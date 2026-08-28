@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useMatches } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { NotificationBell } from '@/features/notifications/components/notification-bell'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import type { PortalConfig } from '@/lib/portal'
@@ -29,12 +29,23 @@ function useRouteHeading(): Heading {
   return { title: '', crumb: '' }
 }
 
-export function AppShell({ config }: { config: PortalConfig }) {
+export function AppShell({
+  config,
+  children,
+  heading,
+}: {
+  config: PortalConfig
+  /** Rendered instead of the matched route — used for the in-shell 404. */
+  children?: ReactNode
+  /** Header text when there is no matched route to read it from. */
+  heading?: Heading
+}) {
   const narrow = useBreakpoint('narrow')
   const drawerOpen = useShellStore((state) => state.drawerOpen)
   const closeDrawer = useShellStore((state) => state.closeDrawer)
   const { pathname } = useLocation()
-  const { title, crumb } = useRouteHeading()
+  const routeHeading = useRouteHeading()
+  const { title, crumb } = heading ?? routeHeading
 
   const drawerVisible = narrow && drawerOpen
 
@@ -74,10 +85,11 @@ export function AppShell({ config }: { config: PortalConfig }) {
           />
         </AppHeader>
         <OfflineBanner />
+        {config.contextBar}
 
         {/* Keyed on the route so the entrance animation replays on navigation. */}
         <div key={pathname} className="flex-1 animate-ems-in p-content">
-          <Outlet />
+          {children ?? <Outlet />}
         </div>
       </main>
     </div>

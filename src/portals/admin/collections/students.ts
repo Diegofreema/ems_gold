@@ -1,7 +1,9 @@
-import type { CollectionDef } from './types'
+import type { CollectionDef } from '@/features/collections/types'
+import { studentTabs } from './tabs'
 
 export const students: CollectionDef = {
   id: 'students',
+  tabs: studentTabs,
   path: '/admin/students',
   kicker: 'Students',
   title: 'Enrolled pupils',

@@ -1,4 +1,5 @@
-import type { AdminListPath, CollectionDef, Row } from './types'
+import type { ListPath, CollectionDef, Row } from '@/features/collections/types'
+import { staffTabs } from './tabs'
 
 const STAFF_COLUMNS: CollectionDef['columns'] = [
   { key: 'staffno', label: 'Staff no.', cardRole: 'subtitle' },
@@ -27,6 +28,7 @@ const OFFICE_ROLES = ['Principal', 'Bursary', 'Head of Primary']
 
 export const staff: CollectionDef = {
   id: 'staff',
+  tabs: staffTabs,
   path: '/admin/staff',
   kicker: 'Staff',
   title: 'Manage staff',
@@ -69,7 +71,7 @@ export const staff: CollectionDef = {
  */
 function staffSlice(
   id: string,
-  path: AdminListPath,
+  path: ListPath,
   title: string,
   description: string,
   keep: (row: Row) => boolean,

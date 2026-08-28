@@ -7,7 +7,7 @@ import { BarChart } from '@/components/charts/bar-chart'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { adminDashboardQuery } from '@/portals/admin/api/dashboard'
-import { FigureTiles } from '@/portals/admin/components/figure-tiles'
+import { FigureTiles } from '@/components/common/figure-tiles'
 
 export const Route = createFileRoute('/admin/')({
   staticData: { title: 'Dashboard', crumb: 'NETPRO EMS Bronze' },

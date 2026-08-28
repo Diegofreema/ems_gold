@@ -1,7 +1,9 @@
-import type { CollectionDef } from './types'
+import type { CollectionDef } from '@/features/collections/types'
+import { feeTabs, invoiceTabs } from './tabs'
 
 export const fees: CollectionDef = {
   id: 'fees',
+  tabs: feeTabs,
   path: '/admin/fees',
   kicker: 'Finance',
   title: 'Fee catalogue',
@@ -96,6 +98,7 @@ export const collect: CollectionDef = {
 
 export const invoices: CollectionDef = {
   id: 'invoices',
+  tabs: invoiceTabs,
   path: '/admin/invoices',
   kicker: 'Finance',
   title: 'Invoices',

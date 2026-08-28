@@ -16,6 +16,11 @@ export function TableView<TRow>({
   onRowClick?: (row: TRow) => void
   compact?: boolean
 }) {
+  // The design sets the record's name semibold. Column sets that declare a
+  // card title say which one that is; the rest follow the second-column rule.
+  const titleIndex = columns.findIndex((column) => column.cardRole === 'title')
+  const boldIndex = titleIndex === -1 ? 1 : titleIndex
+
   return (
     <table className="w-full border-collapse text-sm">
       <thead>
@@ -53,8 +58,7 @@ export function TableView<TRow>({
                   compact ? 'px-2 py-[5px]' : 'px-2 py-[11px]',
                   column.align === 'right' ? 'text-right' : 'text-left',
                   column.nowrap && 'whitespace-nowrap',
-                  // The design sets the second column semibold on every table.
-                  columnIndex === 1 && 'font-semibold',
+                  columnIndex === boldIndex && 'font-semibold',
                 )}
               >
                 {column.cell(row)}

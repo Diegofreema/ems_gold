@@ -1,4 +1,5 @@
-import type { AdminListPath, CollectionDef, Row } from './types'
+import type { ListPath, CollectionDef, Row } from '@/features/collections/types'
+import { parentTabs } from './tabs'
 
 const PARENT_COLUMNS: CollectionDef['columns'] = [
   { key: 'name', label: 'Parent', cardRole: 'title' },
@@ -21,6 +22,7 @@ const PARENT_ROWS: Row[] = [
 
 export const parents: CollectionDef = {
   id: 'parents',
+  tabs: parentTabs,
   path: '/admin/parents',
   kicker: 'Parents',
   title: 'All parents',
@@ -41,7 +43,7 @@ export const parents: CollectionDef = {
 /** Filtered views over the same parent records — see `staffSlice`. */
 function parentSlice(
   id: string,
-  path: AdminListPath,
+  path: ListPath,
   title: string,
   description: string,
   keep: (row: Row) => boolean,

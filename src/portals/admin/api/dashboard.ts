@@ -1,15 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { ActivityEntry } from '@/components/common/activity-list'
+import type { DashboardFigure } from '@/components/common/figure-tiles'
 import type { Bar } from '@/components/charts/bar-chart'
-
-export type DashboardFigure = {
-  label: string
-  amount: number
-  format: 'naira' | 'number' | 'percent'
-  delta: string
-  /** Renders the delta in accent — the figure needs attention. */
-  hot?: boolean
-}
 
 export type AdminDashboard = {
   money: DashboardFigure[]

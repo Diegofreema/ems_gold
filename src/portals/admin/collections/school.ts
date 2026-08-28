@@ -1,4 +1,4 @@
-import type { CollectionDef } from './types'
+import type { CollectionDef } from '@/features/collections/types'
 
 export const library: CollectionDef = {
   id: 'library',

@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import type { NotFoundLink } from '@/components/feedback/not-found-state'
 import type { Notification } from '@/features/notifications/types'
 
 export type PortalRole = 'admin' | 'teacher' | 'student' | 'parent'
@@ -38,6 +39,8 @@ export type PortalConfig = {
   account: AccountSummary
   /** Sidebar block between the brand and the nav. */
   context?: ReactNode
+  /** Strip under the header — the parent portal's child switcher. */
+  contextBar?: ReactNode
   /** Right-hand status text in the header. */
   headerStatus?: ReactNode
   /** Admin filters its long nav with a search box; the others do not. */
@@ -45,4 +48,8 @@ export type PortalConfig = {
   notifications: Notification[]
   /** The extra filter offered on the notifications page, e.g. "Finance". */
   notificationCategory: string
+  /** Where the in-shell 404 points; the design tailors these per role. */
+  notFoundLinks: NotFoundLink[]
+  /** Who "usually wants" those links, e.g. "teachers". */
+  notFoundAudience: string
 }

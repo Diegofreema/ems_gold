@@ -28,6 +28,7 @@ export function SegmentedControl<TValue extends string>({
       {options.map((option) => (
         <label
           key={option.value}
+          data-slot="seg-option"
           className={cn(
             'relative inline-flex cursor-pointer items-center gap-1.5 px-3 py-[7px] text-[13px] transition-colors',
             'border-l border-divider first:border-l-0',

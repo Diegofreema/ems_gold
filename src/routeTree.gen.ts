@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as ParentRouteRouteImport } from './routes/parent/route'
+import { Route as StudentRouteRouteImport } from './routes/student/route'
+import { Route as TeacherRouteRouteImport } from './routes/teacher/route'
 import { Route as AuthCheckEmailRouteImport } from './routes/_auth/check-email'
 import { Route as AuthFirstSignInRouteImport } from './routes/_auth/first-sign-in'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
@@ -48,9 +51,50 @@ import { Route as AdminStaffOtherRouteImport } from './routes/admin/staff-other'
 import { Route as AdminStaffTeachersRouteImport } from './routes/admin/staff-teachers'
 import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
+import { Route as ParentIndexRouteImport } from './routes/parent/index'
+import { Route as ParentAttendanceRouteImport } from './routes/parent/attendance'
+import { Route as ParentInvoicesRouteImport } from './routes/parent/invoices'
+import { Route as ParentMsgSchoolRouteImport } from './routes/parent/msg-school'
+import { Route as ParentNotificationsRouteImport } from './routes/parent/notifications'
+import { Route as ParentPayRouteImport } from './routes/parent/pay'
+import { Route as ParentResultsRouteImport } from './routes/parent/results'
+import { Route as ParentTestsRouteImport } from './routes/parent/tests'
+import { Route as StudentIndexRouteImport } from './routes/student/index'
+import { Route as StudentCoursesRouteImport } from './routes/student/courses'
+import { Route as StudentInvoicesRouteImport } from './routes/student/invoices'
+import { Route as StudentNotificationsRouteImport } from './routes/student/notifications'
+import { Route as StudentRecordRouteImport } from './routes/student/record'
+import { Route as StudentResultsRouteImport } from './routes/student/results'
+import { Route as StudentTestsRouteImport } from './routes/student/tests'
+import { Route as StudentTimetableRouteImport } from './routes/student/timetable'
+import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
+import { Route as TeacherEclassesRouteImport } from './routes/teacher/eclasses'
+import { Route as TeacherMsgAdminRouteImport } from './routes/teacher/msg-admin'
+import { Route as TeacherMsgStudentsRouteImport } from './routes/teacher/msg-students'
+import { Route as TeacherNotificationsRouteImport } from './routes/teacher/notifications'
+import { Route as TeacherResultsRouteImport } from './routes/teacher/results'
+import { Route as TeacherScoresRouteImport } from './routes/teacher/scores'
+import { Route as TeacherStudentsRouteImport } from './routes/teacher/students'
+import { Route as TeacherSubjectsRouteImport } from './routes/teacher/subjects'
+import { Route as TeacherTopicsRouteImport } from './routes/teacher/topics'
 import { Route as AdminCollectionNewRouteImport } from './routes/admin/$collection.new'
+import { Route as ParentCollectionRecordIdRouteImport } from './routes/parent/$collection.$recordId'
+import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
+import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.add'
+import { Route as ParentReceiptsIndexRouteImport } from './routes/parent/receipts.index'
+import { Route as ParentReceiptsRecordIdRouteImport } from './routes/parent/receipts.$recordId'
+import { Route as StudentCollectionRecordIdRouteImport } from './routes/student/$collection.$recordId'
+import { Route as StudentMaterialsIndexRouteImport } from './routes/student/materials.index'
+import { Route as StudentMaterialsRecordIdRouteImport } from './routes/student/materials.$recordId'
+import { Route as StudentTestIndexRouteImport } from './routes/student/test.index'
+import { Route as StudentTestReceiptRouteImport } from './routes/student/test.receipt'
+import { Route as TeacherCollectionNewRouteImport } from './routes/teacher/$collection.new'
+import { Route as TeacherUploadsIndexRouteImport } from './routes/teacher/uploads.index'
+import { Route as TeacherUploadsRecordIdRouteImport } from './routes/teacher/uploads.$recordId'
 import { Route as AdminCollectionRecordIdIndexRouteImport } from './routes/admin/$collection.$recordId.index'
 import { Route as AdminCollectionRecordIdEditRouteImport } from './routes/admin/$collection.$recordId.edit'
+import { Route as TeacherCollectionRecordIdIndexRouteImport } from './routes/teacher/$collection.$recordId.index'
+import { Route as TeacherCollectionRecordIdEditRouteImport } from './routes/teacher/$collection.$recordId.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +108,21 @@ const AuthRoute = AuthRouteImport.update({
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParentRouteRoute = ParentRouteRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRouteRoute = StudentRouteRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherRouteRoute = TeacherRouteRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCheckEmailRoute = AuthCheckEmailRouteImport.update({
@@ -246,10 +305,208 @@ const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   path: '/subjects',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ParentIndexRoute = ParentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentAttendanceRoute = ParentAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentInvoicesRoute = ParentInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentMsgSchoolRoute = ParentMsgSchoolRouteImport.update({
+  id: '/msg-school',
+  path: '/msg-school',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentNotificationsRoute = ParentNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentPayRoute = ParentPayRouteImport.update({
+  id: '/pay',
+  path: '/pay',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentResultsRoute = ParentResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentTestsRoute = ParentTestsRouteImport.update({
+  id: '/tests',
+  path: '/tests',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentCoursesRoute = StudentCoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentInvoicesRoute = StudentInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentRecordRoute = StudentRecordRouteImport.update({
+  id: '/record',
+  path: '/record',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentResultsRoute = StudentResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentTestsRoute = StudentTestsRouteImport.update({
+  id: '/tests',
+  path: '/tests',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentTimetableRoute = StudentTimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const TeacherIndexRoute = TeacherIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherEclassesRoute = TeacherEclassesRouteImport.update({
+  id: '/eclasses',
+  path: '/eclasses',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherMsgAdminRoute = TeacherMsgAdminRouteImport.update({
+  id: '/msg-admin',
+  path: '/msg-admin',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherMsgStudentsRoute = TeacherMsgStudentsRouteImport.update({
+  id: '/msg-students',
+  path: '/msg-students',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherNotificationsRoute = TeacherNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherResultsRoute = TeacherResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherScoresRoute = TeacherScoresRouteImport.update({
+  id: '/scores',
+  path: '/scores',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherStudentsRoute = TeacherStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherSubjectsRoute = TeacherSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherTopicsRoute = TeacherTopicsRouteImport.update({
+  id: '/topics',
+  path: '/topics',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
 const AdminCollectionNewRoute = AdminCollectionNewRouteImport.update({
   id: '/$collection/new',
   path: '/$collection/new',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const ParentCollectionRecordIdRoute =
+  ParentCollectionRecordIdRouteImport.update({
+    id: '/$collection/$recordId',
+    path: '/$collection/$recordId',
+    getParentRoute: () => ParentRouteRoute,
+  } as any)
+const ParentChildrenIndexRoute = ParentChildrenIndexRouteImport.update({
+  id: '/children/',
+  path: '/children/',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentChildrenAddRoute = ParentChildrenAddRouteImport.update({
+  id: '/children/add',
+  path: '/children/add',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentReceiptsIndexRoute = ParentReceiptsIndexRouteImport.update({
+  id: '/receipts/',
+  path: '/receipts/',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentReceiptsRecordIdRoute = ParentReceiptsRecordIdRouteImport.update({
+  id: '/receipts/$recordId',
+  path: '/receipts/$recordId',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const StudentCollectionRecordIdRoute =
+  StudentCollectionRecordIdRouteImport.update({
+    id: '/$collection/$recordId',
+    path: '/$collection/$recordId',
+    getParentRoute: () => StudentRouteRoute,
+  } as any)
+const StudentMaterialsIndexRoute = StudentMaterialsIndexRouteImport.update({
+  id: '/materials/',
+  path: '/materials/',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentMaterialsRecordIdRoute =
+  StudentMaterialsRecordIdRouteImport.update({
+    id: '/materials/$recordId',
+    path: '/materials/$recordId',
+    getParentRoute: () => StudentRouteRoute,
+  } as any)
+const StudentTestIndexRoute = StudentTestIndexRouteImport.update({
+  id: '/test/',
+  path: '/test/',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentTestReceiptRoute = StudentTestReceiptRouteImport.update({
+  id: '/test/receipt',
+  path: '/test/receipt',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const TeacherCollectionNewRoute = TeacherCollectionNewRouteImport.update({
+  id: '/$collection/new',
+  path: '/$collection/new',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherUploadsIndexRoute = TeacherUploadsIndexRouteImport.update({
+  id: '/uploads/',
+  path: '/uploads/',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherUploadsRecordIdRoute = TeacherUploadsRecordIdRouteImport.update({
+  id: '/uploads/$recordId',
+  path: '/uploads/$recordId',
+  getParentRoute: () => TeacherRouteRoute,
 } as any)
 const AdminCollectionRecordIdIndexRoute =
   AdminCollectionRecordIdIndexRouteImport.update({
@@ -263,10 +520,25 @@ const AdminCollectionRecordIdEditRoute =
     path: '/$collection/$recordId/edit',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const TeacherCollectionRecordIdIndexRoute =
+  TeacherCollectionRecordIdIndexRouteImport.update({
+    id: '/$collection/$recordId/',
+    path: '/$collection/$recordId/',
+    getParentRoute: () => TeacherRouteRoute,
+  } as any)
+const TeacherCollectionRecordIdEditRoute =
+  TeacherCollectionRecordIdEditRouteImport.update({
+    id: '/$collection/$recordId/edit',
+    path: '/$collection/$recordId/edit',
+    getParentRoute: () => TeacherRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/parent': typeof ParentRouteRouteWithChildren
+  '/student': typeof StudentRouteRouteWithChildren
+  '/teacher': typeof TeacherRouteRouteWithChildren
   '/check-email': typeof AuthCheckEmailRoute
   '/first-sign-in': typeof AuthFirstSignInRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
@@ -302,10 +574,51 @@ export interface FileRoutesByFullPath {
   '/admin/staff-teachers': typeof AdminStaffTeachersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/parent/attendance': typeof ParentAttendanceRoute
+  '/parent/invoices': typeof ParentInvoicesRoute
+  '/parent/msg-school': typeof ParentMsgSchoolRoute
+  '/parent/notifications': typeof ParentNotificationsRoute
+  '/parent/pay': typeof ParentPayRoute
+  '/parent/results': typeof ParentResultsRoute
+  '/parent/tests': typeof ParentTestsRoute
+  '/student/courses': typeof StudentCoursesRoute
+  '/student/invoices': typeof StudentInvoicesRoute
+  '/student/notifications': typeof StudentNotificationsRoute
+  '/student/record': typeof StudentRecordRoute
+  '/student/results': typeof StudentResultsRoute
+  '/student/tests': typeof StudentTestsRoute
+  '/student/timetable': typeof StudentTimetableRoute
+  '/teacher/eclasses': typeof TeacherEclassesRoute
+  '/teacher/msg-admin': typeof TeacherMsgAdminRoute
+  '/teacher/msg-students': typeof TeacherMsgStudentsRoute
+  '/teacher/notifications': typeof TeacherNotificationsRoute
+  '/teacher/results': typeof TeacherResultsRoute
+  '/teacher/scores': typeof TeacherScoresRoute
+  '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/topics': typeof TeacherTopicsRoute
   '/admin/': typeof AdminIndexRoute
+  '/parent/': typeof ParentIndexRoute
+  '/student/': typeof StudentIndexRoute
+  '/teacher/': typeof TeacherIndexRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
+  '/parent/children/add': typeof ParentChildrenAddRoute
+  '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
+  '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
+  '/student/materials/$recordId': typeof StudentMaterialsRecordIdRoute
+  '/student/test/receipt': typeof StudentTestReceiptRoute
+  '/teacher/$collection/new': typeof TeacherCollectionNewRoute
+  '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
+  '/parent/children/': typeof ParentChildrenIndexRoute
+  '/parent/receipts/': typeof ParentReceiptsIndexRoute
+  '/student/materials/': typeof StudentMaterialsIndexRoute
+  '/student/test/': typeof StudentTestIndexRoute
+  '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
+  '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -344,15 +657,59 @@ export interface FileRoutesByTo {
   '/admin/staff-teachers': typeof AdminStaffTeachersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/parent/attendance': typeof ParentAttendanceRoute
+  '/parent/invoices': typeof ParentInvoicesRoute
+  '/parent/msg-school': typeof ParentMsgSchoolRoute
+  '/parent/notifications': typeof ParentNotificationsRoute
+  '/parent/pay': typeof ParentPayRoute
+  '/parent/results': typeof ParentResultsRoute
+  '/parent/tests': typeof ParentTestsRoute
+  '/student/courses': typeof StudentCoursesRoute
+  '/student/invoices': typeof StudentInvoicesRoute
+  '/student/notifications': typeof StudentNotificationsRoute
+  '/student/record': typeof StudentRecordRoute
+  '/student/results': typeof StudentResultsRoute
+  '/student/tests': typeof StudentTestsRoute
+  '/student/timetable': typeof StudentTimetableRoute
+  '/teacher/eclasses': typeof TeacherEclassesRoute
+  '/teacher/msg-admin': typeof TeacherMsgAdminRoute
+  '/teacher/msg-students': typeof TeacherMsgStudentsRoute
+  '/teacher/notifications': typeof TeacherNotificationsRoute
+  '/teacher/results': typeof TeacherResultsRoute
+  '/teacher/scores': typeof TeacherScoresRoute
+  '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/topics': typeof TeacherTopicsRoute
   '/admin': typeof AdminIndexRoute
+  '/parent': typeof ParentIndexRoute
+  '/student': typeof StudentIndexRoute
+  '/teacher': typeof TeacherIndexRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
+  '/parent/children/add': typeof ParentChildrenAddRoute
+  '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
+  '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
+  '/student/materials/$recordId': typeof StudentMaterialsRecordIdRoute
+  '/student/test/receipt': typeof StudentTestReceiptRoute
+  '/teacher/$collection/new': typeof TeacherCollectionNewRoute
+  '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
+  '/parent/children': typeof ParentChildrenIndexRoute
+  '/parent/receipts': typeof ParentReceiptsIndexRoute
+  '/student/materials': typeof StudentMaterialsIndexRoute
+  '/student/test': typeof StudentTestIndexRoute
+  '/teacher/uploads': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId': typeof AdminCollectionRecordIdIndexRoute
+  '/teacher/$collection/$recordId': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/parent': typeof ParentRouteRouteWithChildren
+  '/student': typeof StudentRouteRouteWithChildren
+  '/teacher': typeof TeacherRouteRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_auth/check-email': typeof AuthCheckEmailRoute
   '/_auth/first-sign-in': typeof AuthFirstSignInRoute
@@ -389,16 +746,60 @@ export interface FileRoutesById {
   '/admin/staff-teachers': typeof AdminStaffTeachersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/parent/attendance': typeof ParentAttendanceRoute
+  '/parent/invoices': typeof ParentInvoicesRoute
+  '/parent/msg-school': typeof ParentMsgSchoolRoute
+  '/parent/notifications': typeof ParentNotificationsRoute
+  '/parent/pay': typeof ParentPayRoute
+  '/parent/results': typeof ParentResultsRoute
+  '/parent/tests': typeof ParentTestsRoute
+  '/student/courses': typeof StudentCoursesRoute
+  '/student/invoices': typeof StudentInvoicesRoute
+  '/student/notifications': typeof StudentNotificationsRoute
+  '/student/record': typeof StudentRecordRoute
+  '/student/results': typeof StudentResultsRoute
+  '/student/tests': typeof StudentTestsRoute
+  '/student/timetable': typeof StudentTimetableRoute
+  '/teacher/eclasses': typeof TeacherEclassesRoute
+  '/teacher/msg-admin': typeof TeacherMsgAdminRoute
+  '/teacher/msg-students': typeof TeacherMsgStudentsRoute
+  '/teacher/notifications': typeof TeacherNotificationsRoute
+  '/teacher/results': typeof TeacherResultsRoute
+  '/teacher/scores': typeof TeacherScoresRoute
+  '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/topics': typeof TeacherTopicsRoute
   '/admin/': typeof AdminIndexRoute
+  '/parent/': typeof ParentIndexRoute
+  '/student/': typeof StudentIndexRoute
+  '/teacher/': typeof TeacherIndexRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
+  '/parent/children/add': typeof ParentChildrenAddRoute
+  '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
+  '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
+  '/student/materials/$recordId': typeof StudentMaterialsRecordIdRoute
+  '/student/test/receipt': typeof StudentTestReceiptRoute
+  '/teacher/$collection/new': typeof TeacherCollectionNewRoute
+  '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
+  '/parent/children/': typeof ParentChildrenIndexRoute
+  '/parent/receipts/': typeof ParentReceiptsIndexRoute
+  '/student/materials/': typeof StudentMaterialsIndexRoute
+  '/student/test/': typeof StudentTestIndexRoute
+  '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
+  '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/parent'
+    | '/student'
+    | '/teacher'
     | '/check-email'
     | '/first-sign-in'
     | '/forgot-password'
@@ -434,10 +835,51 @@ export interface FileRouteTypes {
     | '/admin/staff-teachers'
     | '/admin/students'
     | '/admin/subjects'
+    | '/parent/attendance'
+    | '/parent/invoices'
+    | '/parent/msg-school'
+    | '/parent/notifications'
+    | '/parent/pay'
+    | '/parent/results'
+    | '/parent/tests'
+    | '/student/courses'
+    | '/student/invoices'
+    | '/student/notifications'
+    | '/student/record'
+    | '/student/results'
+    | '/student/tests'
+    | '/student/timetable'
+    | '/teacher/eclasses'
+    | '/teacher/msg-admin'
+    | '/teacher/msg-students'
+    | '/teacher/notifications'
+    | '/teacher/results'
+    | '/teacher/scores'
+    | '/teacher/students'
+    | '/teacher/subjects'
+    | '/teacher/topics'
     | '/admin/'
+    | '/parent/'
+    | '/student/'
+    | '/teacher/'
     | '/admin/$collection/new'
+    | '/parent/$collection/$recordId'
+    | '/parent/children/add'
+    | '/parent/receipts/$recordId'
+    | '/student/$collection/$recordId'
+    | '/student/materials/$recordId'
+    | '/student/test/receipt'
+    | '/teacher/$collection/new'
+    | '/teacher/uploads/$recordId'
+    | '/parent/children/'
+    | '/parent/receipts/'
+    | '/student/materials/'
+    | '/student/test/'
+    | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
+    | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
+    | '/teacher/$collection/$recordId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -476,14 +918,58 @@ export interface FileRouteTypes {
     | '/admin/staff-teachers'
     | '/admin/students'
     | '/admin/subjects'
+    | '/parent/attendance'
+    | '/parent/invoices'
+    | '/parent/msg-school'
+    | '/parent/notifications'
+    | '/parent/pay'
+    | '/parent/results'
+    | '/parent/tests'
+    | '/student/courses'
+    | '/student/invoices'
+    | '/student/notifications'
+    | '/student/record'
+    | '/student/results'
+    | '/student/tests'
+    | '/student/timetable'
+    | '/teacher/eclasses'
+    | '/teacher/msg-admin'
+    | '/teacher/msg-students'
+    | '/teacher/notifications'
+    | '/teacher/results'
+    | '/teacher/scores'
+    | '/teacher/students'
+    | '/teacher/subjects'
+    | '/teacher/topics'
     | '/admin'
+    | '/parent'
+    | '/student'
+    | '/teacher'
     | '/admin/$collection/new'
+    | '/parent/$collection/$recordId'
+    | '/parent/children/add'
+    | '/parent/receipts/$recordId'
+    | '/student/$collection/$recordId'
+    | '/student/materials/$recordId'
+    | '/student/test/receipt'
+    | '/teacher/$collection/new'
+    | '/teacher/uploads/$recordId'
+    | '/parent/children'
+    | '/parent/receipts'
+    | '/student/materials'
+    | '/student/test'
+    | '/teacher/uploads'
     | '/admin/$collection/$recordId/edit'
+    | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId'
+    | '/teacher/$collection/$recordId'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/parent'
+    | '/student'
+    | '/teacher'
     | '/_auth'
     | '/_auth/check-email'
     | '/_auth/first-sign-in'
@@ -520,15 +1006,59 @@ export interface FileRouteTypes {
     | '/admin/staff-teachers'
     | '/admin/students'
     | '/admin/subjects'
+    | '/parent/attendance'
+    | '/parent/invoices'
+    | '/parent/msg-school'
+    | '/parent/notifications'
+    | '/parent/pay'
+    | '/parent/results'
+    | '/parent/tests'
+    | '/student/courses'
+    | '/student/invoices'
+    | '/student/notifications'
+    | '/student/record'
+    | '/student/results'
+    | '/student/tests'
+    | '/student/timetable'
+    | '/teacher/eclasses'
+    | '/teacher/msg-admin'
+    | '/teacher/msg-students'
+    | '/teacher/notifications'
+    | '/teacher/results'
+    | '/teacher/scores'
+    | '/teacher/students'
+    | '/teacher/subjects'
+    | '/teacher/topics'
     | '/admin/'
+    | '/parent/'
+    | '/student/'
+    | '/teacher/'
     | '/admin/$collection/new'
+    | '/parent/$collection/$recordId'
+    | '/parent/children/add'
+    | '/parent/receipts/$recordId'
+    | '/student/$collection/$recordId'
+    | '/student/materials/$recordId'
+    | '/student/test/receipt'
+    | '/teacher/$collection/new'
+    | '/teacher/uploads/$recordId'
+    | '/parent/children/'
+    | '/parent/receipts/'
+    | '/student/materials/'
+    | '/student/test/'
+    | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
+    | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
+    | '/teacher/$collection/$recordId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  ParentRouteRoute: typeof ParentRouteRouteWithChildren
+  StudentRouteRoute: typeof StudentRouteRouteWithChildren
+  TeacherRouteRoute: typeof TeacherRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
 }
 
@@ -553,6 +1083,27 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher': {
+      id: '/teacher'
+      path: '/teacher'
+      fullPath: '/teacher'
+      preLoaderRoute: typeof TeacherRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/check-email': {
@@ -807,12 +1358,285 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubjectsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/parent/': {
+      id: '/parent/'
+      path: '/'
+      fullPath: '/parent/'
+      preLoaderRoute: typeof ParentIndexRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/attendance': {
+      id: '/parent/attendance'
+      path: '/attendance'
+      fullPath: '/parent/attendance'
+      preLoaderRoute: typeof ParentAttendanceRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/invoices': {
+      id: '/parent/invoices'
+      path: '/invoices'
+      fullPath: '/parent/invoices'
+      preLoaderRoute: typeof ParentInvoicesRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/msg-school': {
+      id: '/parent/msg-school'
+      path: '/msg-school'
+      fullPath: '/parent/msg-school'
+      preLoaderRoute: typeof ParentMsgSchoolRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/notifications': {
+      id: '/parent/notifications'
+      path: '/notifications'
+      fullPath: '/parent/notifications'
+      preLoaderRoute: typeof ParentNotificationsRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/pay': {
+      id: '/parent/pay'
+      path: '/pay'
+      fullPath: '/parent/pay'
+      preLoaderRoute: typeof ParentPayRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/results': {
+      id: '/parent/results'
+      path: '/results'
+      fullPath: '/parent/results'
+      preLoaderRoute: typeof ParentResultsRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/tests': {
+      id: '/parent/tests'
+      path: '/tests'
+      fullPath: '/parent/tests'
+      preLoaderRoute: typeof ParentTestsRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/courses': {
+      id: '/student/courses'
+      path: '/courses'
+      fullPath: '/student/courses'
+      preLoaderRoute: typeof StudentCoursesRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/invoices': {
+      id: '/student/invoices'
+      path: '/invoices'
+      fullPath: '/student/invoices'
+      preLoaderRoute: typeof StudentInvoicesRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/notifications': {
+      id: '/student/notifications'
+      path: '/notifications'
+      fullPath: '/student/notifications'
+      preLoaderRoute: typeof StudentNotificationsRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/record': {
+      id: '/student/record'
+      path: '/record'
+      fullPath: '/student/record'
+      preLoaderRoute: typeof StudentRecordRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/results': {
+      id: '/student/results'
+      path: '/results'
+      fullPath: '/student/results'
+      preLoaderRoute: typeof StudentResultsRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/tests': {
+      id: '/student/tests'
+      path: '/tests'
+      fullPath: '/student/tests'
+      preLoaderRoute: typeof StudentTestsRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/timetable': {
+      id: '/student/timetable'
+      path: '/timetable'
+      fullPath: '/student/timetable'
+      preLoaderRoute: typeof StudentTimetableRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/teacher/': {
+      id: '/teacher/'
+      path: '/'
+      fullPath: '/teacher/'
+      preLoaderRoute: typeof TeacherIndexRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/eclasses': {
+      id: '/teacher/eclasses'
+      path: '/eclasses'
+      fullPath: '/teacher/eclasses'
+      preLoaderRoute: typeof TeacherEclassesRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/msg-admin': {
+      id: '/teacher/msg-admin'
+      path: '/msg-admin'
+      fullPath: '/teacher/msg-admin'
+      preLoaderRoute: typeof TeacherMsgAdminRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/msg-students': {
+      id: '/teacher/msg-students'
+      path: '/msg-students'
+      fullPath: '/teacher/msg-students'
+      preLoaderRoute: typeof TeacherMsgStudentsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/notifications': {
+      id: '/teacher/notifications'
+      path: '/notifications'
+      fullPath: '/teacher/notifications'
+      preLoaderRoute: typeof TeacherNotificationsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/results': {
+      id: '/teacher/results'
+      path: '/results'
+      fullPath: '/teacher/results'
+      preLoaderRoute: typeof TeacherResultsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/scores': {
+      id: '/teacher/scores'
+      path: '/scores'
+      fullPath: '/teacher/scores'
+      preLoaderRoute: typeof TeacherScoresRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/students': {
+      id: '/teacher/students'
+      path: '/students'
+      fullPath: '/teacher/students'
+      preLoaderRoute: typeof TeacherStudentsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/subjects': {
+      id: '/teacher/subjects'
+      path: '/subjects'
+      fullPath: '/teacher/subjects'
+      preLoaderRoute: typeof TeacherSubjectsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/topics': {
+      id: '/teacher/topics'
+      path: '/topics'
+      fullPath: '/teacher/topics'
+      preLoaderRoute: typeof TeacherTopicsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
     '/admin/$collection/new': {
       id: '/admin/$collection/new'
       path: '/$collection/new'
       fullPath: '/admin/$collection/new'
       preLoaderRoute: typeof AdminCollectionNewRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/parent/$collection/$recordId': {
+      id: '/parent/$collection/$recordId'
+      path: '/$collection/$recordId'
+      fullPath: '/parent/$collection/$recordId'
+      preLoaderRoute: typeof ParentCollectionRecordIdRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/children/': {
+      id: '/parent/children/'
+      path: '/children'
+      fullPath: '/parent/children/'
+      preLoaderRoute: typeof ParentChildrenIndexRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/children/add': {
+      id: '/parent/children/add'
+      path: '/children/add'
+      fullPath: '/parent/children/add'
+      preLoaderRoute: typeof ParentChildrenAddRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/receipts/': {
+      id: '/parent/receipts/'
+      path: '/receipts'
+      fullPath: '/parent/receipts/'
+      preLoaderRoute: typeof ParentReceiptsIndexRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/receipts/$recordId': {
+      id: '/parent/receipts/$recordId'
+      path: '/receipts/$recordId'
+      fullPath: '/parent/receipts/$recordId'
+      preLoaderRoute: typeof ParentReceiptsRecordIdRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/student/$collection/$recordId': {
+      id: '/student/$collection/$recordId'
+      path: '/$collection/$recordId'
+      fullPath: '/student/$collection/$recordId'
+      preLoaderRoute: typeof StudentCollectionRecordIdRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/materials/': {
+      id: '/student/materials/'
+      path: '/materials'
+      fullPath: '/student/materials/'
+      preLoaderRoute: typeof StudentMaterialsIndexRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/materials/$recordId': {
+      id: '/student/materials/$recordId'
+      path: '/materials/$recordId'
+      fullPath: '/student/materials/$recordId'
+      preLoaderRoute: typeof StudentMaterialsRecordIdRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/test/': {
+      id: '/student/test/'
+      path: '/test'
+      fullPath: '/student/test/'
+      preLoaderRoute: typeof StudentTestIndexRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/test/receipt': {
+      id: '/student/test/receipt'
+      path: '/test/receipt'
+      fullPath: '/student/test/receipt'
+      preLoaderRoute: typeof StudentTestReceiptRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/teacher/$collection/new': {
+      id: '/teacher/$collection/new'
+      path: '/$collection/new'
+      fullPath: '/teacher/$collection/new'
+      preLoaderRoute: typeof TeacherCollectionNewRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/uploads/': {
+      id: '/teacher/uploads/'
+      path: '/uploads'
+      fullPath: '/teacher/uploads/'
+      preLoaderRoute: typeof TeacherUploadsIndexRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/uploads/$recordId': {
+      id: '/teacher/uploads/$recordId'
+      path: '/uploads/$recordId'
+      fullPath: '/teacher/uploads/$recordId'
+      preLoaderRoute: typeof TeacherUploadsRecordIdRouteImport
+      parentRoute: typeof TeacherRouteRoute
     }
     '/admin/$collection/$recordId/': {
       id: '/admin/$collection/$recordId/'
@@ -827,6 +1651,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/$collection/$recordId/edit'
       preLoaderRoute: typeof AdminCollectionRecordIdEditRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/teacher/$collection/$recordId/': {
+      id: '/teacher/$collection/$recordId/'
+      path: '/$collection/$recordId'
+      fullPath: '/teacher/$collection/$recordId/'
+      preLoaderRoute: typeof TeacherCollectionRecordIdIndexRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/$collection/$recordId/edit': {
+      id: '/teacher/$collection/$recordId/edit'
+      path: '/$collection/$recordId/edit'
+      fullPath: '/teacher/$collection/$recordId/edit'
+      preLoaderRoute: typeof TeacherCollectionRecordIdEditRouteImport
+      parentRoute: typeof TeacherRouteRoute
     }
   }
 }
@@ -903,6 +1741,118 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface ParentRouteRouteChildren {
+  ParentAttendanceRoute: typeof ParentAttendanceRoute
+  ParentInvoicesRoute: typeof ParentInvoicesRoute
+  ParentMsgSchoolRoute: typeof ParentMsgSchoolRoute
+  ParentNotificationsRoute: typeof ParentNotificationsRoute
+  ParentPayRoute: typeof ParentPayRoute
+  ParentResultsRoute: typeof ParentResultsRoute
+  ParentTestsRoute: typeof ParentTestsRoute
+  ParentIndexRoute: typeof ParentIndexRoute
+  ParentCollectionRecordIdRoute: typeof ParentCollectionRecordIdRoute
+  ParentChildrenAddRoute: typeof ParentChildrenAddRoute
+  ParentReceiptsRecordIdRoute: typeof ParentReceiptsRecordIdRoute
+  ParentChildrenIndexRoute: typeof ParentChildrenIndexRoute
+  ParentReceiptsIndexRoute: typeof ParentReceiptsIndexRoute
+}
+
+const ParentRouteRouteChildren: ParentRouteRouteChildren = {
+  ParentAttendanceRoute: ParentAttendanceRoute,
+  ParentInvoicesRoute: ParentInvoicesRoute,
+  ParentMsgSchoolRoute: ParentMsgSchoolRoute,
+  ParentNotificationsRoute: ParentNotificationsRoute,
+  ParentPayRoute: ParentPayRoute,
+  ParentResultsRoute: ParentResultsRoute,
+  ParentTestsRoute: ParentTestsRoute,
+  ParentIndexRoute: ParentIndexRoute,
+  ParentCollectionRecordIdRoute: ParentCollectionRecordIdRoute,
+  ParentChildrenAddRoute: ParentChildrenAddRoute,
+  ParentReceiptsRecordIdRoute: ParentReceiptsRecordIdRoute,
+  ParentChildrenIndexRoute: ParentChildrenIndexRoute,
+  ParentReceiptsIndexRoute: ParentReceiptsIndexRoute,
+}
+
+const ParentRouteRouteWithChildren = ParentRouteRoute._addFileChildren(
+  ParentRouteRouteChildren,
+)
+
+interface StudentRouteRouteChildren {
+  StudentCoursesRoute: typeof StudentCoursesRoute
+  StudentInvoicesRoute: typeof StudentInvoicesRoute
+  StudentNotificationsRoute: typeof StudentNotificationsRoute
+  StudentRecordRoute: typeof StudentRecordRoute
+  StudentResultsRoute: typeof StudentResultsRoute
+  StudentTestsRoute: typeof StudentTestsRoute
+  StudentTimetableRoute: typeof StudentTimetableRoute
+  StudentIndexRoute: typeof StudentIndexRoute
+  StudentCollectionRecordIdRoute: typeof StudentCollectionRecordIdRoute
+  StudentMaterialsRecordIdRoute: typeof StudentMaterialsRecordIdRoute
+  StudentTestReceiptRoute: typeof StudentTestReceiptRoute
+  StudentMaterialsIndexRoute: typeof StudentMaterialsIndexRoute
+  StudentTestIndexRoute: typeof StudentTestIndexRoute
+}
+
+const StudentRouteRouteChildren: StudentRouteRouteChildren = {
+  StudentCoursesRoute: StudentCoursesRoute,
+  StudentInvoicesRoute: StudentInvoicesRoute,
+  StudentNotificationsRoute: StudentNotificationsRoute,
+  StudentRecordRoute: StudentRecordRoute,
+  StudentResultsRoute: StudentResultsRoute,
+  StudentTestsRoute: StudentTestsRoute,
+  StudentTimetableRoute: StudentTimetableRoute,
+  StudentIndexRoute: StudentIndexRoute,
+  StudentCollectionRecordIdRoute: StudentCollectionRecordIdRoute,
+  StudentMaterialsRecordIdRoute: StudentMaterialsRecordIdRoute,
+  StudentTestReceiptRoute: StudentTestReceiptRoute,
+  StudentMaterialsIndexRoute: StudentMaterialsIndexRoute,
+  StudentTestIndexRoute: StudentTestIndexRoute,
+}
+
+const StudentRouteRouteWithChildren = StudentRouteRoute._addFileChildren(
+  StudentRouteRouteChildren,
+)
+
+interface TeacherRouteRouteChildren {
+  TeacherEclassesRoute: typeof TeacherEclassesRoute
+  TeacherMsgAdminRoute: typeof TeacherMsgAdminRoute
+  TeacherMsgStudentsRoute: typeof TeacherMsgStudentsRoute
+  TeacherNotificationsRoute: typeof TeacherNotificationsRoute
+  TeacherResultsRoute: typeof TeacherResultsRoute
+  TeacherScoresRoute: typeof TeacherScoresRoute
+  TeacherStudentsRoute: typeof TeacherStudentsRoute
+  TeacherSubjectsRoute: typeof TeacherSubjectsRoute
+  TeacherTopicsRoute: typeof TeacherTopicsRoute
+  TeacherIndexRoute: typeof TeacherIndexRoute
+  TeacherCollectionNewRoute: typeof TeacherCollectionNewRoute
+  TeacherUploadsRecordIdRoute: typeof TeacherUploadsRecordIdRoute
+  TeacherUploadsIndexRoute: typeof TeacherUploadsIndexRoute
+  TeacherCollectionRecordIdEditRoute: typeof TeacherCollectionRecordIdEditRoute
+  TeacherCollectionRecordIdIndexRoute: typeof TeacherCollectionRecordIdIndexRoute
+}
+
+const TeacherRouteRouteChildren: TeacherRouteRouteChildren = {
+  TeacherEclassesRoute: TeacherEclassesRoute,
+  TeacherMsgAdminRoute: TeacherMsgAdminRoute,
+  TeacherMsgStudentsRoute: TeacherMsgStudentsRoute,
+  TeacherNotificationsRoute: TeacherNotificationsRoute,
+  TeacherResultsRoute: TeacherResultsRoute,
+  TeacherScoresRoute: TeacherScoresRoute,
+  TeacherStudentsRoute: TeacherStudentsRoute,
+  TeacherSubjectsRoute: TeacherSubjectsRoute,
+  TeacherTopicsRoute: TeacherTopicsRoute,
+  TeacherIndexRoute: TeacherIndexRoute,
+  TeacherCollectionNewRoute: TeacherCollectionNewRoute,
+  TeacherUploadsRecordIdRoute: TeacherUploadsRecordIdRoute,
+  TeacherUploadsIndexRoute: TeacherUploadsIndexRoute,
+  TeacherCollectionRecordIdEditRoute: TeacherCollectionRecordIdEditRoute,
+  TeacherCollectionRecordIdIndexRoute: TeacherCollectionRecordIdIndexRoute,
+}
+
+const TeacherRouteRouteWithChildren = TeacherRouteRoute._addFileChildren(
+  TeacherRouteRouteChildren,
+)
+
 interface AuthRouteChildren {
   AuthCheckEmailRoute: typeof AuthCheckEmailRoute
   AuthFirstSignInRoute: typeof AuthFirstSignInRoute
@@ -930,6 +1880,9 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  ParentRouteRoute: ParentRouteRouteWithChildren,
+  StudentRouteRoute: StudentRouteRouteWithChildren,
+  TeacherRouteRoute: TeacherRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport

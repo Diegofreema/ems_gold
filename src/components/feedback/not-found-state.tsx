@@ -8,7 +8,13 @@ export type NotFoundLink = {
 }
 
 /** The in-portal 404: an accent numeral over the routes people usually want. */
-export function NotFoundState({ links }: { links: NotFoundLink[] }) {
+export function NotFoundState({
+  links,
+  audience,
+}: {
+  links: NotFoundLink[]
+  audience: string
+}) {
   return (
     <div className="max-w-[620px] py-10">
       <div className="font-heading text-numeral leading-[0.9] font-extrabold tracking-[-0.04em] text-brand">
@@ -17,7 +23,7 @@ export function NotFoundState({ links }: { links: NotFoundLink[] }) {
       <h2 className="mt-[18px] text-page-title">There is no page here</h2>
       <p className="mt-2.5 text-sm text-muted-foreground">
         The link may be old, or the record may have been deleted. These are the
-        places people usually want:
+        places {audience} usually want:
       </p>
 
       <div className="mt-5 border-t-2 border-divider">

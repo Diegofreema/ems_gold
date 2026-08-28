@@ -228,9 +228,19 @@
     }
 }
 
-/* Touch targets — the one media query the design carries. */
+/* Touch targets — the one media query the design carries. Controls grow to
+   44px and inputs to 16px, which also stops iOS zooming on focus. */
 @media (max-width: 640px) {
-    :root {
-        --ems-touch-target: 44px;
+    [data-slot="button"],
+    [data-slot="select-trigger"],
+    [data-slot="seg-option"] {
+        min-height: 44px;
+    }
+
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"] {
+        min-height: 44px;
+        font-size: 16px;
     }
 }
