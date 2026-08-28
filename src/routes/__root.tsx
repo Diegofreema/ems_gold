@@ -1,14 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query'
-import {
-  createRootRouteWithContext,
-  Link,
-  Outlet,
-} from '@tanstack/react-router'
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
-import { useUiStore } from '@/stores/ui-store'
 
 const Devtools = import.meta.env.PROD
   ? () => null
@@ -37,72 +32,32 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootLayout() {
-  const theme = useUiStore((state) => state.theme)
-  const toggleTheme = useUiStore((state) => state.toggleTheme)
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-  }, [theme])
-
   return (
     <NuqsAdapter>
-      <div className="min-h-svh bg-background text-foreground">
-        <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-          <div className="mx-auto flex h-14 w-full max-w-5xl items-center gap-6 px-6">
-            <Link to="/" className="font-semibold tracking-tight">
-              ems<span className="text-muted-foreground">/gold</span>
-            </Link>
-            <nav className="flex items-center gap-1 text-sm">
-              <NavLink to="/">Home</NavLink>
-              <NavLink to="/tasks">Tasks</NavLink>
-            </nav>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto"
-              onClick={toggleTheme}
-            >
-              {theme === 'dark' ? 'Light' : 'Dark'} mode
-            </Button>
-          </div>
-        </header>
-
-        <main className="mx-auto w-full max-w-5xl px-6 py-10">
-          <Outlet />
-        </main>
-
-        <Toaster />
-        <Suspense>
-          <Devtools />
-        </Suspense>
-      </div>
+      <Outlet />
+      <Toaster position="bottom-center" />
+      <Suspense>
+        <Devtools />
+      </Suspense>
     </NuqsAdapter>
-  )
-}
-
-function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
-  return (
-    <Link
-      to={to}
-      className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground data-[status=active]:bg-muted data-[status=active]:text-foreground"
-      activeOptions={{ exact: to === '/' }}
-    >
-      {children}
-    </Link>
   )
 }
 
 function NotFound() {
   return (
-    <div className="space-y-3">
-      <h1 className="text-2xl font-semibold tracking-tight">Page not found</h1>
-      <p className="text-muted-foreground">
-        That route doesn&apos;t exist yet.
-      </p>
-      <Button asChild variant="outline">
-        <Link to="/">Back home</Link>
-      </Button>
+    <div className="grid min-h-screen place-items-center p-content">
+      <div className="w-full max-w-md">
+        <div className="font-heading text-numeral leading-none font-extrabold text-brand">
+          404
+        </div>
+        <h1 className="mt-4 text-detail-title">There is no page here</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The link may be out of date, or the page may have moved.
+        </p>
+        <Button asChild className="mt-6">
+          <Link to="/admin">Back to dashboard</Link>
+        </Button>
+      </div>
     </div>
   )
 }
-

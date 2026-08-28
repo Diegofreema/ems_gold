@@ -12,6 +12,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Pre-bundling nuqs splits it and its adapter into two chunks, each with a
+  // private copy of the adapter context ("Multiple adapter contexts detected"
+  // in dev). Serving it unbundled keeps one context. Production is unaffected.
+  optimizeDeps: {
+    exclude: ['nuqs'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

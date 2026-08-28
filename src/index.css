@@ -1,130 +1,236 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/archivo";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark mode is driven by the design system's own attribute, set on <html>. */
+@custom-variant dark (&:where([data-ems-theme="dark"], [data-ems-theme="dark"] *));
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Modernist tokens — ported from the Modernist design system's styles.css.
+   These raw values are the single source of truth; the shadcn semantic
+   names below are aliases onto them, so every shadcn primitive inherits
+   the design system without being restyled component by component.
+
+   Naming note: the design system calls its red "accent", but shadcn already
+   uses --accent for subtle hover fills. The red is `brand` here.
+   ───────────────────────────────────────────────────────────────────── */
+:root {
+    --ems-ground: #f3f2f2;
+    --ems-surface: #eae9e9;
+    --ems-ink: #201e1d;
+    --ems-brand: #ec3013;
+    --ems-divider: color-mix(in srgb, #201e1d 40%, transparent);
+
+    --ems-neutral-100: #f8f4f4;
+    --ems-neutral-200: #eae7e7;
+    --ems-neutral-300: #d7d3d3;
+    --ems-neutral-400: #bab6b6;
+    --ems-neutral-500: #9b9797;
+    --ems-neutral-600: #7d7979;
+    --ems-neutral-700: #605d5d;
+    --ems-neutral-800: #444141;
+    --ems-neutral-900: #2d2b2b;
+
+    --ems-brand-100: #fff2ef;
+    --ems-brand-200: #ffe0d9;
+    --ems-brand-300: #ffc4b8;
+    --ems-brand-400: #ff9783;
+    --ems-brand-500: #ff563c;
+    --ems-brand-600: #dd2b0f;
+    --ems-brand-700: #ae1800;
+    --ems-brand-800: #7c1405;
+    --ems-brand-900: #4d170e;
+
+    /* Multiplier for every duration below — the design's `motion` prop / 6.
+       Set to 0 to disable animation entirely. */
+    --ems-motion: 1;
+}
+
+[data-ems-theme="dark"] {
+    --ems-ground: #171615;
+    --ems-surface: #23211f;
+    --ems-ink: #f3f2f2;
+    --ems-divider: color-mix(in srgb, #f3f2f2 34%, transparent);
+
+    --ems-neutral-100: #262423;
+    --ems-neutral-200: #322f2e;
+    --ems-neutral-300: #423f3e;
+    --ems-neutral-400: #575453;
+    --ems-neutral-500: #7d7979;
+    --ems-neutral-600: #a29e9e;
+    --ems-neutral-700: #c6c2c2;
+    --ems-neutral-800: #e8e4e4;
+    --ems-neutral-900: #0e0d0c;
+
+    --ems-brand-100: #3b1108;
+    --ems-brand-200: #55190b;
+    --ems-brand-600: #ff7a5e;
+    --ems-brand-700: #ff9783;
+    --ems-brand-800: #ffd0c6;
+}
+
+/* shadcn semantic names, aliased onto the tokens above. */
+:root,
+[data-ems-theme="dark"] {
+    --background: var(--ems-ground);
+    --foreground: var(--ems-ink);
+    --card: var(--ems-surface);
+    --card-foreground: var(--ems-ink);
+    --popover: var(--ems-ground);
+    --popover-foreground: var(--ems-ink);
+    --primary: var(--ems-brand);
+    --primary-foreground: var(--ems-ground);
+    --secondary: var(--ems-neutral-200);
+    --secondary-foreground: var(--ems-ink);
+    --muted: var(--ems-neutral-100);
+    --muted-foreground: color-mix(in srgb, var(--ems-ink) 55%, transparent);
+    --accent: var(--ems-neutral-200);
+    --accent-foreground: var(--ems-ink);
+    --destructive: var(--ems-brand);
+    --border: var(--ems-divider);
+    --input: var(--ems-divider);
+    --ring: var(--ems-brand);
+    --radius: 0px;
+}
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
+    --font-sans: 'Archivo Variable', system-ui, sans-serif;
+    --font-heading: 'Archivo Variable', system-ui, sans-serif;
+
+    --color-ground: var(--ems-ground);
+    --color-surface: var(--ems-surface);
+    --color-ink: var(--ems-ink);
+    --color-divider: var(--ems-divider);
+
+    --color-brand: var(--ems-brand);
+    --color-brand-100: var(--ems-brand-100);
+    --color-brand-200: var(--ems-brand-200);
+    --color-brand-300: var(--ems-brand-300);
+    --color-brand-400: var(--ems-brand-400);
+    --color-brand-500: var(--ems-brand-500);
+    --color-brand-600: var(--ems-brand-600);
+    --color-brand-700: var(--ems-brand-700);
+    --color-brand-800: var(--ems-brand-800);
+    --color-brand-900: var(--ems-brand-900);
+
+    /* Replaces Tailwind's stock neutral ramp with the design system's. */
+    --color-neutral-100: var(--ems-neutral-100);
+    --color-neutral-200: var(--ems-neutral-200);
+    --color-neutral-300: var(--ems-neutral-300);
+    --color-neutral-400: var(--ems-neutral-400);
+    --color-neutral-500: var(--ems-neutral-500);
+    --color-neutral-600: var(--ems-neutral-600);
+    --color-neutral-700: var(--ems-neutral-700);
+    --color-neutral-800: var(--ems-neutral-800);
+    --color-neutral-900: var(--ems-neutral-900);
+
     --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-2xl: 0px;
+    --radius-3xl: 0px;
+    --radius-4xl: 0px;
+
+    /* Fluid type — the design scales these rather than switching at a breakpoint. */
+    --text-page-title: clamp(23px, 6.2vw, 30px);
+    --text-detail-title: clamp(25px, 7vw, 34px);
+    --text-receipt: clamp(30px, 9vw, 40px);
+    --text-numeral: clamp(64px, 18vw, 96px);
+    --text-stat: clamp(24px, 6vw, 30px);
+    --spacing-content: clamp(14px, 4vw, 24px);
+
+    --animate-ems-up: emsUp calc(340ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-in: emsIn calc(340ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-row: emsRow calc(260ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-grow: emsGrow calc(520ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-bar: emsBar calc(600ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-pop: emsPop calc(220ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-fade: emsFade calc(180ms * var(--ems-motion)) ease both;
+    --animate-ems-toast: emsToast calc(260ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
+    --animate-ems-shimmer: emsShimmer calc(1200ms * var(--ems-motion)) linear infinite;
+    --animate-ems-shake: emsShake calc(420ms * var(--ems-motion)) both;
+    --animate-ems-spin: emsSpin 800ms linear infinite;
 }
 
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
-}
+@keyframes emsUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes emsIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+@keyframes emsRow { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes emsGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes emsBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes emsPop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes emsFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes emsToast { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes emsShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes emsShake { 10%, 90% { transform: translateX(-2px); } 30%, 70% { transform: translateX(3px); } 50% { transform: translateX(-3px); } }
+@keyframes emsSpin { to { transform: rotate(360deg); } }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
+
+    html {
+        @apply font-sans;
     }
-  html {
-    @apply font-sans;
+
+    body {
+        @apply bg-background text-foreground;
+        margin: 0;
+        overflow-x: hidden;
+        font-size: 15px;
+        line-height: 1.55;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-heading);
+        font-weight: 800;
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+    }
+
+    /* Anchors styled as buttons keep the button's own colour. */
+    a:not([class*="btn"]) {
+        color: var(--ems-brand);
+    }
+
+    [data-ems-theme="dark"] a:not([class*="btn"]) {
+        color: var(--ems-brand-700);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--ems-brand);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background: color-mix(in srgb, var(--ems-brand) 30%, transparent);
+    }
+}
+
+/* Touch targets — the one media query the design carries. */
+@media (max-width: 640px) {
+    :root {
+        --ems-touch-target: 44px;
     }
 }

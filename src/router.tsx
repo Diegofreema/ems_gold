@@ -14,4 +14,10 @@ declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router
   }
+
+  /** Each route carries the text the shell header shows for it. */
+  interface StaticDataRouteOption {
+    title?: string
+    crumb?: string
+  }
 }

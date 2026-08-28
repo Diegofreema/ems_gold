@@ -1,0 +1,28 @@
+import { Link } from '@tanstack/react-router'
+import { Lock } from 'lucide-react'
+import { Rule } from '@/components/page/rule'
+import { Button } from '@/components/ui/button'
+import { useAuthStore } from '../auth.store'
+import { AuthHeading } from '../components/auth-heading'
+import { IconSquare } from '../components/icon-square'
+import { PortalLinks } from '../components/portal-links'
+
+export function WrongPortalScreen() {
+  const role = useAuthStore((state) => state.role)
+  const reset = useAuthStore((state) => state.reset)
+
+  return (
+    <>
+      <IconSquare icon={Lock} />
+      <AuthHeading
+        title="Wrong portal for this account"
+        description={`This is a ${role.toLowerCase()} account, and the link you followed opens a portal it has no access to. Nothing was changed, and the attempt is written to the activity log. Open the portal your account belongs to instead.`}
+      />
+      <PortalLinks />
+      <Rule />
+      <Button asChild variant="outline" onClick={reset}>
+        <Link to="/sign-in">Sign in as someone else</Link>
+      </Button>
+    </>
+  )
+}

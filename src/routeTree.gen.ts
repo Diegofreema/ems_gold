@@ -10,43 +10,526 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as AuthCheckEmailRouteImport } from './routes/_auth/check-email'
+import { Route as AuthFirstSignInRouteImport } from './routes/_auth/first-sign-in'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
+import { Route as AuthSessionExpiredRouteImport } from './routes/_auth/session-expired'
+import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
+import { Route as AuthSignedInRouteImport } from './routes/_auth/signed-in'
+import { Route as AuthWrongPortalRouteImport } from './routes/_auth/wrong-portal'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
+import { Route as AdminApplicantsRouteImport } from './routes/admin/applicants'
+import { Route as AdminAttReportRouteImport } from './routes/admin/att-report'
+import { Route as AdminAttendanceRouteImport } from './routes/admin/attendance'
+import { Route as AdminCalendarRouteImport } from './routes/admin/calendar'
+import { Route as AdminClassesRouteImport } from './routes/admin/classes'
+import { Route as AdminCollectRouteImport } from './routes/admin/collect'
+import { Route as AdminElectionsRouteImport } from './routes/admin/elections'
+import { Route as AdminFeesRouteImport } from './routes/admin/fees'
+import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
+import { Route as AdminLibraryRouteImport } from './routes/admin/library'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
+import { Route as AdminParentsRouteImport } from './routes/admin/parents'
+import { Route as AdminParentsClearedRouteImport } from './routes/admin/parents-cleared'
+import { Route as AdminParentsInvitedRouteImport } from './routes/admin/parents-invited'
+import { Route as AdminParentsOwingRouteImport } from './routes/admin/parents-owing'
+import { Route as AdminPrivilegesRouteImport } from './routes/admin/privileges'
+import { Route as AdminResultsRouteImport } from './routes/admin/results'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminSpendingsRouteImport } from './routes/admin/spendings'
+import { Route as AdminStaffRouteImport } from './routes/admin/staff'
+import { Route as AdminStaffAdminRouteImport } from './routes/admin/staff-admin'
+import { Route as AdminStaffOtherRouteImport } from './routes/admin/staff-other'
+import { Route as AdminStaffTeachersRouteImport } from './routes/admin/staff-teachers'
+import { Route as AdminStudentsRouteImport } from './routes/admin/students'
+import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
+import { Route as AdminCollectionNewRouteImport } from './routes/admin/$collection.new'
+import { Route as AdminCollectionRecordIdIndexRouteImport } from './routes/admin/$collection.$recordId.index'
+import { Route as AdminCollectionRecordIdEditRouteImport } from './routes/admin/$collection.$recordId.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCheckEmailRoute = AuthCheckEmailRouteImport.update({
+  id: '/check-email',
+  path: '/check-email',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthFirstSignInRoute = AuthFirstSignInRouteImport.update({
+  id: '/first-sign-in',
+  path: '/first-sign-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSessionExpiredRoute = AuthSessionExpiredRouteImport.update({
+  id: '/session-expired',
+  path: '/session-expired',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignedInRoute = AuthSignedInRouteImport.update({
+  id: '/signed-in',
+  path: '/signed-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthWrongPortalRoute = AuthWrongPortalRouteImport.update({
+  id: '/wrong-portal',
+  path: '/wrong-portal',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminApplicantsRoute = AdminApplicantsRouteImport.update({
+  id: '/applicants',
+  path: '/applicants',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAttReportRoute = AdminAttReportRouteImport.update({
+  id: '/att-report',
+  path: '/att-report',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAttendanceRoute = AdminAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCalendarRoute = AdminCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminClassesRoute = AdminClassesRouteImport.update({
+  id: '/classes',
+  path: '/classes',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCollectRoute = AdminCollectRouteImport.update({
+  id: '/collect',
+  path: '/collect',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminElectionsRoute = AdminElectionsRouteImport.update({
+  id: '/elections',
+  path: '/elections',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFeesRoute = AdminFeesRouteImport.update({
+  id: '/fees',
+  path: '/fees',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminLibraryRoute = AdminLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminParentsRoute = AdminParentsRouteImport.update({
+  id: '/parents',
+  path: '/parents',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminParentsClearedRoute = AdminParentsClearedRouteImport.update({
+  id: '/parents-cleared',
+  path: '/parents-cleared',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminParentsInvitedRoute = AdminParentsInvitedRouteImport.update({
+  id: '/parents-invited',
+  path: '/parents-invited',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminParentsOwingRoute = AdminParentsOwingRouteImport.update({
+  id: '/parents-owing',
+  path: '/parents-owing',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPrivilegesRoute = AdminPrivilegesRouteImport.update({
+  id: '/privileges',
+  path: '/privileges',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminResultsRoute = AdminResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSpendingsRoute = AdminSpendingsRouteImport.update({
+  id: '/spendings',
+  path: '/spendings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStaffRoute = AdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStaffAdminRoute = AdminStaffAdminRouteImport.update({
+  id: '/staff-admin',
+  path: '/staff-admin',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStaffOtherRoute = AdminStaffOtherRouteImport.update({
+  id: '/staff-other',
+  path: '/staff-other',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStaffTeachersRoute = AdminStaffTeachersRouteImport.update({
+  id: '/staff-teachers',
+  path: '/staff-teachers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStudentsRoute = AdminStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCollectionNewRoute = AdminCollectionNewRouteImport.update({
+  id: '/$collection/new',
+  path: '/$collection/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCollectionRecordIdIndexRoute =
+  AdminCollectionRecordIdIndexRouteImport.update({
+    id: '/$collection/$recordId/',
+    path: '/$collection/$recordId/',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminCollectionRecordIdEditRoute =
+  AdminCollectionRecordIdEditRouteImport.update({
+    id: '/$collection/$recordId/edit',
+    path: '/$collection/$recordId/edit',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/tasks': typeof TasksRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/check-email': typeof AuthCheckEmailRoute
+  '/first-sign-in': typeof AuthFirstSignInRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/session-expired': typeof AuthSessionExpiredRoute
+  '/sign-in': typeof AuthSignInRoute
+  '/signed-in': typeof AuthSignedInRoute
+  '/wrong-portal': typeof AuthWrongPortalRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/applicants': typeof AdminApplicantsRoute
+  '/admin/att-report': typeof AdminAttReportRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/classes': typeof AdminClassesRoute
+  '/admin/collect': typeof AdminCollectRoute
+  '/admin/elections': typeof AdminElectionsRoute
+  '/admin/fees': typeof AdminFeesRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
+  '/admin/library': typeof AdminLibraryRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/parents': typeof AdminParentsRoute
+  '/admin/parents-cleared': typeof AdminParentsClearedRoute
+  '/admin/parents-invited': typeof AdminParentsInvitedRoute
+  '/admin/parents-owing': typeof AdminParentsOwingRoute
+  '/admin/privileges': typeof AdminPrivilegesRoute
+  '/admin/results': typeof AdminResultsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/spendings': typeof AdminSpendingsRoute
+  '/admin/staff': typeof AdminStaffRoute
+  '/admin/staff-admin': typeof AdminStaffAdminRoute
+  '/admin/staff-other': typeof AdminStaffOtherRoute
+  '/admin/staff-teachers': typeof AdminStaffTeachersRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/tasks': typeof TasksRoute
+  '/check-email': typeof AuthCheckEmailRoute
+  '/first-sign-in': typeof AuthFirstSignInRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/session-expired': typeof AuthSessionExpiredRoute
+  '/sign-in': typeof AuthSignInRoute
+  '/signed-in': typeof AuthSignedInRoute
+  '/wrong-portal': typeof AuthWrongPortalRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/applicants': typeof AdminApplicantsRoute
+  '/admin/att-report': typeof AdminAttReportRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/classes': typeof AdminClassesRoute
+  '/admin/collect': typeof AdminCollectRoute
+  '/admin/elections': typeof AdminElectionsRoute
+  '/admin/fees': typeof AdminFeesRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
+  '/admin/library': typeof AdminLibraryRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/parents': typeof AdminParentsRoute
+  '/admin/parents-cleared': typeof AdminParentsClearedRoute
+  '/admin/parents-invited': typeof AdminParentsInvitedRoute
+  '/admin/parents-owing': typeof AdminParentsOwingRoute
+  '/admin/privileges': typeof AdminPrivilegesRoute
+  '/admin/results': typeof AdminResultsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/spendings': typeof AdminSpendingsRoute
+  '/admin/staff': typeof AdminStaffRoute
+  '/admin/staff-admin': typeof AdminStaffAdminRoute
+  '/admin/staff-other': typeof AdminStaffOtherRoute
+  '/admin/staff-teachers': typeof AdminStaffTeachersRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/admin/$collection/$recordId': typeof AdminCollectionRecordIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/tasks': typeof TasksRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/_auth': typeof AuthRouteWithChildren
+  '/_auth/check-email': typeof AuthCheckEmailRoute
+  '/_auth/first-sign-in': typeof AuthFirstSignInRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
+  '/_auth/session-expired': typeof AuthSessionExpiredRoute
+  '/_auth/sign-in': typeof AuthSignInRoute
+  '/_auth/signed-in': typeof AuthSignedInRoute
+  '/_auth/wrong-portal': typeof AuthWrongPortalRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/applicants': typeof AdminApplicantsRoute
+  '/admin/att-report': typeof AdminAttReportRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/classes': typeof AdminClassesRoute
+  '/admin/collect': typeof AdminCollectRoute
+  '/admin/elections': typeof AdminElectionsRoute
+  '/admin/fees': typeof AdminFeesRoute
+  '/admin/invoices': typeof AdminInvoicesRoute
+  '/admin/library': typeof AdminLibraryRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/parents': typeof AdminParentsRoute
+  '/admin/parents-cleared': typeof AdminParentsClearedRoute
+  '/admin/parents-invited': typeof AdminParentsInvitedRoute
+  '/admin/parents-owing': typeof AdminParentsOwingRoute
+  '/admin/privileges': typeof AdminPrivilegesRoute
+  '/admin/results': typeof AdminResultsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/spendings': typeof AdminSpendingsRoute
+  '/admin/staff': typeof AdminStaffRoute
+  '/admin/staff-admin': typeof AdminStaffAdminRoute
+  '/admin/staff-other': typeof AdminStaffOtherRoute
+  '/admin/staff-teachers': typeof AdminStaffTeachersRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/tasks'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/check-email'
+    | '/first-sign-in'
+    | '/forgot-password'
+    | '/reset-password'
+    | '/session-expired'
+    | '/sign-in'
+    | '/signed-in'
+    | '/wrong-portal'
+    | '/admin/analytics'
+    | '/admin/applicants'
+    | '/admin/att-report'
+    | '/admin/attendance'
+    | '/admin/calendar'
+    | '/admin/classes'
+    | '/admin/collect'
+    | '/admin/elections'
+    | '/admin/fees'
+    | '/admin/invoices'
+    | '/admin/library'
+    | '/admin/logs'
+    | '/admin/notifications'
+    | '/admin/parents'
+    | '/admin/parents-cleared'
+    | '/admin/parents-invited'
+    | '/admin/parents-owing'
+    | '/admin/privileges'
+    | '/admin/results'
+    | '/admin/settings'
+    | '/admin/spendings'
+    | '/admin/staff'
+    | '/admin/staff-admin'
+    | '/admin/staff-other'
+    | '/admin/staff-teachers'
+    | '/admin/students'
+    | '/admin/subjects'
+    | '/admin/'
+    | '/admin/$collection/new'
+    | '/admin/$collection/$recordId/edit'
+    | '/admin/$collection/$recordId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/tasks'
-  id: '__root__' | '/' | '/tasks'
+  to:
+    | '/'
+    | '/check-email'
+    | '/first-sign-in'
+    | '/forgot-password'
+    | '/reset-password'
+    | '/session-expired'
+    | '/sign-in'
+    | '/signed-in'
+    | '/wrong-portal'
+    | '/admin/analytics'
+    | '/admin/applicants'
+    | '/admin/att-report'
+    | '/admin/attendance'
+    | '/admin/calendar'
+    | '/admin/classes'
+    | '/admin/collect'
+    | '/admin/elections'
+    | '/admin/fees'
+    | '/admin/invoices'
+    | '/admin/library'
+    | '/admin/logs'
+    | '/admin/notifications'
+    | '/admin/parents'
+    | '/admin/parents-cleared'
+    | '/admin/parents-invited'
+    | '/admin/parents-owing'
+    | '/admin/privileges'
+    | '/admin/results'
+    | '/admin/settings'
+    | '/admin/spendings'
+    | '/admin/staff'
+    | '/admin/staff-admin'
+    | '/admin/staff-other'
+    | '/admin/staff-teachers'
+    | '/admin/students'
+    | '/admin/subjects'
+    | '/admin'
+    | '/admin/$collection/new'
+    | '/admin/$collection/$recordId/edit'
+    | '/admin/$collection/$recordId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/_auth'
+    | '/_auth/check-email'
+    | '/_auth/first-sign-in'
+    | '/_auth/forgot-password'
+    | '/_auth/reset-password'
+    | '/_auth/session-expired'
+    | '/_auth/sign-in'
+    | '/_auth/signed-in'
+    | '/_auth/wrong-portal'
+    | '/admin/analytics'
+    | '/admin/applicants'
+    | '/admin/att-report'
+    | '/admin/attendance'
+    | '/admin/calendar'
+    | '/admin/classes'
+    | '/admin/collect'
+    | '/admin/elections'
+    | '/admin/fees'
+    | '/admin/invoices'
+    | '/admin/library'
+    | '/admin/logs'
+    | '/admin/notifications'
+    | '/admin/parents'
+    | '/admin/parents-cleared'
+    | '/admin/parents-invited'
+    | '/admin/parents-owing'
+    | '/admin/privileges'
+    | '/admin/results'
+    | '/admin/settings'
+    | '/admin/spendings'
+    | '/admin/staff'
+    | '/admin/staff-admin'
+    | '/admin/staff-other'
+    | '/admin/staff-teachers'
+    | '/admin/students'
+    | '/admin/subjects'
+    | '/admin/'
+    | '/admin/$collection/new'
+    | '/admin/$collection/$recordId/edit'
+    | '/admin/$collection/$recordId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  TasksRoute: typeof TasksRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -58,19 +541,396 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/check-email': {
+      id: '/_auth/check-email'
+      path: '/check-email'
+      fullPath: '/check-email'
+      preLoaderRoute: typeof AuthCheckEmailRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/first-sign-in': {
+      id: '/_auth/first-sign-in'
+      path: '/first-sign-in'
+      fullPath: '/first-sign-in'
+      preLoaderRoute: typeof AuthFirstSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/session-expired': {
+      id: '/_auth/session-expired'
+      path: '/session-expired'
+      fullPath: '/session-expired'
+      preLoaderRoute: typeof AuthSessionExpiredRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sign-in': {
+      id: '/_auth/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/signed-in': {
+      id: '/_auth/signed-in'
+      path: '/signed-in'
+      fullPath: '/signed-in'
+      preLoaderRoute: typeof AuthSignedInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/wrong-portal': {
+      id: '/_auth/wrong-portal'
+      path: '/wrong-portal'
+      fullPath: '/wrong-portal'
+      preLoaderRoute: typeof AuthWrongPortalRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/applicants': {
+      id: '/admin/applicants'
+      path: '/applicants'
+      fullPath: '/admin/applicants'
+      preLoaderRoute: typeof AdminApplicantsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/att-report': {
+      id: '/admin/att-report'
+      path: '/att-report'
+      fullPath: '/admin/att-report'
+      preLoaderRoute: typeof AdminAttReportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/attendance': {
+      id: '/admin/attendance'
+      path: '/attendance'
+      fullPath: '/admin/attendance'
+      preLoaderRoute: typeof AdminAttendanceRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/calendar': {
+      id: '/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AdminCalendarRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/classes': {
+      id: '/admin/classes'
+      path: '/classes'
+      fullPath: '/admin/classes'
+      preLoaderRoute: typeof AdminClassesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/collect': {
+      id: '/admin/collect'
+      path: '/collect'
+      fullPath: '/admin/collect'
+      preLoaderRoute: typeof AdminCollectRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/elections': {
+      id: '/admin/elections'
+      path: '/elections'
+      fullPath: '/admin/elections'
+      preLoaderRoute: typeof AdminElectionsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/fees': {
+      id: '/admin/fees'
+      path: '/fees'
+      fullPath: '/admin/fees'
+      preLoaderRoute: typeof AdminFeesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/invoices': {
+      id: '/admin/invoices'
+      path: '/invoices'
+      fullPath: '/admin/invoices'
+      preLoaderRoute: typeof AdminInvoicesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/library': {
+      id: '/admin/library'
+      path: '/library'
+      fullPath: '/admin/library'
+      preLoaderRoute: typeof AdminLibraryRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/parents': {
+      id: '/admin/parents'
+      path: '/parents'
+      fullPath: '/admin/parents'
+      preLoaderRoute: typeof AdminParentsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/parents-cleared': {
+      id: '/admin/parents-cleared'
+      path: '/parents-cleared'
+      fullPath: '/admin/parents-cleared'
+      preLoaderRoute: typeof AdminParentsClearedRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/parents-invited': {
+      id: '/admin/parents-invited'
+      path: '/parents-invited'
+      fullPath: '/admin/parents-invited'
+      preLoaderRoute: typeof AdminParentsInvitedRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/parents-owing': {
+      id: '/admin/parents-owing'
+      path: '/parents-owing'
+      fullPath: '/admin/parents-owing'
+      preLoaderRoute: typeof AdminParentsOwingRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/privileges': {
+      id: '/admin/privileges'
+      path: '/privileges'
+      fullPath: '/admin/privileges'
+      preLoaderRoute: typeof AdminPrivilegesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/results': {
+      id: '/admin/results'
+      path: '/results'
+      fullPath: '/admin/results'
+      preLoaderRoute: typeof AdminResultsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/spendings': {
+      id: '/admin/spendings'
+      path: '/spendings'
+      fullPath: '/admin/spendings'
+      preLoaderRoute: typeof AdminSpendingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/staff': {
+      id: '/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AdminStaffRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/staff-admin': {
+      id: '/admin/staff-admin'
+      path: '/staff-admin'
+      fullPath: '/admin/staff-admin'
+      preLoaderRoute: typeof AdminStaffAdminRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/staff-other': {
+      id: '/admin/staff-other'
+      path: '/staff-other'
+      fullPath: '/admin/staff-other'
+      preLoaderRoute: typeof AdminStaffOtherRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/staff-teachers': {
+      id: '/admin/staff-teachers'
+      path: '/staff-teachers'
+      fullPath: '/admin/staff-teachers'
+      preLoaderRoute: typeof AdminStaffTeachersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/students': {
+      id: '/admin/students'
+      path: '/students'
+      fullPath: '/admin/students'
+      preLoaderRoute: typeof AdminStudentsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/subjects': {
+      id: '/admin/subjects'
+      path: '/subjects'
+      fullPath: '/admin/subjects'
+      preLoaderRoute: typeof AdminSubjectsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/$collection/new': {
+      id: '/admin/$collection/new'
+      path: '/$collection/new'
+      fullPath: '/admin/$collection/new'
+      preLoaderRoute: typeof AdminCollectionNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/$collection/$recordId/': {
+      id: '/admin/$collection/$recordId/'
+      path: '/$collection/$recordId'
+      fullPath: '/admin/$collection/$recordId/'
+      preLoaderRoute: typeof AdminCollectionRecordIdIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/$collection/$recordId/edit': {
+      id: '/admin/$collection/$recordId/edit'
+      path: '/$collection/$recordId/edit'
+      fullPath: '/admin/$collection/$recordId/edit'
+      preLoaderRoute: typeof AdminCollectionRecordIdEditRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
   }
 }
 
+interface AdminRouteRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminApplicantsRoute: typeof AdminApplicantsRoute
+  AdminAttReportRoute: typeof AdminAttReportRoute
+  AdminAttendanceRoute: typeof AdminAttendanceRoute
+  AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminClassesRoute: typeof AdminClassesRoute
+  AdminCollectRoute: typeof AdminCollectRoute
+  AdminElectionsRoute: typeof AdminElectionsRoute
+  AdminFeesRoute: typeof AdminFeesRoute
+  AdminInvoicesRoute: typeof AdminInvoicesRoute
+  AdminLibraryRoute: typeof AdminLibraryRoute
+  AdminLogsRoute: typeof AdminLogsRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminParentsRoute: typeof AdminParentsRoute
+  AdminParentsClearedRoute: typeof AdminParentsClearedRoute
+  AdminParentsInvitedRoute: typeof AdminParentsInvitedRoute
+  AdminParentsOwingRoute: typeof AdminParentsOwingRoute
+  AdminPrivilegesRoute: typeof AdminPrivilegesRoute
+  AdminResultsRoute: typeof AdminResultsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSpendingsRoute: typeof AdminSpendingsRoute
+  AdminStaffRoute: typeof AdminStaffRoute
+  AdminStaffAdminRoute: typeof AdminStaffAdminRoute
+  AdminStaffOtherRoute: typeof AdminStaffOtherRoute
+  AdminStaffTeachersRoute: typeof AdminStaffTeachersRoute
+  AdminStudentsRoute: typeof AdminStudentsRoute
+  AdminSubjectsRoute: typeof AdminSubjectsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminCollectionNewRoute: typeof AdminCollectionNewRoute
+  AdminCollectionRecordIdEditRoute: typeof AdminCollectionRecordIdEditRoute
+  AdminCollectionRecordIdIndexRoute: typeof AdminCollectionRecordIdIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminApplicantsRoute: AdminApplicantsRoute,
+  AdminAttReportRoute: AdminAttReportRoute,
+  AdminAttendanceRoute: AdminAttendanceRoute,
+  AdminCalendarRoute: AdminCalendarRoute,
+  AdminClassesRoute: AdminClassesRoute,
+  AdminCollectRoute: AdminCollectRoute,
+  AdminElectionsRoute: AdminElectionsRoute,
+  AdminFeesRoute: AdminFeesRoute,
+  AdminInvoicesRoute: AdminInvoicesRoute,
+  AdminLibraryRoute: AdminLibraryRoute,
+  AdminLogsRoute: AdminLogsRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminParentsRoute: AdminParentsRoute,
+  AdminParentsClearedRoute: AdminParentsClearedRoute,
+  AdminParentsInvitedRoute: AdminParentsInvitedRoute,
+  AdminParentsOwingRoute: AdminParentsOwingRoute,
+  AdminPrivilegesRoute: AdminPrivilegesRoute,
+  AdminResultsRoute: AdminResultsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminSpendingsRoute: AdminSpendingsRoute,
+  AdminStaffRoute: AdminStaffRoute,
+  AdminStaffAdminRoute: AdminStaffAdminRoute,
+  AdminStaffOtherRoute: AdminStaffOtherRoute,
+  AdminStaffTeachersRoute: AdminStaffTeachersRoute,
+  AdminStudentsRoute: AdminStudentsRoute,
+  AdminSubjectsRoute: AdminSubjectsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminCollectionNewRoute: AdminCollectionNewRoute,
+  AdminCollectionRecordIdEditRoute: AdminCollectionRecordIdEditRoute,
+  AdminCollectionRecordIdIndexRoute: AdminCollectionRecordIdIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface AuthRouteChildren {
+  AuthCheckEmailRoute: typeof AuthCheckEmailRoute
+  AuthFirstSignInRoute: typeof AuthFirstSignInRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSessionExpiredRoute: typeof AuthSessionExpiredRoute
+  AuthSignInRoute: typeof AuthSignInRoute
+  AuthSignedInRoute: typeof AuthSignedInRoute
+  AuthWrongPortalRoute: typeof AuthWrongPortalRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCheckEmailRoute: AuthCheckEmailRoute,
+  AuthFirstSignInRoute: AuthFirstSignInRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSessionExpiredRoute: AuthSessionExpiredRoute,
+  AuthSignInRoute: AuthSignInRoute,
+  AuthSignedInRoute: AuthSignedInRoute,
+  AuthWrongPortalRoute: AuthWrongPortalRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  TasksRoute: TasksRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  AuthRoute: AuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

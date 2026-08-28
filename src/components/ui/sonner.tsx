@@ -1,12 +1,12 @@
 "use client"
 
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { useUiStore } from "@/stores/ui-store"
+import { useAppearanceStore } from "@/stores/appearance.store"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   // Theme is owned by the Zustand UI store rather than next-themes.
-  const theme = useUiStore((state) => state.theme)
+  const theme = useAppearanceStore((state) => state.theme)
 
   return (
     <Sonner
