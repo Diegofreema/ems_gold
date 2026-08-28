@@ -29,7 +29,15 @@ export const Route = createFileRoute('/admin/$collection/action')({
   component: FlowRoute,
 })
 
+/*
+ * `useLoaderData()` is briefly undefined when this route is already mounted and
+ * the next navigation's loader throws `notFound()` — React renders the
+ * component once more before the not-found boundary takes over. Bailing out of
+ * that render keeps the 404 clean instead of crashing into the error boundary.
+ */
 function FlowRoute() {
-  const { definition, action } = Route.useLoaderData()
+  const loaded = Route.useLoaderData()
+  if (!loaded) return null
+  const { definition, action } = loaded
   return <ActionPage definition={definition} action={action} />
 }

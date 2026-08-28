@@ -3,7 +3,7 @@ export function AuthPoster() {
   return (
     <aside className="hidden flex-col justify-between border-r-2 border-foreground bg-brand p-10 text-white lg:flex">
       <div className="flex items-center gap-3">
-        <div className="size-[26px] flex-none bg-white" />
+        <div className="size-6.5 flex-none bg-white" />
         <div className="font-heading text-base font-extrabold tracking-[-0.01em]">
           NETPRO EMS
         </div>
@@ -17,8 +17,8 @@ export function AuthPoster() {
           One school, one record.
         </div>
         <p className="mt-4 max-w-[34ch] text-[14.5px] leading-normal opacity-90">
-          Fees, results, attendance and admissions in a single system the office,
-          the staff room and the home all read from.
+          Fees, results, attendance and admissions in a single system the
+          office, the staff room and the home all read from.
         </p>
       </div>
 
@@ -27,5 +27,5 @@ export function AuthPoster() {
         Friday, 8am–4pm.
       </div>
     </aside>
-  )
+  );
 }

@@ -14,7 +14,7 @@ import type {
   FlowSpec,
   Row,
 } from '../types'
-import { fileActionToast, isFileAction } from '../file-action'
+import { fileActionToast, isFileAction } from '../primary-action'
 import { DetailTabPanel } from './detail-tab-panel'
 
 /** Shown when a collection defines no sub-tables of its own. */

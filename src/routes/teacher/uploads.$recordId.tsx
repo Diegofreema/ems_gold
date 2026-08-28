@@ -14,6 +14,14 @@ export const Route = createFileRoute('/teacher/uploads/$recordId')({
   component: BatchReviewRoute,
 })
 
+/*
+ * `useLoaderData()` is briefly undefined when this route is already mounted and
+ * the next navigation's loader throws `notFound()` — React renders the
+ * component once more before the not-found boundary takes over. Bailing out of
+ * that render keeps the 404 clean instead of crashing into the error boundary.
+ */
 function BatchReviewRoute() {
-  return <BatchReview batch={Route.useLoaderData().batch} />
+  const loaded = Route.useLoaderData()
+  if (!loaded) return null
+  return <BatchReview batch={loaded.batch} />
 }

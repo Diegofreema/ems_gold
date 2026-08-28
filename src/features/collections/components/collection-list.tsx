@@ -12,7 +12,7 @@ import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
-import { fileActionToast, isFileAction } from '../file-action'
+import { fileActionToast, primaryActionKind } from '../primary-action'
 import { useCollectionRows } from '../use-collection-rows'
 import { toTableColumns } from './collection-columns'
 
@@ -45,39 +45,37 @@ export function CollectionList({
       onConfirm: () => toast(`${row[definition.nameKey]} deleted`),
     })
 
-  // An "Export"/"Download" action hands over a file rather than opening a
-  // form, so it never reaches a create page whatever the portal publishes.
-  // A flow that starts without a record owns the primary action — the design
-  // sends "Take a payment" straight into the flow rather than a create form.
-  // Read-only lists never link to a create form: they either send the reader
-  // somewhere else (`actionTo`) or the action is not wired up yet.
-  const primaryAction = isFileAction(definition.action) ? (
-    <Button onClick={() => toast(fileActionToast(definition.action))}>
-      <Download className="size-[15px]" strokeWidth={2} />
-      {definition.action}
-    </Button>
-  ) : routes.flow && flow?.fromList ? (
-    <Button asChild>
-      <Link to={routes.flow} params={{ collection: definition.id }}>
+  // One decision, shared with the create route so a list that does not create
+  // records has no create page to reach by URL either.
+  const primary = primaryActionKind(definition, routes, flow)
+  const primaryAction =
+    primary === 'file' ? (
+      <Button onClick={() => toast(fileActionToast(definition.action))}>
+        <Download className="size-[15px]" strokeWidth={2} />
         {definition.action}
-      </Link>
-    </Button>
-  ) : routes.create ? (
-    <Button asChild>
-      <Link to={routes.create} params={{ collection: definition.id }}>
-        <Plus className="size-[15px]" strokeWidth={2} />
+      </Button>
+    ) : primary === 'flow' && routes.flow ? (
+      <Button asChild>
+        <Link to={routes.flow} params={{ collection: definition.id }}>
+          {definition.action}
+        </Link>
+      </Button>
+    ) : primary === 'create' && routes.create ? (
+      <Button asChild>
+        <Link to={routes.create} params={{ collection: definition.id }}>
+          <Plus className="size-[15px]" strokeWidth={2} />
+          {definition.action}
+        </Link>
+      </Button>
+    ) : primary === 'link' && definition.actionTo ? (
+      <Button asChild>
+        <Link to={definition.actionTo}>{definition.action}</Link>
+      </Button>
+    ) : (
+      <Button onClick={() => toast(`${definition.action} — requested`)}>
         {definition.action}
-      </Link>
-    </Button>
-  ) : definition.actionTo ? (
-    <Button asChild>
-      <Link to={definition.actionTo}>{definition.action}</Link>
-    </Button>
-  ) : (
-    <Button onClick={() => toast(`${definition.action} — requested`)}>
-      {definition.action}
-    </Button>
-  )
+      </Button>
+    )
 
   const editRoute = routes.edit
 
