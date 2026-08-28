@@ -1,5 +1,5 @@
+import { parseNaira } from '@/lib/format'
 import { CHILDREN } from '../../children'
-import { parseNaira } from '../receipts/amount-in-words'
 
 export type OutstandingInvoice = {
   id: string

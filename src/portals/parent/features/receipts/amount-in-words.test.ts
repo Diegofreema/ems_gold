@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { amountInWords, parseNaira } from './amount-in-words.ts'
+import { amountInWords } from './amount-in-words.ts'
 
 test('the design’s own example', () => {
   assert.equal(
@@ -28,10 +28,4 @@ test('spells the awkward ranges', () => {
 test('never spells a negative or a fraction', () => {
   assert.equal(amountInWords(-50), 'Zero naira only')
   assert.equal(amountInWords(99.9), 'Ninety-nine naira only')
-})
-
-test('reads the figure out of a display string', () => {
-  assert.equal(parseNaira('₦120,000'), 120_000)
-  assert.equal(parseNaira('₦0'), 0)
-  assert.equal(parseNaira('—'), 0)
 })

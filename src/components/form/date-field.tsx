@@ -62,6 +62,8 @@ export function DateField<TValues extends FieldValues>({
           <Calendar
             mode="single"
             selected={value}
+            // Without this the picker opens on today even when a date is set.
+            defaultMonth={value}
             onSelect={(date) => {
               field.onChange(date)
               setOpen(false)

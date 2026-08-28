@@ -1,11 +1,15 @@
+import { cn } from '@/lib/utils'
+
 /** Label/value rows under a 2px top rule — used by the outcome screens. */
 export function DetailRows({
   rows,
+  className,
 }: {
   rows: { label: string; value: string }[]
+  className?: string
 }) {
   return (
-    <div className="mt-[18px] border-t-2 border-divider">
+    <div className={cn('mt-[18px] border-t-2 border-divider', className)}>
       {rows.map((row) => (
         <div
           key={row.label}

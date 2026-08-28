@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { ListSkeleton } from '@/components/feedback/list-skeleton'
-import type { CollectionDef, CollectionRoutes } from '../types'
+import type { CollectionDef, CollectionRoutes, FlowSpec } from '../types'
 import { CollectionList } from './collection-list'
 
 /**
@@ -10,16 +10,18 @@ import { CollectionList } from './collection-list'
 export function CollectionPage({
   definition,
   routes,
+  flow,
 }: {
   definition: CollectionDef
   routes: CollectionRoutes
+  flow?: FlowSpec
 }) {
   return (
     <Suspense
       key={definition.id}
       fallback={<ListSkeleton label={definition.title.toLowerCase()} />}
     >
-      <CollectionList definition={definition} routes={routes} />
+      <CollectionList definition={definition} routes={routes} flow={flow} />
     </Suspense>
   )
 }

@@ -3,7 +3,8 @@ import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { Row } from '@/features/collections/types'
-import { amountInWords, parseNaira } from './amount-in-words'
+import { parseNaira } from '@/lib/format'
+import { amountInWords } from './amount-in-words'
 
 /** The printable official receipt: letterhead, figure, words, then the rows. */
 export function ReceiptView({ receipt }: { receipt: Row }) {
@@ -42,9 +43,11 @@ export function ReceiptView({ receipt }: { receipt: Row }) {
             <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
               Official receipt
             </div>
-            <div className="mt-1 font-heading text-[19px] font-extrabold">
+            {/* The receipt number is what identifies this page; it carries the
+                design's own type, but it has to be a heading. */}
+            <h2 className="mt-1 font-heading text-[19px] font-extrabold">
               {receipt.receipt}
-            </div>
+            </h2>
           </div>
         </header>
 

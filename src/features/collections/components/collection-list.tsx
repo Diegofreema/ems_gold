@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { EmptyState } from '@/components/feedback/empty-state'
@@ -11,16 +11,20 @@ import { Rule } from '@/components/page/rule'
 import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
-import type { CollectionDef, CollectionRoutes, Row } from '../types'
+import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
+import { fileActionToast, isFileAction } from '../file-action'
 import { useCollectionRows } from '../use-collection-rows'
 import { toTableColumns } from './collection-columns'
 
 export function CollectionList({
   definition,
   routes,
+  flow,
 }: {
   definition: CollectionDef
   routes: CollectionRoutes
+  /** The guided flow these records enter, when the portal has one for them. */
+  flow?: FlowSpec
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
@@ -41,9 +45,24 @@ export function CollectionList({
       onConfirm: () => toast(`${row[definition.nameKey]} deleted`),
     })
 
+  // An "Export"/"Download" action hands over a file rather than opening a
+  // form, so it never reaches a create page whatever the portal publishes.
+  // A flow that starts without a record owns the primary action — the design
+  // sends "Take a payment" straight into the flow rather than a create form.
   // Read-only lists never link to a create form: they either send the reader
   // somewhere else (`actionTo`) or the action is not wired up yet.
-  const primaryAction = routes.create ? (
+  const primaryAction = isFileAction(definition.action) ? (
+    <Button onClick={() => toast(fileActionToast(definition.action))}>
+      <Download className="size-[15px]" strokeWidth={2} />
+      {definition.action}
+    </Button>
+  ) : routes.flow && flow?.fromList ? (
+    <Button asChild>
+      <Link to={routes.flow} params={{ collection: definition.id }}>
+        {definition.action}
+      </Link>
+    </Button>
+  ) : routes.create ? (
     <Button asChild>
       <Link to={routes.create} params={{ collection: definition.id }}>
         <Plus className="size-[15px]" strokeWidth={2} />

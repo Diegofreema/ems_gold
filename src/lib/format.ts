@@ -14,3 +14,8 @@ const NAIRA = new Intl.NumberFormat('en-NG', {
 
 export const formatDate = (date: Date) => DATE.format(date)
 export const formatNaira = (amount: number) => NAIRA.format(amount)
+
+/** Pulls the figure out of a display string like "₦120,000". */
+export function parseNaira(display: string): number {
+  return Number.parseInt(display.replace(/[^0-9]/g, ''), 10) || 0
+}

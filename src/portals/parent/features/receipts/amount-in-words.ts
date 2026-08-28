@@ -40,8 +40,3 @@ export function amountInWords(naira: number): string {
   const spelled = spell(whole)
   return `${spelled.charAt(0).toUpperCase()}${spelled.slice(1)} naira only`
 }
-
-/** Pulls the figure out of a display string like "₦120,000". */
-export function parseNaira(display: string): number {
-  return Number.parseInt(display.replace(/[^0-9]/g, ''), 10) || 0
-}

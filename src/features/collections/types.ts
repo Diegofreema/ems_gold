@@ -70,14 +70,28 @@ export type CollectionRoutes =
         | '/admin/$collection/$recordId/edit'
         | '/teacher/$collection/$recordId/edit'
       create: '/admin/$collection/new' | '/teacher/$collection/new'
+      /** Where this portal mounts its guided flows, if it has any. */
+      flow?: '/admin/$collection/action'
     }
-  | { record: RecordPath; edit?: never; create?: never }
+  | { record: RecordPath; edit?: never; create?: never; flow?: never }
 
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
   | '/student/test'
   | '/parent/pay'
   | '/parent/children/add'
+
+/**
+ * A guided flow a collection's records can be put through — allocating a fee
+ * to class arms, reviewing an application. Only the button label lives here;
+ * the flow itself is defined by the portal that mounts it.
+ */
+export type FlowSpec = {
+  /** Button label, e.g. "Allocate to classes". */
+  label: string
+  /** The flow needs no record, so the list's primary action opens it. */
+  fromList?: boolean
+}
 
 /** Every fixture cell is display text; the API returns the same shape. */
 export type Row = { id: string } & Record<string, string>

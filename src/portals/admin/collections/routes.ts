@@ -5,4 +5,5 @@ export const adminCollectionRoutes: CollectionRoutes = {
   record: '/admin/$collection/$recordId',
   edit: '/admin/$collection/$recordId/edit',
   create: '/admin/$collection/new',
+  flow: '/admin/$collection/action',
 }

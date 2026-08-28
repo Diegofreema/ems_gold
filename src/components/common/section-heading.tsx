@@ -1,11 +1,15 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 /** An accent `h6` followed by a 1px rule — the design's section divider. */
 export function SectionHeading({
   children,
+  action,
   className,
 }: {
-  children: React.ReactNode
+  children: ReactNode
+  /** Sits after the rule, e.g. the picker's "Select all". */
+  action?: ReactNode
   className?: string
 }) {
   return (
@@ -14,6 +18,7 @@ export function SectionHeading({
         {children}
       </h6>
       <div className="h-px flex-1 bg-divider" />
+      {action}
     </div>
   )
 }

@@ -38,17 +38,21 @@ export function AppHeader({
         </Button>
       )}
 
+      {/* One line each: a long record name would otherwise wrap into the
+          status beside it. The page below repeats the title in full. */}
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+        <div className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
           {crumb}
         </div>
-        <div className="font-heading text-[17px] leading-[1.15] font-extrabold">
+        <div className="truncate font-heading text-[17px] leading-[1.15] font-extrabold">
           {title}
         </div>
       </div>
 
+      {/* Below the design's phone breakpoint there is no room for both, and
+          the title is what tells you which page you are on. */}
       {status && (
-        <div className="text-right text-[11px] leading-[1.35] text-muted-foreground">
+        <div className="hidden flex-none text-right text-[11px] leading-[1.35] text-muted-foreground sm:block">
           {status}
         </div>
       )}

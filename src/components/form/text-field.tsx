@@ -10,7 +10,7 @@ type TextFieldProps<TValues extends FieldValues> = {
   required?: boolean
   span?: FieldSpan
   placeholder?: string
-  type?: 'text' | 'email' | 'tel' | 'number'
+  type?: 'text' | 'email' | 'tel' | 'number' | 'password'
   multiline?: boolean
 }
 

@@ -2,7 +2,6 @@ import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -57,9 +56,12 @@ export function ConfirmDialog({
             </div>
 
             <div className="flex justify-end gap-2.5 p-[22px]">
-              <DialogClose asChild>
-                <Button variant="outline">{request.cancel ?? 'Keep it'}</Button>
-              </DialogClose>
+              {/* Closed here rather than with `DialogClose asChild`, which
+                  overwrites the button's `data-slot` and so loses the design's
+                  44px touch target on a phone. */}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                {request.cancel ?? 'Keep it'}
+              </Button>
               <Button
                 onClick={() => {
                   request.onConfirm()

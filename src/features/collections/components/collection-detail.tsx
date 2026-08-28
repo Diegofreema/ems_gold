@@ -7,7 +7,14 @@ import { Rule } from '@/components/page/rule'
 import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { toneForStatus } from '@/lib/status-tone'
-import type { CollectionDef, CollectionRoutes, DetailTab, Row } from '../types'
+import type {
+  CollectionDef,
+  CollectionRoutes,
+  DetailTab,
+  FlowSpec,
+  Row,
+} from '../types'
+import { fileActionToast, isFileAction } from '../file-action'
 import { DetailTabPanel } from './detail-tab-panel'
 
 /** Shown when a collection defines no sub-tables of its own. */
@@ -30,13 +37,16 @@ export function CollectionDetail({
   definition,
   record,
   routes,
+  flow,
 }: {
   definition: CollectionDef
   record: Row
   routes: CollectionRoutes
+  flow?: FlowSpec
 }) {
   const navigate = useNavigate()
   const editRoute = routes.edit
+  const flowRoute = routes.flow
 
   const tagColumns = definition.columns.filter((column) => column.tag)
   const statColumns = definition.columns
@@ -71,7 +81,15 @@ export function CollectionDetail({
 
         <div className="flex flex-wrap gap-2.5">
           {!editRoute ? (
-            <Button onClick={() => toast(`${definition.action} — requested`)}>
+            <Button
+              onClick={() =>
+                toast(
+                  isFileAction(definition.action)
+                    ? fileActionToast(definition.action)
+                    : `${definition.action} — requested`,
+                )
+              }
+            >
               {definition.action}
             </Button>
           ) : (
@@ -87,6 +105,17 @@ export function CollectionDetail({
                 <Pencil className="size-[15px]" strokeWidth={2} />
                 Edit
               </Button>
+              {flowRoute && flow && (
+                <Button asChild variant="outline">
+                  <Link
+                    to={flowRoute}
+                    params={{ collection: definition.id }}
+                    search={{ record: record.id }}
+                  >
+                    {flow.label}
+                  </Link>
+                </Button>
+              )}
               <Button variant="outline" onClick={() => toast('Not wired up yet')}>
                 {definition.kicker === 'Finance' ? 'Print' : 'Export'}
               </Button>

@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
@@ -30,6 +31,7 @@ const COPY = {
 /** Serves both the reset link and the first-sign-in variant. */
 export function ResetPasswordScreen({ first }: { first: boolean }) {
   const navigate = useNavigate()
+  const [visible, setVisible] = useState(false)
   const setPasswordChanged = useAuthStore((state) => state.setPasswordChanged)
   const copy = first ? COPY.first : COPY.reset
 
@@ -73,6 +75,8 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
               name="password"
               label="New password"
               placeholder="At least 10 characters"
+              visible={visible}
+              onToggle={() => setVisible((previous) => !previous)}
             />
             <PasswordStrength password={password} />
           </div>
@@ -82,6 +86,7 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
             label="Repeat the new password"
             placeholder="Type it again"
             hint="Both must be identical"
+            visible={visible}
           />
 
           <PasswordRules password={password} />

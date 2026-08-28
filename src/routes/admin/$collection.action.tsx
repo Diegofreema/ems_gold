@@ -1,0 +1,35 @@
+import { createFileRoute, notFound } from '@tanstack/react-router'
+import { adminCollections } from '@/portals/admin/collections'
+import { adminFlows } from '@/portals/admin/features/actions/defs'
+import { ActionPage } from '@/portals/admin/features/actions/action-page'
+
+export const Route = createFileRoute('/admin/$collection/action')({
+  // The record is optional: taking a payment starts without one, allocating a
+  // fee starts from the fee. Keeping it in the URL makes the flow shareable.
+  validateSearch: (search: Record<string, unknown>): { record?: string } =>
+    typeof search.record === 'string' ? { record: search.record } : {},
+  loaderDeps: ({ search }) => ({ record: search.record }),
+  loader: ({ params, deps }) => {
+    const definition = adminCollections[params.collection as keyof typeof adminCollections]
+    const flow = definition && adminFlows[params.collection]
+    if (!definition || !flow) throw notFound()
+
+    const row = deps.record
+      ? definition.rows.find((one) => one.id === deps.record)
+      : undefined
+    if (deps.record && !row) throw notFound()
+
+    const action = flow.build(row)
+    return {
+      definition,
+      action,
+      heading: { title: action.title, crumb: action.kicker },
+    }
+  },
+  component: FlowRoute,
+})
+
+function FlowRoute() {
+  const { definition, action } = Route.useLoaderData()
+  return <ActionPage definition={definition} action={action} />
+}
