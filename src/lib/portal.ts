@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { NotFoundLink } from '@/components/feedback/not-found-state'
 import type { Notification } from '@/features/notifications/types'
+import type { AccountSummary } from './account'
 
 export type PortalRole = 'admin' | 'teacher' | 'student' | 'parent'
 
@@ -17,13 +18,6 @@ export type NavGroup = {
   /** Omitted for the ungrouped block at the top of the sidebar. */
   heading?: string
   items: NavItem[]
-}
-
-export type AccountSummary = {
-  name: string
-  /** The line under the name in the account menu, e.g. "Bursar · Full access". */
-  line: string
-  initials: string
 }
 
 /**

@@ -1,5 +1,5 @@
-import type { PageParams } from '../types'
-import type { Student } from '../students/types'
+import type { PageParams } from '../types.ts'
+import type { Student } from '../students/types.ts'
 
 /** A stream a class is split into — JSS 1 A, JSS 1 B. */
 export type ClassArm = {

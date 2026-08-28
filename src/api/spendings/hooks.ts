@@ -31,6 +31,7 @@ export function useCreateSpending() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SpendingBody) => spendingsService.create(body),
+    meta: { success: 'Spending recorded' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: spendingKeys.all }),
   })
 }
@@ -39,6 +40,7 @@ export function useUpdateSpending(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SpendingBody) => spendingsService.update(id, body),
+    meta: { success: 'Spending updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: spendingKeys.all }),
   })
 }
@@ -47,6 +49,7 @@ export function useDeleteSpending() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => spendingsService.remove(id),
+    meta: { success: 'Spending deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: spendingKeys.all }),
   })
 }

@@ -8,13 +8,14 @@ import { Pagination } from '@/components/data-table/pagination'
 import { FilterBar } from '@/components/page/filter-bar'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
-import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
 import { fileActionToast, primaryActionKind } from '../primary-action'
 import { useCollectionRows } from '../use-collection-rows'
 import { toTableColumns } from './collection-columns'
+import { CollectionFilters } from './collection-filters'
+import { CollectionSummary } from './collection-summary'
 
 export function CollectionList({
   definition,
@@ -28,7 +29,7 @@ export function CollectionList({
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
-  const { query, page, setQuery, setPage, total, paged } =
+  const { text, query, filters, page, setQuery, setFilter, setPage, total, paged } =
     useCollectionRows(definition)
 
   const params = (row: Row) => ({
@@ -89,6 +90,9 @@ export function CollectionList({
       />
       <Rule />
 
+      {/* A search or a filter that matches nothing is the table's own state to
+          show, not the collection's — an empty register is a different thing
+          entirely, and only an unnarrowed list can tell you it is empty. */}
       {total === 0 ? (
         <EmptyState
           title={definition.emptyTitle}
@@ -98,15 +102,25 @@ export function CollectionList({
       ) : (
         <>
           <FilterBar
-            query={query}
+            query={text}
             onQueryChange={setQuery}
             placeholder={definition.searchHint}
-            count={`${paged.total} of ${total}`}
-          />
+            count={
+              total === undefined
+                ? `${paged.total} found`
+                : `${paged.total} of ${total}`
+            }
+          >
+            {definition.filters && (
+              <CollectionFilters
+                specs={definition.filters}
+                filters={filters}
+                onChange={setFilter}
+              />
+            )}
+          </FilterBar>
 
-          {definition.summary && (
-            <TileStrip className="mb-5" tiles={definition.summary} />
-          )}
+          <CollectionSummary definition={definition} />
 
           <DataTable
             columns={toTableColumns(definition.columns)}

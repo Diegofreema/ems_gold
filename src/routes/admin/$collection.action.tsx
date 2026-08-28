@@ -9,17 +9,20 @@ export const Route = createFileRoute('/admin/$collection/action')({
   validateSearch: (search: Record<string, unknown>): { record?: string } =>
     typeof search.record === 'string' ? { record: search.record } : {},
   loaderDeps: ({ search }) => ({ record: search.record }),
-  loader: ({ params, deps }) => {
+  loader: async ({ params, deps }) => {
     const definition = adminCollections[params.collection as keyof typeof adminCollections]
     const flow = definition && adminFlows[params.collection]
     if (!definition || !flow) throw notFound()
 
-    const row = deps.record
-      ? definition.rows.find((one) => one.id === deps.record)
-      : undefined
+    // A live collection is asked for the record; a fixture one holds its own.
+    const row = !deps.record
+      ? undefined
+      : definition.record
+        ? await definition.record(deps.record)
+        : definition.rows?.find((one) => one.id === deps.record)
     if (deps.record && !row) throw notFound()
 
-    const action = flow.build(row)
+    const action = await flow.build(row)
     return {
       definition,
       action,

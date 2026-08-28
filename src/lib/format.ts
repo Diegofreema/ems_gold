@@ -12,7 +12,10 @@ const NAIRA = new Intl.NumberFormat('en-NG', {
   maximumFractionDigits: 0,
 })
 
+const COUNT = new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0 })
+
 export const formatDate = (date: Date) => DATE.format(date)
+export const formatCount = (value: number) => COUNT.format(value)
 export const formatNaira = (amount: number) => NAIRA.format(amount)
 
 /** Pulls the figure out of a display string like "₦120,000". */

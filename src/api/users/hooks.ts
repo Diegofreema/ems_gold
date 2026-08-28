@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { saveBlob } from '@/lib/download'
 import type { Id } from '../types'
 import { userKeys } from './keys'
 import { usersService } from './service'
@@ -45,6 +46,7 @@ export function useDeleteUser() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => usersService.remove(id),
+    meta: { success: 'Account deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.all }),
   })
 }
@@ -53,6 +55,7 @@ export function useSetUserStatus() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SetUserStatusBody) => usersService.setStatus(body),
+    meta: { success: 'Account status changed' },
     onSuccess: (_data, body) => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() })
       queryClient.invalidateQueries({ queryKey: userKeys.detail(body.id) })
@@ -64,6 +67,7 @@ export function useFreeEmail() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (email: string) => usersService.freeEmail(email),
+    meta: { success: 'Email address freed' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
   })
 }
@@ -79,6 +83,7 @@ export function useUpdateMyProfile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateProfileBody) => usersService.updateProfile(body),
+    meta: { success: 'Your profile was saved' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
   })
 }
@@ -102,6 +107,7 @@ export function useUpdateAdmin(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateAdminBody) => usersService.updateAdmin(id, body),
+    meta: { success: 'Administrator updated' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.admin(id) })
       queryClient.invalidateQueries({ queryKey: userKeys.admins() })
@@ -113,6 +119,7 @@ export function useCreateAdmin() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: CreateUserBody) => usersService.createAdmin(body),
+    meta: { success: 'Administrator created' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.admins() })
       queryClient.invalidateQueries({ queryKey: userKeys.lists() })
@@ -130,9 +137,27 @@ export function useStudentFeeStatus(studentId: Id | undefined) {
 
 /** Not a query — nothing is cached, the browser is handed a file. */
 export function useDownloadApplicantFile() {
-  return useMutation({ mutationFn: (filename: string) => usersService.download(filename) })
+  return useMutation({
+    mutationFn: (filename: string) => usersService.download(filename),
+    meta: { success: 'File downloaded' },
+  })
 }
 
 export function useSendTestEmail() {
-  return useMutation({ mutationFn: () => usersService.testEmail() })
+  return useMutation({
+    mutationFn: () => usersService.testEmail(),
+    meta: { success: 'Test email sent' },
+  })
+}
+
+/**
+ * Fetches one of the files a family uploaded and saves it. Named per file so
+ * the toast can say which one, and so two cells never share a pending state.
+ */
+export function useDownloadFile(filename: string) {
+  return useMutation({
+    mutationFn: () => usersService.download(filename),
+    meta: { success: `${filename} downloaded` },
+    onSuccess: (blob) => saveBlob(blob, filename),
+  })
 }

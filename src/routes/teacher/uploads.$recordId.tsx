@@ -4,7 +4,7 @@ import { BatchReview } from '@/portals/teacher/features/uploads/batch-review'
 
 export const Route = createFileRoute('/teacher/uploads/$recordId')({
   loader: ({ params }) => {
-    const batch = uploads.rows.find((row) => row.id === params.recordId)
+    const batch = uploads.rows?.find((row) => row.id === params.recordId)
     if (!batch) throw notFound()
     return {
       batch,

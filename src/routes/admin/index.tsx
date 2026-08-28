@@ -6,6 +6,7 @@ import { SectionHeading } from '@/components/common/section-heading'
 import { BarChart } from '@/components/charts/bar-chart'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { useFirstName } from '@/features/auth/session'
 import { adminDashboardQuery } from '@/portals/admin/api/dashboard'
 import { FigureTiles } from '@/components/common/figure-tiles'
 
@@ -16,13 +17,14 @@ export const Route = createFileRoute('/admin/')({
 })
 
 function AdminDashboard() {
+  const name = useFirstName('Amaka')
   const { data } = useSuspenseQuery(adminDashboardQuery)
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-page-title">Good morning, Amaka.</h2>
+          <h2 className="text-page-title">Good morning, {name}.</h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Term-to-date position across money and people. Figures update as
             payments clear.

@@ -36,6 +36,7 @@ export function useCreateStudent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: StudentBody) => studentsService.create(body),
+    meta: { success: 'Pupil admitted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: studentKeys.all }),
   })
 }
@@ -44,6 +45,7 @@ export function useUpdateStudent(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: StudentBody) => studentsService.update(id, body),
+    meta: { success: 'Pupil updated' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studentKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
@@ -55,6 +57,7 @@ export function useSetStudentStatus(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SetStudentStatusBody) => studentsService.setStatus(id, body),
+    meta: { success: 'Pupil status changed' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studentKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
@@ -67,6 +70,7 @@ export function usePromoteStudents() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: PromoteStudentsBody) => studentsService.promote(body),
+    meta: { success: 'Pupils promoted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: studentKeys.all }),
   })
 }

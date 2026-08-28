@@ -1,10 +1,14 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, CircleAlert } from 'lucide-react'
 import { FormProvider } from 'react-hook-form'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { DateField } from '@/components/form/date-field'
+import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
+import { toOptions } from '@/features/collections/options'
 import { TextField } from '@/components/form/text-field'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
@@ -22,12 +26,58 @@ import type { ActionDef, ActionField } from './types'
 
 type Values = Record<string, unknown>
 
+/**
+ * The pupils the API would not move, and what it said about each. Shaped like
+ * the form's own error banner, since it is the same kind of news.
+ */
+function NotMoved({ failures }: { failures: string[] }) {
+  return (
+    <div
+      role="alert"
+      className="mb-6 flex animate-ems-up gap-3 border-2 border-brand px-4 py-3.5"
+    >
+      <CircleAlert className="mt-px size-[18px] flex-none text-brand" strokeWidth={2.2} />
+      <div>
+        <div className="font-heading text-sm font-extrabold">
+          {failures.length === 1
+            ? 'One pupil was not moved'
+            : `${failures.length} pupils were not moved`}
+        </div>
+        <ul className="mt-[3px] space-y-0.5 text-[13px] text-muted-foreground">
+          {failures.map((failure) => (
+            <li key={failure}>{failure}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 function schemaFor(action: ActionDef) {
   const picks = action.picker?.requiredMessage
     ? z.array(z.string()).min(1, action.picker.requiredMessage)
     : z.array(z.string())
-  return schemaFromSections([{ title: action.title, fields: action.fields }])
-    .extend({ picks })
+  const schema = schemaFromSections([
+    { title: action.title, fields: action.fields },
+  ]).extend({ picks })
+
+  // A field only some answers need. Checked here rather than on the field, so
+  // declining an application is not held up asking which class to put them in.
+  const conditional = action.fields.filter((field) => field.requiredWhen)
+  if (conditional.length === 0) return schema
+
+  return schema.superRefine((values: Values, ctx) => {
+    for (const field of conditional) {
+      const when = field.requiredWhen!
+      if (values[when.field] !== when.is) continue
+      if (String(values[field.key] ?? '').trim()) continue
+      ctx.addIssue({
+        code: 'custom',
+        path: [field.key],
+        message: `Required to ${when.is.toLowerCase()}`,
+      })
+    }
+  })
 }
 
 function defaultsFor(action: ActionDef): Values {
@@ -47,8 +97,17 @@ function renderField(field: ActionField) {
     span: field.wide ? (2 as const) : undefined,
   }
   if (field.date) return <DateField<Values> key={field.key} {...shared} />
+  if (field.optionsFrom)
+    return (
+      <RemoteSelectField<Values>
+        key={field.key}
+        {...shared}
+        from={field.optionsFrom}
+        dependsOn={field.dependsOn}
+      />
+    )
   if (field.options)
-    return <SelectField<Values> key={field.key} {...shared} options={field.options} />
+    return <SelectField<Values> key={field.key} {...shared} options={toOptions(field.options)} />
   return (
     <TextField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   )
@@ -68,12 +127,42 @@ export function ActionPage({
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
+  const queryClient = useQueryClient()
+  const [failures, setFailures] = useState<string[]>([])
   const form = useRecordForm<Values>(schemaFor(action), defaultsFor(action))
   const picked = (form.watch('picks') as string[] | undefined) ?? []
 
   const back = () => navigate({ to: definition.path })
-  const run = async () => {
-    toast(action.done(picked.length))
+
+  const flow = useMutation({
+    mutationFn: (values: Values) => action.run!(values),
+    // No `meta`: the message is the count the API came back with, which a
+    // fixed string cannot say. A refusal is still announced by the cache.
+    onSuccess: (outcome) => {
+      toast.success(outcome.message)
+      // Every list, not just this one: admitting an applicant puts them on the
+      // student register, and promoting empties one arm to fill another.
+      queryClient.invalidateQueries({ queryKey: ['collection'] })
+    },
+  })
+
+  const run = async (values: Values) => {
+    if (!action.run) {
+      toast(action.done(picked.length))
+      await navigate({ to: definition.path })
+      return
+    }
+
+    setFailures([])
+    const outcome = await flow.mutateAsync(values).catch(() => null)
+    if (!outcome) return
+
+    // A partial move is not something to walk away from — the rows that did
+    // not move stay on screen with the reason the API gave for each.
+    if (outcome.failures?.length) {
+      setFailures(outcome.failures)
+      return
+    }
     await navigate({ to: definition.path })
   }
 
@@ -110,11 +199,11 @@ export function ActionPage({
 
       <FormProvider {...form}>
         <form
-          onSubmit={form.handleSubmit(() => {
+          onSubmit={form.handleSubmit((values) => {
             // Validation has passed; a flow that commits money asks once more.
             const ask = action.confirm && total ? action.confirm(total) : undefined
-            if (!ask) return run()
-            confirm.ask({ ...ask, onConfirm: () => void run() })
+            if (!ask) return run(values)
+            confirm.ask({ ...ask, onConfirm: () => void run(values) })
           })}
           noValidate
         >
@@ -127,6 +216,8 @@ export function ActionPage({
           <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px]">
             {action.fields.map(renderField)}
           </div>
+
+          {failures.length > 0 && <NotMoved failures={failures} />}
 
           <Rule />
 

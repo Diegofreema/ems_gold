@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import type { Option } from '@/features/collections/options'
 import { FieldShell, type FieldSpan } from './field-shell'
 
 export function SelectField<TValues extends FieldValues>({
@@ -16,14 +17,17 @@ export function SelectField<TValues extends FieldValues>({
   required,
   span,
   placeholder,
+  disabled,
 }: {
   name: Path<TValues>
   label: string
-  options: readonly string[]
+  /** The value is what the form submits; the label is what the school reads. */
+  options: readonly Option[]
   hint?: string
   required?: boolean
   span?: FieldSpan
   placeholder?: string
+  disabled?: boolean
 }) {
   const { control } = useFormContext<TValues>()
   const { field, fieldState } = useController({ control, name })
@@ -38,7 +42,11 @@ export function SelectField<TValues extends FieldValues>({
       required={required}
       span={span}
     >
-      <Select value={field.value ?? ''} onValueChange={field.onChange}>
+      <Select
+        value={field.value ?? ''}
+        onValueChange={field.onChange}
+        disabled={disabled}
+      >
         <SelectTrigger
           id={name}
           className="w-full"
@@ -49,8 +57,8 @@ export function SelectField<TValues extends FieldValues>({
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>

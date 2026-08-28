@@ -1,15 +1,54 @@
-import { useState } from 'react'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { Suspense, useState } from 'react'
 import { SectionHeading } from '@/components/common/section-heading'
 import { SegmentedControl } from '@/components/common/segmented-control'
+import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { TableView } from '@/components/data-table/table-view'
-import type { DetailTab } from '../types'
+import type { DetailTab, Row } from '../types'
 import { toTableColumns } from './collection-columns'
+
+/** How many rows the tab shimmers while it loads. */
+const SKELETON_ROWS = 3
+
+function TabTable({ tab, rows }: { tab: DetailTab; rows: Row[] }) {
+  return (
+    <TableView
+      columns={toTableColumns(tab.columns)}
+      rows={rows}
+      rowKey={(row) => row.id}
+    />
+  )
+}
+
+/** A tab the API answers for. Suspends, so the frame shimmers rather than
+ *  flashing "nothing to show" on the way in. */
+function LiveTab({
+  tab,
+  recordId,
+  source,
+}: {
+  tab: DetailTab
+  recordId: string
+  source: NonNullable<DetailTab['source']>
+}) {
+  const { data } = useSuspenseQuery({
+    queryKey: ['detail-tab', tab.label, recordId],
+    queryFn: () => source(recordId),
+  })
+  return <TabTable tab={tab} rows={data} />
+}
 
 /**
  * The record's sub-tables. More than one becomes the design's segmented
  * control; a single tab is just a titled table.
  */
-export function DetailTabPanel({ tabs }: { tabs: DetailTab[] }) {
+export function DetailTabPanel({
+  tabs,
+  recordId,
+}: {
+  tabs: DetailTab[]
+  recordId: string
+}) {
   const [active, setActive] = useState(0)
   const tab = tabs[active]
 
@@ -30,12 +69,16 @@ export function DetailTabPanel({ tabs }: { tabs: DetailTab[] }) {
         <SectionHeading className="mb-3.5">{tab.label}</SectionHeading>
       )}
 
-      <div key={active} className="animate-ems-up overflow-x-auto border-2 border-divider">
-        <TableView
-          columns={toTableColumns(tab.columns)}
-          rows={tab.rows}
-          rowKey={(row) => row.id}
-        />
+      <div key={active} className="animate-ems-up overflow-x-auto">
+        <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>
+          <div className="border-2 border-divider">
+            {tab.source ? (
+              <LiveTab tab={tab} recordId={recordId} source={tab.source} />
+            ) : (
+              <TabTable tab={tab} rows={tab.rows ?? []} />
+            )}
+          </div>
+        </Suspense>
       </div>
     </section>
   )

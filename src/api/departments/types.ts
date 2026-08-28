@@ -1,4 +1,4 @@
-import type { PageParams } from '../types'
+import type { PageParams } from '../types.ts'
 
 /**
  * The table is called `departments`, but a row is a class — JSS 1, JSS II.

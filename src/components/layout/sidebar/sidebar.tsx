@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useAccountSummary } from '@/features/auth/session'
 import type { PortalConfig } from '@/lib/portal'
 import { cn } from '@/lib/utils'
 import { useShellStore } from '@/stores/shell.store'
@@ -36,6 +37,7 @@ export function Sidebar({
   const collapsedGroups = useShellStore((state) => state.collapsedGroups)
   const toggleGroup = useShellStore((state) => state.toggleGroup)
   const closeDrawer = useShellStore((state) => state.closeDrawer)
+  const account = useAccountSummary(config.account)
 
   const nav = useMemo(
     () => (config.searchableNav ? filterNav(config.nav, navQuery) : config.nav),
@@ -65,7 +67,7 @@ export function Sidebar({
       </nav>
 
       <SidebarAccountMenu
-        account={config.account}
+        account={account}
         profilePath={`${config.basePath}/profile`}
       />
     </aside>

@@ -26,7 +26,7 @@ export class ApiError extends Error {
 }
 
 export type RequestOptions = {
-  method?: 'GET' | 'POST' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   /** JSON body. Mutually exclusive with `form`. */
   body?: unknown
   /** Multipart body, for the endpoints that take a file. */
@@ -76,7 +76,13 @@ export async function requestBlob(
     signal: options.signal,
   })
   if (!response.ok) {
-    throw new ApiError(response.status, response.statusText || 'That file could not be downloaded.')
+    // A refusal comes back as the ordinary envelope even here, so the reason
+    // the API gave is what the toast says — not the bare HTTP status line.
+    const refusal = (await response.json().catch(() => null)) as ApiEnvelope<never> | null
+    throw new ApiError(
+      response.status,
+      refusal?.message || response.statusText || 'That file could not be downloaded.',
+    )
   }
   return response.blob()
 }

@@ -3,12 +3,16 @@ import { toast } from 'sonner'
 import { DateField } from '@/components/form/date-field'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
+import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
+import { toOptions } from '@/features/collections/options'
 import { TextField } from '@/components/form/text-field'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useRecordForm } from '@/hooks/use-record-form'
+import { BLANK } from '../blank'
 import { schemaFromSections } from '../schema'
+import { useSaveRecord } from '../use-save-record'
 import type {
   CollectionDef,
   CollectionRoutes,
@@ -29,12 +33,21 @@ function renderField(field: FieldSpec) {
   }
 
   if (field.date) return <DateField<Values> key={field.key} {...shared} />
+  if (field.optionsFrom)
+    return (
+      <RemoteSelectField<Values>
+        key={field.key}
+        {...shared}
+        from={field.optionsFrom}
+        dependsOn={field.dependsOn}
+      />
+    )
   if (field.options)
     return (
       <SelectField<Values>
         key={field.key}
         {...shared}
-        options={field.options}
+        options={toOptions(field.options)}
       />
     )
   return (
@@ -66,12 +79,16 @@ export function CollectionForm({
   const defaults: Values = {}
   for (const section of sections) {
     for (const field of section.fields) {
-      defaults[field.key] = field.date ? undefined : (record?.[field.key] ?? '')
+      // A blank is how the record reads, not what it holds — typing over an
+      // em dash, or saving one back, is nobody's intent.
+      const held = record?.[field.key]
+      defaults[field.key] = field.date ? undefined : (held === BLANK ? '' : (held ?? ''))
     }
   }
 
   const form = useRecordForm<Values>(schemaFromSections(sections), defaults)
   const editing = Boolean(record)
+  const save = useSaveRecord(definition, editing)
   const back = () =>
     record
       ? navigate({
@@ -92,8 +109,17 @@ export function CollectionForm({
             : `Nothing is saved until you press ${definition.action.toLowerCase()}.`
         }
         submitLabel={editing ? 'Save changes' : definition.action}
-        onSubmit={() => {
-          toast(editing ? 'Changes saved' : `${definition.noun} created`)
+        onSubmit={async (values) => {
+          if (definition.save) {
+            // A refusal has already been announced by the mutation cache;
+            // swallowing it here only keeps the form open on the values typed.
+            const saved = await save
+              .mutateAsync({ values, recordId: record?.id })
+              .catch(() => null)
+            if (!saved) return
+          } else {
+            toast(editing ? 'Changes saved' : `${definition.noun} created`)
+          }
           back()
         }}
         onCancel={back}

@@ -6,6 +6,11 @@ export type PickerItem = {
   meta: string
   /** Pupils in the arm — the allocate flow bills every one of them. */
   count: number
+  /**
+   * A stored file behind this row. Set by review, where the reader needs to
+   * open the document before ticking that they have seen it.
+   */
+  file?: string
 }
 
 export type PickerSpec = {
@@ -18,8 +23,15 @@ export type PickerSpec = {
   requiredMessage?: string
 }
 
-/** A field with the value the flow opens on. */
-export type ActionField = FieldSpec & { value?: string | Date }
+/**
+ * A field with the value the flow opens on, and the answer that makes it
+ * matter — a class is required to admit an applicant and meaningless to
+ * decline one, which a flat `required` cannot say.
+ */
+export type ActionField = FieldSpec & {
+  value?: string | Date
+  requiredWhen?: { field: string; is: string }
+}
 
 /**
  * One guided flow: what it is for, what it needs picked, what it asks, and
@@ -39,10 +51,23 @@ export type ActionDef = {
   /** The toast, given how many items were picked. */
   done: (picked: number) => string
   /**
+   * Runs the flow against the API. A flow without one keeps the prototype's
+   * toast. Returning failures holds the page open with them listed, since a
+   * partial move is not something to navigate away from.
+   */
+  run?: (values: Record<string, unknown>) => Promise<ActionOutcome>
+  /**
    * Asked before the flow runs. Set where pressing the button commits money
    * against real families and cannot be taken back from this screen.
    */
   confirm?: (total: { pupils: number; amount: number }) => ActionConfirm
+}
+
+/** What the API did, as the flow page reports it. */
+export type ActionOutcome = {
+  message: string
+  /** One line per pupil the API would not move, with its reason. */
+  failures?: string[]
 }
 
 /**

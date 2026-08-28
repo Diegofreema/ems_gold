@@ -29,16 +29,25 @@ export function PersonalDetails({
   note,
   fields,
   values,
+  onSave,
+  saving,
 }: {
   form: UseFormReturn<ProfileValues>
   note: ProfileConfig['note']
   fields: ProfileField[]
   values: ProfileConfig['values']
+  /**
+   * Whoever owns the record decides what saving means — this only collects it.
+   * Left out where the API has no endpoint for the role, and the button that
+   * would call it goes with it.
+   */
+  onSave?: (values: ProfileValues) => void
+  saving?: boolean
 }) {
   return (
     <FormProvider {...form}>
       <form
-        onSubmit={form.handleSubmit(() => toast('Your details were saved'))}
+        onSubmit={form.handleSubmit((values) => onSave?.(values))}
         noValidate
       >
         <SectionHeading className="mb-4">Personal details</SectionHeading>
@@ -64,19 +73,26 @@ export function PersonalDetails({
           )}
         </div>
 
-        <div className="mt-[22px] flex flex-wrap gap-2.5">
-          <Button type="submit">Save changes</Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              form.reset()
-              toast('Your edits were undone')
-            }}
-          >
-            Undo my edits
-          </Button>
-        </div>
+        {/* A record nobody here can save is a record with nothing to type
+            into, so neither button has anything left to do. */}
+        {onSave && (
+          <div className="mt-[22px] flex flex-wrap gap-2.5">
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save changes'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving}
+              onClick={() => {
+                form.reset()
+                toast('Your edits were undone')
+              }}
+            >
+              Undo my edits
+            </Button>
+          </div>
+        )}
       </form>
     </FormProvider>
   )

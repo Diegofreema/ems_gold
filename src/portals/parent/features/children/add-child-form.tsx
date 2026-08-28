@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { DeclarationField } from '@/components/form/declaration-field'
 import { FormErrorBanner } from '@/components/form/form-error-banner'
 import { SelectField } from '@/components/form/select-field'
+import { toOptions } from '@/features/collections/options'
 import { TextField } from '@/components/form/text-field'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
@@ -93,12 +94,12 @@ export function AddChildForm() {
               required
               placeholder="Chidi"
             />
-            <SelectField<Values> name="arm" label="Class" required options={ARMS} />
+            <SelectField<Values> name="arm" label="Class" required options={toOptions(ARMS)} />
             <SelectField<Values>
               name="relationship"
               label="Your relationship"
               required
-              options={RELATIONSHIPS}
+              options={toOptions(RELATIONSHIPS)}
             />
             <TextField<Values>
               name="phone"

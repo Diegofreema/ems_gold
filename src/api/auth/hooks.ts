@@ -1,5 +1,6 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getToken, setToken } from '../token'
+import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
+import { endSession } from '@/stores/session.store'
+import { setToken } from '../token'
 import { authKeys } from './keys'
 import { authService } from './service'
 import type {
@@ -23,6 +24,8 @@ export function useLogin() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: LoginBody) => authService.login(body),
+    // The sign-in screen shows a refusal in the design's own alert.
+    meta: { success: 'Signed in', ownsError: true },
     onSuccess: (result) => {
       setToken(result.token)
       queryClient.removeQueries({ queryKey: authKeys.me() })
@@ -45,37 +48,52 @@ export function meQueryOptions() {
   })
 }
 
-export function useCurrentUser() {
-  // Nothing to ask for while signed out.
-  return useQuery({ ...meQueryOptions(), enabled: getToken() !== null })
-}
-
 export function useLogout() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (everywhere?: boolean) =>
-      everywhere ? authService.logoutEverywhere() : authService.logout(),
-    // Drops the token and the cache whether or not the server agreed — a
-    // refused logout must still end the session on this device.
-    onSettled: () => {
-      setToken(null)
-      queryClient.clear()
-    },
+    mutationFn: () => authService.logout(),
+    meta: { success: 'Signed out' },
+    // Ends the session whether or not the server agreed — a refused logout
+    // must still end it on this device.
+    onSettled: () => endSession(queryClient),
   })
 }
 
+/** Kept apart from `useLogout` so each can say what it actually did. */
+export function useLogoutEverywhere() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => authService.logoutEverywhere(),
+    meta: { success: 'Signed out on every device' },
+    onSettled: () => endSession(queryClient),
+  })
+}
+
+// The four recovery screens each render the failure in their own alert.
 export function useForgotPassword() {
-  return useMutation({ mutationFn: (body: ForgotPasswordBody) => authService.forgotPassword(body) })
+  return useMutation({
+    mutationFn: (body: ForgotPasswordBody) => authService.forgotPassword(body),
+    meta: { success: 'Reset code sent', ownsError: true },
+  })
 }
 
 export function useVerifyOtp() {
-  return useMutation({ mutationFn: (body: VerifyOtpBody) => authService.verifyOtp(body) })
+  return useMutation({
+    mutationFn: (body: VerifyOtpBody) => authService.verifyOtp(body),
+    meta: { success: 'Code accepted', ownsError: true },
+  })
 }
 
 export function useResetPassword() {
-  return useMutation({ mutationFn: (body: ResetPasswordBody) => authService.resetPassword(body) })
+  return useMutation({
+    mutationFn: (body: ResetPasswordBody) => authService.resetPassword(body),
+    meta: { success: 'Password saved', ownsError: true },
+  })
 }
 
 export function useChangePassword() {
-  return useMutation({ mutationFn: (body: ChangePasswordBody) => authService.changePassword(body) })
+  return useMutation({
+    mutationFn: (body: ChangePasswordBody) => authService.changePassword(body),
+    meta: { success: 'Password changed', ownsError: true },
+  })
 }

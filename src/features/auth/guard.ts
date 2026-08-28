@@ -1,33 +1,51 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
-import { meQueryOptions } from '@/api/auth/hooks'
-import { ApiError } from '@/api/client'
-import { getToken, setToken } from '@/api/token'
+import { getToken } from '@/api/token'
 import { useAuthStore } from './auth.store'
-import { type Role, roleForAccount } from './role'
+import { portalFor, type Role, roleForAccount } from './role'
+import { loadAccount } from './session'
+
+/**
+ * Resolves the signed-in account or sends the visitor somewhere they can act:
+ * no token at all means sign in, a refused token means the session ended.
+ */
+async function requireAccount(queryClient: QueryClient) {
+  if (getToken() === null) throw redirect({ to: '/sign-in' })
+
+  const account = await loadAccount(queryClient)
+  if (!account) throw redirect({ to: '/session-expired' })
+  return account
+}
 
 /**
  * Guards a portal's shell. Resolving the account here rather than inside the
  * shell means a wrong account never sees a frame of a portal it cannot use.
  */
 export async function requirePortal(queryClient: QueryClient, role: Role) {
-  if (getToken() === null) throw redirect({ to: '/sign-in' })
+  const account = await requireAccount(queryClient)
+  if (roleForAccount(account) !== role) throw redirect({ to: '/wrong-portal' })
+}
 
-  const me = await queryClient.ensureQueryData(meQueryOptions()).catch((error: unknown) => {
-    // Only a refused token ends the session. A network failure or a 500 does
-    // not, and must not throw away a token that is still good — nobody should
-    // be told they were signed out when they were not.
-    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) return null
-    throw error
-  })
+/**
+ * Guards the screens that only make sense to someone signed in — chiefly the
+ * wrong-portal page, which is an answer to a question nobody signed out has
+ * asked.
+ */
+export async function requireSession(queryClient: QueryClient) {
+  await requireAccount(queryClient)
+}
 
-  if (!me) {
-    setToken(null)
-    queryClient.clear()
-    throw redirect({ to: '/session-expired' })
-  }
+/**
+ * The reverse: someone already signed in has no business on the sign-in form,
+ * so they go to their own portal. A token that turns out to be dead is dropped
+ * on the way and the form renders, rather than bouncing them around.
+ */
+export async function redirectIfSignedIn(queryClient: QueryClient) {
+  if (getToken() === null) return
 
-  if (roleForAccount(me) !== role) throw redirect({ to: '/wrong-portal' })
+  const account = await loadAccount(queryClient)
+  const role = account ? roleForAccount(account) : null
+  if (role) throw redirect({ to: portalFor(role).to })
 }
 
 /**

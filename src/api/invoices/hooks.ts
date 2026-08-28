@@ -24,6 +24,7 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: InvoiceBody) => invoicesService.create(body),
+    meta: { success: 'Invoice created' },
     onSuccess: (_data, body) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() })
       // The pupil's own invoice list is a different endpoint holding the same row.
@@ -36,6 +37,7 @@ export function useUpdateInvoice(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: InvoiceBody) => invoicesService.update(id, body),
+    meta: { success: 'Invoice updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: invoiceKeys.all }),
   })
 }
@@ -44,6 +46,7 @@ export function useDeleteInvoice() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => invoicesService.remove(id),
+    meta: { success: 'Invoice deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: invoiceKeys.all }),
   })
 }
@@ -53,6 +56,7 @@ export function useSettleInvoice(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SettleInvoiceBody) => invoicesService.settle(id, body),
+    meta: { success: 'Invoice settled' },
     onSuccess: (_data, body) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.all })
       queryClient.invalidateQueries({ queryKey: studentKeys.invoices(body.student_id) })

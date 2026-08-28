@@ -1,4 +1,7 @@
-import type { Role, User } from '../users/types.ts'
+import type { Parent } from '../parents/types.ts'
+import type { Student } from '../students/types.ts'
+import type { Teacher } from '../teachers/types.ts'
+import type { Admin, Role, User } from '../users/types.ts'
 
 export type LoginBody = {
   /** The account's username — a reg number for pupils, an email for staff. */
@@ -13,22 +16,27 @@ export type LoginBody = {
  */
 export type ProfileType = 'admin' | 'teacher' | 'student' | 'sparent'
 
-/** The signed-in account plus whichever role record hangs off it. */
+/** The role record itself. Which of the four it is follows `profile_type`. */
+export type Profile = Admin | Teacher | Student | Parent
+
+/**
+ * The signed-in account: the login, the role it holds, and the record for
+ * whichever kind of person it belongs to. `/users/me` answers with exactly
+ * this; login answers with this plus a token.
+ */
 export type Account = {
   user: User
   role?: Role
   profile_type?: ProfileType
-  /** The admin / teacher / student / guardian record itself. */
-  profile?: unknown
-  /** Came back empty on every response seen so far, so left unnarrowed. */
-  warnings?: unknown[]
+  profile?: Profile
 }
 
-/** Login answers with the whole account, so nothing else has to be asked for. */
 export type LoginResult = Account & {
   token: string
   /** ISO timestamp; the token lasts 12 hours. */
   expires: string
+  /** Empty on every response seen so far, so left unnarrowed. */
+  warnings?: unknown[]
 }
 
 export type CurrentUser = Account

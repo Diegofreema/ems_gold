@@ -1,3 +1,4 @@
+import { ApiError } from '@/api/client'
 import type { CollectionDef } from './types'
 
 export type Heading = { title: string; crumb: string }
@@ -17,10 +18,23 @@ export function loadCollection(registry: Registry, id: string) {
   }
 }
 
-export function loadRecord(registry: Registry, id: string, recordId: string) {
+/**
+ * One record, by URL. A live collection is asked for it directly — the row may
+ * be on a page this browser never loaded, so there is nothing local to search.
+ */
+export async function loadRecord(registry: Registry, id: string, recordId: string) {
   const definition = registry[id]
-  const record = definition?.rows.find((row) => row.id === recordId)
-  if (!definition || !record) return undefined
+  if (!definition) return undefined
+
+  const record = definition.record
+    // A record the API does not have is a 404, not a failure — anything else
+    // that went wrong is left to throw and reach the error boundary.
+    ? await definition.record(recordId).catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 404) return undefined
+        throw error
+      })
+    : definition.rows?.find((row) => row.id === recordId)
+  if (!record) return undefined
   return {
     definition,
     record,
@@ -31,12 +45,12 @@ export function loadRecord(registry: Registry, id: string, recordId: string) {
   }
 }
 
-export function loadRecordForEdit(
+export async function loadRecordForEdit(
   registry: Registry,
   id: string,
   recordId: string,
 ) {
-  const loaded = loadRecord(registry, id, recordId)
+  const loaded = await loadRecord(registry, id, recordId)
   if (!loaded) return undefined
   return {
     ...loaded,

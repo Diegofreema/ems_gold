@@ -7,6 +7,7 @@ import { Rule } from '@/components/page/rule'
 import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { toneForStatus } from '@/lib/status-tone'
+import { BLANK } from '../blank'
 import type {
   CollectionDef,
   CollectionRoutes,
@@ -48,7 +49,10 @@ export function CollectionDetail({
   const editRoute = routes.edit
   const flowRoute = routes.flow
 
-  const tagColumns = definition.columns.filter((column) => column.tag)
+  // Same rule as the table: a state the record is not in gets no badge.
+  const tagColumns = definition.columns.filter(
+    (column) => column.tag && record[column.key] !== BLANK,
+  )
   const statColumns = definition.columns
     .filter((column) => column.align === 'right')
     .slice(0, 3)
@@ -136,21 +140,21 @@ export function CollectionDetail({
       )}
 
       <div className="grid gap-[34px] lg:grid-cols-[1.6fr_1fr]">
-        <DetailTabPanel tabs={definition.tabs ?? [ACTIVITY]} />
+        <DetailTabPanel tabs={definition.tabs ?? [ACTIVITY]} recordId={record.id} />
 
         <aside>
           <SectionHeading className="mb-3.5">Record</SectionHeading>
           <div className="border-t-2 border-divider">
-            {definition.columns.map((column) => (
+            {(definition.detail ?? definition.columns).map((field) => (
               <div
-                key={column.key}
+                key={field.key}
                 className="flex gap-3.5 border-b border-divider px-0.5 py-[11px]"
               >
                 <div className="w-[45%] text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-                  {column.label}
+                  {field.label}
                 </div>
                 <div className="flex-1 text-[13.5px] tabular-nums">
-                  {record[column.key]}
+                  {record[field.key]}
                 </div>
               </div>
             ))}

@@ -9,6 +9,7 @@ import {
   figuresFor,
   queueFor,
 } from '@/portals/parent/api/dashboard'
+import { useFirstName } from '@/features/auth/session'
 import { ActionQueue } from '@/portals/parent/features/action-queue'
 import { useSelectedChild } from '@/portals/parent/parent.store'
 
@@ -18,13 +19,14 @@ export const Route = createFileRoute('/parent/')({
 })
 
 function ParentDashboard() {
+  const name = useFirstName('Mr. Udo')
   const child = useSelectedChild()
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-page-title">Good morning, Mr. Udo.</h2>
+          <h2 className="text-page-title">Good morning, {name}.</h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Two invoices are outstanding and one test is open for {child.name}.
           </p>

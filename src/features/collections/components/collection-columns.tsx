@@ -1,6 +1,8 @@
+import { FileLink } from '@/components/common/file-link'
 import { Tag } from '@/components/common/tag'
 import type { Column } from '@/components/data-table/types'
 import { toneForStatus } from '@/lib/status-tone'
+import { BLANK } from '../blank'
 import type { ColumnSpec, Row } from '../types'
 
 /** Turns a collection's column specs into renderable table columns. */
@@ -11,11 +13,15 @@ export function toTableColumns(specs: ColumnSpec[]): Column<Row>[] {
     align: spec.align,
     cardRole: spec.cardRole,
     nowrap: !spec.tag,
-    cell: (row) =>
-      spec.tag ? (
+    cell: (row) => {
+      if (spec.download) return <FileLink name={row[spec.key]} />
+      // A tag is a state the record is in; where there is no state to report
+      // the cell reads as any other blank rather than as an empty badge.
+      return spec.tag && row[spec.key] !== BLANK ? (
         <Tag variant={toneForStatus(row[spec.key])}>{row[spec.key]}</Tag>
       ) : (
         row[spec.key]
-      ),
+      )
+    },
   }))
 }

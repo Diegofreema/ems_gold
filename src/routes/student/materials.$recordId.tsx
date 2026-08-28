@@ -4,7 +4,7 @@ import { MaterialViewer } from '@/portals/student/features/materials/material-vi
 
 export const Route = createFileRoute('/student/materials/$recordId')({
   loader: ({ params }) => {
-    const material = materials.rows.find((row) => row.id === params.recordId)
+    const material = materials.rows?.find((row) => row.id === params.recordId)
     if (!material) throw notFound()
     return {
       material,

@@ -26,6 +26,7 @@ export function useUpdateMyTeachingProfile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateMyTeachingProfileBody) => teachingService.updateProfile(body),
+    meta: { success: 'Your details were saved' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.profile() }),
   })
 }
@@ -68,12 +69,16 @@ export function useRegisteredStudents(params: Partial<RegisteredStudentParams>) 
 }
 
 export function useMessageAdmin() {
-  return useMutation({ mutationFn: (body: MessageAdminBody) => teachingService.messageAdmin(body) })
+  return useMutation({
+    mutationFn: (body: MessageAdminBody) => teachingService.messageAdmin(body),
+    meta: { success: 'Message sent to the office' },
+  })
 }
 
 export function useMessageMyStudents() {
   return useMutation({
     mutationFn: (body: MessageStudentsBody) => teachingService.messageStudents(body),
+    meta: { success: 'Message sent to your pupils' },
   })
 }
 
@@ -81,6 +86,7 @@ export function useUploadResults() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UploadResultsBody) => teachingService.uploadResults(body),
+    meta: { success: 'Results uploaded' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teachingKeys.uploads() })
       queryClient.invalidateQueries({ queryKey: teachingKeys.all })
@@ -116,6 +122,7 @@ export function useEnterScore() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: EnterScoreBody) => teachingService.enterScore(body),
+    meta: { success: 'Score saved' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.all }),
   })
 }
@@ -131,6 +138,7 @@ export function useAddTopic() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: CreateTopicBody) => teachingService.addTopic(body),
+    meta: { success: 'Topic added' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.topics() }),
   })
 }
@@ -139,6 +147,7 @@ export function useUpdateTopic(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateTopicBody) => teachingService.updateTopic(id, body),
+    meta: { success: 'Topic updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.topics() }),
   })
 }

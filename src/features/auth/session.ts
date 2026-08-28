@@ -1,32 +1,102 @@
-import { useCurrentUser } from '@/api/auth/hooks'
-import type { User } from '@/api/users/types'
+import type { QueryClient } from '@tanstack/react-query'
+import { meQueryOptions } from '@/api/auth/hooks'
+import { authKeys } from '@/api/auth/keys'
+import type { Account } from '@/api/auth/types'
+import { ApiError } from '@/api/client'
+import type { Admin, User } from '@/api/users/types'
+import type { AccountSummary } from '@/lib/account'
+import { endSession, useSessionStore } from '@/stores/session.store'
+import { accountSummary } from './account-summary'
 import { type Portal, portalFor, type Role, roleForAccount } from './role'
 
-/** The signed-in account as the screens need it. Everything is null while out. */
+/** The signed-in account as the screens need it. All null while signed out. */
 export type Session = {
+  account: Account | null
   user: User | null
   role: Role | null
   portal: Portal | null
-  isPending: boolean
 }
 
 /**
- * One read of the signed-in account. The query is cached under a single key,
- * so every screen that calls this shares the same request.
+ * Reads the stored account rather than the query, so a component has an
+ * identity on the first render after a reload instead of a loading state.
  */
 export function useSession(): Session {
-  const { data, isPending } = useCurrentUser()
-  const role = data ? roleForAccount(data) : null
+  const account = useSessionStore((state) => state.account)
+  const role = account ? roleForAccount(account) : null
 
   return {
-    user: data?.user ?? null,
+    account,
+    user: account?.user ?? null,
     role,
     portal: role ? portalFor(role) : null,
-    isPending,
   }
 }
 
-/** "Chukwuma Nnaji" — the API keeps the parts apart. */
-export function fullName(user: User): string {
-  return [user.fname, user.lname].filter(Boolean).join(' ')
+/**
+ * Asks the API who the token belongs to and stores the answer.
+ *
+ * `null` means the token was refused, and the session has been ended by the
+ * time it returns. Anything else — a network failure, a 500 — is left to
+ * throw: not being able to check is not the same as being signed out.
+ */
+export async function loadAccount(queryClient: QueryClient): Promise<Account | null> {
+  const account = await queryClient
+    .ensureQueryData(meQueryOptions())
+    .catch((error: unknown) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) return null
+      throw error
+    })
+
+  if (!account) {
+    endSession(queryClient)
+    return null
+  }
+
+  useSessionStore.getState().setAccount(account)
+  return account
+}
+
+/**
+ * Re-asks the API who the token belongs to. Used after the person edits their
+ * own record, so the sidebar and the greeting stop showing the old name.
+ */
+export async function refreshAccount(queryClient: QueryClient) {
+  // Dropped rather than invalidated: nothing subscribes to `me`, and
+  // `ensureQueryData` hands back cached data however stale it is.
+  queryClient.removeQueries({ queryKey: authKeys.me() })
+  return loadAccount(queryClient)
+}
+
+/**
+ * The signed-in account for the sidebar block, falling back to the portal's
+ * own definition — which is only reached in the moment between signing out and
+ * the redirect landing, since the guard will not render a shell without one.
+ */
+export function useAccountSummary(fallback: AccountSummary): AccountSummary {
+  const account = useSessionStore((state) => state.account)
+  return account ? accountSummary(account) : fallback
+}
+
+/**
+ * The name to greet the signed-in person by, falling back to the portal's own
+ * wording — reached only in the moment between signing out and the redirect
+ * landing, since the guard will not render a dashboard without a session.
+ */
+export function useFirstName(fallback: string): string {
+  return useSessionStore((state) => state.account?.user.fname) || fallback
+}
+
+/**
+ * The office record, when the account is an administrator. Narrows the four
+ * possible profile shapes down to the one `profile_type` promises, which is
+ * what anything reading `privileges` needs.
+ */
+export function adminProfile(account: Account | null): Admin | null {
+  return account?.profile_type === 'admin' ? ((account.profile ?? null) as Admin | null) : null
+}
+
+/** What this administrator is allowed to reach, by name. Empty for anyone else. */
+export function privilegeNames(account: Account | null): string[] {
+  return (adminProfile(account)?.privileges ?? []).map((privilege) => privilege.name)
 }

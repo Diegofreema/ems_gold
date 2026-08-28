@@ -40,6 +40,7 @@ export function useCreateClassArm() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: ClassArmBody) => classArmsService.create(body),
+    meta: { success: 'Arm created' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: classArmKeys.all }),
   })
 }
@@ -48,6 +49,7 @@ export function useUpdateClassArm(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: ClassArmBody) => classArmsService.update(id, body),
+    meta: { success: 'Arm updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: classArmKeys.all }),
   })
 }
@@ -65,6 +67,7 @@ export function useAssignStudentsToArm(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: AssignStudentsBody) => classArmsService.assignStudents(id, body),
+    meta: { success: 'Pupils moved into the arm' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: classArmKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
@@ -76,6 +79,7 @@ export function useRemoveStudentFromArm(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (classArmStudentId: Id) => classArmsService.removeStudent(id, classArmStudentId),
+    meta: { success: 'Pupil removed from the arm' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: classArmKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
@@ -87,6 +91,7 @@ export function useDeleteClassArm() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, force }: { id: Id; force?: boolean }) => classArmsService.remove(id, force),
+    meta: { success: 'Arm deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: classArmKeys.all }),
   })
 }

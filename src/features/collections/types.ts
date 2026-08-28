@@ -1,3 +1,5 @@
+import type { Paginated } from '../../api/types.ts'
+import type { OptionsKey } from './options.ts'
 import type { Align, CardRole } from '@/lib/table.ts'
 
 /**
@@ -96,12 +98,46 @@ export type FlowSpec = {
 /** Every fixture cell is display text; the API returns the same shape. */
 export type Row = { id: string } & Record<string, string>
 
+/** What a list asks for: one page, narrowed by the search box and the filters. */
+export type ListParams = {
+  page: number
+  q: string
+  /** Keyed by the query parameter the endpoint takes; empty means unset. */
+  filters: Record<string, string>
+}
+
+/**
+ * A dropdown beside the search box. `key` is the query parameter the endpoint
+ * takes, and `label` doubles as the choice that clears it — "All classes".
+ */
+export type FilterSpec = {
+  key: string
+  label: string
+  options?: readonly string[]
+  /** Reads the choices from the API, the same feeds the forms use. */
+  optionsFrom?: OptionsKey
+  /** Names the filter this one is scoped by; arms belong to a class. */
+  dependsOn?: string
+}
+
+/**
+ * Where a collection's rows come from. A definition that names one is read
+ * from the API, paginated and searched by the server; one that does not falls
+ * back to the rows written into the definition.
+ */
+export type ListSource = (params: ListParams) => Promise<Paginated<Row>>
+
+/** A summary tile whose figure the API is asked for rather than written down. */
+export type CountTile = { label: string; count: () => Promise<number> }
+
 export type ColumnSpec = {
   key: string
   label: string
   align?: Align
   /** Renders the value as a status tag, coloured by meaning. */
   tag?: boolean
+  /** The value is a stored filename; the cell fetches and saves it. */
+  download?: boolean
   cardRole?: CardRole
 }
 
@@ -114,6 +150,13 @@ export type FieldSpec = {
   placeholder?: string
   hint?: string
   options?: readonly string[]
+  /**
+   * Reads the choices from the API instead of listing them, so the form
+   * submits the school's own ids. `dependsOn` names the field that scopes the
+   * feed — an arm is only meaningful inside a class.
+   */
+  optionsFrom?: OptionsKey
+  dependsOn?: string
   multiline?: boolean
   numeric?: boolean
   email?: boolean
@@ -129,7 +172,10 @@ export type FormSectionSpec = {
 export type DetailTab = {
   label: string
   columns: ColumnSpec[]
-  rows: Row[]
+  /** Shown when the tab has no `source`; the fixture rows. */
+  rows?: Row[]
+  /** Reads the tab from the API for the record being looked at. */
+  source?: (recordId: string) => Promise<Row[]>
 }
 
 /**
@@ -151,8 +197,35 @@ export type CollectionDef = {
   /** Singular noun used in delete confirms, e.g. "fee". */
   noun: string
   summary?: { label: string; value: string }[]
+  /**
+   * Summary tiles the API counts, replacing `summary` where a collection has
+   * one. Each tile names itself up front and asks for its number separately,
+   * so the strip is the right shape before any of them answer.
+   */
+  counts?: readonly CountTile[]
   columns: ColumnSpec[]
-  rows: Row[]
+  /** The rows to show when the collection has no `source` of its own. */
+  rows?: Row[]
+  /** Dropdowns beside the search box. Only read by a collection with a `source`. */
+  filters?: readonly FilterSpec[]
+  /**
+   * Reads this collection from the API instead of from `rows`, one page at a
+   * time. `record` fetches a single row for the detail page, which cannot go
+   * looking in a page it never loaded.
+   */
+  source?: ListSource
+  record?: (recordId: string) => Promise<Row | undefined>
+  /**
+   * Writes the form back. `recordId` is absent when creating. A collection
+   * without one keeps the prototype's toast, since it has no endpoint yet.
+   */
+  save?: (values: Record<string, unknown>, recordId?: string) => Promise<unknown>
+  /**
+   * What the record panel lists. Defaults to the table's columns, which is
+   * all a fixture row holds; a collection read from the API usually knows far
+   * more about a record than the register has room to show.
+   */
+  detail?: { key: string; label: string }[]
   /** The column holding the record's name — used in titles and confirms. */
   nameKey: string
   form?: FormSectionSpec[]

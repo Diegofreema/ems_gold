@@ -1,4 +1,17 @@
+import { classArmsService } from '@/api/class-arms/service'
+import { studentsService } from '@/api/students/service'
 import type { Row } from '@/features/collections/types'
+import {
+  ADMIT,
+  admission,
+  type ReviewValues,
+} from '@/portals/admin/collections/admission'
+import { applicantDocuments } from '@/portals/admin/collections/applicant-row'
+import {
+  moveOutcome,
+  type MoveValues,
+  studentMove,
+} from '@/portals/admin/collections/student-move'
 import { formatNaira, parseNaira } from '@/lib/format'
 import type { ActionDef, PickerItem } from './types'
 
@@ -7,7 +20,7 @@ export type AdminFlow = {
   label: string
   /** The flow needs no record, so the list's primary action opens it. */
   fromList?: boolean
-  build: (row?: Row) => ActionDef
+  build: (row?: Row) => ActionDef | Promise<ActionDef>
 }
 
 /** Every arm a fee can be allocated to, with the pupils it holds. */
@@ -28,6 +41,11 @@ const ARMS: PickerItem[] = [
 }))
 
 const DASH = '—'
+
+/** The pupil as the picker names them. */
+function pupilName(pupil: { fname: string; lname: string; mname?: string | null }) {
+  return [pupil.fname, pupil.mname, pupil.lname].filter(Boolean).join(' ')
+}
 
 function allocate(row?: Row): ActionDef {
   const amount = parseNaira(row?.amount ?? '')
@@ -144,52 +162,73 @@ function payment(row?: Row): ActionDef {
   }
 }
 
-function promote(row?: Row): ActionDef {
+async function promote(row?: Row): Promise<ActionDef> {
+  const armId = row?.class_arm_id ?? ''
+  const from = { departmentId: row?.department_id ?? '' }
+
+  // Everyone in the pupil's own arm, plus anyone admitted into the class but
+  // not yet placed — those are exactly the pupils this move can reach.
+  const arm = armId
+    ? await classArmsService.students(armId).catch(() => undefined)
+    : undefined
+  const pupils = [...(arm?.students ?? []), ...(arm?.unassigned_in_class ?? [])]
+  const names = new Map(pupils.map((pupil) => [pupil.id, pupilName(pupil)]))
+
   return {
     kicker: 'People · Student register',
     title: 'Promote or transfer pupils',
     description:
-      'Move pupils from one arm to another. Results and invoices stay attached to the pupil, not the arm.',
+      'Pick where these pupils are going. Staying in the class moves them between arms; a different class promotes them. Results and invoices stay attached to the pupil, not the arm.',
     summary: [
-      { label: 'From', value: row?.arm ?? 'SS2 B' },
-      { label: 'Pupils in arm', value: '34' },
-      { label: 'Session', value: '2025/2026' },
+      { label: 'From', value: row?.arm ?? DASH },
+      { label: 'Class', value: row?.class ?? DASH },
+      { label: 'Pupils here', value: String(pupils.length) },
     ],
     picker: {
       title: 'Pupils to move',
-      items: [
-        ['Chinedu Udo', 'Owing ₦85,000'],
-        ['Halima Yusuf', 'Cleared'],
-        ['Segun Bakare', 'Cleared'],
-        ['Zainab Lawal', 'Cleared'],
-        ['Samuel Idris', 'Owing ₦42,000'],
-        ['Amarachi Nwosu', 'Part paid'],
-      ].map(([label, meta]) => ({ key: label, label, meta, count: 1 })),
-      note: 'Pupils who owe fees can still be promoted; the debt follows them.',
+      items: pupils.map((pupil) => ({
+        key: String(pupil.id),
+        label: pupilName(pupil),
+        meta: pupil.regno ?? pupil.application_no ?? DASH,
+        count: 1,
+      })),
+      preselected: row?.id ? [row.id] : undefined,
+      note: 'Pupils who owe fees can still be moved; the debt follows them.',
       requiredMessage: 'Pick at least one pupil to move.',
     },
     fields: [
-      { key: 'target', label: 'Move to', required: true, options: ['SS3 A', 'SS3 B', 'SS2 B (no change)', 'Graduated'] },
-      { key: 'effective', label: 'Effective from', required: true, value: 'Second Term 2025/2026' },
+      { key: 'department_id', label: 'Move to class', required: true, optionsFrom: 'classes' },
+      {
+        key: 'class_arm_id',
+        label: 'Move to arm',
+        required: true,
+        optionsFrom: 'arms',
+        dependsOn: 'department_id',
+        hint: 'The same class means a transfer between arms.',
+      },
     ],
     cta: 'Move selected pupils',
     footnote: 'Written to the activity log against your name.',
     done: (picked) => `${picked} ${picked === 1 ? 'pupil moved' : 'pupils moved'}`,
+    run: async (values) => {
+      const move = studentMove(values as unknown as MoveValues, from)
+      const result =
+        move.kind === 'transfer'
+          ? await classArmsService.assignStudents(move.armId, move.body)
+          : await studentsService.promote(move.body).then(() => undefined)
+
+      return moveOutcome(move, result, (id) => names.get(id) ?? `Pupil ${id}`)
+    },
   }
 }
 
 function review(row?: Row): ActionDef {
-  const documents: PickerItem[] = [
-    { key: 'birth', label: 'Birth certificate', meta: 'PDF · 1.2 MB', count: 1 },
-    { key: 'report', label: 'Last school report', meta: 'PDF · 840 KB', count: 1 },
-    { key: 'transfer', label: 'Transfer certificate', meta: 'Not supplied', count: 0 },
-    { key: 'photo', label: 'Passport photograph', meta: 'JPG · 310 KB', count: 1 },
-  ]
+  const documents = applicantDocuments(row)
   return {
     kicker: 'People · Applicants',
     title: `Review ${row?.name ?? 'application'}`,
     description:
-      'Read the file, then admit into an arm or decline. The family is emailed either way.',
+      'Read the file, then admit into a class arm or decline. An admitted applicant joins the register straight away.',
     summary: [
       { label: 'Reference', value: row?.ref ?? DASH },
       { label: 'Applying to', value: row?.applying ?? DASH },
@@ -203,18 +242,33 @@ function review(row?: Row): ActionDef {
       note: 'Tick the documents you have seen and verified.',
     },
     fields: [
-      { key: 'decision', label: 'Decision', required: true, options: ['Admit', 'Invite for interview', 'Decline'] },
-      { key: 'arm', label: 'Admit into', required: true, options: ['JSS1 A', 'JSS1 B', 'Primary 1 A', 'SS1 A'] },
+      { key: 'decision', label: 'Decision', required: true, options: [ADMIT, 'Decline'] },
       {
-        key: 'note',
-        label: 'Note to the family',
-        wide: true,
-        hint: 'Included in the email. Keep it short and plain.',
+        key: 'department_id',
+        label: 'Admit into class',
+        optionsFrom: 'classes',
+        // Opens on the class the family applied for, which is usually the one.
+        value: row?.department_id,
+        requiredWhen: { field: 'decision', is: ADMIT },
+      },
+      {
+        key: 'class_arm_id',
+        label: 'Admit into arm',
+        optionsFrom: 'arms',
+        dependsOn: 'department_id',
+        requiredWhen: { field: 'decision', is: ADMIT },
+        hint: 'Arms belong to a class, so pick the class first.',
       },
     ],
-    cta: 'Save decision and email the family',
+    cta: 'Save decision',
     footnote: 'The applicant appears on the student register once admitted.',
-    done: () => 'Decision saved — the family has been emailed',
+    done: () => 'Decision saved',
+    run: async (values) => {
+      if (!row) throw new Error('That application could not be loaded.')
+      const { body, message } = admission(row, values as ReviewValues)
+      await studentsService.update(row.id, body)
+      return { message }
+    },
   }
 }
 

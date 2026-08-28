@@ -44,6 +44,7 @@ export function useRetryPayment() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: RetryPaymentBody) => analyticsService.retryPayment(body),
+    meta: { success: 'Payment retried' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: analyticsKeys.all }),
   })
 }
@@ -52,6 +53,7 @@ export function useCheckRrr() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: CheckRrrBody) => analyticsService.checkRrr(body),
+    meta: { success: 'Payment reference checked' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: analyticsKeys.all }),
   })
 }

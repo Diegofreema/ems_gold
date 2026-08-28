@@ -3,7 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
-import { meQueryOptions, useLogin } from '@/api/auth/hooks'
+import { useLogin } from '@/api/auth/hooks'
 import { TextField } from '@/components/form/text-field'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { AuthAlert } from '../components/auth-alert'
 import { AuthHeading } from '../components/auth-heading'
 import { PasswordInput } from '../components/password-input'
 import { portalFor, roleForAccount } from '../role'
+import { loadAccount } from '../session'
 import { signInSchema, type SignInValues } from '../schemas'
 
 export function SignInScreen() {
@@ -33,21 +34,23 @@ export function SignInScreen() {
   const onSubmit = async (values: SignInValues) => {
     setFailure(null)
     try {
-      const signedIn = await login.mutateAsync({
+      await login.mutateAsync({
         username: values.username,
         password: values.password,
       })
 
-      // The token is stored by now, so this carries it. `me` is read here
-      // rather than the login answer because `me` is what the portal guard
-      // reads on every reload afterwards — if the two describe an account
-      // differently, sign-in should fail on it, not the first refresh.
-      const me = await queryClient.fetchQuery(meQueryOptions())
+      // The token is stored by now, so this carries it. The account is read
+      // from `me` rather than from the login answer because `me` is what the
+      // portal guard reads on every reload afterwards — a disagreement
+      // between the two should surface here, not on the first refresh.
+      const account = await loadAccount(queryClient)
+      if (!account) {
+        setFailure('Your password was accepted but the account would not load. Try again.')
+        return
+      }
 
-      // Falling back to the login answer keeps a shape surprise in `me` from
-      // locking anybody out. Drop it once `me` is known to carry profile_type.
-      const role = roleForAccount(me) ?? roleForAccount(signedIn)
-      identify(me.user?.username ?? signedIn.user.username, role)
+      const role = roleForAccount(account)
+      identify(account.user.username, role)
 
       await navigate({ to: role ? portalFor(role).to : '/wrong-portal' })
     } catch (error) {

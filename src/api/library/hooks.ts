@@ -15,6 +15,7 @@ export function useAddBook() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: BookBody) => libraryService.addBook(body),
+    meta: { success: 'Book added' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.all }),
   })
 }
@@ -23,6 +24,7 @@ export function useUpdateBook(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: BookBody) => libraryService.updateBook(id, body),
+    meta: { success: 'Book updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.all }),
   })
 }
@@ -39,6 +41,7 @@ export function useLendBook(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: LendBookBody) => libraryService.lend(id, body),
+    meta: { success: 'Book lent out' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.all }),
   })
 }
@@ -47,6 +50,7 @@ export function useReturnBook() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => libraryService.returnBook(id),
+    meta: { success: 'Book returned' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.all }),
   })
 }

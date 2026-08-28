@@ -1,4 +1,19 @@
-import type { PageParams } from '../types'
+import type { ClassArm } from '../class-arms/types.ts'
+import type { Department } from '../departments/types.ts'
+import type { PageParams } from '../types.ts'
+import type { User } from '../users/types.ts'
+
+/** Reference rows the detail endpoint expands alongside the pupil. */
+export type Country = {
+  id: number
+  name: string
+  sortname: string
+  phonecode: number
+}
+
+export type State = { id: number; name: string; country_id: number }
+
+export type Lga = { id: number; name: string }
 
 /** A pupil record. Applicants are the same row with `status: 'Applied'`. */
 export type Student = {
@@ -17,8 +32,6 @@ export type Student = {
   joindate: string | null
   admissiondate: string | null
   department_id: number | null
-  level_id: number | null
-  faculty_id: number | null
   state_id: number | null
   country_id: number | null
   lga_id: number | null
@@ -35,14 +48,27 @@ export type Student = {
   /** Where they are once admitted: Active, Suspended, … */
   studentstatus: string | null
   passporturl: string | null
-  olevelresulturl: string | null
   birthcerturl: string | null
   othercerts: string | null
-  jamb: string | null
-  jambregno: string | null
-  jambresult: string | null
-  jamb_notification: string | null
-  jamb_admin_letter: string | null
+  /** The last school report, where the family uploaded one. */
+  olevelresulturl: string | null
+  /** The arm they sit in. `class_arm` is expanded by the list endpoint. */
+  class_arm_id: number | null
+  /** The guardian record, when one has been linked. No name comes with it. */
+  sparent_id: number | null
+  session_id: number | null
+  religion: string | null
+  /** Expanded by the list endpoint; absent on the leaner responses. */
+  user?: User
+  class_arm?: ClassArm
+  department?: Department
+  /**
+   * Only `GET /students/{id}` expands these, and each comes back null where
+   * the pupil has no such row — a record entered without one has no state.
+   */
+  country?: Country | null
+  state?: State | null
+  lga?: Lga | null
 }
 
 export type StudentListParams = PageParams & {
@@ -51,7 +77,6 @@ export type StudentListParams = PageParams & {
   department_id?: number
   class_arm_id?: number
   session_id?: number
-  level_id?: number
   /** Name, regno, email or application number. */
   q?: string
 }

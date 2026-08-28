@@ -37,5 +37,6 @@ export function useAttendanceClassArms(departmentId?: number) {
 export function useExportAttendanceCsv() {
   return useMutation({
     mutationFn: (params: AttendanceExportParams = {}) => attendanceService.exportCsv(params),
+    meta: { success: 'Attendance report exported' },
   })
 }

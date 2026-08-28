@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import { type FieldValues, type Path, useController, useFormContext } from 'react-hook-form'
+import { FileLink } from '@/components/common/file-link'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -53,35 +54,45 @@ export function PickerList<TValues extends FieldValues>({
         {picker.items.map((item, index) => {
           const on = picked.includes(item.key)
           return (
-            <button
+            // A row with a file holds two controls, so the tick is its own
+            // button rather than the whole row — a button cannot nest one.
+            <div
               key={item.key}
-              type="button"
-              aria-pressed={on}
-              onClick={() => toggle(item.key)}
               style={{ animationDelay: `${index * 26}ms` }}
               className={cn(
-                'flex w-full animate-ems-row cursor-pointer items-center gap-3.5 border-b border-divider px-[15px] py-[13px] text-left text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
+                'flex animate-ems-row items-center gap-3.5 border-b border-divider px-[15px] py-[13px] text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
                 on && 'bg-brand/9',
               )}
             >
-              <span
-                className={cn(
-                  'grid size-[18px] flex-none place-items-center border-2',
-                  on ? 'border-brand bg-brand' : 'border-divider',
-                )}
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(item.key)}
+                className="flex flex-1 cursor-pointer items-center gap-3.5 text-left"
               >
-                {on && (
-                  <Check
-                    className="size-3 text-background"
-                    strokeWidth={3.4}
-                  />
-                )}
-              </span>
-              <span className="flex-1 font-semibold">{item.label}</span>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {item.meta}
-              </span>
-            </button>
+                <span
+                  className={cn(
+                    'grid size-[18px] flex-none place-items-center border-2',
+                    on ? 'border-brand bg-brand' : 'border-divider',
+                  )}
+                >
+                  {on && (
+                    <Check
+                      className="size-3 text-background"
+                      strokeWidth={3.4}
+                    />
+                  )}
+                </span>
+                <span className="flex-1 font-semibold">{item.label}</span>
+              </button>
+              {item.file ? (
+                <FileLink name={item.file} className="text-xs" />
+              ) : (
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {item.meta}
+                </span>
+              )}
+            </div>
           )
         })}
       </div>

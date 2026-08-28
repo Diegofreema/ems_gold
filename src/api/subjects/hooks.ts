@@ -36,6 +36,7 @@ export function useCreateSubject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SubjectBody) => subjectsService.create(body),
+    meta: { success: 'Subject created' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.lists() }),
   })
 }
@@ -44,6 +45,7 @@ export function useUpdateSubject(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SubjectBody) => subjectsService.update(id, body),
+    meta: { success: 'Subject updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.all }),
   })
 }
@@ -52,6 +54,7 @@ export function useDeactivateSubject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => subjectsService.deactivate(id),
+    meta: { success: 'Subject deactivated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.all }),
   })
 }
@@ -60,6 +63,7 @@ export function useActivateSubject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => subjectsService.activate(id),
+    meta: { success: 'Subject activated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.all }),
   })
 }
@@ -68,6 +72,7 @@ export function useAssignTeachersToSubject(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: AssignTeachersBody) => subjectsService.assignTeachers(id, body),
+    meta: { success: 'Teachers assigned to the subject' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.detail(id) }),
   })
 }
@@ -76,6 +81,7 @@ export function useSetSubjectClasses(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SetSubjectClassesBody) => subjectsService.setClasses(id, body),
+    meta: { success: 'Classes set for the subject' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.detail(id) }),
   })
 }
@@ -84,6 +90,7 @@ export function useDeleteSubject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, force }: { id: Id; force?: boolean }) => subjectsService.remove(id, force),
+    meta: { success: 'Subject deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.all }),
   })
 }

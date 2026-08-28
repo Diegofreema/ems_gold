@@ -14,6 +14,7 @@ export function useUpdateMyStudentRecord() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateMyRecordBody) => mySchoolingService.updateRecord(body),
+    meta: { success: 'Your details were saved' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: mySchoolingKeys.record() }),
   })
 }

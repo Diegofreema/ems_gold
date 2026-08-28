@@ -1,4 +1,4 @@
-import type { PageParams } from '../types'
+import type { PageParams } from '../types.ts'
 
 /** A guardian record. The API calls the table `sparents`. */
 export type Parent = {

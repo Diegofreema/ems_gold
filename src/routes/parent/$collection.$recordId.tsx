@@ -10,9 +10,9 @@ export const Route = createFileRoute('/parent/$collection/$recordId')({
    * shared link opens even when the switcher is on the other child. The
    * definition returned is the one the record actually belongs to.
    */
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     for (const child of CHILDREN) {
-      const loaded = loadRecord(
+      const loaded = await loadRecord(
         parentCollections(child),
         params.collection,
         params.recordId,

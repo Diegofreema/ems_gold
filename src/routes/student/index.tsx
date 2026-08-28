@@ -5,6 +5,7 @@ import { BarChart } from '@/components/charts/bar-chart'
 import { FigureTiles } from '@/components/common/figure-tiles'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { useFirstName } from '@/features/auth/session'
 import { studentDashboardQuery } from '@/portals/student/api/dashboard'
 import { WeekList } from '@/portals/student/features/week-list'
 
@@ -15,13 +16,14 @@ export const Route = createFileRoute('/student/')({
 })
 
 function StudentDashboard() {
+  const name = useFirstName('Amara')
   const { data } = useSuspenseQuery(studentDashboardQuery)
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-page-title">Hello, Amara.</h2>
+          <h2 className="text-page-title">Hello, {name}.</h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             One test is open and closes on Friday. Your fees are cleared for this
             term.

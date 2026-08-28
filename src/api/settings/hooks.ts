@@ -25,6 +25,7 @@ export function useUpdateSettings() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SettingsBody) => settingsService.update(body),
+    meta: { success: 'Settings saved' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: settingsKeys.all }),
   })
 }
@@ -37,6 +38,7 @@ export function useSetCurrentSession() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (sessionId: number) => settingsService.setCurrentSession(sessionId),
+    meta: { success: 'Current session changed' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all })
       queryClient.invalidateQueries({ queryKey: sessionKeys.all })
@@ -49,6 +51,7 @@ export function useSetCurrentTerm() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (semesterId: number) => settingsService.setCurrentTerm(semesterId),
+    meta: { success: 'Current term changed' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all })
       queryClient.invalidateQueries({ queryKey: termKeys.all })

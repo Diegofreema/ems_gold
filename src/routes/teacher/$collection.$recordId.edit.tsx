@@ -3,8 +3,8 @@ import { CollectionForm } from '@/portals/teacher/components/collection-form'
 import { loadRecordForEdit } from '@/portals/teacher/collections/resolve'
 
 export const Route = createFileRoute('/teacher/$collection/$recordId/edit')({
-  loader: ({ params }) => {
-    const loaded = loadRecordForEdit(params.collection, params.recordId)
+  loader: async ({ params }) => {
+    const loaded = await loadRecordForEdit(params.collection, params.recordId)
     if (!loaded) throw notFound()
     return loaded
   },

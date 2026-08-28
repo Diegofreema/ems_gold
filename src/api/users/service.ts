@@ -42,7 +42,7 @@ export const usersService = {
   profile: () => request<{ admin: Admin }>('users/profile').then((data) => data.admin),
 
   updateProfile: (body: UpdateProfileBody) =>
-    request<{ admin: Admin }>('users/profile', { method: 'POST', form: toFormData(body) }),
+    request<{ admin: Admin }>('users/profile', { method: 'PATCH', form: toFormData(body) }),
 
   listAdmins: () => request<{ admins: Admin[] }>('users/admins').then((data) => data.admins),
 

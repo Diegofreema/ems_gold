@@ -1,9 +1,108 @@
-import type { CollectionDef } from '@/features/collections/types'
-import { studentTabs } from './tabs'
+import { sessionsService } from '@/api/calendar/service'
+import { departmentsService } from '@/api/departments/service'
+import { studentsService } from '@/api/students/service'
+import type { StudentListParams } from '@/api/students/types'
+import type {
+  CollectionDef,
+  FieldSpec,
+  FormSectionSpec,
+} from '@/features/collections/types'
+import { PAGE_SIZE } from '@/hooks/use-list-query'
+import { studentBody } from './student-body'
+import { applicantDocuments, applicantRow } from './applicant-row'
+import { invoiceRow, resultRow, studentRow } from './student-row'
+
+/** The API accepts exactly these words for the two status fields. */
+const ADMISSION = ['Applied', 'Admitted', 'Declined'] as const
+const ENROLMENT = ['Active', 'Suspended'] as const
+
+/** Where an application sits until somebody decides it. */
+const APPLIED = 'Applied'
+
+/**
+ * A summary figure, asked for as one row and read off the pagination the
+ * endpoint returns with it — there is no endpoint that counts without listing.
+ */
+const countStudents = (params: StudentListParams) => async () =>
+  (await studentsService.list({ ...params, limit: 1 })).pagination.total
+
+/** A filter's id as the endpoint wants it; an unset filter is left off. */
+function asId(value: string | undefined) {
+  return Number(value) || undefined
+}
+
+/**
+ * The parts of the record the office fills in the same way whether a pupil is
+ * being enrolled or an application is being taken. Only what admission asks
+ * for differs between the two forms.
+ */
+const IDENTITY: FormSectionSpec = {
+  title: 'Pupil',
+  fields: [
+    { key: 'fname', label: 'First name', required: true, placeholder: 'Ngozi' },
+    { key: 'lname', label: 'Surname', required: true, placeholder: 'Eze' },
+    { key: 'mname', label: 'Middle name', placeholder: 'Chiamaka' },
+    { key: 'dob', label: 'Date of birth', date: true },
+    { key: 'gender', label: 'Gender', options: ['Female', 'Male'] },
+    { key: 'religion', label: 'Religion', placeholder: 'Christian' },
+  ],
+}
+
+const CONTACT: FormSectionSpec = {
+  title: 'Contact and guardian',
+  fields: [
+    { key: 'email', label: 'Email', email: true, placeholder: 'pupil@example.com' },
+    { key: 'phone', label: 'Phone', numeric: true, placeholder: '0705 883 1190' },
+    { key: 'sparent_id', label: 'Guardian on record', optionsFrom: 'guardians' },
+    { key: 'address', label: 'Home address', multiline: true, wide: true, placeholder: '14 Ogui Road, Enugu' },
+  ],
+}
+
+const CLASS_FIELD: FieldSpec = {
+  key: 'department_id',
+  label: 'Class',
+  required: true,
+  optionsFrom: 'classes',
+}
+
+/** What the record panel reads about the person, whichever page opened it. */
+const PERSON_DETAIL = [
+  { key: 'gender', label: 'Gender' },
+  { key: 'dob', label: 'Date of birth' },
+  { key: 'religion', label: 'Religion' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'address', label: 'Address' },
+  { key: 'origin', label: 'From' },
+  { key: 'school', label: 'Previous school' },
+  { key: 'father', label: 'Father' },
+  { key: 'mother', label: 'Mother' },
+]
 
 export const students: CollectionDef = {
   id: 'students',
-  tabs: studentTabs,
+  tabs: [
+    {
+      label: 'Fees',
+      columns: [
+        { key: 'invoice', label: 'Invoice' },
+        { key: 'fee', label: 'Fee' },
+        { key: 'amount', label: 'Amount', align: 'right' },
+        { key: 'state', label: 'State', tag: true },
+      ],
+      source: (recordId) => studentsService.invoices(recordId).then((invoices) => invoices.map(invoiceRow)),
+    },
+    {
+      label: 'Results',
+      // Approved results only — that is all this endpoint returns.
+      columns: [
+        { key: 'subject', label: 'Subject' },
+        { key: 'total', label: 'Total', align: 'right' },
+        { key: 'grade', label: 'Grade', tag: true },
+      ],
+      source: (recordId) => studentsService.results(recordId).then((results) => results.map(resultRow)),
+    },
+  ],
   path: '/admin/students',
   kicker: 'Students',
   title: 'Enrolled pupils',
@@ -11,16 +110,20 @@ export const students: CollectionDef = {
     'Every enrolled pupil across Primary 1 to SS3. Open a pupil for their record, fees and results.',
   action: 'Enrol a pupil',
   searchHint: 'Search name or admission no.',
-  footer: '8 of 1,842 pupils · 2025/2026',
+  footer: '2025/2026 session',
   emptyTitle: 'No pupils on the register',
   emptyBody: 'Enrol your first pupil, or admit one from the applicants list.',
   noun: 'pupil',
   nameKey: 'name',
-  summary: [
-    { label: 'Enrolled', value: '1,842' },
-    { label: 'Primary', value: '968' },
-    { label: 'Secondary', value: '874' },
-    { label: 'Suspended', value: '6' },
+  counts: [
+    { label: 'Enrolled', count: countStudents({ status: 'Admitted' }) },
+    { label: 'Suspended', count: countStudents({ studentstatus: 'Suspended' }) },
+    { label: 'Applicants', count: countStudents({ status: APPLIED }) },
+    {
+      label: 'Classes',
+      count: async () =>
+        (await departmentsService.list({ limit: 1 })).pagination.total,
+    },
   ],
   columns: [
     { key: 'adm', label: 'Adm. no.', cardRole: 'subtitle' },
@@ -30,37 +133,70 @@ export const students: CollectionDef = {
     { key: 'fees', label: 'Fees', tag: true },
     { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'st-1', adm: 'NEB/2021/0412', name: 'Chinedu Udo', arm: 'SS2 B', parent: 'Mr. Emmanuel Udo', fees: 'Owing', status: 'Active' },
-    { id: 'st-2', adm: 'NEB/2023/1180', name: 'Fatima Bello', arm: 'JSS1 A', parent: 'Alhaji M. Bello', fees: 'Owing', status: 'Active' },
-    { id: 'st-3', adm: 'NEB/2024/1503', name: 'Tolu Adeyemi', arm: 'Primary 4 A', parent: 'Mrs. Kemi Adeyemi', fees: 'Part paid', status: 'Active' },
-    { id: 'st-4', adm: 'NEB/2022/0871', name: 'Ngozi Eze', arm: 'SS1 A', parent: 'Dr. P. Eze', fees: 'Owing', status: 'Active' },
-    { id: 'st-5', adm: 'NEB/2020/0233', name: 'David Ogunleye', arm: 'SS3 A', parent: 'Mr. T. Ogunleye', fees: 'Cleared', status: 'Active' },
-    { id: 'st-6', adm: 'NEB/2023/1266', name: 'Amarachi Nwosu', arm: 'Primary 6 B', parent: 'Mrs. J. Nwosu', fees: 'Part paid', status: 'Active' },
-    { id: 'st-7', adm: 'NEB/2021/0559', name: 'Ibrahim Sani', arm: 'JSS3 C', parent: 'Mr. A. Sani', fees: 'Owing', status: 'Suspended' },
-    { id: 'st-8', adm: 'NEB/2024/1610', name: 'Blessing Okoro', arm: 'Primary 2 A', parent: 'Mrs. G. Okoro', fees: 'Cleared', status: 'Active' },
+  detail: [
+    { key: 'adm', label: 'Adm. no.' },
+    { key: 'name', label: 'Name' },
+    { key: 'class', label: 'Class' },
+    { key: 'arm', label: 'Arm' },
+    { key: 'status', label: 'Status' },
+    ...PERSON_DETAIL,
+    { key: 'admitted', label: 'Admitted' },
+    { key: 'enrolled', label: 'Enrolled' },
+    { key: 'username', label: 'Signs in with' },
   ],
+  filters: [
+    { key: 'department_id', label: 'All classes', optionsFrom: 'classes' },
+    {
+      key: 'class_arm_id',
+      label: 'All arms',
+      optionsFrom: 'arms',
+      dependsOn: 'department_id',
+    },
+    { key: 'status', label: 'Any admission', options: ADMISSION },
+    { key: 'studentstatus', label: 'Any enrolment', options: ENROLMENT },
+  ],
+  source: async ({ page, q, filters }) => {
+    const { items, pagination } = await studentsService.list({
+      page,
+      limit: PAGE_SIZE,
+      q,
+      department_id: asId(filters.department_id),
+      class_arm_id: asId(filters.class_arm_id),
+      status: filters.status || undefined,
+      studentstatus: filters.studentstatus || undefined,
+    })
+    return { items: items.map(studentRow), pagination }
+  },
+  record: (recordId) => studentsService.get(recordId).then(studentRow),
+  save: async (values, recordId) => {
+    if (recordId) return studentsService.update(recordId, studentBody(values))
+
+    // A new pupil joins the session the school is currently running. Editing
+    // one never moves them between sessions, so this is only asked for here.
+    const session = await sessionsService.current().catch(() => undefined)
+    return studentsService.create(studentBody(values, session?.id))
+  },
   form: [
+    IDENTITY,
     {
-      title: 'Pupil',
+      title: 'Class',
       fields: [
-        { key: 'name', label: 'Full name', required: true, wide: true, placeholder: 'Ngozi Chiamaka Eze' },
-        { key: 'adm', label: 'Admission number', required: true, placeholder: 'NEB/2025/0001' },
-        { key: 'arm', label: 'Class arm', required: true, options: ['Primary 1 A', 'Primary 4 A', 'Primary 6 B', 'JSS1 A', 'JSS3 C', 'SS1 A', 'SS2 B', 'SS3 A'] },
-        { key: 'dob', label: 'Date of birth', date: true },
-        { key: 'gender', label: 'Gender', options: ['Female', 'Male'] },
+        CLASS_FIELD,
+        {
+          key: 'class_arm_id',
+          label: 'Arm',
+          // Required as the design has it, and because a class changed without
+          // an arm leaves the pupil in an arm of the class they just left.
+          required: true,
+          optionsFrom: 'arms',
+          dependsOn: 'department_id',
+          hint: 'Arms belong to a class, so pick the class first.',
+        },
+        { key: 'admission', label: 'Admission', required: true, options: ADMISSION },
+        { key: 'studentstatus', label: 'Enrolment', required: true, options: ENROLMENT },
       ],
     },
-    {
-      title: 'Parent and status',
-      fields: [
-        { key: 'parent', label: 'Parent or guardian', required: true, placeholder: 'Dr. P. Eze' },
-        { key: 'phone', label: 'Parent phone', numeric: true, placeholder: '0705 883 1190' },
-        { key: 'email', label: 'Parent email', email: true, placeholder: 'parent@example.com' },
-        { key: 'status', label: 'Status', options: ['Active', 'Suspended'] },
-        { key: 'address', label: 'Home address', multiline: true, wide: true, placeholder: '14 Ogui Road, Enugu' },
-      ],
-    },
+    CONTACT,
   ],
 }
 
@@ -73,16 +209,16 @@ export const applicants: CollectionDef = {
     'Admission applications for the 2025/2026 session. Review the file, then admit into a class arm or decline.',
   action: 'Add applicant',
   searchHint: 'Search applicant',
-  footer: '6 of 37 applications',
+  footer: '2025/2026 session',
   emptyTitle: 'No applications',
   emptyBody:
     'Applications appear here as families submit them through the admission form.',
   noun: 'application',
   nameKey: 'name',
-  summary: [
-    { label: 'Applications', value: '37' },
-    { label: 'Awaiting review', value: '14' },
-    { label: 'Admitted', value: '19' },
+  counts: [
+    { label: 'Awaiting review', count: countStudents({ status: APPLIED }) },
+    { label: 'Admitted', count: countStudents({ status: 'Admitted' }) },
+    { label: 'Declined', count: countStudents({ status: 'Declined' }) },
   ],
   columns: [
     { key: 'ref', label: 'Reference', cardRole: 'subtitle' },
@@ -91,13 +227,69 @@ export const applicants: CollectionDef = {
     { key: 'submitted', label: 'Submitted' },
     { key: 'stage', label: 'Stage', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'ap-1', ref: 'APP-0231', name: 'Zainab Lawal', applying: 'JSS1', submitted: '14 Nov 2025', stage: 'Awaiting review' },
-    { id: 'ap-2', ref: 'APP-0229', name: 'Michael Etim', applying: 'Primary 1', submitted: '13 Nov 2025', stage: 'Awaiting review' },
-    { id: 'ap-3', ref: 'APP-0224', name: 'Precious Ajayi', applying: 'SS1', submitted: '11 Nov 2025', stage: 'Interview set' },
-    { id: 'ap-4', ref: 'APP-0219', name: 'Yusuf Garba', applying: 'JSS2', submitted: '08 Nov 2025', stage: 'Admitted' },
-    { id: 'ap-5', ref: 'APP-0214', name: 'Grace Onu', applying: 'Primary 5', submitted: '05 Nov 2025', stage: 'Admitted' },
-    { id: 'ap-6', ref: 'APP-0208', name: 'Samuel Idris', applying: 'SS2', submitted: '01 Nov 2025', stage: 'Declined' },
+  detail: [
+    { key: 'ref', label: 'Reference' },
+    { key: 'name', label: 'Applicant' },
+    { key: 'applying', label: 'Applying to' },
+    { key: 'submitted', label: 'Submitted' },
+    { key: 'stage', label: 'Stage' },
+    ...PERSON_DETAIL,
+  ],
+  tabs: [
+    {
+      label: 'Documents on file',
+      columns: [
+        { key: 'document', label: 'Document' },
+        { key: 'file', label: 'File', download: true },
+      ],
+      source: async (recordId) => {
+        const row = applicantRow(await studentsService.get(recordId))
+        return applicantDocuments(row).map((one) => ({
+          id: one.key,
+          document: one.label,
+          // The cell fetches whatever name it is given, so a slot with no
+          // file has to hand it nothing rather than the words for nothing.
+          file: one.file,
+        }))
+      },
+    },
+  ],
+  filters: [
+    // Unset, the page is the queue: everyone still waiting on a decision.
+    // The two decided words are there to look back at what was settled.
+    { key: 'status', label: 'Awaiting review', options: ['Admitted', 'Declined'] },
+    { key: 'department_id', label: 'All classes', optionsFrom: 'classes' },
+  ],
+  source: async ({ page, q, filters }) => {
+    const { items, pagination } = await studentsService.list({
+      page,
+      limit: PAGE_SIZE,
+      q,
+      status: filters.status || APPLIED,
+      department_id: asId(filters.department_id),
+    })
+    return { items: items.map(applicantRow), pagination }
+  },
+  record: (recordId) => studentsService.get(recordId).then(applicantRow),
+  save: async (values, recordId) => {
+    // Editing an application never re-opens a decision already taken, so the
+    // status is only set where there is not one yet.
+    if (recordId) return studentsService.update(recordId, studentBody(values))
+
+    const session = await sessionsService.current().catch(() => undefined)
+    return studentsService.create({
+      ...studentBody(values, session?.id),
+      status: APPLIED,
+    })
+  },
+  form: [
+    { ...IDENTITY, title: 'Applicant' },
+    {
+      title: 'Applying to',
+      // No arm: an applicant is placed in one at the point they are admitted.
+      fields: [{ ...CLASS_FIELD, label: 'Class applied for' }],
+    },
+    CONTACT,
   ],
 }
 

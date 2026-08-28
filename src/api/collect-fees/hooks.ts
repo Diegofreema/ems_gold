@@ -58,6 +58,7 @@ export function useTakePayment(invoiceId: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: TakePaymentBody) => collectFeesService.pay(invoiceId, body),
+    meta: { success: 'Payment recorded' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collectFeeKeys.all })
       queryClient.invalidateQueries({ queryKey: invoiceKeys.all })

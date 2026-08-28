@@ -2,7 +2,6 @@ import { useNavigate } from '@tanstack/react-router'
 import { Mail } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
-import { toast } from 'sonner'
 import { useForgotPassword, useVerifyOtp } from '@/api/auth/hooks'
 import { TextField } from '@/components/form/text-field'
 import { Rule } from '@/components/page/rule'
@@ -51,7 +50,6 @@ export function CheckEmailScreen() {
     try {
       await forgotPassword.mutateAsync({ username: email })
       setResent(true)
-      toast('Reset code sent again')
     } catch (error) {
       setFailure(errorMessage(error, OFFLINE_MESSAGE))
     }

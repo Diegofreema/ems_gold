@@ -2,7 +2,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, LogOut, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLogout } from '@/api/auth/hooks'
-import type { AccountSummary } from '@/lib/portal'
+import type { AccountSummary } from '@/lib/account'
 import { cn } from '@/lib/utils'
 
 /**
@@ -54,7 +54,7 @@ export function SidebarAccountMenu({
               disabled={logout.isPending}
               onClick={async () => {
                 setOpen(false)
-                await logout.mutateAsync(false).catch(() => undefined)
+                await logout.mutateAsync().catch(() => undefined)
                 await navigate({ to: '/sign-in' })
               }}
               className="flex w-full cursor-pointer items-center gap-3 px-3.5 py-3 text-left text-[13.5px] !text-brand-700 transition-[background-color,padding-left] duration-150 hover:bg-brand/10 hover:pl-[18px]"

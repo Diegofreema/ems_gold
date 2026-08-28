@@ -39,6 +39,7 @@ export function useCreateParent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: ParentBody) => parentsService.create(body),
+    meta: { success: 'Parent added' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: parentKeys.all }),
   })
 }
@@ -47,6 +48,7 @@ export function useUpdateParent(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: ParentBody) => parentsService.update(id, body),
+    meta: { success: 'Parent updated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: parentKeys.all }),
   })
 }
@@ -55,6 +57,7 @@ export function useDeactivateParent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => parentsService.deactivate(id),
+    meta: { success: 'Parent deactivated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: parentKeys.all }),
   })
 }
@@ -63,6 +66,7 @@ export function useActivateParent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => parentsService.activate(id),
+    meta: { success: 'Parent activated' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: parentKeys.all }),
   })
 }
@@ -71,6 +75,7 @@ export function useDeleteParent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => parentsService.remove(id),
+    meta: { success: 'Parent deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: parentKeys.all }),
   })
 }
@@ -157,6 +162,7 @@ export function useSubmitChildAssignment(childId: Id, setassignmentId: Id) {
   return useMutation({
     mutationFn: (body: SubmitAnswersBody) =>
       myFamilyService.submitAssignment(childId, setassignmentId, body),
+    meta: { success: 'Assignment submitted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: myFamilyKeys.assignments() }),
   })
 }

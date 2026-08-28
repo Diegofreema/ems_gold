@@ -4,7 +4,7 @@ import { ReceiptView } from '@/portals/parent/features/receipts/receipt-view'
 
 export const Route = createFileRoute('/parent/receipts/$recordId')({
   loader: ({ params }) => {
-    const receipt = receipts.rows.find((row) => row.id === params.recordId)
+    const receipt = receipts.rows?.find((row) => row.id === params.recordId)
     if (!receipt) throw notFound()
     return {
       receipt,

@@ -35,6 +35,7 @@ export function useCreateAdminRecord() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: CreateAdminBody) => adminsService.create(body),
+    meta: { success: 'Administrator added' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.lists() }),
   })
 }
@@ -43,6 +44,7 @@ export function useUpdateAdminRecord(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateAdminRecordBody) => adminsService.update(id, body),
+    meta: { success: 'Administrator updated' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() })
@@ -54,6 +56,7 @@ export function useDeleteAdminRecord() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => adminsService.remove(id),
+    meta: { success: 'Administrator deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.all }),
   })
 }
@@ -70,6 +73,7 @@ export function useSetAdminPrivileges(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SetPrivilegesBody) => adminsService.setPrivileges(id, body),
+    meta: { success: 'Privileges saved' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.detail(id) }),
   })
 }

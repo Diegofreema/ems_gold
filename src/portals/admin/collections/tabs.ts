@@ -1,35 +1,5 @@
 import type { DetailTab } from '@/features/collections/types'
 
-export const studentTabs: DetailTab[] = [
-  {
-    label: 'Fees',
-    columns: [{ key: 'invoice', label: 'Invoice' }, { key: 'fee', label: 'Fee' }, { key: 'amount', label: 'Amount', align: 'right' }, { key: 'state', label: 'State', tag: true }],
-    rows: [
-      { id: 'sf-1', invoice: 'INV-25133', fee: 'Tuition — SS', amount: '₦120,000', state: 'Unpaid' },
-      { id: 'sf-2', invoice: 'INV-25074', fee: 'ICT levy', amount: '₦15,000', state: 'Paid' },
-      { id: 'sf-3', invoice: 'INV-24980', fee: 'Boarding', amount: '₦85,000', state: 'Paid' },
-    ],
-  },
-  {
-    label: 'Results',
-    columns: [{ key: 'subject', label: 'Subject' }, { key: 'total', label: 'Total', align: 'right' }, { key: 'grade', label: 'Grade', tag: true }],
-    rows: [
-      { id: 'sr-1', subject: 'Mathematics', total: '78', grade: 'A' },
-      { id: 'sr-2', subject: 'English Language', total: '72', grade: 'B' },
-      { id: 'sr-3', subject: 'Biology', total: '71', grade: 'B' },
-    ],
-  },
-  {
-    label: 'Attendance',
-    columns: [{ key: 'date', label: 'Date' }, { key: 'state', label: 'Mark', tag: true }, { key: 'note', label: 'Note' }],
-    rows: [
-      { id: 'sa-1', date: '19 Nov', state: 'Present', note: '—' },
-      { id: 'sa-2', date: '18 Nov', state: 'Present', note: '—' },
-      { id: 'sa-3', date: '15 Nov', state: 'Absent', note: 'Unexcused' },
-    ],
-  },
-]
-
 export const invoiceTabs: DetailTab[] = [
   {
     label: 'Payments',

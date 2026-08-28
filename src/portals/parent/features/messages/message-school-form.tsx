@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { FormErrorBanner } from '@/components/form/form-error-banner'
 import { SelectField } from '@/components/form/select-field'
+import { toOptions } from '@/features/collections/options'
 import { TextField } from '@/components/form/text-field'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
@@ -62,7 +63,7 @@ export function MessageSchoolForm() {
           <FormErrorBanner count={Object.keys(form.formState.errors).length} />
 
           <div className="flex flex-col gap-4">
-            <SelectField<Values> name="about" label="About" options={ABOUT} />
+            <SelectField<Values> name="about" label="About" options={toOptions(ABOUT)} />
 
             <div>
               <Label className="mb-[5px] block text-xs font-normal text-foreground/70">

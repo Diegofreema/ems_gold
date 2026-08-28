@@ -5,6 +5,7 @@ import { BarChart } from '@/components/charts/bar-chart'
 import { FigureTiles } from '@/components/common/figure-tiles'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { useFirstName } from '@/features/auth/session'
 import { teacherDashboardQuery } from '@/portals/teacher/api/dashboard'
 import { TimetableList } from '@/portals/teacher/features/timetable-list'
 
@@ -15,13 +16,14 @@ export const Route = createFileRoute('/teacher/')({
 })
 
 function TeacherDashboard() {
+  const name = useFirstName('Chukwuma')
   const { data } = useSuspenseQuery(teacherDashboardQuery)
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-page-title">Good morning, Chukwuma.</h2>
+          <h2 className="text-page-title">Good morning, {name}.</h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Two score sheets are still open for this term. Everything else is
             submitted.

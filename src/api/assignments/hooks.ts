@@ -27,6 +27,7 @@ export function useSubmitAssignment(setassignmentId: Id) {
   return useMutation({
     mutationFn: (body: SubmitAssignmentBody) =>
       assignmentsService.submit(setassignmentId, body),
+    meta: { success: 'Assignment submitted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
   })
 }

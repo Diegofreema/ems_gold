@@ -29,6 +29,7 @@ export function useCreateStaff() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: CreateStaffBody) => teachersService.create(body),
+    meta: { success: 'Staff member added' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teacherKeys.lists() }),
   })
 }
@@ -37,6 +38,7 @@ export function useUpdateStaff(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateStaffBody) => teachersService.update(id, body),
+    meta: { success: 'Staff member updated' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teacherKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: teacherKeys.lists() })
@@ -48,6 +50,7 @@ export function useDeleteStaff() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => teachersService.remove(id),
+    meta: { success: 'Staff member deleted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teacherKeys.all }),
   })
 }
@@ -56,15 +59,22 @@ export function useAssignSubjects(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: AssignSubjectsBody) => teachersService.assignSubjects(id, body),
+    meta: { success: 'Subjects assigned' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: teacherKeys.detail(id) }),
   })
 }
 
 /** A download rather than a cache entry. */
 export function useDownloadCv() {
-  return useMutation({ mutationFn: (id: Id) => teachersService.cv(id) })
+  return useMutation({
+    mutationFn: (id: Id) => teachersService.cv(id),
+    meta: { success: 'CV downloaded' },
+  })
 }
 
 export function useMailStaff() {
-  return useMutation({ mutationFn: (body: MailStaffBody) => teachersService.mail(body) })
+  return useMutation({
+    mutationFn: (body: MailStaffBody) => teachersService.mail(body),
+    meta: { success: 'Email sent' },
+  })
 }
