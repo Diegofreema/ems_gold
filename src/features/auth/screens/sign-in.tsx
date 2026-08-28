@@ -1,50 +1,61 @@
-import { Link, useNavigate } from '@tanstack/react-router';
-import { LoaderCircle } from 'lucide-react';
-import { useState } from 'react';
-import { FormProvider } from 'react-hook-form';
-import { TextField } from '@/components/form/text-field';
-import { Rule } from '@/components/page/rule';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useRecordForm } from '@/hooks/use-record-form';
-import { useAuthStore } from '../auth.store';
-import { AuthAlert } from '../components/auth-alert';
-import { AuthHeading } from '../components/auth-heading';
-import { PasswordInput } from '../components/password-input';
-import { portalFor, roleForEmail } from '../role';
-import { signInSchema, type SignInValues } from '../schemas';
-
-/** Stands in for the real sign-in call; see the prototype's demo rules. */
-const TEMPORARY_PASSWORDS = ['temp', 'temporary'];
+import { useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { LoaderCircle } from 'lucide-react'
+import { useState } from 'react'
+import { FormProvider } from 'react-hook-form'
+import { meQueryOptions, useLogin } from '@/api/auth/hooks'
+import { TextField } from '@/components/form/text-field'
+import { Rule } from '@/components/page/rule'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useRecordForm } from '@/hooks/use-record-form'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
+import { useAuthStore } from '../auth.store'
+import { AuthAlert } from '../components/auth-alert'
+import { AuthHeading } from '../components/auth-heading'
+import { PasswordInput } from '../components/password-input'
+import { portalFor, roleForAccount } from '../role'
+import { signInSchema, type SignInValues } from '../schemas'
 
 export function SignInScreen() {
-  const navigate = useNavigate();
-  const identify = useAuthStore((state) => state.identify);
-  const [failed, setFailed] = useState(false);
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const login = useLogin()
+  const identify = useAuthStore((state) => state.identify)
+  const [failure, setFailure] = useState<string | null>(null)
 
   const form = useRecordForm<SignInValues>(signInSchema, {
-    email: '',
+    username: '',
     password: '',
     remember: false,
-  });
+  })
 
   const onSubmit = async (values: SignInValues) => {
-    setFailed(false);
-    identify(values.email);
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    setFailure(null)
+    try {
+      const signedIn = await login.mutateAsync({
+        username: values.username,
+        password: values.password,
+      })
 
-    if (/^guest@/i.test(values.email.trim())) {
-      await navigate({ to: '/wrong-portal' });
-      return;
-    }
-    if (TEMPORARY_PASSWORDS.includes(values.password.toLowerCase())) {
-      await navigate({ to: '/first-sign-in' });
-      return;
-    }
-    await navigate({ to: portalFor(roleForEmail(values.email)).to });
-  };
+      // The token is stored by now, so this carries it. `me` is read here
+      // rather than the login answer because `me` is what the portal guard
+      // reads on every reload afterwards — if the two describe an account
+      // differently, sign-in should fail on it, not the first refresh.
+      const me = await queryClient.fetchQuery(meQueryOptions())
 
-  const { isSubmitting } = form.formState;
+      // Falling back to the login answer keeps a shape surprise in `me` from
+      // locking anybody out. Drop it once `me` is known to carry profile_type.
+      const role = roleForAccount(me) ?? roleForAccount(signedIn)
+      identify(me.user?.username ?? signedIn.user.username, role)
+
+      await navigate({ to: role ? portalFor(role).to : '/wrong-portal' })
+    } catch (error) {
+      setFailure(errorMessage(error, OFFLINE_MESSAGE))
+    }
+  }
+
+  const { isSubmitting } = form.formState
 
   return (
     <>
@@ -55,9 +66,9 @@ export function SignInScreen() {
       />
       <Rule />
 
-      {failed && (
+      {failure && (
         <AuthAlert
-          title="That email and password do not match"
+          title={failure}
           body="Check the address and try again. After five wrong attempts the account locks for fifteen minutes and the office is notified."
         />
       )}
@@ -69,9 +80,8 @@ export function SignInScreen() {
           className="flex flex-col gap-4.5"
         >
           <TextField<SignInValues>
-            name="email"
+            name="username"
             label="Email address"
-            type="email"
             placeholder="you@school.ng"
             hint="The address the school has on file"
             required
@@ -122,5 +132,5 @@ export function SignInScreen() {
         the office to send it again.
       </div>
     </>
-  );
+  )
 }

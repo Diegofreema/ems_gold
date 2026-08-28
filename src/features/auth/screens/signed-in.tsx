@@ -6,11 +6,17 @@ import { useAuthStore } from '../auth.store'
 import { AuthHeading } from '../components/auth-heading'
 import { IconSquare } from '../components/icon-square'
 import { PORTALS, portalFor } from '../role'
+import { useSession } from '../session'
 
 export function SignedInScreen() {
-  const role = useAuthStore((state) => state.role)
+  const { role: signedInAs } = useSession()
+  const lastKnownRole = useAuthStore((state) => state.role)
   const passwordChanged = useAuthStore((state) => state.passwordChanged)
-  const portal = portalFor(role)
+
+  // A password reset does not sign anybody in — the new password still has to
+  // be used — so the button leads back to sign-in when there is no session.
+  const role = signedInAs ?? lastKnownRole
+  const portal = signedInAs && role ? portalFor(role) : null
 
   return (
     <>
@@ -26,7 +32,11 @@ export function SignedInScreen() {
       <Rule />
 
       <Button asChild>
-        <Link to={portal.to}>Open the {role.toLowerCase()} portal</Link>
+        {portal ? (
+          <Link to={portal.to}>Open the {portal.role.toLowerCase()} portal</Link>
+        ) : (
+          <Link to="/sign-in">Sign in</Link>
+        )}
       </Button>
 
       <div className="mt-[22px] flex flex-wrap gap-4 text-xs">

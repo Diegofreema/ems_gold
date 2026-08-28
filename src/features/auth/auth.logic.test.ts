@@ -1,14 +1,38 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { MINIMUM_SCORE, passwordScore, strengthLabel } from './password.ts'
-import { roleForEmail } from './role.ts'
+import { roleForAccount } from './role.ts'
 
-test('the account, not the person, decides the portal', () => {
-  assert.equal(roleForEmail('bursary@netpro.ng'), 'Admin')
-  assert.equal(roleForEmail('office.desk@netpro.ng'), 'Admin')
-  assert.equal(roleForEmail('guardian@netpro.ng'), 'Parent')
-  assert.equal(roleForEmail('a.okeke@pupils.netpro.ng'), 'Student')
-  assert.equal(roleForEmail('c.nnaji@netpro.ng'), 'Teacher')
+/** Only the parts of a sign-in the portal decision reads. */
+const account = (record: Record<string, unknown>) =>
+  ({ user: { username: 'x' }, ...record }) as never
+
+test('profile_type decides the portal', () => {
+  assert.equal(roleForAccount(account({ profile_type: 'admin' })), 'Admin')
+  assert.equal(roleForAccount(account({ profile_type: 'teacher' })), 'Teacher')
+  assert.equal(roleForAccount(account({ profile_type: 'student' })), 'Student')
+  assert.equal(roleForAccount(account({ profile_type: 'sparent' })), 'Parent')
+})
+
+test('profile_type outranks a role name the school has changed', () => {
+  // The live payload: profile_type "admin" under the role name "Super Admin".
+  assert.equal(
+    roleForAccount(
+      account({ profile_type: 'admin', role: { id: 5, role_name: 'Super Admin' } }),
+    ),
+    'Admin',
+  )
+})
+
+test('an account with no profile_type falls back to its role name', () => {
+  const named = (role_name: string) =>
+    roleForAccount(account({ role: { id: 1, role_name } }))
+
+  assert.equal(named('Super Admin'), 'Admin')
+  assert.equal(named('Parent'), 'Parent')
+  // Nothing to read either way means there is no portal to open.
+  assert.equal(named('Bursary'), null)
+  assert.equal(roleForAccount(account({})), null)
 })
 
 test('length can never be traded away for other rules', () => {

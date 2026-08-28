@@ -1,10 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
+import { useResetPassword } from '@/api/auth/hooks'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useRecordForm } from '@/hooks/use-record-form'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { useAuthStore } from '../auth.store'
+import { AuthAlert } from '../components/auth-alert'
 import { AuthHeading } from '../components/auth-heading'
 import { PasswordInput } from '../components/password-input'
 import { PasswordRules } from '../components/password-rules'
@@ -32,7 +35,11 @@ const COPY = {
 export function ResetPasswordScreen({ first }: { first: boolean }) {
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
-  const setPasswordChanged = useAuthStore((state) => state.setPasswordChanged)
+  const [failure, setFailure] = useState<string | null>(null)
+  const userId = useAuthStore((state) => state.userId)
+  const ticket = useAuthStore((state) => state.ticket)
+  const completeReset = useAuthStore((state) => state.completeReset)
+  const resetPassword = useResetPassword()
   const copy = first ? COPY.first : COPY.reset
 
   const form = useRecordForm<ResetPasswordValues>(resetPasswordSchema, {
@@ -43,6 +50,30 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
 
   const password = form.watch('password') ?? ''
 
+  const onSubmit = async (values: ResetPasswordValues) => {
+    setFailure(null)
+    try {
+      // ponytail: the first-sign-in variant has no endpoint of its own yet —
+      // a temporary password is not an OTP, and /users/change-password wants
+      // the verification key from the invitation email. It falls through to
+      // the confirmation screen until we know which of the two it is.
+      if (userId !== null && ticket !== null) {
+        await resetPassword.mutateAsync({
+          user_id: userId,
+          ticket,
+          password: values.password,
+          confirm_password: values.confirmPassword,
+        })
+      }
+      completeReset()
+      await navigate({ to: '/signed-in' })
+    } catch (error) {
+      setFailure(errorMessage(error, OFFLINE_MESSAGE))
+    }
+  }
+
+  const { isSubmitting } = form.formState
+
   return (
     <>
       <AuthHeading
@@ -52,12 +83,16 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
       />
       <Rule />
 
+      {failure && (
+        <AuthAlert
+          title={failure}
+          body="The code you used is single-use and lasts fifteen minutes. If it has expired, start the reset again."
+        />
+      )}
+
       <FormProvider {...form}>
         <form
-          onSubmit={form.handleSubmit(async () => {
-            setPasswordChanged(true)
-            await navigate({ to: '/signed-in' })
-          })}
+          onSubmit={form.handleSubmit(onSubmit)}
           noValidate
           className="flex flex-col gap-[18px]"
         >
@@ -91,8 +126,12 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
 
           <PasswordRules password={password} />
 
-          <Button type="submit" className="w-full justify-start">
-            {copy.cta}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full justify-start"
+          >
+            {isSubmitting ? 'Saving…' : copy.cta}
           </Button>
         </form>
       </FormProvider>

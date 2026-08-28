@@ -21,8 +21,10 @@ export function SessionExpiredScreen() {
       />
       <DetailRows
         rows={[
-          { label: 'Account', value: `${email || 'c.nnaji@netpro.ng'} · ${role}` },
-          { label: 'Signed out', value: 'Today, 10:42' },
+          {
+            label: 'Account',
+            value: [email || 'Your account', role].filter(Boolean).join(' · '),
+          },
         ]}
       />
       <Rule />

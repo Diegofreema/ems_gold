@@ -8,9 +8,20 @@ const email = z
   .regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'That does not look like an email address')
 
 export const signInSchema = z.object({
-  email,
+  /**
+   * The API calls this the username: an email address for staff, a
+   * registration number for pupils. So it cannot be held to the email shape.
+   */
+  username: z.string().trim().min(1, 'Required'),
   password: z.string().min(6, 'Your password is at least six characters'),
   remember: z.boolean(),
+})
+
+export const verifyOtpSchema = z.object({
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'The code is six digits'),
 })
 
 export const forgotPasswordSchema = z.object({ email })
@@ -33,5 +44,6 @@ export const resetPasswordSchema = z
   })
 
 export type SignInValues = z.infer<typeof signInSchema>
+export type VerifyOtpValues = z.infer<typeof verifyOtpSchema>
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>

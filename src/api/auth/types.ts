@@ -1,4 +1,4 @@
-import type { User } from '../users/types'
+import type { Role, User } from '../users/types.ts'
 
 export type LoginBody = {
   /** The account's username — a reg number for pupils, an email for staff. */
@@ -6,21 +6,32 @@ export type LoginBody = {
   password: string
 }
 
-export type LoginResult = {
+/**
+ * Which kind of person the login belongs to, as the API spells it. This — not
+ * the role name — is what decides the portal: `role_name` is free text a
+ * school can rename ("Super Admin"), while this is one of a fixed set.
+ */
+export type ProfileType = 'admin' | 'teacher' | 'student' | 'sparent'
+
+/** The signed-in account plus whichever role record hangs off it. */
+export type Account = {
+  user: User
+  role?: Role
+  profile_type?: ProfileType
+  /** The admin / teacher / student / guardian record itself. */
+  profile?: unknown
+  /** Came back empty on every response seen so far, so left unnarrowed. */
+  warnings?: unknown[]
+}
+
+/** Login answers with the whole account, so nothing else has to be asked for. */
+export type LoginResult = Account & {
   token: string
   /** ISO timestamp; the token lasts 12 hours. */
   expires: string
-  user?: User
 }
 
-/** The signed-in account plus whichever role record hangs off it. */
-export type CurrentUser = {
-  user: User
-  admin?: unknown
-  student?: unknown
-  teacher?: unknown
-  sparent?: unknown
-}
+export type CurrentUser = Account
 
 export type ForgotPasswordBody = {
   /** The address the OTP is emailed to. */

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getToken, setToken } from '../token'
 import { authKeys } from './keys'
 import { authService } from './service'
@@ -12,7 +12,12 @@ import type {
 
 /**
  * Signing in stores the bearer token before anything else runs, so the `me`
- * refetch below — and every query a redirect kicks off — already carries it.
+ * request that follows — and every query a redirect kicks off — already
+ * carries it.
+ *
+ * The login answer is deliberately *not* written into the `me` cache: the two
+ * endpoints may describe an account differently, and the app should be reading
+ * the one it will still be reading after a reload.
  */
 export function useLogin() {
   const queryClient = useQueryClient()
@@ -20,19 +25,29 @@ export function useLogin() {
     mutationFn: (body: LoginBody) => authService.login(body),
     onSuccess: (result) => {
       setToken(result.token)
-      queryClient.invalidateQueries({ queryKey: authKeys.me() })
+      queryClient.removeQueries({ queryKey: authKeys.me() })
     },
   })
 }
 
-export function useCurrentUser() {
-  return useQuery({
+/**
+ * Shared with the portal route guards, which resolve the account before the
+ * shell renders rather than through a hook.
+ */
+export function meQueryOptions() {
+  return queryOptions({
     queryKey: authKeys.me(),
     queryFn: () => authService.me(),
-    // Nothing to ask for while signed out.
-    enabled: getToken() !== null,
     staleTime: 5 * 60_000,
+    // A refused token will be refused again, and a portal guard waiting out a
+    // retry is a portal that renders nothing for a second longer.
+    retry: false,
   })
+}
+
+export function useCurrentUser() {
+  // Nothing to ask for while signed out.
+  return useQuery({ ...meQueryOptions(), enabled: getToken() !== null })
 }
 
 export function useLogout() {

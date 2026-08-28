@@ -1,4 +1,6 @@
+import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useLogout } from '@/api/auth/hooks'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
@@ -20,6 +22,8 @@ import type { ProfileConfig } from './types'
  * in `PersonalDetails` so the heading can show the name as it is being typed.
  */
 export function ProfilePage({ config }: { config: ProfileConfig }) {
+  const navigate = useNavigate()
+  const logout = useLogout()
   const form = useRecordForm<ProfileValues>(
     profileSchema(config.fields),
     config.values,
@@ -61,10 +65,17 @@ export function ProfilePage({ config }: { config: ProfileConfig }) {
           <AppearancePicker />
 
           <SectionHeading className="mt-7 mb-3.5">Session</SectionHeading>
+          {/* The API revokes every token for the account at once, this one
+              included, so the page it lands on has to be sign-in. */}
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => toast('Signed out of your other devices')}
+            disabled={logout.isPending}
+            onClick={async () => {
+              await logout.mutateAsync(true).catch(() => undefined)
+              toast('Signed out of every device — sign in again')
+              await navigate({ to: '/sign-in' })
+            }}
           >
             Sign out my other devices
           </Button>

@@ -1,6 +1,7 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, LogOut, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useLogout } from '@/api/auth/hooks'
 import type { AccountSummary } from '@/lib/portal'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +17,8 @@ export function SidebarAccountMenu({
   profilePath: string
 }) {
   const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
+  const logout = useLogout()
 
   useEffect(() => {
     if (!open) return
@@ -44,14 +47,23 @@ export function SidebarAccountMenu({
               <User className="size-[15px] flex-none" strokeWidth={1.85} />
               <span className="flex-1">My profile</span>
             </Link>
-            <Link
-              to="/sign-in"
-              onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-3 px-3.5 py-3 text-left text-[13.5px] !text-brand-700 transition-[background-color,padding-left] duration-150 hover:bg-brand/10 hover:pl-[18px]"
+            {/* The session ends on this device whether or not the server
+                answers, so the redirect is unconditional. */}
+            <button
+              type="button"
+              disabled={logout.isPending}
+              onClick={async () => {
+                setOpen(false)
+                await logout.mutateAsync(false).catch(() => undefined)
+                await navigate({ to: '/sign-in' })
+              }}
+              className="flex w-full cursor-pointer items-center gap-3 px-3.5 py-3 text-left text-[13.5px] !text-brand-700 transition-[background-color,padding-left] duration-150 hover:bg-brand/10 hover:pl-[18px]"
             >
               <LogOut className="size-[15px] flex-none" strokeWidth={1.85} />
-              <span className="flex-1">Sign out</span>
-            </Link>
+              <span className="flex-1">
+                {logout.isPending ? 'Signing out…' : 'Sign out'}
+              </span>
+            </button>
           </div>
         </>
       )}

@@ -6,7 +6,11 @@ export { paginated } from './url.ts'
 export type { QueryValue }
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? 'https://bronze.uaes.education/api'
+  import.meta.env.VITE_API_URL ??
+  // Dev goes through Vite's proxy — see the CORS note in vite.config.ts.
+  (import.meta.env.DEV
+    ? `${window.location.origin}/api`
+    : 'https://bronze.uaes.education/api')
 
 /** Anything the API refused, with the field errors a form needs to show. */
 export class ApiError extends Error {

@@ -1,4 +1,4 @@
-import type { Id, PageParams } from '../types'
+import type { Id, PageParams } from '../types.ts'
 
 /** A login account. Every portal's person hangs off one of these. */
 export type User = {

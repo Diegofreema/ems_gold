@@ -6,9 +6,10 @@ import { useAuthStore } from '../auth.store'
 import { AuthHeading } from '../components/auth-heading'
 import { IconSquare } from '../components/icon-square'
 import { PortalLinks } from '../components/portal-links'
+import { useSession } from '../session'
 
 export function WrongPortalScreen() {
-  const role = useAuthStore((state) => state.role)
+  const { role } = useSession()
   const reset = useAuthStore((state) => state.reset)
 
   return (
@@ -16,7 +17,7 @@ export function WrongPortalScreen() {
       <IconSquare icon={Lock} />
       <AuthHeading
         title="Wrong portal for this account"
-        description={`This is a ${role.toLowerCase()} account, and the link you followed opens a portal it has no access to. Nothing was changed, and the attempt is written to the activity log. Open the portal your account belongs to instead.`}
+        description={`This is a ${role ? `${role.toLowerCase()} ` : ''}account, and the link you followed opens a portal it has no access to. Nothing was changed, and the attempt is written to the activity log. Open the portal your account belongs to instead.`}
       />
       <PortalLinks />
       <Rule />
