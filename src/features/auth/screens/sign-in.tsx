@@ -1,50 +1,50 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import { LoaderCircle } from 'lucide-react'
-import { useState } from 'react'
-import { FormProvider } from 'react-hook-form'
-import { TextField } from '@/components/form/text-field'
-import { Rule } from '@/components/page/rule'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useRecordForm } from '@/hooks/use-record-form'
-import { useAuthStore } from '../auth.store'
-import { AuthAlert } from '../components/auth-alert'
-import { AuthHeading } from '../components/auth-heading'
-import { PasswordInput } from '../components/password-input'
-import { portalFor, roleForEmail } from '../role'
-import { signInSchema, type SignInValues } from '../schemas'
+import { Link, useNavigate } from '@tanstack/react-router';
+import { LoaderCircle } from 'lucide-react';
+import { useState } from 'react';
+import { FormProvider } from 'react-hook-form';
+import { TextField } from '@/components/form/text-field';
+import { Rule } from '@/components/page/rule';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useRecordForm } from '@/hooks/use-record-form';
+import { useAuthStore } from '../auth.store';
+import { AuthAlert } from '../components/auth-alert';
+import { AuthHeading } from '../components/auth-heading';
+import { PasswordInput } from '../components/password-input';
+import { portalFor, roleForEmail } from '../role';
+import { signInSchema, type SignInValues } from '../schemas';
 
 /** Stands in for the real sign-in call; see the prototype's demo rules. */
-const TEMPORARY_PASSWORDS = ['temp', 'temporary']
+const TEMPORARY_PASSWORDS = ['temp', 'temporary'];
 
 export function SignInScreen() {
-  const navigate = useNavigate()
-  const identify = useAuthStore((state) => state.identify)
-  const [failed, setFailed] = useState(false)
+  const navigate = useNavigate();
+  const identify = useAuthStore((state) => state.identify);
+  const [failed, setFailed] = useState(false);
 
   const form = useRecordForm<SignInValues>(signInSchema, {
     email: '',
     password: '',
     remember: false,
-  })
+  });
 
   const onSubmit = async (values: SignInValues) => {
-    setFailed(false)
-    identify(values.email)
-    await new Promise((resolve) => setTimeout(resolve, 700))
+    setFailed(false);
+    identify(values.email);
+    await new Promise((resolve) => setTimeout(resolve, 700));
 
     if (/^guest@/i.test(values.email.trim())) {
-      await navigate({ to: '/wrong-portal' })
-      return
+      await navigate({ to: '/wrong-portal' });
+      return;
     }
     if (TEMPORARY_PASSWORDS.includes(values.password.toLowerCase())) {
-      await navigate({ to: '/first-sign-in' })
-      return
+      await navigate({ to: '/first-sign-in' });
+      return;
     }
-    await navigate({ to: portalFor(roleForEmail(values.email)).to })
-  }
+    await navigate({ to: portalFor(roleForEmail(values.email)).to });
+  };
 
-  const { isSubmitting } = form.formState
+  const { isSubmitting } = form.formState;
 
   return (
     <>
@@ -66,7 +66,7 @@ export function SignInScreen() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-[18px]"
+          className="flex flex-col gap-4.5"
         >
           <TextField<SignInValues>
             name="email"
@@ -99,10 +99,14 @@ export function SignInScreen() {
             </Button>
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full justify-start">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-fit justify-start"
+          >
             {isSubmitting && (
               <LoaderCircle
-                className="size-[15px] animate-ems-spin"
+                className="size-3.75 animate-ems-spin"
                 strokeWidth={2.4}
               />
             )}
@@ -114,9 +118,9 @@ export function SignInScreen() {
       <Rule />
       <div className="text-[12.5px] leading-relaxed text-muted-foreground">
         Accounts are created by the school office. If you are new and have no
-        password yet, open the invitation email and use the link in it, or ask the
-        office to send it again.
+        password yet, open the invitation email and use the link in it, or ask
+        the office to send it again.
       </div>
     </>
-  )
+  );
 }

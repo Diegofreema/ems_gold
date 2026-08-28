@@ -1,0 +1,101 @@
+import { paginated, request } from '../client'
+import type { Id } from '../types'
+import type { Invoice } from '../invoices/types'
+import type {
+  Child,
+  ChildAssignment,
+  ChildAttendanceParams,
+  ChildResultParams,
+  Parent,
+  ParentBody,
+  ParentDashboard,
+  ParentListParams,
+  SubmitAnswersBody,
+} from './types'
+
+/** The admin's view of guardians. */
+export const parentsService = {
+  list: (params: ParentListParams = {}) =>
+    request<Record<string, unknown>>('sparents', { query: { ...params } }).then((data) =>
+      paginated<Parent>(data, 'sparents'),
+    ),
+
+  get: (id: Id) => request<{ sparent: Parent }>(`sparents/${id}`).then((data) => data.sparent),
+
+  children: (id: Id) =>
+    request<{ children: Child[] }>(`sparents/${id}/children`).then((data) => data.children),
+
+  create: (body: ParentBody) =>
+    request<{ sparent: Parent; username: string; password: string }>('sparents', {
+      method: 'POST',
+      body,
+    }),
+
+  /** `user_id` is stripped — re-pointing a guardian would hand over a family. */
+  update: (id: Id, body: ParentBody) =>
+    request<{ sparent: Parent }>(`sparents/${id}`, { method: 'POST', body }),
+
+  /** Blocks the guardian from signing in; the record and children stay. */
+  deactivate: (id: Id) => request<unknown>(`sparents/${id}/deactivate`, { method: 'POST' }),
+
+  activate: (id: Id) => request<unknown>(`sparents/${id}/activate`, { method: 'POST' }),
+
+  /** Deletes the record and the login. Refused with 409 while children remain. */
+  remove: (id: Id) => request<unknown>(`sparents/${id}`, { method: 'DELETE' }),
+
+  /** The read-only directory behind the admin parent lookups. */
+  directory: () =>
+    request<{ parents: Parent[] }>('admins/parents').then((data) => data.parents),
+
+  directoryEntry: (id: Id) => request<Record<string, unknown>>(`admins/parents/${id}`),
+}
+
+/**
+ * Everything a signed-in guardian sees. The parent is resolved from the token
+ * — never from a path parameter — and a child who is not theirs is a 403.
+ */
+export const myFamilyService = {
+  profile: () => request<{ sparent: Parent }>('sparents/me').then((data) => data.sparent),
+
+  dashboard: () => request<ParentDashboard>('sparents/dashboard'),
+
+  children: () =>
+    request<{ children: Child[] }>('sparents/my-children').then((data) => data.children),
+
+  invoices: (params: { page?: number; limit?: number } = {}) =>
+    request<Record<string, unknown>>('sparents/my-invoices', { query: { ...params } }).then(
+      (data) => paginated<Invoice>(data, 'invoices'),
+    ),
+
+  /** Approved results only. */
+  childResults: (childId: Id, params: ChildResultParams = {}) =>
+    request<Record<string, unknown>>(`sparents/my-children/${childId}/results`, {
+      query: { ...params },
+    }),
+
+  /** The rate counts late as attended. */
+  childAttendance: (childId: Id, params: ChildAttendanceParams = {}) =>
+    request<Record<string, unknown>>(`sparents/my-children/${childId}/attendance`, {
+      query: { ...params },
+    }),
+
+  assignments: () =>
+    request<{ children: ChildAssignment[] }>('sparents/my-assignments').then(
+      (data) => data.children,
+    ),
+
+  /** The answer key is never included — options carry text and order only. */
+  assignment: (childId: Id, setassignmentId: Id) =>
+    request<Record<string, unknown>>(
+      `sparents/my-children/${childId}/assignments/${setassignmentId}`,
+    ),
+
+  submitAssignment: (childId: Id, setassignmentId: Id, body: SubmitAnswersBody) =>
+    request<unknown>(
+      `sparents/my-children/${childId}/assignments/${setassignmentId}/submit`,
+      { method: 'POST', body },
+    ),
+
+  assignmentResult: (assignmentId: Id) =>
+    request<Record<string, unknown>>(`sparents/my-assignments/${assignmentId}/result`),
+}

@@ -1,0 +1,50 @@
+import type { PageParams } from '../types'
+import type { Admin, Privilege } from '../users/types'
+
+export type { Admin, Privilege }
+
+/** One line of the audit trail. */
+export type ActivityLog = {
+  id: number
+  title: string
+  timestamp: string
+  user_id: number
+  description: string
+  ip: string
+  type: string
+}
+
+export type AdminListParams = PageParams
+
+/**
+ * The login and the office record are created together; the account starts
+ * Enabled on the default password, to be changed on first sign-in.
+ */
+export type CreateAdminBody = {
+  username: string
+  surname: string
+  lastname: string
+  middlename?: string
+  gender?: string
+  department_id?: number
+  phone?: string
+  address?: string
+}
+
+export type UpdateAdminRecordBody = Omit<CreateAdminBody, 'username'>
+
+/** Replaces the privilege set with exactly these ids. */
+export type SetPrivilegesBody = {
+  privileges: number[]
+}
+
+export type AdminPrivileges = {
+  admin: Admin
+  /** Everything that could be granted, not only what is held. */
+  privileges: Privilege[]
+}
+
+export type AdminActivity = {
+  admin: Pick<Admin, 'id' | 'surname' | 'lastname'>
+  logs: ActivityLog[]
+}
