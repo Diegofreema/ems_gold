@@ -1,24 +1,5 @@
 import type { DetailTab } from '@/features/collections/types'
 
-export const invoiceTabs: DetailTab[] = [
-  {
-    label: 'Payments',
-    columns: [{ key: 'receipt', label: 'Receipt' }, { key: 'amount', label: 'Amount', align: 'right' }, { key: 'method', label: 'Method' }, { key: 'date', label: 'Date' }],
-    rows: [
-      { id: 'ip-1', receipt: 'RCT-8841', amount: '₦60,000', method: 'Transfer', date: '02 Oct 2025' },
-      { id: 'ip-2', receipt: 'RCT-8790', amount: '₦60,000', method: 'Remita', date: '18 Oct 2025' },
-    ],
-  },
-  {
-    label: 'Reminders',
-    columns: [{ key: 'when', label: 'Sent' }, { key: 'channel', label: 'Channel' }, { key: 'to', label: 'To' }],
-    rows: [
-      { id: 'ir-1', when: '12 Nov', channel: 'Email', to: 'Mr. Emmanuel Udo' },
-      { id: 'ir-2', when: '05 Nov', channel: 'SMS', to: '0803 441 2280' },
-    ],
-  },
-]
-
 export const staffTabs: DetailTab[] = [
   {
     label: 'Subjects',
@@ -35,26 +16,6 @@ export const staffTabs: DetailTab[] = [
     rows: [
       { id: 'su-1', batch: 'BAT-1142', subject: 'Mathematics', state: 'Approved' },
       { id: 'su-2', batch: 'BAT-1121', subject: 'Further Maths', state: 'Rejected' },
-    ],
-  },
-]
-
-export const feeTabs: DetailTab[] = [
-  {
-    label: 'Allocations',
-    columns: [{ key: 'arm', label: 'Arm' }, { key: 'pupils', label: 'Pupils', align: 'right' }, { key: 'billed', label: 'Billed', align: 'right' }],
-    rows: [
-      { id: 'fa-1', arm: 'SS1 A', pupils: '35', billed: '₦4,200,000' },
-      { id: 'fa-2', arm: 'SS2 B', pupils: '34', billed: '₦4,080,000' },
-      { id: 'fa-3', arm: 'SS3 A', pupils: '31', billed: '₦3,720,000' },
-    ],
-  },
-  {
-    label: 'Invoices',
-    columns: [{ key: 'invoice', label: 'Invoice' }, { key: 'student', label: 'Pupil' }, { key: 'state', label: 'State', tag: true }],
-    rows: [
-      { id: 'fi-1', invoice: 'INV-25133', student: 'Ngozi Eze', state: 'Unpaid' },
-      { id: 'fi-2', invoice: 'INV-25084', student: 'Segun Bakare', state: 'Paid' },
     ],
   },
 ]

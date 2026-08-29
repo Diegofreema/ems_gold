@@ -61,23 +61,41 @@ export function RemoteSelectField<TValues extends FieldValues>({
       span={span}
       options={options}
       disabled={waiting || isPending}
-      placeholder={placeholderFor({ waiting, isPending, isError, empty: options.length === 0 })}
+      placeholder={placeholderFor({
+        from,
+        waiting,
+        isPending,
+        isError,
+        empty: options.length === 0,
+      })}
     />
   )
 }
 
+/**
+ * What a scoped feed says while it waits. Keyed by the feed, since only a feed
+ * that names a scope has anything to wait for; one that is not listed falls
+ * back to the ordinary placeholder rather than naming the wrong field.
+ */
+const WAITING_FOR: Partial<Record<OptionsKey, string>> = {
+  arms: 'Pick a class first',
+  'unpaid-invoices': 'Pick a pupil first',
+}
+
 function placeholderFor({
+  from,
   waiting,
   isPending,
   isError,
   empty,
 }: {
+  from: OptionsKey
   waiting: boolean
   isPending: boolean
   isError: boolean
   empty: boolean
 }) {
-  if (waiting) return 'Pick a class first'
+  if (waiting) return WAITING_FOR[from] ?? 'Choose one'
   if (isPending) return 'Loading…'
   if (isError) return 'Could not load these'
   if (empty) return 'Nothing to choose from'

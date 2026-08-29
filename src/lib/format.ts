@@ -15,6 +15,9 @@ const NAIRA = new Intl.NumberFormat('en-NG', {
 const COUNT = new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0 })
 
 export const formatDate = (date: Date) => DATE.format(date)
+
+/** A noun at the start of a sentence — "Spending deleted", not "spending". */
+export const capitalise = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
 export const formatCount = (value: number) => COUNT.format(value)
 export const formatNaira = (amount: number) => NAIRA.format(amount)
 

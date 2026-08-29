@@ -1,15 +1,28 @@
-import type { PageParams } from '../types'
+import type { PageParams } from '../types.ts'
 
+/**
+ * One chargeable fee. `amount` comes back as an integer, and `status` and
+ * `is_active` say the same thing twice — 1/0 beside true/false.
+ */
 export type Fee = {
   id: number
   name: string
-  /** Normalised to an integer server-side, but returned as a string. */
   amount: string | number
   feetype: FeeType
   itemcode: string | null
+  /** The code the Remita gateway bills under, where the school uses one. */
+  remitaitemcode: string | null
+  /** 1 while the fee is charged, 0 once it is retired. */
   status: number
+  is_active?: boolean
+  /** Both null on every fee seen so far; the API keeps the columns anyway. */
+  startdate: string | null
+  enddate: string | null
   user_id: number
-  departments?: { id: number; name: string }[]
+  /** The name of whoever created it, not an id — the list joins it in. */
+  created_by?: string
+  /** What it is allocated to. Only the detail endpoint expands these. */
+  departments?: { id: number; name: string; deptcode?: string }[]
   levels?: { id: number; name: string }[]
   /** How many invoices, transactions and transcript requests point at it. */
   dependencies?: Record<string, number>

@@ -199,9 +199,10 @@ export function ActionPage({
 
       <FormProvider {...form}>
         <form
-          onSubmit={form.handleSubmit((values) => {
+          onSubmit={form.handleSubmit(async (values) => {
             // Validation has passed; a flow that commits money asks once more.
-            const ask = action.confirm && total ? action.confirm(total) : undefined
+            // A flow without a picker has no running total to show it.
+            const ask = await action.confirm?.(total, values)
             if (!ask) return run(values)
             confirm.ask({ ...ask, onConfirm: () => void run(values) })
           })}

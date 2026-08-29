@@ -1,11 +1,18 @@
-import type { PageParams } from '../types'
+import type { PageParams } from '../types.ts'
+import type { User } from '../users/types.ts'
 
+/**
+ * One line of the expenditure ledger. `amount` is a decimal string —
+ * `"20500.00"` — and `user` is the account that recorded it, expanded by both
+ * the list and the detail endpoint.
+ */
 export type Spending = {
   id: number
   amount: number | string
   description: string
   datecreated: string
   user_id: number
+  user?: User
 }
 
 export type SpendingListParams = PageParams & {
@@ -24,4 +31,9 @@ export type SpendingBody = {
   description: string
 }
 
-export type SpendingMonth = Record<string, unknown>
+/** One month of `GET /spendings/summary`, keyed `YYYY-MM`. */
+export type SpendingMonth = {
+  month: string
+  total: number
+  entries: number
+}

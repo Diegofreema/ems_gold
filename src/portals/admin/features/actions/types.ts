@@ -59,8 +59,16 @@ export type ActionDef = {
   /**
    * Asked before the flow runs. Set where pressing the button commits money
    * against real families and cannot be taken back from this screen.
+   *
+   * The running total is passed where the flow has a picker to compute one;
+   * taking a payment settles one invoice and has none, so it is optional. The
+   * answers are passed too, and awaited, so a confirm can name what was picked
+   * — the dialog is the last chance to notice the wrong invoice.
    */
-  confirm?: (total: { pupils: number; amount: number }) => ActionConfirm
+  confirm?: (
+    total?: { pupils: number; amount: number },
+    values?: Record<string, unknown>,
+  ) => ActionConfirm | Promise<ActionConfirm>
 }
 
 /** What the API did, as the flow page reports it. */

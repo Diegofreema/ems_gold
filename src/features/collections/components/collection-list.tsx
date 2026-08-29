@@ -11,10 +11,12 @@ import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
 import { fileActionToast, primaryActionKind } from '../primary-action'
 import { useCollectionRows } from '../use-collection-rows'
+import { useRemoveRecord } from '../use-remove-record'
 import { useRowAction } from '../use-row-action'
 import { toTableColumns } from './collection-columns'
 import { CollectionFilters } from './collection-filters'
@@ -33,8 +35,33 @@ export function CollectionList({
   const navigate = useNavigate()
   const confirm = useConfirm()
   const rowAction = useRowAction(definition, confirm)
-  const { text, query, filters, page, pending, setQuery, setFilter, setPage, total, paged } =
-    useCollectionRows(definition)
+  const remove = useRemoveRecord(definition)
+  const {
+    text, query, filters, page, pending, setQuery, setFilter, setPage,
+    total, paged, error, paused, retry,
+  } = useCollectionRows(definition)
+
+  // A list that cannot load says so rather than shimmering forever — because
+  // the endpoint refused, or because the request is held back as offline and
+  // may never go. Only with nothing on screen: a failed page turn keeps the
+  // rows already there.
+  if (!paged && (error || paused)) {
+    return (
+      <>
+        <PageHeader
+          kicker={definition.kicker}
+          title={definition.title}
+          description={definition.description}
+        />
+        <Rule />
+        <EmptyState
+          title="This list could not load"
+          body={error ? errorMessage(error, OFFLINE_MESSAGE) : OFFLINE_MESSAGE}
+          action={<Button onClick={retry}>Try again</Button>}
+        />
+      </>
+    )
+  }
 
   // The one moment with nothing to show: before the first answer. Every later
   // one keeps the rows it has, so this is the only skeleton a reader sees.
@@ -51,7 +78,11 @@ export function CollectionList({
       body: `This removes the record from the register. Anything already raised against it stays in the audit log.`,
       subject: row[definition.nameKey],
       cta: `Delete the ${definition.noun}`,
-      onConfirm: () => toast(`${row[definition.nameKey]} deleted`),
+      // A collection with no delete endpoint keeps the prototype's toast.
+      onConfirm: () =>
+        definition.remove
+          ? remove.mutate(row.id)
+          : toast(`${row[definition.nameKey]} deleted`),
     })
 
   // One decision, shared with the create route so a list that does not create

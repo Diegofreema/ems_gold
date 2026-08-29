@@ -25,7 +25,7 @@ export function useCollectionRows(definition: CollectionDef) {
   )
   const list = useListQuery(keys)
   const { query, filters } = list
-  const { data, isPlaceholderData, isFetching } = useQuery(
+  const { data, error, refetch, fetchStatus, isPlaceholderData, isFetching } = useQuery(
     collectionQuery(definition, { page: list.page, q: query, filters }),
   )
   const pagination = data?.pagination
@@ -58,6 +58,20 @@ export function useCollectionRows(definition: CollectionDef) {
     page: list.page,
     /** The next set of rows is on its way; the ones on screen are the last set. */
     pending: isPlaceholderData || isFetching,
+    /**
+     * Why there are no rows, when the reason is a refusal rather than an empty
+     * register — an endpoint the deployment is missing, or a session that has
+     * ended. Only worth showing while there is nothing on screen to keep.
+     */
+    error,
+    /**
+     * react-query is holding the request back because it believes the browser
+     * is offline. It will go on its own once the connection returns, but with
+     * nothing on screen the reader is owed the reason rather than a skeleton
+     * that never resolves.
+     */
+    paused: fetchStatus === 'paused',
+    retry: () => void refetch(),
     setQuery: list.setQuery,
     setFilter: list.setFilter,
     setPage: list.setPage,

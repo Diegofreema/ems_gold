@@ -1,5 +1,5 @@
 import type { Paginated } from '../../api/types.ts'
-import type { OptionsKey } from './options.ts'
+import type { Choice, OptionsKey } from './options.ts'
 import type { Align, CardRole } from '@/lib/table.ts'
 
 /**
@@ -114,7 +114,7 @@ export type ListParams = {
 export type FilterSpec = {
   key: string
   label: string
-  options?: readonly string[]
+  options?: readonly Choice[]
   /** Reads the choices from the API, the same feeds the forms use. */
   optionsFrom?: OptionsKey
   /** Names the filter this one is scoped by; arms belong to a class. */
@@ -157,7 +157,12 @@ export type RowActionSpec = {
 }
 
 /** A summary tile whose figure the API is asked for rather than written down. */
-export type CountTile = { label: string; count: () => Promise<number> }
+export type CountTile = {
+  label: string
+  count: () => Promise<number>
+  /** How the figure reads. Defaults to a plain count; a ledger wants money. */
+  format?: (value: number) => string
+}
 
 export type ColumnSpec = {
   key: string
@@ -178,7 +183,7 @@ export type FieldSpec = {
   wide?: boolean
   placeholder?: string
   hint?: string
-  options?: readonly string[]
+  options?: readonly Choice[]
   /**
    * Reads the choices from the API instead of listing them, so the form
    * submits the school's own ids. `dependsOn` names the field that scopes the
@@ -269,6 +274,11 @@ export type CollectionDef = {
    * without one keeps the prototype's toast, since it has no endpoint yet.
    */
   save?: (values: Record<string, unknown>, recordId?: string) => Promise<unknown>
+  /**
+   * Deletes a record, from its row and from its edit form. A collection
+   * without one keeps the prototype's toast, since it has no endpoint yet.
+   */
+  remove?: (recordId: string) => Promise<unknown>
   /**
    * What the record panel lists. Defaults to the table's columns, which is
    * all a fixture row holds; a collection read from the API usually knows far

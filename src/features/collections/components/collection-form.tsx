@@ -12,6 +12,7 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { BLANK } from '../blank'
 import { schemaFromSections } from '../schema'
+import { useRemoveRecord } from '../use-remove-record'
 import { useSaveRecord } from '../use-save-record'
 import type {
   CollectionDef,
@@ -90,6 +91,7 @@ export function CollectionForm({
   const form = useRecordForm<Values>(schemaFromSections(sections), defaults)
   const editing = Boolean(record)
   const save = useSaveRecord(definition, editing)
+  const remove = useRemoveRecord(definition)
   const back = () =>
     record
       ? navigate({
@@ -97,6 +99,28 @@ export function CollectionForm({
           params: { collection: definition.id, recordId: record.id },
         })
       : navigate({ to: definition.path })
+
+  /**
+   * The list is where a deleted record's page has to end up, so the navigation
+   * waits for the API rather than leaving on the click — a refusal keeps the
+   * form open on a record that still exists.
+   */
+  const askDelete = () =>
+    confirm.ask({
+      title: `Delete this ${definition.noun}?`,
+      body: 'This removes the record from the register. Anything already raised against it stays in the audit log.',
+      subject: record?.[definition.nameKey] ?? '',
+      cta: `Delete the ${definition.noun}`,
+      onConfirm: () => {
+        if (!definition.remove) {
+          toast(`${record?.[definition.nameKey]} deleted`)
+          return void navigate({ to: definition.path })
+        }
+        remove.mutate(record!.id, {
+          onSuccess: () => void navigate({ to: definition.path }),
+        })
+      },
+    })
 
   return (
     <>
@@ -125,21 +149,7 @@ export function CollectionForm({
         }}
         onCancel={back}
         deleteLabel={editing ? 'Delete this record' : undefined}
-        onDelete={
-          editing
-            ? () =>
-                confirm.ask({
-                  title: `Delete this ${definition.noun}?`,
-                  body: 'This removes the record from the register. Anything already raised against it stays in the audit log.',
-                  subject: record?.[definition.nameKey] ?? '',
-                  cta: `Delete the ${definition.noun}`,
-                  onConfirm: () => {
-                    toast(`${record?.[definition.nameKey]} deleted`)
-                    void navigate({ to: definition.path })
-                  },
-                })
-            : undefined
-        }
+        onDelete={editing ? askDelete : undefined}
       >
         {sections.map((section) => (
           <FormSection key={section.title} title={section.title}>

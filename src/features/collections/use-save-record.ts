@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { capitalise } from '@/lib/format'
 import type { CollectionDef } from './types'
-
-const sentence = (noun: string) => noun.charAt(0).toUpperCase() + noun.slice(1)
 
 /**
  * Writes a record back through the collection's own `save`, then drops the
@@ -21,7 +20,7 @@ export function useSaveRecord(definition: CollectionDef, editing: boolean) {
     }) => definition.save!(values, recordId),
     // "Pupil created", to read like every other toast in the app.
     meta: {
-      success: `${sentence(definition.noun)} ${editing ? 'updated' : 'created'}`,
+      success: `${capitalise(definition.noun)} ${editing ? 'updated' : 'created'}`,
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['collection', definition.path] }),

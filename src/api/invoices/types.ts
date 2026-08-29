@@ -14,6 +14,8 @@ export type Invoice = {
   payday: string | null
   student?: Record<string, unknown>
   fee?: Record<string, unknown>
+  /** The session the invoice was raised under, expanded by list and detail. */
+  session?: Record<string, unknown>
   /** Set when the pupil's row has since been deleted. */
   student_missing?: boolean
 }
@@ -26,11 +28,17 @@ export type InvoiceListParams = PageParams & {
   enddate?: string
 }
 
+/**
+ * Only `amount` is actually required — `POST /invoices` accepts a body with
+ * nothing else in it. The rest are required here because an invoice nobody
+ * can bill is not worth raising; `session_id` is the exception, since the
+ * school may not have a current session set.
+ */
 export type InvoiceBody = {
   fee_id: number
   student_id: number
-  session_id: number
   amount: string
+  session_id?: number
   paystatus?: string
   invoiceid?: string
 }

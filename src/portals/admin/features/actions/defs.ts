@@ -1,5 +1,9 @@
 import { classArmsService } from '@/api/class-arms/service'
+import { departmentsService } from '@/api/departments/service'
+import { feesService } from '@/api/fees/service'
+import { invoicesService } from '@/api/invoices/service'
 import { studentsService } from '@/api/students/service'
+import { optionLabels } from '@/features/collections/option-feeds'
 import type { Row } from '@/features/collections/types'
 import {
   ADMIT,
@@ -13,7 +17,7 @@ import {
   studentMove,
 } from '@/portals/admin/collections/student-move'
 import { formatNaira, parseNaira } from '@/lib/format'
-import type { ActionDef, PickerItem } from './types'
+import type { ActionDef } from './types'
 
 export type AdminFlow = {
   /** Button label on the record, e.g. "Allocate to classes". */
@@ -23,22 +27,8 @@ export type AdminFlow = {
   build: (row?: Row) => ActionDef | Promise<ActionDef>
 }
 
-/** Every arm a fee can be allocated to, with the pupils it holds. */
-const ARMS: PickerItem[] = [
-  ['Primary 1 A', 38],
-  ['Primary 4 A', 41],
-  ['Primary 6 B', 36],
-  ['JSS1 A', 44],
-  ['JSS3 C', 39],
-  ['SS1 A', 35],
-  ['SS2 B', 34],
-  ['SS3 A', 31],
-].map(([label, count]) => ({
-  key: label as string,
-  label: label as string,
-  meta: `${count} pupils`,
-  count: count as number,
-}))
+/** Everything on one page — a school has classes in the dozens. */
+const ALL_CLASSES = 200
 
 const DASH = '—'
 
@@ -47,118 +37,150 @@ function pupilName(pupil: { fname: string; lname: string; mname?: string | null 
   return [pupil.fname, pupil.mname, pupil.lname].filter(Boolean).join(' ')
 }
 
-function allocate(row?: Row): ActionDef {
+/**
+ * Allocating a fee to classes.
+ *
+ * The design picks class arms; `POST /fees/{id}/allocate` takes classes and
+ * levels, and knows nothing about arms — so the picker offers classes. Each
+ * one is asked how many pupils it holds, because the whole point of this
+ * screen is seeing what pressing the button will bill.
+ *
+ * Passing `departments` replaces the whole set, so the classes a fee is
+ * already charged to arrive ticked: unticking one is how it is unallocated.
+ */
+async function allocate(row?: Row): Promise<ActionDef> {
   const amount = parseNaira(row?.amount ?? '')
+  const classes = await departmentsService
+    .list({ limit: ALL_CLASSES })
+    .then((page) => page.items)
+    .catch(() => [])
+
+  const headcounts = await Promise.all(
+    classes.map((department) =>
+      studentsService
+        .list({ department_id: department.id, status: 'Admitted', limit: 1 })
+        .then((page) => page.pagination.total)
+        .catch(() => 0),
+    ),
+  )
+
   return {
     kicker: 'Finance · Fee catalogue',
     title: `Allocate ${row?.name ?? 'this fee'}`,
     description:
-      'Pick the arms this fee applies to. Invoices are raised for every pupil in the arms you pick, at the amount on the fee.',
+      'Pick the classes this fee applies to. Invoices are raised for every pupil in them, at the amount on the fee.',
     summary: [
       { label: 'Fee', value: row?.name ?? DASH },
       { label: 'Per pupil', value: formatNaira(amount) },
-      { label: 'Charged', value: row?.type ?? DASH },
+      { label: 'Charged to', value: row?.charge ?? DASH },
     ],
     picker: {
-      title: 'Class arms',
-      items: ARMS,
-      note: 'Pupils admitted later are billed automatically while the fee stays active.',
-      requiredMessage: 'Pick at least one arm to bill.',
+      title: 'Classes',
+      items: classes.map((department, index) => ({
+        key: String(department.id),
+        label: department.name,
+        meta: `${headcounts[index]} ${headcounts[index] === 1 ? 'pupil' : 'pupils'}`,
+        count: headcounts[index],
+      })),
+      // Unticking is how a class is dropped, so what it is already charged to
+      // has to be on screen before anything is changed.
+      preselected: row?.classIds ? row.classIds.split(',').filter(Boolean) : undefined,
+      note: 'Unticking a class stops the fee applying to it. Invoices already raised are not touched.',
+      requiredMessage: 'Pick at least one class to bill.',
     },
-    fields: [
-      { key: 'due', label: 'Due date', required: true, date: true, value: new Date(2025, 10, 30) },
-      { key: 'notify', label: 'Tell parents', required: true, options: ['Email and SMS', 'Email only', 'Do not notify'] },
-    ],
+    fields: [],
     unitAmount: amount,
-    cta: 'Raise invoices',
+    cta: 'Allocate to these classes',
     footnote: 'Nothing is billed until you press this.',
-    confirm: (total) => ({
-      title: 'Raise these invoices?',
-      body: 'Every pupil in the arms you picked is billed at the fee amount, and their parents see the invoice straight away. Invoices already raised are not touched.',
+    confirm: (total = { pupils: 0, amount: 0 }) => ({
+      title: 'Allocate this fee?',
+      body: 'Every pupil in the classes ticked is billed at the fee amount. Classes you unticked stop being charged, and invoices already raised are not touched.',
       subject: `${total.pupils} ${total.pupils === 1 ? 'pupil' : 'pupils'} · ${formatNaira(total.amount)} · ${row?.name ?? 'this fee'}`,
-      cta: 'Raise invoices',
+      cta: 'Allocate the fee',
       cancel: 'Go back',
     }),
-    done: (picked) => `Invoices raised for ${picked} ${picked === 1 ? 'arm' : 'arms'}`,
+    run: async (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      await feesService.allocate(String(row?.id ?? ''), {
+        departments: picked.map(Number),
+      })
+      return {
+        message: `${row?.name ?? 'The fee'} allocated to ${picked.length} ${picked.length === 1 ? 'class' : 'classes'}`,
+      }
+    },
+    done: (picked) => `Fee allocated to ${picked} ${picked === 1 ? 'class' : 'classes'}`,
   }
 }
 
+/**
+ * Taking a payment at the counter.
+ *
+ * `POST /invoices/{id}/settle` marks the whole invoice paid in one move and
+ * names the pupil, so a mistyped reference cannot clear someone else's bill.
+ * That is all it records: there is no part payment, and nowhere to put a
+ * method or a teller number, so the flow does not ask for either. The endpoint
+ * that carries them is `collect-fees/{id}/pay`, which is not deployed yet.
+ */
 function payment(row?: Row): ActionDef {
-  // Opened from the collection page there is no invoice yet, so the flow asks
-  // for one; opened from an invoice it already knows what is being settled.
-  const balance = parseNaira(row?.balance ?? row?.owing ?? row?.amount ?? '')
-  const lookup: ActionDef['fields'] = row
-    ? []
-    : [
-        {
-          key: 'pupil',
-          label: 'Pupil',
-          required: true,
-          wide: true,
-          hint: 'Search by name or admission number.',
-          options: [
-            'Chinedu Udo — SS2 B',
-            'Fatima Bello — JSS1 A',
-            'Tolu Adeyemi — Primary 4 A',
-            'Ngozi Eze — SS1 A',
-            'Ibrahim Sani — JSS3 C',
-          ],
-        },
-        {
-          key: 'invoice',
-          label: 'Invoice to settle',
-          required: true,
-          wide: true,
-          options: [
-            'INV-25091 — Boarding — ₦85,000 outstanding',
-            'INV-25104 — Tuition JSS — ₦47,500 outstanding',
-            'INV-25117 — Tuition Primary — ₦31,000 outstanding',
-          ],
-        },
-      ]
+  // Opened from a parent's record the flow already knows the household, which
+  // is worth showing; it still cannot know which of their children is paying.
+  const household = row?.name
 
   return {
     kicker: 'Finance · Fee collection',
     title: 'Take a payment',
-    description: row
-      ? 'Record money received at the bursary. The receipt is issued immediately and the parent is notified.'
-      : 'Find the pupil, pick the invoice being settled, then record what you received. The receipt is issued immediately.',
-    // The flow is reached from an invoice and from a parent account, and the
-    // two identify themselves differently.
-    summary: row
-      ? [
-          ...(row.student
-            ? [
-                { label: 'Invoice', value: row.invoice ?? DASH },
-                { label: 'Pupil', value: row.student },
-              ]
-            : [
-                { label: 'Parent', value: row.name ?? DASH },
-                { label: 'Children', value: row.children ?? DASH },
-              ]),
-          { label: 'Balance', value: formatNaira(balance) },
-        ]
-      : [],
+    description:
+      'Find the pupil, pick the invoice being settled, then record it. The invoice is marked paid in full and the parent sees it straight away.',
+    // Only the household: the parent record keeps its children in a tab, not
+    // in a column, so a "Children" tile here would read as a dash every time.
+    summary: household ? [{ label: 'Parent', value: household }] : [],
     fields: [
-      ...lookup,
       {
-        key: 'amount',
-        label: 'Amount received (₦)',
+        key: 'student_id',
+        label: 'Pupil',
         required: true,
-        numeric: true,
-        value: balance ? balance.toLocaleString('en-NG') : '',
-      },
-      { key: 'method', label: 'Method', required: true, options: ['Cash', 'Bank transfer', 'POS', 'Remita (RRR)'] },
-      {
-        key: 'ref',
-        label: 'Reference or teller number',
         wide: true,
-        hint: 'Leave empty for cash taken at the counter.',
+        optionsFrom: 'students',
+        hint: 'Search by name or admission number.',
+      },
+      {
+        key: 'invoice_id',
+        label: 'Invoice to settle',
+        required: true,
+        wide: true,
+        optionsFrom: 'unpaid-invoices',
+        dependsOn: 'student_id',
+        hint: 'Only invoices still owing are listed. Settling clears the whole amount.',
       },
     ],
-    cta: 'Record payment and issue receipt',
-    footnote: 'Part payments are allowed.',
-    done: () => 'Payment recorded — receipt issued',
+    cta: 'Record payment',
+    footnote: 'Nothing is settled until you press this.',
+    // Named from the two feeds the selects just read, so the dialog says who
+    // is paying and what for rather than "the invoice you picked" — this is
+    // the last chance to notice the wrong one.
+    confirm: async (_total, values) => {
+      const pupil = String(values?.student_id ?? '')
+      const [pupils, invoices] = await Promise.all([
+        optionLabels('students'),
+        optionLabels('unpaid-invoices', pupil),
+      ])
+      return {
+        title: 'Settle this invoice?',
+        body: 'This records the invoice as paid in full and closes its transaction. There is no undoing it from here.',
+        subject: [pupils.get(pupil), invoices.get(String(values?.invoice_id ?? ''))]
+          .filter(Boolean)
+          .join(' · '),
+        cta: 'Record the payment',
+        cancel: 'Go back',
+      }
+    },
+    run: async (values) => {
+      await invoicesService.settle(String(values.invoice_id), {
+        student_id: Number(values.student_id),
+      })
+      return { message: 'Payment recorded — invoice settled' }
+    },
+    done: () => 'Payment recorded — invoice settled',
   }
 }
 
@@ -310,7 +332,8 @@ function lend(row?: Row): ActionDef {
 export const adminFlows: Record<string, AdminFlow> = {
   fees: { label: 'Allocate to classes', build: allocate },
   collect: { label: 'Take a payment', fromList: true, build: payment },
-  invoices: { label: 'Record offline payment', build: payment },
+  // Not on `invoices`: an invoice's own page settles it from the row action,
+  // and two buttons doing one thing is one too many.
   parents: { label: 'Take a payment', build: payment },
   students: { label: 'Promote or transfer', build: promote },
   applicants: { label: 'Review application', build: review },

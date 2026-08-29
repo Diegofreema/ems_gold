@@ -1,60 +1,217 @@
+import { sessionsService } from '@/api/calendar/service'
+import { feesService } from '@/api/fees/service'
+import type { FeeType } from '@/api/fees/types'
+import { invoicesService } from '@/api/invoices/service'
+import { spendingsService } from '@/api/spendings/service'
 import type { CollectionDef } from '@/features/collections/types'
-import { feeTabs, invoiceTabs } from './tabs'
+import { formatNaira } from '@/lib/format'
+import { PAGE_SIZE } from '@/hooks/use-list-query'
+import { queryClient } from '@/lib/query-client'
+import {
+  activateAction,
+  CHARGE_OPTIONS,
+  feeBody,
+  feeRow,
+} from './fee-row'
+import { invoiceBody, invoiceRow, owedTotal, settleAction } from './invoice-row'
+import {
+  monthKey,
+  spendingBody,
+  spendingRow,
+  spentIn,
+  spentInYear,
+} from './spending-row'
+
+/**
+ * Totals and entry counts per month, from the one endpoint that answers for
+ * every month at once. The three tiles above the ledger ask for it together
+ * and react-query collapses that into a single request.
+ */
+const monthlySpend = () =>
+  queryClient.ensureQueryData({
+    queryKey: ['spendings', 'summary'],
+    queryFn: () => spendingsService.summary(),
+  })
+
+/**
+ * A count the catalogue asks for by listing one row and reading the total off
+ * the pagination — there is no endpoint that counts fees without listing them.
+ */
+const countFees = (status: 0 | 1) => async () =>
+  (await feesService.list({ status, limit: 1 })).pagination.total
 
 export const fees: CollectionDef = {
   id: 'fees',
-  tabs: feeTabs,
   path: '/admin/fees',
   kicker: 'Finance',
   title: 'Fee catalogue',
   description:
-    'Every chargeable fee, its amount and the classes it is allocated to. Amounts here drive every invoice raised this term.',
+    'Every chargeable fee and what it costs. Allocate one to classes and it is billed to every pupil in them; retire it and invoices already raised stay payable.',
   action: 'Create fee',
-  searchHint: 'Search fee name',
-  footer: 'Showing 6 of 6 fees · First Term 2025/2026',
+  searchHint: 'Search fee name or item code',
+  footer: 'Newest first',
   emptyTitle: 'No fees in the catalogue',
   emptyBody:
     'Nothing can be invoiced until at least one fee exists. Create the first one and allocate it to classes.',
   noun: 'fee',
   nameKey: 'name',
-  summary: [
-    { label: 'Active fees', value: '6' },
-    { label: 'Total per pupil (SS1)', value: '₦182,500' },
-    { label: 'Unallocated fees', value: '1' },
+  counts: [
+    { label: 'Active', count: countFees(1) },
+    { label: 'Retired', count: countFees(0) },
   ],
+  // No "Allocated to" column: only `GET /fees/{id}` expands what a fee is
+  // charged to, so the register would show an empty cell on every row. It is
+  // on the record panel, where the API does answer for it.
   columns: [
     { key: 'name', label: 'Fee', cardRole: 'title' },
-    { key: 'type', label: 'Type', cardRole: 'subtitle' },
+    { key: 'code', label: 'Item code', cardRole: 'subtitle' },
+    { key: 'charge', label: 'Charged to' },
     { key: 'amount', label: 'Amount', align: 'right' },
-    { key: 'classes', label: 'Allocated to' },
     { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'fee-1', name: 'Tuition — Senior Secondary', type: 'Termly', amount: '₦120,000', classes: 'SS1 – SS3', status: 'Active' },
-    { id: 'fee-2', name: 'Tuition — Junior Secondary', type: 'Termly', amount: '₦95,000', classes: 'JSS1 – JSS3', status: 'Active' },
-    { id: 'fee-3', name: 'Tuition — Primary', type: 'Termly', amount: '₦62,000', classes: 'Primary 1 – 6', status: 'Active' },
-    { id: 'fee-4', name: 'Boarding', type: 'Termly', amount: '₦85,000', classes: '9 arms', status: 'Active' },
-    { id: 'fee-5', name: 'Examination (WAEC)', type: 'One-off', amount: '₦28,500', classes: 'SS3', status: 'Active' },
-    { id: 'fee-6', name: 'ICT levy', type: 'Session', amount: '₦15,000', classes: 'Not allocated', status: 'Draft' },
+  detail: [
+    { key: 'name', label: 'Fee' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'charge', label: 'Charged to' },
+    { key: 'status', label: 'Status' },
+    { key: 'classes', label: 'Allocated to' },
+    { key: 'levels', label: 'Levels' },
+    { key: 'code', label: 'Item code' },
+    { key: 'remita', label: 'Remita code' },
+    { key: 'author', label: 'Created by' },
+    { key: 'starts', label: 'Starts' },
+    { key: 'ends', label: 'Ends' },
   ],
+  filters: [
+    {
+      key: 'status',
+      label: 'Any status',
+      options: [
+        { value: '1', label: 'Active' },
+        { value: '0', label: 'Retired' },
+      ],
+    },
+    { key: 'feetype', label: 'Anyone', options: CHARGE_OPTIONS },
+  ],
+  // Retiring is two endpoints of its own rather than a field on the fee, and
+  // it is the safe alternative to deleting: what is already invoiced stays.
+  rowAction: {
+    label: (row) => activateAction(row.status).label,
+    confirm: (row) =>
+      row.status === 'Active'
+        ? 'It stops being charged from now on. Invoices already raised against it stay intact and payable.'
+        : undefined,
+    done: (row) => `${row.name} ${activateAction(row.status).done}`,
+    run: (row) =>
+      activateAction(row.status).activate
+        ? feesService.activate(row.id)
+        : feesService.deactivate(row.id),
+  },
+  source: async ({ page, q, filters }) => {
+    const { items, pagination } = await feesService.list({
+      page,
+      limit: PAGE_SIZE,
+      q,
+      status: filters.status === '' ? undefined : (Number(filters.status) as 0 | 1),
+      feetype: (filters.feetype || undefined) as FeeType | undefined,
+    })
+    return { items: items.map(feeRow), pagination }
+  },
+  record: (recordId) => feesService.get(recordId).then(feeRow),
+  save: (values, recordId) =>
+    recordId
+      ? feesService.update(recordId, feeBody(values))
+      : feesService.create(feeBody(values)),
+  /**
+   * Refused with 409 while anything references the fee, and the API says what
+   * in the message. Deactivating is almost always what was meant, which is why
+   * that is the button on the row.
+   */
+  remove: (recordId) => feesService.remove(recordId),
+  // Allocation is not here: passing `departments` replaces the whole set, so
+  // an edit that did not ask about it would silently unallocate the fee.
   form: [
     {
       title: 'The fee',
       fields: [
-        { key: 'name', label: 'Fee name', required: true, wide: true, placeholder: 'Tuition — Senior Secondary', hint: 'Appears on the invoice exactly as written.' },
-        { key: 'type', label: 'Charged', required: true, options: ['Termly', 'Session', 'One-off'] },
-        { key: 'amount', label: 'Amount (₦)', required: true, numeric: true, placeholder: '120,000' },
-      ],
-    },
-    {
-      title: 'Where it applies',
-      fields: [
-        { key: 'classes', label: 'Allocated to', options: ['Not allocated', 'Primary 1 – 6', 'JSS1 – JSS3', 'SS1 – SS3', 'All classes'], hint: 'You can allocate to individual arms after saving.' },
-        { key: 'status', label: 'Status', options: ['Draft', 'Active'] },
-        { key: 'note', label: 'Internal note', multiline: true, wide: true, placeholder: 'Why this fee exists, who approved it.' },
+        {
+          key: 'name',
+          label: 'Fee name',
+          required: true,
+          wide: true,
+          placeholder: 'TUITION FEE',
+          hint: 'Appears on every invoice raised against it, exactly as written.',
+        },
+        {
+          key: 'figure',
+          label: 'Amount (₦)',
+          required: true,
+          numeric: true,
+          placeholder: '30,000',
+        },
+        {
+          key: 'feetype',
+          label: 'Charged to',
+          required: true,
+          options: CHARGE_OPTIONS,
+        },
+        {
+          key: 'itemcode',
+          label: 'Item code',
+          placeholder: '10001001',
+          hint: 'The school\'s own accounting code. Leave it empty if you do not use one.',
+        },
       ],
     },
   ],
+}
+
+/** Everything the school is still owed, in one request. */
+const OWING_PAGE = 500
+
+/**
+ * The two words `paystatus` comes back as, offered under the one an office
+ * would use. The value is the API's own, since the filter is sent verbatim.
+ */
+const PAY_STATUS = [
+  { value: 'Unpaid', label: 'Unpaid' },
+  { value: 'success', label: 'Paid' },
+] as const
+
+/**
+ * A figure the register asks for by listing one row and reading the count off
+ * the pagination — there is no endpoint that counts invoices without listing
+ * them.
+ */
+const countInvoices = (status?: string) => async () =>
+  (await invoicesService.list({ status, limit: 1 })).pagination.total
+
+/** What an invoice's own page reads, whichever register opened it. */
+const INVOICE_DETAIL = [
+  { key: 'invoice', label: 'Reference' },
+  { key: 'student', label: 'Pupil' },
+  { key: 'arm', label: 'Arm' },
+  { key: 'fee', label: 'Fee' },
+  { key: 'billed', label: 'Amount' },
+  { key: 'paid', label: 'Paid' },
+  { key: 'status', label: 'Status' },
+  { key: 'session', label: 'Session' },
+  { key: 'raised', label: 'Raised' },
+  { key: 'settledOn', label: 'Settled' },
+]
+
+/**
+ * Settling is offered wherever an invoice is listed. It is its own endpoint
+ * rather than a field on the invoice, and it names the pupil so a mistyped
+ * reference cannot clear someone else's bill. Every part is read off the row,
+ * and an invoice already paid gets no button at all.
+ */
+const settleRow: CollectionDef['rowAction'] = {
+  label: (row) => settleAction(row.status),
+  confirm: () =>
+    'This records the invoice as paid in full and closes its transaction. There is no undoing it from here.',
+  done: (row) => `${row.invoice} settled`,
+  run: (row) => invoicesService.settle(row.id, { student_id: Number(row.student_id) }),
 }
 
 export const collect: CollectionDef = {
@@ -63,82 +220,126 @@ export const collect: CollectionDef = {
   kicker: 'Finance',
   title: 'Fee collection',
   description:
-    'Outstanding invoices waiting on payment. Record cash, transfer or POS against an invoice and the receipt is issued immediately.',
+    'Every invoice still owing. Take a payment against one and it is settled in full — this API records no part payments.',
   action: 'Take a payment',
   searchHint: 'Search pupil or invoice no.',
-  footer: '20 of 214 outstanding invoices',
+  // Same as the invoice register: the endpoint takes no search term.
+  searchable: false,
+  footer: 'Newest first',
   emptyTitle: 'Nothing outstanding',
   emptyBody:
-    'Every invoice for this term has been settled. New invoices will appear here as they fall due.',
+    'Every invoice raised has been settled. New ones appear here as fees are raised against pupils.',
   noun: 'invoice',
   nameKey: 'student',
-  summary: [
-    { label: 'Outstanding', value: '₦12,480,000' },
-    { label: 'Collected today', value: '₦1,930,000' },
-    { label: 'Invoices overdue', value: '214' },
+  counts: [
+    {
+      label: 'Outstanding',
+      count: async () =>
+        owedTotal((await invoicesService.list({ status: 'Unpaid', limit: OWING_PAGE })).items),
+      format: formatNaira,
+    },
+    { label: 'Invoices owing', count: countInvoices('Unpaid') },
+    { label: 'Settled', count: countInvoices('success') },
   ],
+  // No status column: every row here is owing, so it would say one word all
+  // the way down. No due date either — the API keeps none.
   columns: [
     { key: 'invoice', label: 'Invoice', cardRole: 'subtitle' },
     { key: 'student', label: 'Pupil', cardRole: 'title' },
     { key: 'arm', label: 'Arm' },
-    { key: 'balance', label: 'Balance', align: 'right' },
-    { key: 'due', label: 'Due' },
-    { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
+    { key: 'fee', label: 'Fee' },
+    { key: 'billed', label: 'Balance', align: 'right' },
   ],
-  rows: [
-    { id: 'c-1', invoice: 'INV-25091', student: 'Chinedu Udo', arm: 'SS2 B', balance: '₦85,000', due: '12 Oct 2025', status: 'Overdue' },
-    { id: 'c-2', invoice: 'INV-25104', student: 'Fatima Bello', arm: 'JSS1 A', balance: '₦47,500', due: '19 Oct 2025', status: 'Overdue' },
-    { id: 'c-3', invoice: 'INV-25117', student: 'Tolu Adeyemi', arm: 'Primary 4 A', balance: '₦31,000', due: '02 Nov 2025', status: 'Part paid' },
-    { id: 'c-4', invoice: 'INV-25133', student: 'Ngozi Eze', arm: 'SS1 A', balance: '₦120,000', due: '05 Nov 2025', status: 'Unpaid' },
-    { id: 'c-5', invoice: 'INV-25148', student: 'Ibrahim Sani', arm: 'JSS3 C', balance: '₦95,000', due: '05 Nov 2025', status: 'Unpaid' },
-    { id: 'c-6', invoice: 'INV-25156', student: 'Amarachi Nwosu', arm: 'Primary 6 B', balance: '₦18,750', due: '11 Nov 2025', status: 'Part paid' },
-    { id: 'c-7', invoice: 'INV-25161', student: 'David Ogunleye', arm: 'SS3 A', balance: '₦28,500', due: '14 Nov 2025', status: 'Unpaid' },
-  ],
+  detail: INVOICE_DETAIL,
+  rowAction: settleRow,
+  source: async ({ page }) => {
+    const { items, pagination } = await invoicesService.list({
+      page,
+      limit: PAGE_SIZE,
+      status: 'Unpaid',
+    })
+    return { items: items.map(invoiceRow), pagination }
+  },
+  record: (recordId) => invoicesService.get(recordId).then(invoiceRow),
 }
 
 export const invoices: CollectionDef = {
   id: 'invoices',
-  tabs: invoiceTabs,
   path: '/admin/invoices',
   kicker: 'Finance',
   title: 'Invoices',
   description:
-    'Every invoice raised this session, paid or not. Open one to see its payment history and reissue the receipt.',
+    'Every invoice raised against a pupil, settled or not. Open one for the pupil, the fee and when it was paid.',
   action: 'Create invoice',
   searchHint: 'Search invoice or pupil',
-  footer: '8 of 1,604 invoices · 2025/2026',
+  // The endpoint takes no search term — it answers with the whole register
+  // whatever is passed — and a box that narrows nothing is worse than none.
+  searchable: false,
+  footer: 'Newest first',
   emptyTitle: 'No invoices yet',
   emptyBody:
-    'Invoices appear here once fees are allocated to a class and raised against pupils.',
+    'Invoices appear here once a fee is raised against a pupil. Create the first one to start billing.',
   noun: 'invoice',
   nameKey: 'student',
+  counts: [
+    { label: 'Invoices raised', count: countInvoices() },
+    { label: 'Still owing', count: countInvoices('Unpaid') },
+    { label: 'Settled', count: countInvoices('success') },
+  ],
   columns: [
     { key: 'invoice', label: 'Invoice', cardRole: 'subtitle' },
     { key: 'student', label: 'Pupil', cardRole: 'title' },
     { key: 'fee', label: 'Fee' },
-    { key: 'amount', label: 'Amount', align: 'right' },
+    { key: 'billed', label: 'Amount', align: 'right' },
     { key: 'paid', label: 'Paid', align: 'right' },
     { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'i-1', invoice: 'INV-25091', student: 'Chinedu Udo', fee: 'Boarding', amount: '₦85,000', paid: '₦0', status: 'Overdue' },
-    { id: 'i-2', invoice: 'INV-25088', student: 'Halima Yusuf', fee: 'Tuition — JSS', amount: '₦95,000', paid: '₦95,000', status: 'Paid' },
-    { id: 'i-3', invoice: 'INV-25084', student: 'Segun Bakare', fee: 'Tuition — SS', amount: '₦120,000', paid: '₦120,000', status: 'Paid' },
-    { id: 'i-4', invoice: 'INV-25117', student: 'Tolu Adeyemi', fee: 'Tuition — Primary', amount: '₦62,000', paid: '₦31,000', status: 'Part paid' },
-    { id: 'i-5', invoice: 'INV-25074', student: 'Blessing Okoro', fee: 'ICT levy', amount: '₦15,000', paid: '₦15,000', status: 'Paid' },
-    { id: 'i-6', invoice: 'INV-25133', student: 'Ngozi Eze', fee: 'Tuition — SS', amount: '₦120,000', paid: '₦0', status: 'Unpaid' },
-    { id: 'i-7', invoice: 'INV-25061', student: 'Emeka Obi', fee: 'Examination (WAEC)', amount: '₦28,500', paid: '₦28,500', status: 'Paid' },
-    { id: 'i-8', invoice: 'INV-25156', student: 'Amarachi Nwosu', fee: 'Boarding', amount: '₦85,000', paid: '₦66,250', status: 'Part paid' },
-  ],
+  detail: INVOICE_DETAIL,
+  // With no search box, the status is the only way to cut a register of every
+  // invoice the school has ever raised down to the ones somebody is chasing.
+  filters: [{ key: 'status', label: 'Any status', options: PAY_STATUS }],
+  rowAction: settleRow,
+  source: async ({ page, filters }) => {
+    const { items, pagination } = await invoicesService.list({
+      page,
+      limit: PAGE_SIZE,
+      status: filters.status || undefined,
+    })
+    return { items: items.map(invoiceRow), pagination }
+  },
+  record: (recordId) => invoicesService.get(recordId).then(invoiceRow),
+  save: async (values, recordId) => {
+    if (recordId) return invoicesService.update(recordId, invoiceBody(values))
+    // A school with no current session set still raises invoices; the one it
+    // is filed under is simply left off. Same reading as the enrolment form.
+    const session = await sessionsService.current().catch(() => undefined)
+    return invoicesService.create(invoiceBody(values, session?.id))
+  },
+  /** Refused with 409 once paid, so a settled payment cannot be erased. */
+  remove: (recordId) => invoicesService.remove(recordId),
+  // The reference and the status are not asked for: the API generates
+  // `TSS1/16` itself, and an invoice becomes paid by being settled.
   form: [
     {
       title: 'Invoice',
       fields: [
-        { key: 'student', label: 'Pupil', required: true, wide: true, placeholder: 'Search by name or admission number' },
-        { key: 'fee', label: 'Fee', required: true, options: ['Tuition — SS', 'Tuition — JSS', 'Tuition — Primary', 'Boarding', 'Examination (WAEC)', 'ICT levy'] },
-        { key: 'amount', label: 'Amount (₦)', required: true, numeric: true, placeholder: '120,000' },
-        { key: 'due', label: 'Due date', required: true, date: true },
-        { key: 'status', label: 'Status', options: ['Unpaid', 'Part paid', 'Paid'] },
+        {
+          key: 'student_id',
+          label: 'Pupil',
+          required: true,
+          wide: true,
+          optionsFrom: 'students',
+          hint: 'Only pupils already admitted can be billed.',
+        },
+        { key: 'fee_id', label: 'Fee', required: true, optionsFrom: 'fees' },
+        {
+          key: 'amount',
+          label: 'Amount (₦)',
+          required: true,
+          numeric: true,
+          placeholder: '30,000',
+          hint: 'Defaults to nothing — the fee\'s own amount is not copied here.',
+        },
       ],
     },
   ],
@@ -150,44 +351,81 @@ export const spendings: CollectionDef = {
   kicker: 'Finance',
   title: 'Spendings',
   description:
-    'The expenditure ledger. Every entry is dated, categorised and attributable to the staff member who recorded it.',
+    'The expenditure ledger. Every entry is dated and attributed to the staff member who recorded it, and neither can be typed by hand.',
   action: 'Record a spending',
   searchHint: 'Search description',
-  footer: '7 entries · November 2025',
+  footer: 'Newest first',
   emptyTitle: 'No spendings recorded',
-  emptyBody: 'The expenditure ledger is empty for this period.',
+  emptyBody: 'The expenditure ledger is empty. Record the first entry to start it.',
   noun: 'spending',
   nameKey: 'description',
-  summary: [
-    { label: 'Spent this month', value: '₦4,182,000' },
-    { label: 'Largest category', value: 'Salaries' },
-    { label: 'Entries', value: '7' },
+  counts: [
+    {
+      label: 'Spent this month',
+      count: async () => spentIn(await monthlySpend(), monthKey(new Date())).total,
+      format: formatNaira,
+    },
+    {
+      label: 'Entries this month',
+      count: async () => spentIn(await monthlySpend(), monthKey(new Date())).entries,
+    },
+    {
+      label: 'Spent this year',
+      count: async () =>
+        spentInYear(await monthlySpend(), String(new Date().getFullYear())),
+      format: formatNaira,
+    },
   ],
+  // No category column: the endpoint holds none, and a column the ledger
+  // cannot fill would be blank on every row it has.
   columns: [
     { key: 'date', label: 'Date', cardRole: 'subtitle' },
     { key: 'description', label: 'Description', cardRole: 'title' },
-    { key: 'category', label: 'Category' },
-    { key: 'amount', label: 'Amount', align: 'right' },
+    { key: 'spent', label: 'Amount', align: 'right' },
     { key: 'by', label: 'Recorded by' },
   ],
-  rows: [
-    { id: 's-1', date: '18 Nov', description: 'November salaries — teaching staff', category: 'Salaries', amount: '₦3,100,000', by: 'A. Okonkwo' },
-    { id: 's-2', date: '16 Nov', description: 'Diesel — 2,000 litres', category: 'Utilities', amount: '₦412,000', by: 'S. Idowu' },
-    { id: 's-3', date: '14 Nov', description: 'Science laboratory reagents', category: 'Academics', amount: '₦186,500', by: 'A. Okonkwo' },
-    { id: 's-4', date: '11 Nov', description: 'Bus maintenance — Hiace 2', category: 'Transport', amount: '₦154,000', by: 'S. Idowu' },
-    { id: 's-5', date: '08 Nov', description: 'Printing — mid-term test papers', category: 'Academics', amount: '₦88,000', by: 'C. Nnaji' },
-    { id: 's-6', date: '05 Nov', description: 'Cleaning supplies', category: 'Operations', amount: '₦42,500', by: 'S. Idowu' },
-    { id: 's-7', date: '02 Nov', description: 'Internet subscription', category: 'Utilities', amount: '₦199,000', by: 'A. Okonkwo' },
+  detail: [
+    { key: 'description', label: 'What it was for' },
+    { key: 'spent', label: 'Amount' },
+    { key: 'when', label: 'Recorded' },
+    { key: 'by', label: 'Recorded by' },
+    { key: 'account', label: 'Signed in as' },
   ],
+  source: async ({ page, q }) => {
+    const { items, pagination } = await spendingsService.list({
+      page,
+      limit: PAGE_SIZE,
+      q,
+    })
+    return { items: items.map(spendingRow), pagination }
+  },
+  record: (recordId) => spendingsService.get(recordId).then(spendingRow),
+  save: (values, recordId) =>
+    recordId
+      ? spendingsService.update(recordId, spendingBody(values))
+      : spendingsService.create(spendingBody(values)),
+  remove: (recordId) => spendingsService.remove(recordId),
+  // The endpoint stamps the date and reads the spender off the token, so the
+  // form asks for the two things only the person recording it knows.
   form: [
     {
       title: 'Spending',
       fields: [
-        { key: 'description', label: 'What was it for', required: true, wide: true, placeholder: 'Diesel — 2,000 litres' },
-        { key: 'amount', label: 'Amount (₦)', required: true, numeric: true, placeholder: '412,000' },
-        { key: 'category', label: 'Category', required: true, options: ['Salaries', 'Utilities', 'Academics', 'Transport', 'Operations'] },
-        { key: 'date', label: 'Date', required: true, date: true },
-        { key: 'by', label: 'Recorded by', options: ['A. Okonkwo', 'S. Idowu', 'C. Nnaji'] },
+        {
+          key: 'description',
+          label: 'What was it for',
+          required: true,
+          wide: true,
+          placeholder: 'Diesel — 2,000 litres',
+          hint: 'Written into the ledger exactly as typed.',
+        },
+        {
+          key: 'amount',
+          label: 'Amount (₦)',
+          required: true,
+          numeric: true,
+          placeholder: '412,000',
+        },
       ],
     },
   ],

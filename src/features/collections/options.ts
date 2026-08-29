@@ -6,9 +6,26 @@ export type Option = { value: string; label: string }
  * than listing choices, so every form offers the same classes, arms and
  * guardians the API knows about.
  */
-export type OptionsKey = 'classes' | 'arms' | 'guardians' | 'teachers'
+export type OptionsKey =
+  | 'classes'
+  | 'arms'
+  | 'guardians'
+  | 'teachers'
+  | 'students'
+  | 'fees'
+  /** A pupil's invoices still owing, scoped by the pupil chosen before it. */
+  | 'unpaid-invoices'
+
+/**
+ * A choice as a definition writes it: a bare string where the value and the
+ * label are the same word, and a pair where they differ — the invoice status
+ * the API calls `success` is the one an office calls Paid.
+ */
+export type Choice = string | Option
 
 /** Choices whose value is the text itself — a gender, a status, a term. */
-export function toOptions(labels: readonly string[]): Option[] {
-  return labels.map((label) => ({ value: label, label }))
+export function toOptions(choices: readonly Choice[]): Option[] {
+  return choices.map((choice) =>
+    typeof choice === 'string' ? { value: choice, label: choice } : choice,
+  )
 }

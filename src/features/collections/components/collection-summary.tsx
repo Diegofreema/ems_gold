@@ -28,7 +28,7 @@ function CountedTiles({ path, tiles }: { path: string; tiles: readonly CountTile
           data === undefined ? (
             BLANK
           ) : (
-            <CountUp to={data[index]} format={formatCount} />
+            <CountUp to={data[index]} format={tile.format ?? formatCount} />
           ),
       }))}
     />
