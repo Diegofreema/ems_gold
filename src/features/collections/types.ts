@@ -27,6 +27,7 @@ export type ListPath =
   | '/admin/arms'
   | '/admin/subjects'
   | '/admin/calendar'
+  | '/admin/terms'
   | '/admin/results'
   | '/admin/library'
   | '/admin/elections'
@@ -83,6 +84,8 @@ export type ActionPath =
   | '/student/test'
   | '/admin/arms'
   | '/admin/classes'
+  | '/admin/calendar'
+  | '/admin/terms'
   | '/admin/collect/report'
   | '/admin/collect/pupil'
   | '/parent/pay'
@@ -180,6 +183,13 @@ export type RowActionSpec = {
   confirm?: (row: Row) => string | undefined
   /** What the toast says once the API has taken it. */
   done: (row: Row) => string
+  /**
+   * The dialog's heading and its button, where the label does not read as a
+   * verb. "Withdraw" composes into "Withdraw this subject?" on its own; "Make
+   * current" does not, and the row button is the wrong place to fix that.
+   */
+  title?: (row: Row) => string
+  cta?: (row: Row) => string
   run: (row: Row) => Promise<unknown>
 }
 

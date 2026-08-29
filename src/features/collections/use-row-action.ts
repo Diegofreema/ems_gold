@@ -59,10 +59,10 @@ export function useRowAction(
       const body = spec?.confirm?.(row)
       if (!body) return void mutation.mutate(row)
       confirm.ask({
-        title: `${spec!.label(row)} this ${definition.noun}?`,
+        title: spec!.title?.(row) ?? `${spec!.label(row)} this ${definition.noun}?`,
         body,
         subject: row[definition.nameKey],
-        cta: `${spec!.label(row)} the ${definition.noun}`,
+        cta: spec!.cta?.(row) ?? `${spec!.label(row)} the ${definition.noun}`,
         // Nothing is being kept or thrown away here, unlike a delete.
         cancel: 'Go back',
         // Handed back rather than fired and forgotten, so the dialog stays up

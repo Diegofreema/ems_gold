@@ -442,49 +442,6 @@ export const subjects: CollectionDef = {
   ],
 }
 
-export const calendar: CollectionDef = {
-  id: 'calendar',
-  path: '/admin/calendar',
-  kicker: 'Academics',
-  title: 'Sessions & terms',
-  description:
-    'Academic sessions and the terms inside them. One session and one term are active at a time.',
-  action: 'Create session',
-  searchHint: 'Search session or term',
-  footer: '6 records',
-  emptyTitle: 'No sessions defined',
-  emptyBody: 'Create a session before terms, fees or results can be recorded.',
-  noun: 'session',
-  nameKey: 'name',
-  columns: [
-    { key: 'name', label: 'Name', cardRole: 'title' },
-    { key: 'type', label: 'Type', cardRole: 'subtitle' },
-    { key: 'starts', label: 'Starts' },
-    { key: 'ends', label: 'Ends' },
-    { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
-  ],
-  rows: [
-    { id: 'ca-1', name: '2025/2026', type: 'Session', starts: '15 Sep 2025', ends: '17 Jul 2026', state: 'Current' },
-    { id: 'ca-2', name: 'First Term', type: 'Term', starts: '15 Sep 2025', ends: '12 Dec 2025', state: 'Current' },
-    { id: 'ca-3', name: 'Second Term', type: 'Term', starts: '05 Jan 2026', ends: '27 Mar 2026', state: 'Upcoming' },
-    { id: 'ca-4', name: 'Third Term', type: 'Term', starts: '20 Apr 2026', ends: '17 Jul 2026', state: 'Upcoming' },
-    { id: 'ca-5', name: '2024/2025', type: 'Session', starts: '16 Sep 2024', ends: '18 Jul 2025', state: 'Closed' },
-    { id: 'ca-6', name: '2023/2024', type: 'Session', starts: '18 Sep 2023', ends: '19 Jul 2024', state: 'Closed' },
-  ],
-  form: [
-    {
-      title: 'Session or term',
-      fields: [
-        { key: 'name', label: 'Name', required: true, wide: true, placeholder: '2025/2026' },
-        { key: 'type', label: 'Type', required: true, options: ['Session', 'Term'] },
-        { key: 'starts', label: 'Starts', required: true, date: true },
-        { key: 'ends', label: 'Ends', required: true, date: true },
-        { key: 'state', label: 'State', options: ['Upcoming', 'Current', 'Closed'] },
-      ],
-    },
-  ],
-}
-
 export const results: CollectionDef = {
   id: 'results',
   path: '/admin/results',

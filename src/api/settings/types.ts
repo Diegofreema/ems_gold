@@ -4,7 +4,16 @@ export type SchoolSettings = {
   prefixes?: Record<string, unknown>
   /** Crest and stamp, with ready-made URLs. */
   images?: Record<string, string>
-  calendar?: Record<string, unknown>
+  /** What the school is in right now, and the two dates the office sets. */
+  calendar?: {
+    session_id?: number
+    session?: string
+    semester_id?: number
+    semester?: string
+    /** Written DD/MM/YYYY, the way the API stores it. */
+    current_term_ends?: string
+    next_term_begins?: string
+  }
   [key: string]: unknown
 }
 

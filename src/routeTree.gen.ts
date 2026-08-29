@@ -52,6 +52,7 @@ import { Route as AdminStaffOtherRouteImport } from './routes/admin/staff-other'
 import { Route as AdminStaffTeachersRouteImport } from './routes/admin/staff-teachers'
 import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
+import { Route as AdminTermsRouteImport } from './routes/admin/terms'
 import { Route as ParentIndexRouteImport } from './routes/parent/index'
 import { Route as ParentAttendanceRouteImport } from './routes/parent/attendance'
 import { Route as ParentInvoicesRouteImport } from './routes/parent/invoices'
@@ -317,6 +318,11 @@ const AdminStudentsRoute = AdminStudentsRouteImport.update({
 const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminTermsRoute = AdminTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const ParentIndexRoute = ParentIndexRouteImport.update({
@@ -630,6 +636,7 @@ export interface FileRoutesByFullPath {
   '/admin/staff-teachers': typeof AdminStaffTeachersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/terms': typeof AdminTermsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
@@ -722,6 +729,7 @@ export interface FileRoutesByTo {
   '/admin/staff-teachers': typeof AdminStaffTeachersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/terms': typeof AdminTermsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
@@ -820,6 +828,7 @@ export interface FileRoutesById {
   '/admin/staff-teachers': typeof AdminStaffTeachersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/terms': typeof AdminTermsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
@@ -918,6 +927,7 @@ export interface FileRouteTypes {
     | '/admin/staff-teachers'
     | '/admin/students'
     | '/admin/subjects'
+    | '/admin/terms'
     | '/parent/attendance'
     | '/parent/invoices'
     | '/parent/msg-school'
@@ -1010,6 +1020,7 @@ export interface FileRouteTypes {
     | '/admin/staff-teachers'
     | '/admin/students'
     | '/admin/subjects'
+    | '/admin/terms'
     | '/parent/attendance'
     | '/parent/invoices'
     | '/parent/msg-school'
@@ -1107,6 +1118,7 @@ export interface FileRouteTypes {
     | '/admin/staff-teachers'
     | '/admin/students'
     | '/admin/subjects'
+    | '/admin/terms'
     | '/parent/attendance'
     | '/parent/invoices'
     | '/parent/msg-school'
@@ -1472,6 +1484,13 @@ declare module '@tanstack/react-router' {
       path: '/subjects'
       fullPath: '/admin/subjects'
       preLoaderRoute: typeof AdminSubjectsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/terms': {
+      id: '/admin/terms'
+      path: '/terms'
+      fullPath: '/admin/terms'
+      preLoaderRoute: typeof AdminTermsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/parent/': {
@@ -1870,6 +1889,7 @@ interface AdminRouteRouteChildren {
   AdminStaffTeachersRoute: typeof AdminStaffTeachersRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
+  AdminTermsRoute: typeof AdminTermsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCollectionActionRoute: typeof AdminCollectionActionRoute
   AdminCollectionNewRoute: typeof AdminCollectionNewRoute
@@ -1910,6 +1930,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminStaffTeachersRoute: AdminStaffTeachersRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
+  AdminTermsRoute: AdminTermsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCollectionActionRoute: AdminCollectionActionRoute,
   AdminCollectionNewRoute: AdminCollectionNewRoute,

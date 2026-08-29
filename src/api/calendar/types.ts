@@ -1,4 +1,4 @@
-import type { PageParams } from '../types'
+import type { PageParams } from '../types.ts'
 
 /**
  * A session (2025/2026) and a term share one shape and one set of endpoints;
@@ -9,7 +9,10 @@ export type CalendarRecord = {
   name: string
   is_current: boolean
   user_id?: number
+  /** The name of whoever opened it, already joined. Sessions only. */
+  created_by?: string | null
   createdate?: string
+  /** Detail only: how many rows are filed under it. */
   dependencies?: Record<string, number>
 }
 

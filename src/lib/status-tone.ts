@@ -1,6 +1,9 @@
 import type { TagProps } from '@/components/common/tag'
 
-const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Available', 'Admitted', 'In this arm']
+// 'Not current' is settled, not withdrawn: four sessions out of five are not
+// the current one, and outlining every last one of them in accent would read
+// as four problems.
+const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Not current', 'Available', 'Admitted', 'In this arm']
 const BAD = ['Overdue', 'Unpaid', 'Suspended', 'Not marked', 'All out', 'Rejected', 'Declined', 'Owing', 'Not placed']
 
 /**

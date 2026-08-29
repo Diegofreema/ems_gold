@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { CollectionPage } from '@/portals/admin/components/collection-page'
-import { calendar } from '@/portals/admin/collections/academics'
+import { sessions } from '@/portals/admin/collections/calendar'
 
 export const Route = createFileRoute('/admin/calendar')({
-  staticData: { title: 'Sessions & terms', crumb: 'Academics' },
-  component: () => <CollectionPage definition={calendar} />,
+  staticData: { title: 'Academic sessions', crumb: 'Academics' },
+  component: () => <CollectionPage definition={sessions} />,
 })

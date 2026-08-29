@@ -19,9 +19,16 @@ function calendarResource(resource: 'sessions' | 'semesters', key: 'session' | '
     current: () =>
       request<Record<string, CalendarRecord>>(`${resource}/current`).then((data) => data[key]),
 
-    /** With a count of everything filed under it. */
+    /**
+     * With a count of everything filed under it. `dependencies` is a sibling
+     * of the record in the envelope rather than a field on it, so it is folded
+     * on here — returning `data[key]` alone drops every count silently, and a
+     * record page that has never been told reads the same as one told none.
+     */
     get: (id: Id) =>
-      request<Record<string, CalendarRecord>>(`${resource}/${id}`).then((data) => data[key]),
+      request<{ dependencies?: Record<string, number> } & Record<string, CalendarRecord>>(
+        `${resource}/${id}`,
+      ).then(({ dependencies, ...data }) => ({ ...data[key], dependencies })),
 
     create: (body: CalendarBody) =>
       request<Record<string, CalendarRecord>>(resource, { method: 'POST', body }),

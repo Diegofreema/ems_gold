@@ -1,4 +1,5 @@
 import type { PortalConfig } from '@/lib/portal'
+import { CurrentTerm } from './components/current-term'
 import { adminNotifications } from './api/notifications'
 import { adminNav } from './nav'
 
@@ -22,10 +23,5 @@ export const adminPortal: PortalConfig = {
     line: 'Bursar · Full access',
     initials: 'AO',
   },
-  headerStatus: (
-    <>
-      <div className="uppercase tracking-[0.06em]">2025/2026 · First Term</div>
-      <div>Week 9 of 13</div>
-    </>
-  ),
+  headerStatus: <CurrentTerm />,
 }
