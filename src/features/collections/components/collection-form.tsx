@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { CheckboxGroupField } from '@/components/form/checkbox-group-field'
 import { DateField } from '@/components/form/date-field'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
@@ -34,6 +35,8 @@ function renderField(field: FieldSpec) {
     span: field.wide ? (2 as const) : undefined,
   }
 
+  if (field.multi && field.optionsFrom)
+    return <CheckboxGroupField<Values> key={field.key} {...shared} from={field.optionsFrom} />
   if (field.money)
     return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.date)
@@ -87,6 +90,14 @@ export function CollectionForm({
       // A blank is how the record reads, not what it holds — typing over an
       // em dash, or saving one back, is nobody's intent.
       const held = record?.[field.key]
+      if (field.multi) {
+        // A row holds strings, so a set of ids travels as one comma-joined
+        // cell and is split back out here. Getting this wrong on an edit is
+        // expensive: these keys replace the whole set, so a form that opened
+        // with none ticked would save the class as charging no fees at all.
+        defaults[field.key] = String(held ?? '').split(',').filter(Boolean)
+        continue
+      }
       defaults[field.key] = field.date ? undefined : (held === BLANK ? '' : (held ?? ''))
     }
   }
@@ -111,7 +122,9 @@ export function CollectionForm({
   const askDelete = () =>
     confirm.ask({
       title: `Delete this ${definition.noun}?`,
-      body: 'This removes the record from the register. Anything already raised against it stays in the audit log.',
+      body:
+        (record && definition.removeBody?.(record)) ??
+        'This removes the record from the register. Anything already raised against it stays in the audit log.',
       subject: record?.[definition.nameKey] ?? '',
       cta: `Delete the ${definition.noun}`,
       onConfirm: () => {
@@ -119,9 +132,11 @@ export function CollectionForm({
           toast(`${record?.[definition.nameKey]} deleted`)
           return void navigate({ to: definition.path })
         }
-        remove.mutate(record!.id, {
-          onSuccess: () => void navigate({ to: definition.path }),
-        })
+        // Awaited rather than fired: the dialog's button spins until the
+        // record is actually gone, and a refusal leaves the form where it is.
+        return remove
+          .mutateAsync(record!.id)
+          .then(() => navigate({ to: definition.path }))
       },
     })
 

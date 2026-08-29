@@ -92,7 +92,7 @@ export function ProfilePage({ config: portal }: { config: ProfileConfig }) {
           <Button
             variant="outline"
             className="w-full justify-start"
-            disabled={logout.isPending}
+            pending={logout.isPending}
             onClick={async () => {
               await logout.mutateAsync().catch(() => undefined)
               await navigate({ to: '/sign-in' })

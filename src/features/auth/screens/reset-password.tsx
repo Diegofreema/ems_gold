@@ -128,7 +128,7 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
 
           <Button
             type="submit"
-            disabled={isSubmitting}
+            pending={isSubmitting}
             className="w-full justify-start"
           >
             {isSubmitting ? 'Saving…' : copy.cta}

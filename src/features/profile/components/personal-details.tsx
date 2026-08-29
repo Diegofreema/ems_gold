@@ -77,7 +77,7 @@ export function PersonalDetails({
             into, so neither button has anything left to do. */}
         {onSave && (
           <div className="mt-[22px] flex flex-wrap gap-2.5">
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" pending={saving}>
               {saving ? 'Saving…' : 'Save changes'}
             </Button>
             <Button

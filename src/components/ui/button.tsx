@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { LoaderCircle } from "lucide-react"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
@@ -41,15 +42,28 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * `pending` is how a button that writes to the server says so: it disables
+ * itself and grows a spinner, which is the same thing said twice on purpose —
+ * the disable is what stops a second submission, the spinner is what tells
+ * the person why their click did nothing.
+ *
+ * It lives here rather than at each call site because a mutation that forgets
+ * it is invisible, and there is no way to notice the omission from the outside.
+ */
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  pending = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    pending?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
 
@@ -58,9 +72,24 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
+      aria-busy={pending || undefined}
+      disabled={disabled || pending || undefined}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {/* Radix's Slot takes exactly one child, and a second expression here —
+          even one evaluating to `false` — counts as one. So `asChild` hands
+          its child straight through; a link does not mutate anything and has
+          nothing to spin for anyway. */}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {pending && <LoaderCircle className="animate-ems-spin" strokeWidth={2.4} />}
+          {children}
+        </>
+      )}
+    </Comp>
   )
 }
 

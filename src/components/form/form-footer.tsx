@@ -17,10 +17,12 @@ export function FormFooter({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" pending={pending}>
         {submitLabel}
       </Button>
-      <Button type="button" variant="outline" onClick={onCancel}>
+      {/* Both are shut while the save is in flight: leaving the page or
+          deleting the record mid-write is not something to offer. */}
+      <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
         Cancel
       </Button>
       <div className="flex-1" />
@@ -29,6 +31,7 @@ export function FormFooter({
           type="button"
           variant="ghost"
           onClick={onDelete}
+          disabled={pending}
           className="text-brand hover:bg-brand/10 hover:text-brand"
         >
           {deleteLabel}

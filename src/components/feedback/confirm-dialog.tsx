@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -16,7 +17,12 @@ export type ConfirmRequest = {
   cta: string
   /** Label of the cancel button — "Keep it", "Go back", "Keep working". */
   cancel?: string
-  onConfirm: () => void
+  /**
+   * Returning the write's promise holds the dialog open until the API answers,
+   * with the button spinning. A caller that returns nothing closes at once, as
+   * before — right for an action with no server behind it.
+   */
+  onConfirm: () => void | Promise<unknown>
 }
 
 /**
@@ -30,8 +36,24 @@ export function ConfirmDialog({
   request: ConfirmRequest | null
   onOpenChange: (open: boolean) => void
 }) {
+  const [pending, setPending] = useState(false)
+
+  const run = async () => {
+    setPending(true)
+    // A refusal is announced by the mutation cache; all this needs to know is
+    // that the write is over, so the dialog stops holding the page.
+    await Promise.resolve(request?.onConfirm()).catch(() => {})
+    setPending(false)
+    onOpenChange(false)
+  }
+
   return (
-    <Dialog open={Boolean(request)} onOpenChange={onOpenChange}>
+    <Dialog
+      open={Boolean(request)}
+      // Escape and the scrim are shut off mid-write: closing would leave the
+      // request running with nothing on screen saying so.
+      onOpenChange={(open) => !pending && onOpenChange(open)}
+    >
       <DialogContent
         showCloseButton={false}
         className="w-[min(460px,100%)] gap-0 border-2 border-brand bg-background p-0 shadow-lg sm:max-w-[460px]"
@@ -59,15 +81,14 @@ export function ConfirmDialog({
               {/* Closed here rather than with `DialogClose asChild`, which
                   overwrites the button's `data-slot` and so loses the design's
                   44px touch target on a phone. */}
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                variant="outline"
+                disabled={pending}
+                onClick={() => onOpenChange(false)}
+              >
                 {request.cancel ?? 'Keep it'}
               </Button>
-              <Button
-                onClick={() => {
-                  request.onConfirm()
-                  onOpenChange(false)
-                }}
-              >
+              <Button pending={pending} onClick={() => void run()}>
                 {request.cta}
               </Button>
             </div>

@@ -17,7 +17,11 @@ export const subjectsService = {
 
   options: () => request<SubjectOptions>('subjects/options'),
 
-  get: (id: Id) => request<{ subject: Subject }>(`subjects/${id}`).then((data) => data.subject),
+  /** `dependencies` is a sibling of the subject in the envelope, not a field. */
+  get: (id: Id) =>
+    request<{ subject: Subject; dependencies?: Record<string, number> }>(
+      `subjects/${id}`,
+    ).then(({ subject, dependencies }) => ({ ...subject, dependencies })),
 
   create: (body: SubjectBody) =>
     request<{ subject: Subject }>('subjects', { method: 'POST', body }),

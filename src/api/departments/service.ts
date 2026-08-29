@@ -19,9 +19,18 @@ export const departmentsService = {
 
   options: () => request<DepartmentOptions>('departments/options'),
 
-  /** With its subjects, arms, fees, levels, terms and dependency counts. */
+  /**
+   * With its subjects, arms, fees, levels, terms and dependency counts.
+   *
+   * `dependencies` sits beside the class in the envelope rather than on it,
+   * and it is the only place the pupil count is stated — the class carries no
+   * pupil list to fall back on. It is folded onto the record here so callers
+   * read one object.
+   */
   get: (id: Id) =>
-    request<{ department: Department }>(`departments/${id}`).then((data) => data.department),
+    request<{ department: Department; dependencies?: Record<string, number> }>(
+      `departments/${id}`,
+    ).then(({ department, dependencies }) => ({ ...department, dependencies })),
 
   subjects: (id: Id) =>
     request<{ subjects: ClassSubject[] }>(`departments/${id}/subjects`).then(

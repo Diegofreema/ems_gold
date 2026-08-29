@@ -216,7 +216,9 @@ export function ActionPage({
             // A flow without a picker has no running total to show it.
             const ask = await action.confirm?.(total, values)
             if (!ask) return run(values)
-            confirm.ask({ ...ask, onConfirm: () => void run(values) })
+            // Returned, not discarded: the dialog holds with its button
+            // spinning while the payment is actually being taken.
+            confirm.ask({ ...ask, onConfirm: () => run(values) })
           })}
           noValidate
         >
@@ -235,10 +237,21 @@ export function ActionPage({
           <Rule />
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            {/* `isSubmitting` alone is not enough: a flow that confirms has
+                already resolved its submit handler by the time the dialog
+                opens, so the write itself runs with the form idle. */}
+            <Button
+              type="submit"
+              pending={form.formState.isSubmitting || flow.isPending}
+            >
               {action.cta}
             </Button>
-            <Button type="button" variant="outline" onClick={back}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={flow.isPending}
+              onClick={back}
+            >
               Cancel
             </Button>
             <div className="flex-1" />

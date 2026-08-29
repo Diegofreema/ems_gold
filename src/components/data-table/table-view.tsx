@@ -112,7 +112,12 @@ function RowActionButton<TRow>({
   if (!label) return null
 
   return (
-    <Button variant="outline" size="sm" onClick={() => action.onSelect(row)}>
+    <Button
+      variant="outline"
+      size="sm"
+      pending={action.pending?.(row)}
+      onClick={() => action.onSelect(row)}
+    >
       {label}
     </Button>
   )

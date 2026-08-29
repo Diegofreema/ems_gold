@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { useLogin } from '@/api/auth/hooks'
@@ -114,15 +113,9 @@ export function SignInScreen() {
 
           <Button
             type="submit"
-            disabled={isSubmitting}
+            pending={isSubmitting}
             className="w-fit justify-start"
           >
-            {isSubmitting && (
-              <LoaderCircle
-                className="size-3.75 animate-ems-spin"
-                strokeWidth={2.4}
-              />
-            )}
             {isSubmitting ? 'Signing you in…' : 'Sign in'}
           </Button>
         </form>

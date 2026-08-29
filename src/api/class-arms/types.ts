@@ -5,10 +5,21 @@ import type { Student } from '../students/types.ts'
 export type ClassArm = {
   id: number
   department_id: number
+  /** Expanded beside the id on every response, so no name feed is needed. */
+  department?: string | null
   arm_name: string
   arm_description: string | null
   class_teacher_id: number | null
+  class_teacher?: string | null
+  /**
+   * The roll, on the list. The detail sends `null` here and puts the count in
+   * `dependencies.students` instead, so read them in that order.
+   */
+  students?: number | null
   status: ClassArmStatus
+  created?: string
+  modified?: string
+  /** Sits beside the arm in the detail envelope; folded on by the service. */
   dependencies?: Record<string, number>
 }
 
@@ -55,9 +66,11 @@ export type AssignStudentsResult = {
   failed: { student_id: number; reason: string }[]
 }
 
-/** Names only — this feed is open to any signed-in user. */
+/**
+ * The dropdown feed. `label` already reads "JSS 1 - JSS1 A" — class and arm
+ * together — because an arm name alone does not identify one.
+ */
 export type ArmOption = {
   id: number
-  arm_name: string
-  department?: string
+  label: string
 }

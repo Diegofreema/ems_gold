@@ -26,6 +26,7 @@ import { Route as AuthWrongPortalRouteImport } from './routes/_auth/wrong-portal
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminApplicantsRouteImport } from './routes/admin/applicants'
+import { Route as AdminArmsRouteImport } from './routes/admin/arms'
 import { Route as AdminAttReportRouteImport } from './routes/admin/att-report'
 import { Route as AdminAttendanceRouteImport } from './routes/admin/attendance'
 import { Route as AdminCalendarRouteImport } from './routes/admin/calendar'
@@ -186,6 +187,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
 const AdminApplicantsRoute = AdminApplicantsRouteImport.update({
   id: '/applicants',
   path: '/applicants',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminArmsRoute = AdminArmsRouteImport.update({
+  id: '/arms',
+  path: '/arms',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAttReportRoute = AdminAttReportRouteImport.update({
@@ -598,6 +604,7 @@ export interface FileRoutesByFullPath {
   '/wrong-portal': typeof AuthWrongPortalRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
+  '/admin/arms': typeof AdminArmsRoute
   '/admin/att-report': typeof AdminAttReportRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
@@ -689,6 +696,7 @@ export interface FileRoutesByTo {
   '/wrong-portal': typeof AuthWrongPortalRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
+  '/admin/arms': typeof AdminArmsRoute
   '/admin/att-report': typeof AdminAttReportRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
@@ -786,6 +794,7 @@ export interface FileRoutesById {
   '/_auth/wrong-portal': typeof AuthWrongPortalRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
+  '/admin/arms': typeof AdminArmsRoute
   '/admin/att-report': typeof AdminAttReportRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
@@ -883,6 +892,7 @@ export interface FileRouteTypes {
     | '/wrong-portal'
     | '/admin/analytics'
     | '/admin/applicants'
+    | '/admin/arms'
     | '/admin/att-report'
     | '/admin/attendance'
     | '/admin/calendar'
@@ -974,6 +984,7 @@ export interface FileRouteTypes {
     | '/wrong-portal'
     | '/admin/analytics'
     | '/admin/applicants'
+    | '/admin/arms'
     | '/admin/att-report'
     | '/admin/attendance'
     | '/admin/calendar'
@@ -1070,6 +1081,7 @@ export interface FileRouteTypes {
     | '/_auth/wrong-portal'
     | '/admin/analytics'
     | '/admin/applicants'
+    | '/admin/arms'
     | '/admin/att-report'
     | '/admin/attendance'
     | '/admin/calendar'
@@ -1278,6 +1290,13 @@ declare module '@tanstack/react-router' {
       path: '/applicants'
       fullPath: '/admin/applicants'
       preLoaderRoute: typeof AdminApplicantsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/arms': {
+      id: '/admin/arms'
+      path: '/arms'
+      fullPath: '/admin/arms'
+      preLoaderRoute: typeof AdminArmsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/att-report': {
@@ -1825,6 +1844,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminApplicantsRoute: typeof AdminApplicantsRoute
+  AdminArmsRoute: typeof AdminArmsRoute
   AdminAttReportRoute: typeof AdminAttReportRoute
   AdminAttendanceRoute: typeof AdminAttendanceRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
@@ -1864,6 +1884,7 @@ interface AdminRouteRouteChildren {
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminApplicantsRoute: AdminApplicantsRoute,
+  AdminArmsRoute: AdminArmsRoute,
   AdminAttReportRoute: AdminAttReportRoute,
   AdminAttendanceRoute: AdminAttendanceRoute,
   AdminCalendarRoute: AdminCalendarRoute,

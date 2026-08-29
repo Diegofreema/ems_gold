@@ -35,6 +35,7 @@ export function PickerList<TValues extends FieldValues>({
       <SectionHeading
         className="mb-3.5"
         action={
+          picker.items.length > 0 && (
           <Button
             type="button"
             variant="ghost"
@@ -45,6 +46,7 @@ export function PickerList<TValues extends FieldValues>({
           >
             {allOn ? 'Clear all' : 'Select all'}
           </Button>
+          )
         }
       >
         {picker.title}

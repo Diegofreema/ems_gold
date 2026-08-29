@@ -5,6 +5,7 @@ import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
+import { subjectsService } from '@/api/subjects/service'
 import { teachersService } from '@/api/teachers/service'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from '@/portals/admin/collections/collect-row'
@@ -37,7 +38,9 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // until one is chosen rather than offering every arm in the school.
     if (!dependsOn) return []
     const arms = await classArmsService.forDepartment(dependsOn)
-    return arms.map((arm) => ({ value: String(arm.id), label: arm.arm_name }))
+    // The feed's label already carries the class — "JSS 1 - JSS1 A" — which is
+    // what makes the choice unambiguous where two classes both have an A.
+    return arms.map((arm) => ({ value: String(arm.id), label: arm.label }))
   }
 
   if (key === 'students') {
@@ -60,6 +63,18 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // charged, and the catalogue keeps them only so old invoices still read.
     const { items } = await feesService.list({ limit: ALL, status: 1 })
     return items.map((fee) => ({ value: String(fee.id), label: fee.name }))
+  }
+
+  if (key === 'subjects') {
+    // Withdrawn subjects are left out: a class cannot be taught one, and the
+    // register keeps them only so old results still read.
+    const { items } = await subjectsService.list({ limit: ALL, status: 1 })
+    return items.map((subject) => ({
+      value: String(subject.id),
+      // Two schools' worth of "Mathematics" are told apart by the class that
+      // owns the subject, so it is offered beside the name.
+      label: subject.department ? `${subject.name} · ${subject.department}` : subject.name,
+    }))
   }
 
   if (key === 'payment-methods') {

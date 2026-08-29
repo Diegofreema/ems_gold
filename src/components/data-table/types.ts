@@ -12,6 +12,11 @@ export type { CardRole }
 export type RowAction<TRow> = {
   label: (row: TRow) => string | undefined
   onSelect: (row: TRow) => void
+  /**
+   * This row's action is in flight. Read per row rather than for the table, so
+   * one row spinning does not disable the rest of the register.
+   */
+  pending?: (row: TRow) => boolean
 }
 
 export type Column<TRow> = {

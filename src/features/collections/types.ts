@@ -24,6 +24,7 @@ export type ListPath =
   | '/admin/parents-cleared'
   | '/admin/parents-invited'
   | '/admin/classes'
+  | '/admin/arms'
   | '/admin/subjects'
   | '/admin/calendar'
   | '/admin/results'
@@ -80,6 +81,8 @@ export type CollectionRoutes =
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
   | '/student/test'
+  | '/admin/arms'
+  | '/admin/classes'
   | '/admin/collect/report'
   | '/admin/collect/pupil'
   | '/parent/pay'
@@ -225,6 +228,11 @@ export type FieldSpec = {
    */
   optionsFrom?: OptionsKey
   dependsOn?: string
+  /**
+   * Many of the feed at once, held as an array of ids — the fees a class is
+   * charged. Only meaningful with `optionsFrom`.
+   */
+  multi?: boolean
   multiline?: boolean
   numeric?: boolean
   /** A figure in naira: masked as it is typed and spelled out beneath. */
@@ -321,6 +329,12 @@ export type CollectionDef = {
    * without one keeps the prototype's toast, since it has no endpoint yet.
    */
   remove?: (recordId: string) => Promise<unknown>
+  /**
+   * What the delete confirm says, in place of the generic sentence. Set where
+   * other records depend on this one and the API will refuse: the dialog is
+   * where that belongs, not a toast after the button has been pressed.
+   */
+  removeBody?: (row: Row) => string
   /**
    * What the record panel lists. Defaults to the table's columns, which is
    * all a fixture row holds; a collection read from the API usually knows far

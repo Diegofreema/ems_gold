@@ -37,16 +37,27 @@ export function armBody(values: FormValues): ClassArmBody {
 }
 
 /**
- * The subject form as `POST /subjects` wants it. The code is generated from
- * the name where the office leaves it empty, so it is dropped rather than sent
- * blank; the same is true of every other field on update.
+ * The subject form as `POST /subjects` wants it: the name, the class it
+ * belongs to, and the teachers who carry it as a plain array of ids.
+ *
+ * `subjectcode` is not sent — the endpoint generates it from the name, the way
+ * a class's code is generated from its own. Nor is `creditload`, which the
+ * school has never set on a subject.
+ *
+ * `teachers` replaces the whole set rather than adding to it, so it is always
+ * sent, including empty. Leaving it out of an edit that unticked the last
+ * teacher would keep them on the subject.
  */
 export function subjectBody(values: FormValues): SubjectBody {
-  const credit = Number(text(values.creditload))
   return {
     name: text(values.name),
-    subjectcode: text(values.subjectcode),
     department_id: asId(values.department_id),
-    creditload: Number.isFinite(credit) && credit > 0 ? credit : undefined,
+    teachers: ids(values.teacher_ids),
   }
+}
+
+/** A checkbox group holds the API's ids as strings; a body wants numbers. */
+function ids(value: unknown): number[] {
+  if (!Array.isArray(value)) return []
+  return value.map(asId).filter((one): one is number => one !== undefined)
 }

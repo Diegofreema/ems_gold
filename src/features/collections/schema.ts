@@ -5,6 +5,11 @@ import type { FieldSpec, FormSectionSpec } from './types.ts'
 const NUMERIC = /^[0-9,.\s]+$/
 
 function schemaForField(field: FieldSpec): ZodType {
+  if (field.multi) {
+    const many = z.array(z.string())
+    return field.required ? many.min(1, 'Pick at least one') : many
+  }
+
   if (field.date) {
     return field.required
       ? z.date({ message: 'Required' })

@@ -13,6 +13,7 @@ export type OptionsKey =
   | 'teachers'
   | 'students'
   | 'fees'
+  | 'subjects'
   /** The four ways the school takes money at the counter. */
   | 'payment-methods'
 

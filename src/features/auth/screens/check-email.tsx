@@ -91,13 +91,13 @@ export function CheckEmailScreen() {
           />
 
           <div className="flex flex-wrap gap-2.5">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" pending={isSubmitting}>
               {isSubmitting ? 'Checking the code…' : 'Continue'}
             </Button>
             <Button
               type="button"
               variant="outline"
-              disabled={forgotPassword.isPending}
+              pending={forgotPassword.isPending}
               onClick={sendAgain}
             >
               {resent ? 'Sent again' : 'Send it again'}

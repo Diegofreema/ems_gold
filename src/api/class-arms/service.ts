@@ -25,8 +25,15 @@ export const classArmsService = {
       (data) => data.class_arms,
     ),
 
+  /**
+   * `dependencies` — pupils, results, attendances — is a sibling of the arm in
+   * the envelope, not a field on it, and the arm's own `students` is null here.
+   * Folding it on is what keeps the roll readable off one object.
+   */
   get: (id: Id) =>
-    request<{ class_arm: ClassArm }>(`class-arms/${id}`).then((data) => data.class_arm),
+    request<{ class_arm: ClassArm; dependencies?: Record<string, number> }>(
+      `class-arms/${id}`,
+    ).then(({ class_arm, dependencies }) => ({ ...class_arm, dependencies })),
 
   create: (body: ClassArmBody) =>
     request<{ class_arm: ClassArm }>('class-arms', { method: 'POST', body }),

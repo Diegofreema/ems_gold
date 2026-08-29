@@ -38,15 +38,26 @@ export function useRowAction(
     },
   })
 
+  /**
+   * The write is on one row, so the spinner is too — read off the variables
+   * react-query is already holding rather than tracked separately here.
+   */
+  const pending = (row: Row) =>
+    mutation.isPending && mutation.variables?.id === row.id
+
   return {
     spec,
+    pending,
     /**
      * Taking a state away is asked about; putting one back is not, so a spec
      * with nothing to say runs on the first click.
      */
     ask: (row: Row) => {
+      // Whichever way it was reached, a second press while the first is still
+      // in flight would take the state twice.
+      if (mutation.isPending) return
       const body = spec?.confirm?.(row)
-      if (!body) return mutation.mutate(row)
+      if (!body) return void mutation.mutate(row)
       confirm.ask({
         title: `${spec!.label(row)} this ${definition.noun}?`,
         body,
@@ -54,7 +65,9 @@ export function useRowAction(
         cta: `${spec!.label(row)} the ${definition.noun}`,
         // Nothing is being kept or thrown away here, unlike a delete.
         cancel: 'Go back',
-        onConfirm: () => mutation.mutate(row),
+        // Handed back rather than fired and forgotten, so the dialog stays up
+        // with its button spinning until the API has actually answered.
+        onConfirm: () => mutation.mutateAsync(row),
       })
     },
   }

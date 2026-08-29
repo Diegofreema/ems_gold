@@ -75,14 +75,15 @@ export function CollectionList({
   const askDelete = (row: Row) =>
     confirm.ask({
       title: `Delete this ${definition.noun}?`,
-      body: `This removes the record from the register. Anything already raised against it stays in the audit log.`,
+      body: definition.removeBody?.(row) ?? 'This removes the record from the register. Anything already raised against it stays in the audit log.',
       subject: row[definition.nameKey],
       cta: `Delete the ${definition.noun}`,
       // A collection with no delete endpoint keeps the prototype's toast.
-      onConfirm: () =>
-        definition.remove
-          ? remove.mutate(row.id)
-          : toast(`${row[definition.nameKey]} deleted`),
+      // The promise is handed back so the dialog holds until the API answers.
+      onConfirm: () => {
+        if (!definition.remove) return void toast(`${row[definition.nameKey]} deleted`)
+        return remove.mutateAsync(row.id)
+      },
     })
 
   // One decision, shared with the create route so a list that does not create
@@ -211,6 +212,7 @@ export function CollectionList({
                 rowAction.spec && {
                   label: rowAction.spec.label,
                   onSelect: rowAction.ask,
+                  pending: rowAction.pending,
                 }
               }
               searchQuery={query}

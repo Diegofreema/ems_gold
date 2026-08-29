@@ -78,7 +78,7 @@ export function ForgotPasswordScreen() {
           />
           <Button
             type="submit"
-            disabled={isSubmitting}
+            pending={isSubmitting}
             className="w-full justify-start"
           >
             {isSubmitting ? 'Sending the code…' : 'Send the reset code'}

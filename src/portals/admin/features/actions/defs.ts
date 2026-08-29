@@ -3,6 +3,7 @@ import { collectFeesService } from '@/api/collect-fees/service'
 import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
 import { studentsService } from '@/api/students/service'
+import { subjectsService } from '@/api/subjects/service'
 import type { Row } from '@/features/collections/types'
 import {
   ADMIT,
@@ -351,11 +352,131 @@ function lend(row?: Row): ActionDef {
  * no flow and shows no button, so a filtered view of another collection's rows
  * cannot inherit one it has no page for.
  */
+/**
+ * Placing pupils into an arm.
+ *
+ * `POST /class-arms/{id}/students` judges each pupil separately and reports
+ * what it would not take, so a partial move is a real outcome rather than a
+ * failure — the page holds open with the reasons rather than navigating away.
+ *
+ * The picker offers only `unassigned_in_class`: pupils admitted into this
+ * arm's class who are not yet in any arm. A pupil already placed elsewhere is
+ * moved from the promote flow, not from here.
+ */
+async function placePupils(row?: Row): Promise<ActionDef> {
+  const armId = String(row?.id ?? '')
+  const { unassigned_in_class } = await classArmsService.students(armId)
+
+  return {
+    kicker: 'Academics · Class arms',
+    title: `Place pupils in ${row?.arm ?? 'this arm'}`,
+    description:
+      'Pick the pupils to put on this arm’s roll. Only pupils admitted into its class and not yet in any arm are listed.',
+    summary: [
+      { label: 'Arm', value: row?.arm ?? DASH },
+      { label: 'Class', value: row?.klass ?? DASH },
+      { label: 'On the roll', value: row?.roll ?? DASH },
+    ],
+    picker: {
+      title: 'Waiting to be placed',
+      items: unassigned_in_class.map((pupil) => ({
+        key: String(pupil.id),
+        label: pupilName(pupil),
+        meta: pupil.regno || 'No adm. no. yet',
+        count: 1,
+      })),
+      note:
+        unassigned_in_class.length === 0
+          ? 'Every pupil admitted into this class is already in an arm.'
+          : 'A pupil may only join an arm of their own class. Placing them here puts this arm on their register, their result sheet and their attendance.',
+      requiredMessage: 'Pick at least one pupil to place.',
+    },
+    fields: [],
+    cta: 'Place these pupils',
+    footnote: 'Nothing moves until you press this.',
+    run: async (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      const { assigned, failed } = await classArmsService.assignStudents(armId, {
+        student_ids: picked.map(Number),
+      })
+      return {
+        message: `${assigned.length} ${assigned.length === 1 ? 'pupil' : 'pupils'} placed in ${row?.arm ?? 'the arm'}`,
+        failures: failed.map((one) => {
+          const pupil = unassigned_in_class.find((each) => each.id === one.student_id)
+          return `${pupil ? pupilName(pupil) : `Pupil ${one.student_id}`} — ${one.reason}`
+        }),
+      }
+    },
+    done: (picked) => `${picked} ${picked === 1 ? 'pupil' : 'pupils'} placed in the arm`,
+  }
+}
+
+/**
+ * Choosing the classes a subject is taught to.
+ *
+ * `POST /subjects/{id}/classes` replaces the whole set, so the classes it is
+ * already taught to arrive ticked and unticking one is how it is dropped. The
+ * home class is kept by the API whether it is listed or not, which is what
+ * stops a subject ending up taught to nobody — it is shown ticked and said so.
+ */
+async function teachTo(row?: Row): Promise<ActionDef> {
+  const homeId = String(row?.department_id ?? '')
+  const classes = await departmentsService
+    .list({ limit: ALL_CLASSES })
+    .then((page) => page.items)
+
+  return {
+    kicker: 'Academics · Subjects',
+    title: `Teach ${row?.name ?? 'this subject'} to`,
+    description:
+      'Pick every class this subject is taught to. Unticking one drops it; the home class is always kept.',
+    summary: [
+      { label: 'Subject', value: row?.name ?? DASH },
+      { label: 'Home class', value: row?.klass ?? DASH },
+      { label: 'Taught to', value: row?.taught ?? DASH },
+    ],
+    picker: {
+      title: 'Classes',
+      items: classes.map((department) => ({
+        key: String(department.id),
+        label: department.name,
+        // Most schools code a class differently from its name; this one does
+        // not, and repeating "SSS I" beside "SSS I" says nothing.
+        meta:
+          String(department.id) === homeId
+            ? 'Home class'
+            : department.deptcode === department.name
+              ? ''
+              : department.deptcode,
+        count: 0,
+      })),
+      preselected: row?.classIds ? row.classIds.split(',').filter(Boolean) : undefined,
+      note: 'The home class stays whether it is ticked or not — a subject can never end up taught to nobody.',
+      requiredMessage: 'Pick at least one class.',
+    },
+    fields: [],
+    cta: 'Save these classes',
+    footnote: 'Nothing changes until you press this.',
+    run: async (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      await subjectsService.setClasses(String(row?.id ?? ''), {
+        classes: picked.map(Number),
+      })
+      return {
+        message: `${row?.name ?? 'The subject'} is taught to ${picked.length} ${picked.length === 1 ? 'class' : 'classes'}`,
+      }
+    },
+    done: (picked) => `Taught to ${picked} ${picked === 1 ? 'class' : 'classes'}`,
+  }
+}
+
 export const adminFlows: Record<string, AdminFlow> = {
   fees: { label: 'Allocate to classes', build: allocate },
   // Record-scoped, not `fromList`: a payment needs the invoice it settles,
   // and the queue's own search is how that invoice is found.
   collect: { label: 'Take a payment', when: payAction, build: payment },
+  arms: { label: 'Place pupils', build: placePupils },
+  subjects: { label: 'Teach to classes', build: teachTo },
   students: { label: 'Promote or transfer', build: promote },
   applicants: { label: 'Review application', build: review },
   library: { label: 'Issue this book', build: lend },

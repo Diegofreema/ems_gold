@@ -94,7 +94,11 @@ export function CardView<TRow>({
                 </Button>
               )}
               {action?.label(row) && (
-                <Button variant="outline" onClick={() => action.onSelect(row)}>
+                <Button
+                  variant="outline"
+                  pending={action.pending?.(row)}
+                  onClick={() => action.onSelect(row)}
+                >
                   {action.label(row)}
                 </Button>
               )}
