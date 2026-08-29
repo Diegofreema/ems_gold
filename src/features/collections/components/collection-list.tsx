@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Download, Plus } from 'lucide-react'
+import { Download, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { EmptyState } from '@/components/feedback/empty-state'
@@ -38,7 +38,7 @@ export function CollectionList({
   const remove = useRemoveRecord(definition)
   const {
     text, query, filters, page, pending, setQuery, setFilter, setPage,
-    total, paged, error, paused, retry,
+    total, paged, error, paused, retry, tally, filtered, clear,
   } = useCollectionRows(definition)
 
   // A list that cannot load says so rather than shimmering forever — because
@@ -89,10 +89,9 @@ export function CollectionList({
   // records has no create page to reach by URL either.
   const primary = primaryActionKind(definition, routes, flow)
   const primaryAction =
-    // `none` elsewhere still means the prototype's placeholder toast — the
-    // student and parent portals publish no create route and lean on it. A
-    // readonly collection means there is no action, so it shows none.
-    definition.readonly ? null : primary === 'file' ? (
+    // One decision, taken in `primaryActionKind`. A second `readonly` gate
+    // here used to overrule the destination such a collection had named.
+    primary === 'none' ? null : primary === 'file' ? (
       <Button onClick={() => toast(fileActionToast(definition.action))}>
         <Download className="size-[15px]" strokeWidth={2} />
         {definition.action}
@@ -124,13 +123,24 @@ export function CollectionList({
   // neither pencil nor bin.
   const editRoute = definition.readonly ? undefined : routes.edit
 
+  const actions = definition.secondaryTo ? (
+    <div className="flex flex-wrap gap-2.5">
+      {primaryAction}
+      <Button asChild variant="outline">
+        <Link to={definition.secondaryTo.to}>{definition.secondaryTo.label}</Link>
+      </Button>
+    </div>
+  ) : (
+    primaryAction
+  )
+
   return (
     <>
       <PageHeader
         kicker={definition.kicker}
         title={definition.title}
         description={definition.description}
-        action={primaryAction}
+        action={actions}
       />
       <Rule />
 
@@ -163,9 +173,17 @@ export function CollectionList({
                 onChange={setFilter}
               />
             )}
+            {/* Only once something is narrowing the list — a control that
+                undoes nothing is one more thing to read past. */}
+            {filtered && (
+              <Button variant="ghost" size="sm" onClick={clear}>
+                <X className="size-3.5" strokeWidth={2} />
+                Clear
+              </Button>
+            )}
           </FilterBar>
 
-          <CollectionSummary definition={definition} />
+          <CollectionSummary definition={definition} tally={tally} />
 
           {/* Dimmed rather than replaced: the rows on screen are the last
               answer, still true until the next one arrives. */}

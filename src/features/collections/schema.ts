@@ -20,7 +20,7 @@ function schemaForField(field: FieldSpec): ZodType {
       (value) => !value || z.email().safeParse(value).success,
       'That does not look like an email address',
     )
-  } else if (field.numeric) {
+  } else if (field.numeric || field.money) {
     schema = text.refine(
       (value) => !value || NUMERIC.test(value),
       'Numbers only',

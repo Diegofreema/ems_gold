@@ -1,7 +1,6 @@
 import { keepPreviousData, queryOptions } from '@tanstack/react-query'
-import type { Paginated } from '@/api/types'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
-import type { CollectionDef, ListParams, Row } from './types'
+import type { CollectionDef, ListParams, ListResult, Row } from './types'
 
 /** The design shows its loading skeleton for about this long on a navigation. */
 const LATENCY_MS = 420
@@ -19,7 +18,7 @@ function matches(row: Row, needle: string) {
 async function fixtureRows(
   definition: CollectionDef,
   { page, q }: ListParams,
-): Promise<Paginated<Row>> {
+): Promise<ListResult> {
   await new Promise((resolve) => setTimeout(resolve, LATENCY_MS))
 
   const needle = q.trim().toLowerCase()
@@ -43,7 +42,7 @@ async function fixtureRows(
  * itself empty, so its empty state can explain what is missing rather than the
  * route showing rows nobody counted.
  */
-export const emptySource = async (): Promise<Paginated<Row>> => ({
+export const emptySource = async (): Promise<ListResult> => ({
   items: [],
   pagination: { page: 1, limit: PAGE_SIZE, total: 0, pages: 1 },
 })

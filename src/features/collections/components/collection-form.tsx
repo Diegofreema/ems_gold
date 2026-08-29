@@ -6,6 +6,7 @@ import { RecordForm } from '@/components/form/record-form'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
 import { toOptions } from '@/features/collections/options'
+import { MoneyField } from '@/components/form/money-field'
 import { TextField } from '@/components/form/text-field'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { useConfirm } from '@/hooks/use-confirm'
@@ -33,6 +34,8 @@ function renderField(field: FieldSpec) {
     span: field.wide ? (2 as const) : undefined,
   }
 
+  if (field.money)
+    return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.date)
     return <DateField<Values> key={field.key} {...shared} past={field.past} />
   if (field.optionsFrom)

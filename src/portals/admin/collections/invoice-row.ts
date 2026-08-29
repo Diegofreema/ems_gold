@@ -1,7 +1,8 @@
 import type { Invoice, InvoiceBody } from '../../../api/invoices/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
-import { formatDate, formatNaira } from '../../../lib/format.ts'
+import { when } from './when.ts'
+import { formatNaira } from '../../../lib/format.ts'
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
@@ -39,27 +40,6 @@ export function payStatus(paystatus: string | null | undefined): string {
   const word = paystatus?.trim()
   if (!word) return BLANK
   return word === SETTLED ? 'Paid' : word
-}
-
-/**
- * A date this API writes in one of two ways: an ISO timestamp on the rows it
- * has raised lately, and `24 Oct 2022 19:02 pm` on the older ones. The second
- * is already readable, so a date that will not parse is shown as it was sent
- * rather than as "Invalid Date".
- */
-function when(value: string | null | undefined, withTime = false): string {
-  if (!value) return BLANK
-  const at = new Date(value)
-  if (Number.isNaN(at.getTime())) return value
-  if (!withTime) return formatDate(at)
-  return at.toLocaleString('en-NG', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
 }
 
 /**
@@ -121,18 +101,6 @@ export function invoiceRow(invoice: Invoice): Row {
  */
 export function settleAction(status: string): string | undefined {
   return status === 'Paid' ? undefined : 'Settle'
-}
-
-/**
- * What a page of invoices still owing adds up to.
- *
- * ponytail: summed over the rows asked for rather than by the API — there is
- * no endpoint that totals invoices, and `/invoices` sends no `total_amount`
- * the way `/spendings` does. Fine for a school-sized ledger; if this list ever
- * runs to five figures, the API needs to answer the question itself.
- */
-export function owedTotal(invoices: Invoice[]): number {
-  return invoices.reduce((total, invoice) => total + money(invoice.amount), 0)
 }
 
 /** The form's values, all strings from the inputs and selects. */

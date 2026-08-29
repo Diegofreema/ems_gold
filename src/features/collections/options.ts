@@ -13,8 +13,8 @@ export type OptionsKey =
   | 'teachers'
   | 'students'
   | 'fees'
-  /** A pupil's invoices still owing, scoped by the pupil chosen before it. */
-  | 'unpaid-invoices'
+  /** The four ways the school takes money at the counter. */
+  | 'payment-methods'
 
 /**
  * A choice as a definition writes it: a bare string where the value and the

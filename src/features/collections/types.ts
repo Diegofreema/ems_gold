@@ -80,6 +80,8 @@ export type CollectionRoutes =
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
   | '/student/test'
+  | '/admin/collect/report'
+  | '/admin/collect/pupil'
   | '/parent/pay'
   | '/parent/children/add'
   | '/admin/collect'
@@ -94,6 +96,12 @@ export type FlowSpec = {
   label: string
   /** The flow needs no record, so the list's primary action opens it. */
   fromList?: boolean
+  /**
+   * Records this flow can be run against. A settled invoice cannot be paid
+   * twice — the API refuses with 409 — so it gets no button rather than one
+   * that always fails. A flow without this is offered on every record.
+   */
+  when?: (record: Row) => boolean
 }
 
 /** Every fixture cell is display text; the API returns the same shape. */
@@ -114,6 +122,14 @@ export type ListParams = {
 export type FilterSpec = {
   key: string
   label: string
+  /**
+   * A date range rather than a dropdown: `key` is the query parameter for the
+   * first day and this one names the parameter for the last. One control
+   * writes both, which is also what keeps them the right way round — the
+   * ledger endpoint answers with nothing at all for a range given backwards
+   * rather than swapping it.
+   */
+  until?: string
   options?: readonly Choice[]
   /** Reads the choices from the API, the same feeds the forms use. */
   optionsFrom?: OptionsKey
@@ -133,7 +149,15 @@ export type FilterSpec = {
  * from the API, paginated and searched by the server; one that does not falls
  * back to the rows written into the definition.
  */
-export type ListSource = (params: ListParams) => Promise<Paginated<Row>>
+export type ListSource = (params: ListParams) => Promise<ListResult>
+
+/**
+ * A page of rows, and optionally a figure the endpoint worked out over
+ * everything the filters match rather than over the page it sent — the
+ * ledger's `total_amount`. Absent where the endpoint offers none, or where
+ * there is nothing narrowing the list for it to be about.
+ */
+export type ListResult = Paginated<Row> & { tally?: number }
 
 /**
  * A control on every row of a list, beside the link into the record — a state
@@ -154,6 +178,16 @@ export type RowActionSpec = {
   /** What the toast says once the API has taken it. */
   done: (row: Row) => string
   run: (row: Row) => Promise<unknown>
+}
+
+/**
+ * A summary tile whose figure arrives with the page rather than from its own
+ * endpoint, so it moves as the list is narrowed. `source` supplies the number;
+ * a page that sends none shows no tile.
+ */
+export type TallyTile = {
+  label: string
+  format?: (value: number) => string
 }
 
 /** A summary tile whose figure the API is asked for rather than written down. */
@@ -193,6 +227,8 @@ export type FieldSpec = {
   dependsOn?: string
   multiline?: boolean
   numeric?: boolean
+  /** A figure in naira: masked as it is typed and spelled out beneath. */
+  money?: boolean
   email?: boolean
   date?: boolean
   /** With `date`: the answer is already behind us, so the years read backwards. */
@@ -257,6 +293,12 @@ export type CollectionDef = {
    * so the strip is the right shape before any of them answer.
    */
   counts?: readonly CountTile[]
+  /**
+   * One more tile, for the figure the list endpoint sends back with the page.
+   * Unlike `counts` it answers for what the filters match, so it appears only
+   * while the list is narrowed and the tiles above it no longer say it.
+   */
+  tally?: TallyTile
   columns: ColumnSpec[]
   /** The rows to show when the collection has no `source` of its own. */
   rows?: Row[]
@@ -302,4 +344,11 @@ export type CollectionDef = {
    * from in portals that publish no create route.
    */
   actionTo?: ActionPath
+  /**
+   * A second destination beside the primary one, as an outline button. The
+   * counter queue has two jobs off it that are not each other — looking a
+   * family up, and reconciling the day's takings — and burying either one
+   * inside the other would be inventing a hierarchy the work does not have.
+   */
+  secondaryTo?: { to: ActionPath; label: string }
 }

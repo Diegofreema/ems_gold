@@ -1,9 +1,12 @@
 import { sessionsService } from '@/api/calendar/service'
+import { paymentMethods } from '@/api/collect-fees/hooks'
+import { collectFeeKeys } from '@/api/collect-fees/keys'
+import { collectFeesService } from '@/api/collect-fees/service'
 import { feesService } from '@/api/fees/service'
 import type { FeeType } from '@/api/fees/types'
 import { invoicesService } from '@/api/invoices/service'
 import { spendingsService } from '@/api/spendings/service'
-import type { CollectionDef } from '@/features/collections/types'
+import type { CollectionDef, DetailTab } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { queryClient } from '@/lib/query-client'
@@ -13,7 +16,8 @@ import {
   feeBody,
   feeRow,
 } from './fee-row'
-import { invoiceBody, invoiceRow, owedTotal, settleAction } from './invoice-row'
+import { collectRow, transactionRow } from './collect-row'
+import { invoiceBody, invoiceRow, settleAction } from './invoice-row'
 import {
   monthKey,
   spendingBody,
@@ -146,8 +150,9 @@ export const fees: CollectionDef = {
           key: 'figure',
           label: 'Amount (₦)',
           required: true,
-          numeric: true,
+          money: true,
           placeholder: '30,000',
+          hint: 'Charged per pupil, every time this fee is raised.',
         },
         {
           key: 'feetype',
@@ -165,9 +170,6 @@ export const fees: CollectionDef = {
     },
   ],
 }
-
-/** Everything the school is still owed, in one request. */
-const OWING_PAGE = 500
 
 /**
  * The two words `paystatus` comes back as, offered under the one an office
@@ -209,9 +211,66 @@ const INVOICE_DETAIL = [
 const settleRow: CollectionDef['rowAction'] = {
   label: (row) => settleAction(row.status),
   confirm: () =>
-    'This records the invoice as paid in full and closes its transaction. There is no undoing it from here.',
+    'This records the invoice as paid in full and closes its transaction. It keeps no method, discount or reference, and the collections report will not see it — take the payment from Fee collection instead if you can. There is no undoing it from here.',
   done: (row) => `${row.invoice} settled`,
   run: (row) => invoicesService.settle(row.id, { student_id: Number(row.student_id) }),
+}
+
+/**
+ * The queue's own count of itself. `/collect-fees` sends `stats` beside the
+ * page it was asked for, so the three tiles and the list share one request
+ * instead of the four the invoice register needs — and the outstanding total
+ * is the whole ledger's, not just the page's.
+ */
+const collectStats = () =>
+  queryClient
+    .ensureQueryData({
+      queryKey: collectFeeKeys.stats(),
+      queryFn: () => collectFeesService.outstanding({ limit: 1 }),
+    })
+    .then((page) => page.stats)
+
+/** Every payment ever taken against one invoice. */
+const paymentsTaken: DetailTab = {
+  label: 'Payments taken',
+  columns: [
+    { key: 'taken', label: 'When' },
+    { key: 'method', label: 'Method' },
+    { key: 'amount', label: 'Collected', align: 'right' },
+    { key: 'discount', label: 'Discount', align: 'right' },
+    { key: 'payref', label: 'Reference' },
+    { key: 'notes', label: 'Note' },
+  ],
+  empty: 'Nothing has been collected against this invoice yet.',
+  source: async (recordId) => {
+    const [invoice, methods] = await Promise.all([
+      collectFeesService.invoice(recordId),
+      paymentMethods().catch(() => undefined),
+    ])
+    return (invoice.transactions ?? []).map((entry) => transactionRow(entry, methods))
+  },
+}
+
+/**
+ * The rest of the same pupil's bill. A parent at the counter settling one
+ * invoice is the moment to know they are also down for the bus, so this asks
+ * for every session rather than only the current one.
+ */
+const pupilLedger: DetailTab = {
+  label: "This pupil's invoices",
+  columns: [
+    { key: 'invoice', label: 'Invoice' },
+    { key: 'fee', label: 'Fee' },
+    { key: 'session', label: 'Session' },
+    { key: 'billed', label: 'Amount', align: 'right' },
+    { key: 'status', label: 'Status', tag: true },
+  ],
+  empty: 'This pupil has no other invoices.',
+  source: async (recordId) => {
+    const invoice = await collectFeesService.invoice(recordId)
+    const ledger = await collectFeesService.studentLedger(invoice.student_id)
+    return ledger.invoices.map(collectRow)
+  },
 }
 
 export const collect: CollectionDef = {
@@ -220,47 +279,69 @@ export const collect: CollectionDef = {
   kicker: 'Finance',
   title: 'Fee collection',
   description:
-    'Every invoice still owing. Take a payment against one and it is settled in full — this API records no part payments.',
-  action: 'Take a payment',
-  searchHint: 'Search pupil or invoice no.',
-  // Same as the invoice register: the endpoint takes no search term.
-  searchable: false,
+    'The counter queue: every invoice still owing. Open one to take the payment — it is settled in full, less any discount you grant.',
+  // Finding a family is the counter's own job and comes first; the report is
+  // the end-of-day one.
+  action: 'Find a pupil',
+  actionTo: '/admin/collect/pupil',
+  secondaryTo: { to: '/admin/collect/report', label: 'Collections report' },
+  // Unlike the invoice register, this endpoint really does search — `q`
+  // matches a pupil's name or registration number.
+  searchHint: 'Search pupil name or reg. no.',
+  searchable: true,
   footer: 'Newest first',
   emptyTitle: 'Nothing outstanding',
   emptyBody:
-    'Every invoice raised has been settled. New ones appear here as fees are raised against pupils.',
+    'Every invoice raised has been settled. New ones appear here as fees are charged to pupils.',
   noun: 'invoice',
   nameKey: 'student',
+  // Counted by the API over the whole ledger rather than summed over the page
+  // on screen, which is the only way these can be right past page one.
   counts: [
     {
       label: 'Outstanding',
-      count: async () =>
-        owedTotal((await invoicesService.list({ status: 'Unpaid', limit: OWING_PAGE })).items),
+      count: async () => (await collectStats()).outstanding_amount,
       format: formatNaira,
     },
-    { label: 'Invoices owing', count: countInvoices('Unpaid') },
-    { label: 'Settled', count: countInvoices('success') },
+    { label: 'Invoices owing', count: async () => (await collectStats()).unpaid_invoices },
+    { label: 'Settled', count: async () => (await collectStats()).paid_invoices },
   ],
-  // No status column: every row here is owing, so it would say one word all
-  // the way down. No due date either — the API keeps none.
+  // No status column: every row in the queue is owing, so it would say one
+  // word all the way down. The registration number earns its place instead —
+  // it is what a counter checks a family against.
   columns: [
-    { key: 'invoice', label: 'Invoice', cardRole: 'subtitle' },
     { key: 'student', label: 'Pupil', cardRole: 'title' },
-    { key: 'arm', label: 'Arm' },
+    { key: 'regno', label: 'Reg. no.', cardRole: 'subtitle' },
+    { key: 'placed', label: 'Class' },
     { key: 'fee', label: 'Fee' },
-    { key: 'billed', label: 'Balance', align: 'right' },
+    { key: 'billed', label: 'Amount', align: 'right' },
   ],
-  detail: INVOICE_DETAIL,
-  rowAction: settleRow,
-  source: async ({ page }) => {
-    const { items, pagination } = await invoicesService.list({
+  detail: [
+    { key: 'invoice', label: 'Invoice' },
+    { key: 'student', label: 'Pupil' },
+    { key: 'regno', label: 'Reg. no.' },
+    { key: 'placed', label: 'Class' },
+    { key: 'fee', label: 'Fee' },
+    { key: 'billed', label: 'Amount' },
+    { key: 'collected', label: 'Collected' },
+    { key: 'status', label: 'Status' },
+    { key: 'session', label: 'Session' },
+    { key: 'raised', label: 'Raised' },
+    { key: 'settledOn', label: 'Settled' },
+  ],
+  tabs: [paymentsTaken, pupilLedger],
+  // The record is not edited from here: an invoice is written by the register
+  // and closed by a payment, and there is nothing on it a counter may retype.
+  readonly: true,
+  source: async ({ page, q }) => {
+    const { invoices: items, pagination } = await collectFeesService.outstanding({
       page,
       limit: PAGE_SIZE,
-      status: 'Unpaid',
+      q,
     })
-    return { items: items.map(invoiceRow), pagination }
+    return { items: items.map(collectRow), pagination }
   },
-  record: (recordId) => invoicesService.get(recordId).then(invoiceRow),
+  record: (recordId) => collectFeesService.invoice(recordId).then(collectRow),
 }
 
 export const invoices: CollectionDef = {
@@ -295,15 +376,23 @@ export const invoices: CollectionDef = {
     { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
   detail: INVOICE_DETAIL,
-  // With no search box, the status is the only way to cut a register of every
+  // With no search box, these are the only way to cut a register of every
   // invoice the school has ever raised down to the ones somebody is chasing.
-  filters: [{ key: 'status', label: 'Any status', options: PAY_STATUS }],
+  // The endpoint spells its date bounds `startdate` and `enddate`, applies
+  // each on its own, and answers a range given backwards with nothing at all
+  // rather than swapping it — which is why one control writes both.
+  filters: [
+    { key: 'status', label: 'Any status', options: PAY_STATUS },
+    { key: 'startdate', label: 'Any date', until: 'enddate' },
+  ],
   rowAction: settleRow,
   source: async ({ page, filters }) => {
     const { items, pagination } = await invoicesService.list({
       page,
       limit: PAGE_SIZE,
       status: filters.status || undefined,
+      startdate: filters.startdate || undefined,
+      enddate: filters.enddate || undefined,
     })
     return { items: items.map(invoiceRow), pagination }
   },
@@ -336,7 +425,7 @@ export const invoices: CollectionDef = {
           key: 'amount',
           label: 'Amount (₦)',
           required: true,
-          numeric: true,
+          money: true,
           placeholder: '30,000',
           hint: 'Defaults to nothing — the fee\'s own amount is not copied here.',
         },
@@ -376,6 +465,13 @@ export const spendings: CollectionDef = {
       format: formatNaira,
     },
   ],
+  // The ledger's own date bounds, inclusive at both ends. One control over
+  // both, because the endpoint answers a range given backwards with nothing
+  // at all rather than swapping it.
+  filters: [{ key: 'from', label: 'Any date', until: 'to' }],
+  // The endpoint totals whatever the filters match, not just the page, so
+  // this is the range's own figure rather than a sum of what is on screen.
+  tally: { label: 'Spent in this range', format: formatNaira },
   // No category column: the endpoint holds none, and a column the ledger
   // cannot fill would be blank on every row it has.
   columns: [
@@ -391,13 +487,18 @@ export const spendings: CollectionDef = {
     { key: 'by', label: 'Recorded by' },
     { key: 'account', label: 'Signed in as' },
   ],
-  source: async ({ page, q }) => {
-    const { items, pagination } = await spendingsService.list({
+  source: async ({ page, q, filters }) => {
+    const { items, pagination, totalAmount } = await spendingsService.list({
       page,
       limit: PAGE_SIZE,
       q,
+      from: filters.from || undefined,
+      to: filters.to || undefined,
     })
-    return { items: items.map(spendingRow), pagination }
+    // Only while a range is set: unfiltered this is the whole ledger, which
+    // the three tiles above already answer for and would contradict.
+    const dated = Boolean(filters.from || filters.to)
+    return { items: items.map(spendingRow), pagination, tally: dated ? totalAmount : undefined }
   },
   record: (recordId) => spendingsService.get(recordId).then(spendingRow),
   save: (values, recordId) =>
@@ -423,8 +524,9 @@ export const spendings: CollectionDef = {
           key: 'amount',
           label: 'Amount (₦)',
           required: true,
-          numeric: true,
+          money: true,
           placeholder: '412,000',
+          hint: 'Separators are added for you; the figure is spelled out as you type.',
         },
       ],
     },

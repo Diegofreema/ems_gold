@@ -66,7 +66,7 @@ export function CollectionDetail({
 
   // Where it is the only thing the page offers, it is the page's main verb.
   const flowButton =
-    flowRoute && flow ? (
+    flowRoute && flow && (flow.when?.(record) ?? true) ? (
       <Button asChild variant={definition.readonly ? 'default' : 'outline'}>
         <Link
           to={flowRoute}

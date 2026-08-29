@@ -4,7 +4,6 @@ import type { Invoice } from '../../../api/invoices/types.ts'
 import {
   invoiceBody,
   invoiceRow,
-  owedTotal,
   payStatus,
   settleAction,
 } from './invoice-row.ts'
@@ -109,9 +108,3 @@ test('a school with no current session files the invoice under none', () => {
   assert.equal(invoiceBody({ fee_id: '1', student_id: '16' }, 8).session_id, 8)
 })
 
-test('what the counter is owed is the sum of the rows it was given', () => {
-  assert.equal(owedTotal([owing, { ...owing, amount: '190600' } as unknown as Invoice]), 220600)
-  assert.equal(owedTotal([]), 0)
-  // An amount the API sends as something unreadable is nothing owed, not NaN.
-  assert.equal(owedTotal([{ ...owing, amount: null } as unknown as Invoice]), 0)
-})

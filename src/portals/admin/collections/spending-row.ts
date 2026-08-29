@@ -1,7 +1,8 @@
 import type { Spending, SpendingBody, SpendingMonth } from '../../../api/spendings/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
-import { formatDate, formatNaira } from '../../../lib/format.ts'
+import { when } from './when.ts'
+import { formatNaira } from '../../../lib/format.ts'
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
@@ -11,22 +12,6 @@ function text(value: string | null | undefined): string {
 function figure(amount: number | string | null | undefined): number {
   const parsed = Number(amount)
   return Number.isFinite(parsed) ? parsed : 0
-}
-
-/** The day an entry was written, and the same moment with its time on it. */
-function when(timestamp: string | null | undefined, withTime: boolean): string {
-  if (!timestamp) return BLANK
-  const at = new Date(timestamp)
-  if (Number.isNaN(at.getTime())) return timestamp
-  if (!withTime) return formatDate(at)
-  return at.toLocaleString('en-NG', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
 }
 
 /**

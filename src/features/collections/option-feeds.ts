@@ -1,12 +1,13 @@
 import { queryOptions } from '@tanstack/react-query'
 import { classArmsService } from '@/api/class-arms/service'
+import { paymentMethods } from '@/api/collect-fees/hooks'
 import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
 import { teachersService } from '@/api/teachers/service'
 import { queryClient } from '@/lib/query-client'
-import { formatNaira } from '@/lib/format'
+import { methodOptions } from '@/portals/admin/collections/collect-row'
 import { guardianOption } from './guardian-option'
 import type { Option, OptionsKey } from './options'
 
@@ -61,25 +62,10 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     return items.map((fee) => ({ value: String(fee.id), label: fee.name }))
   }
 
-  if (key === 'unpaid-invoices') {
-    // An invoice only means something against a pupil, so this feed stays
-    // empty until one is chosen rather than offering the whole ledger.
-    if (!dependsOn) return []
-    const invoices = await studentsService.invoices(dependsOn)
-    return invoices
-      .filter((invoice) => invoice.paystatus !== 'success')
-      .map((invoice) => ({
-        value: String(invoice.id),
-        // What is owed and what for — the two things a bursary checks before
-        // taking money over the counter.
-        label: [
-          invoice.invoiceid?.trim() || `#${invoice.id}`,
-          typeof invoice.fee?.name === 'string' ? invoice.fee.name : undefined,
-          formatNaira(Number(invoice.amount) || 0),
-        ]
-          .filter(Boolean)
-          .join(' · '),
-      }))
+  if (key === 'payment-methods') {
+    // Named by the API rather than listed here, so a school that stops
+    // taking cheques stops being offered cheque.
+    return methodOptions(await paymentMethods())
   }
 
   if (key === 'teachers') {

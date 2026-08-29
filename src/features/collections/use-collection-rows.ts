@@ -20,7 +20,10 @@ import type { CollectionDef } from './types'
  */
 export function useCollectionRows(definition: CollectionDef) {
   const keys = useMemo(
-    () => definition.filters?.map((filter) => filter.key) ?? [],
+    () =>
+      definition.filters?.flatMap((filter) =>
+        filter.until ? [filter.key, filter.until] : [filter.key],
+      ) ?? [],
     [definition.filters],
   )
   const list = useListQuery(keys)
@@ -38,8 +41,11 @@ export function useCollectionRows(definition: CollectionDef) {
   // A filter that swaps the population has no whole to be a part of, so a
   // collection carrying one never claims a total.
   const swaps = definition.filters?.some((filter) => filter.replaces) ?? false
-  const narrowed =
-    swaps || Boolean(query) || Object.values(filters).some(Boolean)
+  // Something the reader set, which is what the clear control undoes. Not the
+  // same as having no whole to count against: a collection that swaps its
+  // population has none even before anybody touches a filter.
+  const filtered = Boolean(query) || Object.values(filters).some(Boolean)
+  const narrowed = swaps || filtered
   const [all, setAll] = useState<number | undefined>(
     narrowed ? undefined : pagination?.total,
   )
@@ -72,8 +78,18 @@ export function useCollectionRows(definition: CollectionDef) {
      */
     paused: fetchStatus === 'paused',
     retry: () => void refetch(),
+    /**
+     * The figure the endpoint worked out over everything the filters match,
+     * where it sends one. Undefined while the last answer is still on screen
+     * and the next is being fetched, so the tile never reads as the total of
+     * a range nobody is looking at any more.
+     */
+    tally: isPlaceholderData ? undefined : data?.tally,
+    /** Whether the reader has set anything — a search or a filter. */
+    filtered,
     setQuery: list.setQuery,
     setFilter: list.setFilter,
+    clear: list.clear,
     setPage: list.setPage,
     total: all,
     paged:

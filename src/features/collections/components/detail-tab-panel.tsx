@@ -67,7 +67,10 @@ export function DetailTabPanel({
   if (!tab) return null
 
   return (
-    <section>
+    // `min-w-0`: a grid item sizes to its content by default, so a wide tab
+    // — a payment history is six columns — would push the record beside it
+    // off the page instead of scrolling inside its own frame.
+    <section className="min-w-0">
       {tabs.length > 1 ? (
         <SegmentedControl
           name="detail-tab"

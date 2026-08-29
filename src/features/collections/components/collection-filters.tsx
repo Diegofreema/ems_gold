@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { optionsQuery } from '../option-feeds'
+import { FilterDateRange } from './filter-date-range'
 import { toOptions } from '../options'
 import type { FilterSpec } from '../types'
 
@@ -64,21 +65,30 @@ export function CollectionFilters({
 }: {
   specs: readonly FilterSpec[]
   filters: Record<string, string>
-  onChange: (key: string, value: string, clears: string[]) => void
+  onChange: (values: Record<string, string>, clears: string[]) => void
 }) {
-  return specs.map((spec) => (
-    <FilterSelect
-      key={spec.key}
-      spec={spec}
-      value={filters[spec.key] ?? ''}
-      scope={spec.dependsOn ? (filters[spec.dependsOn] ?? '') : ''}
-      onChange={(value) =>
-        onChange(
-          spec.key,
-          value,
-          specs.filter((other) => other.dependsOn === spec.key).map((other) => other.key),
-        )
-      }
-    />
-  ))
+  return specs.map((spec) =>
+    spec.until ? (
+      <FilterDateRange
+        key={spec.key}
+        spec={spec}
+        from={filters[spec.key] ?? ''}
+        to={filters[spec.until] ?? ''}
+        onChange={(values) => onChange(values, [])}
+      />
+    ) : (
+      <FilterSelect
+        key={spec.key}
+        spec={spec}
+        value={filters[spec.key] ?? ''}
+        scope={spec.dependsOn ? (filters[spec.dependsOn] ?? '') : ''}
+        onChange={(value) =>
+          onChange(
+            { [spec.key]: value },
+            specs.filter((other) => other.dependsOn === spec.key).map((other) => other.key),
+          )
+        }
+      />
+    ),
+  )
 }

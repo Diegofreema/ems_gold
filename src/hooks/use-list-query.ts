@@ -53,16 +53,32 @@ export function useListQuery(filterKeys: readonly string[] = []) {
     filters: filters as Record<string, string>,
     setQuery: setText,
     /**
-     * `clears` names the filters scoped by this one — an arm of the class just
+     * A patch rather than one key, because a date range is a single control
+     * over two query parameters and setting them one at a time would ask the
+     * API twice for a range half of which is still the old one.
+     *
+     * `clears` names the filters scoped by these — an arm of the class just
      * left is not a filter anybody meant to keep.
      */
-    setFilter: (key: string, value: string, clears: readonly string[] = []) => {
-      const next: Record<string, string | null> = { [key]: value || null }
+    setFilter: (values: Record<string, string>, clears: readonly string[] = []) => {
+      const next: Record<string, string | null> = {}
+      for (const [key, value] of Object.entries(values)) next[key] = value || null
       for (const dependent of clears) next[dependent] = null
       void setFilters(next)
       void setPageState(null)
     },
     setPage: (value: number) => void setPageState(value === 1 ? null : value),
+    /**
+     * Back to the whole list. Every filter at once rather than one control at
+     * a time: a reader who wants the register back does not want to hunt for
+     * which three things were narrowing it.
+     */
+    clear: () => {
+      setText('')
+      void setQueryState(null)
+      void setFilters(Object.fromEntries(filterKeys.map((key) => [key, null])))
+      void setPageState(null)
+    },
   }
 }
 

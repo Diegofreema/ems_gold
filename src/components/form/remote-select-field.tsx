@@ -79,7 +79,6 @@ export function RemoteSelectField<TValues extends FieldValues>({
  */
 const WAITING_FOR: Partial<Record<OptionsKey, string>> = {
   arms: 'Pick a class first',
-  'unpaid-invoices': 'Pick a pupil first',
 }
 
 function placeholderFor({

@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useState } from 'react'
+import { NumericFormat } from 'react-number-format'
 import { toast } from 'sonner'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
@@ -11,6 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useConfirm } from '@/hooks/use-confirm'
+import { amountInWords } from '@/lib/amount-words'
+import { formatNaira } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { OUTSTANDING, PAY_METHODS } from './outstanding'
 
@@ -30,24 +33,27 @@ export function PayPage() {
   const chosen =
     OUTSTANDING.find((entry) => entry.id === invoiceId) ?? OUTSTANDING[0]
   // Part payments are allowed, so the amount starts at the balance and is
-  // then the parent's to change. It carries the design's grouping separators.
-  const [amount, setAmount] = useState(chosen?.amountDraft ?? '0')
+  // then the parent's to change. Held unformatted — the field puts the
+  // separators on, and `payable` puts them back for the copy that reads it.
+  const [amount, setAmount] = useState(String(chosen?.balanceValue ?? 0))
+  const words = amountInWords(amount)
+  const payable = formatNaira(Number(amount) || 0)
 
   const pick = (id: string) => {
     void setInvoiceId(id)
     const next = OUTSTANDING.find((entry) => entry.id === id)
-    if (next) setAmount(next.amountDraft)
+    if (next) setAmount(String(next.balanceValue))
   }
 
   const pay = () =>
     confirm.ask({
       title: 'Send this payment?',
       body: 'The school is charged as soon as this clears. A refund has to go through the bursary, so check the invoice and the amount first.',
-      subject: `₦${amount} by ${method}${chosen ? ` · ${chosen.invoice}` : ''}`,
+      subject: `${payable} by ${method}${chosen ? ` · ${chosen.invoice}` : ''}`,
       cancel: 'Go back',
       cta: 'Pay now',
       onConfirm: () => {
-        toast(`Payment of ₦${amount} initiated — receipt follows`)
+        toast(`Payment of ${payable} initiated — receipt follows`)
         void navigate({ to: '/parent/receipts' })
       },
     })
@@ -123,13 +129,22 @@ export function PayPage() {
         >
           Amount to pay
         </Label>
-        <Input
+        <NumericFormat
+          customInput={Input}
           id="amount"
-          inputMode="numeric"
           value={amount}
-          onChange={(event) => setAmount(event.target.value)}
+          onValueChange={(values) => setAmount(values.value)}
+          thousandSeparator=","
+          decimalScale={2}
+          allowNegative={false}
+          inputMode="decimal"
           className="text-right font-heading text-lg font-extrabold tabular-nums"
         />
+        {/* The figure spelled out sits above the balance rather than replacing
+            it: paying part of an invoice is a decision that needs both. */}
+        {words && (
+          <div className="mt-1 text-[11px] text-foreground/70">{words}</div>
+        )}
         <div className="mt-1 text-[11px] text-muted-foreground">
           {chosen
             ? `Balance on ${chosen.invoice} is ${chosen.balance}. Part payments are allowed.`
@@ -139,8 +154,9 @@ export function PayPage() {
       <Rule />
 
       <div className="flex flex-wrap items-center gap-2.5">
-        <Button onClick={pay} disabled={!chosen}>
-          Pay ₦{amount} by {method}
+        {/* An emptied field used to leave a live "Pay ₦0" button behind it. */}
+        <Button onClick={pay} disabled={!chosen || !Number(amount)}>
+          Pay {payable} by {method}
         </Button>
         <Button asChild variant="outline">
           <Link to="/parent/invoices">See all invoices</Link>

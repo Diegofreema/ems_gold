@@ -35,7 +35,9 @@ export function CountUp({
         duration: (DURATION_MS * (motion / 6)) / 1000,
         ease: 'power2.out',
         onUpdate: () => {
-          node.textContent = format(counter.value)
+          // Rounded: the tween runs through fractions, and a money format that
+          // shows kobo would flicker two decimal places all the way up.
+          node.textContent = format(Math.round(counter.value))
         },
         onComplete: () => {
           node.textContent = format(to)

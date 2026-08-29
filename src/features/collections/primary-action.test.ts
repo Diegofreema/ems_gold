@@ -70,7 +70,8 @@ test('a create route alone is not enough to publish a create page', () => {
 
 test('a portal with no create route falls through to its own destination', () => {
   const readOnly = { record: '/parent/$collection/$recordId' } as const
-  assert.equal(primaryActionKind(def('Report an absence'), readOnly), 'none')
+  // Nothing to link to and no create route: the prototype's unwired button.
+  assert.equal(primaryActionKind(def('Report an absence'), readOnly), 'placeholder')
   assert.equal(
     primaryActionKind({ ...def('Pay an invoice'), actionTo: '/parent/pay' }, readOnly),
     'link',
@@ -84,14 +85,22 @@ test('a named destination wins over the portal’s create route', () => {
   assert.equal(primaryActionKind(def('Add parent'), routes), 'create')
 })
 
-test('a file action still beats a named destination', () => {
+test('a named destination beats a label that reads like a download', () => {
+  // `actionTo` is declared; `isFileAction` is guessed from the verb. Where
+  // both apply, the one that was written down wins.
   const both: CollectionDef = { ...def('Export CSV'), actionTo: '/admin/collect' }
-  assert.equal(primaryActionKind(both, routes), 'file')
+  assert.equal(primaryActionKind(both, routes), 'link')
 })
 
-test('a readonly collection offers no primary action at all', () => {
+test('a readonly collection offers nothing that would write to it', () => {
   const log: CollectionDef = { ...def('Export log'), readonly: true }
   assert.equal(primaryActionKind(log, routes), 'none')
-  // Even where the label would otherwise hand over a file, or name a page.
-  assert.equal(primaryActionKind({ ...log, actionTo: '/admin/collect' }, routes), 'none')
+  // Even where the label would otherwise hand over a file.
+  assert.equal(primaryActionKind({ ...log, action: 'Export CSV' }, routes), 'none')
+  // A destination it named itself is not a way of writing to it, though: the
+  // counter queue takes no new invoices and still opens its report.
+  assert.equal(
+    primaryActionKind({ ...log, actionTo: '/admin/collect/report' }, routes),
+    'link',
+  )
 })

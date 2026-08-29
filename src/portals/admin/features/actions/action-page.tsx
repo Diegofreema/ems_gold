@@ -6,6 +6,7 @@ import { FormProvider } from 'react-hook-form'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { DateField } from '@/components/form/date-field'
+import { MoneyField } from '@/components/form/money-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
 import { toOptions } from '@/features/collections/options'
@@ -96,6 +97,8 @@ function renderField(field: ActionField) {
     required: field.required,
     span: field.wide ? (2 as const) : undefined,
   }
+  if (field.money)
+    return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.date) return <DateField<Values> key={field.key} {...shared} />
   if (field.optionsFrom)
     return (
@@ -109,7 +112,12 @@ function renderField(field: ActionField) {
   if (field.options)
     return <SelectField<Values> key={field.key} {...shared} options={toOptions(field.options)} />
   return (
-    <TextField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
+    <TextField<Values>
+      key={field.key}
+      {...shared}
+      placeholder={field.placeholder}
+      multiline={field.multiline}
+    />
   )
 }
 
@@ -131,6 +139,9 @@ export function ActionPage({
   const [failures, setFailures] = useState<string[]>([])
   const form = useRecordForm<Values>(schemaFor(action), defaultsFor(action))
   const picked = (form.watch('picks') as string[] | undefined) ?? []
+  // Watched rather than read once: the payment flow's figures move as the
+  // discount is typed.
+  const answers = form.watch()
 
   const back = () => navigate({ to: definition.path })
 
@@ -179,6 +190,7 @@ export function ActionPage({
           { label: 'Will bill', value: formatNaira(total.amount) },
         ]
       : []),
+    ...(action.tally?.(answers) ?? []),
   ]
 
   return (

@@ -3,13 +3,14 @@ import type { CollectionsReportParams, FindStudentParams, OutstandingParams } fr
 
 export const collectFeeKeys = {
   all: ['collect-fees'] as const,
-  outstanding: (params: OutstandingParams) => [...collectFeeKeys.all, 'outstanding', params] as const,
+  outstanding: (params: OutstandingParams) =>
+    [...collectFeeKeys.all, 'outstanding', params] as const,
   paymentMethods: () => [...collectFeeKeys.all, 'payment-methods'] as const,
-  studentSearch: (params: Partial<FindStudentParams>) =>
+  stats: () => [...collectFeeKeys.all, 'stats'] as const,
+  ledger: (studentId: Id, all: boolean) =>
+    [...collectFeeKeys.all, 'ledger', String(studentId), all] as const,
+  studentSearch: (params: FindStudentParams) =>
     [...collectFeeKeys.all, 'student-search', params] as const,
-  studentInvoices: (studentId: Id, all: boolean) =>
-    [...collectFeeKeys.all, 'student', String(studentId), 'invoices', all] as const,
-  invoice: (invoiceId: Id) => [...collectFeeKeys.all, 'invoice', String(invoiceId)] as const,
-  receipt: (invoiceId: Id) => [...collectFeeKeys.invoice(invoiceId), 'receipt'] as const,
+  receipt: (invoiceId: Id) => [...collectFeeKeys.all, 'receipt', String(invoiceId)] as const,
   report: (params: CollectionsReportParams) => [...collectFeeKeys.all, 'report', params] as const,
 }

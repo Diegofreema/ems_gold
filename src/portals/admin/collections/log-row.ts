@@ -1,6 +1,7 @@
 import type { ActivityLog } from '../../../api/logs/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
+import { when } from './when.ts'
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
@@ -50,21 +51,6 @@ export function logRange(preset: string | undefined, today: Date): Range {
   }
 }
 
-/** The time an entry was written, as the design shows it. */
-function when(timestamp: string | null | undefined): string {
-  if (!timestamp) return BLANK
-  const at = new Date(timestamp)
-  if (Number.isNaN(at.getTime())) return timestamp
-  return at.toLocaleString('en-NG', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-}
-
 /**
  * One line of the audit trail.
  *
@@ -76,7 +62,7 @@ function when(timestamp: string | null | undefined): string {
 export function logRow(log: ActivityLog): Row {
   return {
     id: String(log.id),
-    when: when(log.timestamp),
+    when: when(log.timestamp, true),
     user: log.user?.username?.trim() || (log.user_id ? `User ${log.user_id}` : 'Deleted account'),
     type: text(log.type),
     action: text(log.description || log.title),

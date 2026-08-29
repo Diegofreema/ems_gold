@@ -30,7 +30,6 @@ import { Route as AdminAttReportRouteImport } from './routes/admin/att-report'
 import { Route as AdminAttendanceRouteImport } from './routes/admin/attendance'
 import { Route as AdminCalendarRouteImport } from './routes/admin/calendar'
 import { Route as AdminClassesRouteImport } from './routes/admin/classes'
-import { Route as AdminCollectRouteImport } from './routes/admin/collect'
 import { Route as AdminElectionsRouteImport } from './routes/admin/elections'
 import { Route as AdminFeesRouteImport } from './routes/admin/fees'
 import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
@@ -83,6 +82,9 @@ import { Route as TeacherSubjectsRouteImport } from './routes/teacher/subjects'
 import { Route as TeacherTopicsRouteImport } from './routes/teacher/topics'
 import { Route as AdminCollectionActionRouteImport } from './routes/admin/$collection.action'
 import { Route as AdminCollectionNewRouteImport } from './routes/admin/$collection.new'
+import { Route as AdminCollectIndexRouteImport } from './routes/admin/collect.index'
+import { Route as AdminCollectPupilRouteImport } from './routes/admin/collect.pupil'
+import { Route as AdminCollectReportRouteImport } from './routes/admin/collect.report'
 import { Route as ParentCollectionRecordIdRouteImport } from './routes/parent/$collection.$recordId'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
 import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.add'
@@ -98,6 +100,7 @@ import { Route as TeacherUploadsIndexRouteImport } from './routes/teacher/upload
 import { Route as TeacherUploadsRecordIdRouteImport } from './routes/teacher/uploads.$recordId'
 import { Route as AdminCollectionRecordIdIndexRouteImport } from './routes/admin/$collection.$recordId.index'
 import { Route as AdminCollectionRecordIdEditRouteImport } from './routes/admin/$collection.$recordId.edit'
+import { Route as AdminCollectReceiptInvoiceIdRouteImport } from './routes/admin/collect.receipt.$invoiceId'
 import { Route as TeacherCollectionRecordIdIndexRouteImport } from './routes/teacher/$collection.$recordId.index'
 import { Route as TeacherCollectionRecordIdEditRouteImport } from './routes/teacher/$collection.$recordId.edit'
 
@@ -203,11 +206,6 @@ const AdminCalendarRoute = AdminCalendarRouteImport.update({
 const AdminClassesRoute = AdminClassesRouteImport.update({
   id: '/classes',
   path: '/classes',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminCollectRoute = AdminCollectRouteImport.update({
-  id: '/collect',
-  path: '/collect',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminElectionsRoute = AdminElectionsRouteImport.update({
@@ -470,6 +468,21 @@ const AdminCollectionNewRoute = AdminCollectionNewRouteImport.update({
   path: '/$collection/new',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminCollectIndexRoute = AdminCollectIndexRouteImport.update({
+  id: '/collect/',
+  path: '/collect/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCollectPupilRoute = AdminCollectPupilRouteImport.update({
+  id: '/collect/pupil',
+  path: '/collect/pupil',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCollectReportRoute = AdminCollectReportRouteImport.update({
+  id: '/collect/report',
+  path: '/collect/report',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ParentCollectionRecordIdRoute =
   ParentCollectionRecordIdRouteImport.update({
     id: '/$collection/$recordId',
@@ -550,6 +563,12 @@ const AdminCollectionRecordIdEditRoute =
     path: '/$collection/$recordId/edit',
     getParentRoute: () => AdminRouteRoute,
   } as any)
+const AdminCollectReceiptInvoiceIdRoute =
+  AdminCollectReceiptInvoiceIdRouteImport.update({
+    id: '/collect/receipt/$invoiceId',
+    path: '/collect/receipt/$invoiceId',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
 const TeacherCollectionRecordIdIndexRoute =
   TeacherCollectionRecordIdIndexRouteImport.update({
     id: '/$collection/$recordId/',
@@ -583,7 +602,6 @@ export interface FileRoutesByFullPath {
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/classes': typeof AdminClassesRoute
-  '/admin/collect': typeof AdminCollectRoute
   '/admin/elections': typeof AdminElectionsRoute
   '/admin/fees': typeof AdminFeesRoute
   '/admin/invoices': typeof AdminInvoicesRoute
@@ -637,6 +655,8 @@ export interface FileRoutesByFullPath {
   '/teacher/': typeof TeacherIndexRoute
   '/admin/$collection/action': typeof AdminCollectionActionRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/admin/collect/pupil': typeof AdminCollectPupilRoute
+  '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
@@ -645,12 +665,14 @@ export interface FileRoutesByFullPath {
   '/student/test/receipt': typeof StudentTestReceiptRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
+  '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
   '/parent/receipts/': typeof ParentReceiptsIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
   '/student/test/': typeof StudentTestIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
   '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
@@ -671,7 +693,6 @@ export interface FileRoutesByTo {
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/classes': typeof AdminClassesRoute
-  '/admin/collect': typeof AdminCollectRoute
   '/admin/elections': typeof AdminElectionsRoute
   '/admin/fees': typeof AdminFeesRoute
   '/admin/invoices': typeof AdminInvoicesRoute
@@ -725,6 +746,8 @@ export interface FileRoutesByTo {
   '/teacher': typeof TeacherIndexRoute
   '/admin/$collection/action': typeof AdminCollectionActionRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/admin/collect/pupil': typeof AdminCollectPupilRoute
+  '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
@@ -733,12 +756,14 @@ export interface FileRoutesByTo {
   '/student/test/receipt': typeof StudentTestReceiptRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
+  '/admin/collect': typeof AdminCollectIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
   '/parent/receipts': typeof ParentReceiptsIndexRoute
   '/student/materials': typeof StudentMaterialsIndexRoute
   '/student/test': typeof StudentTestIndexRoute
   '/teacher/uploads': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId': typeof AdminCollectionRecordIdIndexRoute
   '/teacher/$collection/$recordId': typeof TeacherCollectionRecordIdIndexRoute
@@ -765,7 +790,6 @@ export interface FileRoutesById {
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/classes': typeof AdminClassesRoute
-  '/admin/collect': typeof AdminCollectRoute
   '/admin/elections': typeof AdminElectionsRoute
   '/admin/fees': typeof AdminFeesRoute
   '/admin/invoices': typeof AdminInvoicesRoute
@@ -819,6 +843,8 @@ export interface FileRoutesById {
   '/teacher/': typeof TeacherIndexRoute
   '/admin/$collection/action': typeof AdminCollectionActionRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
+  '/admin/collect/pupil': typeof AdminCollectPupilRoute
+  '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
@@ -827,12 +853,14 @@ export interface FileRoutesById {
   '/student/test/receipt': typeof StudentTestReceiptRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
+  '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
   '/parent/receipts/': typeof ParentReceiptsIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
   '/student/test/': typeof StudentTestIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
+  '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
   '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
@@ -859,7 +887,6 @@ export interface FileRouteTypes {
     | '/admin/attendance'
     | '/admin/calendar'
     | '/admin/classes'
-    | '/admin/collect'
     | '/admin/elections'
     | '/admin/fees'
     | '/admin/invoices'
@@ -913,6 +940,8 @@ export interface FileRouteTypes {
     | '/teacher/'
     | '/admin/$collection/action'
     | '/admin/$collection/new'
+    | '/admin/collect/pupil'
+    | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/parent/receipts/$recordId'
@@ -921,12 +950,14 @@ export interface FileRouteTypes {
     | '/student/test/receipt'
     | '/teacher/$collection/new'
     | '/teacher/uploads/$recordId'
+    | '/admin/collect/'
     | '/parent/children/'
     | '/parent/receipts/'
     | '/student/materials/'
     | '/student/test/'
     | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
+    | '/admin/collect/receipt/$invoiceId'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
     | '/teacher/$collection/$recordId/'
@@ -947,7 +978,6 @@ export interface FileRouteTypes {
     | '/admin/attendance'
     | '/admin/calendar'
     | '/admin/classes'
-    | '/admin/collect'
     | '/admin/elections'
     | '/admin/fees'
     | '/admin/invoices'
@@ -1001,6 +1031,8 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/admin/$collection/action'
     | '/admin/$collection/new'
+    | '/admin/collect/pupil'
+    | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/parent/receipts/$recordId'
@@ -1009,12 +1041,14 @@ export interface FileRouteTypes {
     | '/student/test/receipt'
     | '/teacher/$collection/new'
     | '/teacher/uploads/$recordId'
+    | '/admin/collect'
     | '/parent/children'
     | '/parent/receipts'
     | '/student/materials'
     | '/student/test'
     | '/teacher/uploads'
     | '/admin/$collection/$recordId/edit'
+    | '/admin/collect/receipt/$invoiceId'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId'
     | '/teacher/$collection/$recordId'
@@ -1040,7 +1074,6 @@ export interface FileRouteTypes {
     | '/admin/attendance'
     | '/admin/calendar'
     | '/admin/classes'
-    | '/admin/collect'
     | '/admin/elections'
     | '/admin/fees'
     | '/admin/invoices'
@@ -1094,6 +1127,8 @@ export interface FileRouteTypes {
     | '/teacher/'
     | '/admin/$collection/action'
     | '/admin/$collection/new'
+    | '/admin/collect/pupil'
+    | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/parent/receipts/$recordId'
@@ -1102,12 +1137,14 @@ export interface FileRouteTypes {
     | '/student/test/receipt'
     | '/teacher/$collection/new'
     | '/teacher/uploads/$recordId'
+    | '/admin/collect/'
     | '/parent/children/'
     | '/parent/receipts/'
     | '/student/materials/'
     | '/student/test/'
     | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
+    | '/admin/collect/receipt/$invoiceId'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
     | '/teacher/$collection/$recordId/'
@@ -1269,13 +1306,6 @@ declare module '@tanstack/react-router' {
       path: '/classes'
       fullPath: '/admin/classes'
       preLoaderRoute: typeof AdminClassesRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/collect': {
-      id: '/admin/collect'
-      path: '/collect'
-      fullPath: '/admin/collect'
-      preLoaderRoute: typeof AdminCollectRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/elections': {
@@ -1642,6 +1672,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectionNewRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/collect/': {
+      id: '/admin/collect/'
+      path: '/collect'
+      fullPath: '/admin/collect/'
+      preLoaderRoute: typeof AdminCollectIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/collect/pupil': {
+      id: '/admin/collect/pupil'
+      path: '/collect/pupil'
+      fullPath: '/admin/collect/pupil'
+      preLoaderRoute: typeof AdminCollectPupilRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/collect/report': {
+      id: '/admin/collect/report'
+      path: '/collect/report'
+      fullPath: '/admin/collect/report'
+      preLoaderRoute: typeof AdminCollectReportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/parent/$collection/$recordId': {
       id: '/parent/$collection/$recordId'
       path: '/$collection/$recordId'
@@ -1747,6 +1798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectionRecordIdEditRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/collect/receipt/$invoiceId': {
+      id: '/admin/collect/receipt/$invoiceId'
+      path: '/collect/receipt/$invoiceId'
+      fullPath: '/admin/collect/receipt/$invoiceId'
+      preLoaderRoute: typeof AdminCollectReceiptInvoiceIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/teacher/$collection/$recordId/': {
       id: '/teacher/$collection/$recordId/'
       path: '/$collection/$recordId'
@@ -1771,7 +1829,6 @@ interface AdminRouteRouteChildren {
   AdminAttendanceRoute: typeof AdminAttendanceRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminClassesRoute: typeof AdminClassesRoute
-  AdminCollectRoute: typeof AdminCollectRoute
   AdminElectionsRoute: typeof AdminElectionsRoute
   AdminFeesRoute: typeof AdminFeesRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
@@ -1796,7 +1853,11 @@ interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCollectionActionRoute: typeof AdminCollectionActionRoute
   AdminCollectionNewRoute: typeof AdminCollectionNewRoute
+  AdminCollectPupilRoute: typeof AdminCollectPupilRoute
+  AdminCollectReportRoute: typeof AdminCollectReportRoute
+  AdminCollectIndexRoute: typeof AdminCollectIndexRoute
   AdminCollectionRecordIdEditRoute: typeof AdminCollectionRecordIdEditRoute
+  AdminCollectReceiptInvoiceIdRoute: typeof AdminCollectReceiptInvoiceIdRoute
   AdminCollectionRecordIdIndexRoute: typeof AdminCollectionRecordIdIndexRoute
 }
 
@@ -1807,7 +1868,6 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAttendanceRoute: AdminAttendanceRoute,
   AdminCalendarRoute: AdminCalendarRoute,
   AdminClassesRoute: AdminClassesRoute,
-  AdminCollectRoute: AdminCollectRoute,
   AdminElectionsRoute: AdminElectionsRoute,
   AdminFeesRoute: AdminFeesRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
@@ -1832,7 +1892,11 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminCollectionActionRoute: AdminCollectionActionRoute,
   AdminCollectionNewRoute: AdminCollectionNewRoute,
+  AdminCollectPupilRoute: AdminCollectPupilRoute,
+  AdminCollectReportRoute: AdminCollectReportRoute,
+  AdminCollectIndexRoute: AdminCollectIndexRoute,
   AdminCollectionRecordIdEditRoute: AdminCollectionRecordIdEditRoute,
+  AdminCollectReceiptInvoiceIdRoute: AdminCollectReceiptInvoiceIdRoute,
   AdminCollectionRecordIdIndexRoute: AdminCollectionRecordIdIndexRoute,
 }
 

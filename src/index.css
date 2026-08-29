@@ -244,3 +244,29 @@
         font-size: 16px;
     }
 }
+
+/* Printing. Only the fee-collection receipt is meant to reach paper: a parent
+   is handed the slip, not a screenshot of the app around it. Everything else
+   is hidden rather than the slip being lifted out of the layout, so it keeps
+   the dividers and type it was designed with. */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    [data-slot="receipt"],
+    [data-slot="receipt"] * {
+        visibility: visible;
+    }
+
+    [data-slot="receipt"] {
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        border: 0;
+    }
+
+    [data-print-hide] {
+        display: none !important;
+    }
+}

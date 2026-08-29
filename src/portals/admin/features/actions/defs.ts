@@ -1,9 +1,8 @@
 import { classArmsService } from '@/api/class-arms/service'
+import { collectFeesService } from '@/api/collect-fees/service'
 import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
-import { invoicesService } from '@/api/invoices/service'
 import { studentsService } from '@/api/students/service'
-import { optionLabels } from '@/features/collections/option-feeds'
 import type { Row } from '@/features/collections/types'
 import {
   ADMIT,
@@ -11,6 +10,7 @@ import {
   type ReviewValues,
 } from '@/portals/admin/collections/admission'
 import { applicantDocuments } from '@/portals/admin/collections/applicant-row'
+import { collecting, figure, payAction, paymentBody } from '@/portals/admin/collections/collect-row'
 import {
   moveOutcome,
   type MoveValues,
@@ -24,6 +24,8 @@ export type AdminFlow = {
   label: string
   /** The flow needs no record, so the list's primary action opens it. */
   fromList?: boolean
+  /** Records the flow can run against; offered on every record without it. */
+  when?: (record: Row) => boolean
   build: (row?: Row) => ActionDef | Promise<ActionDef>
 }
 
@@ -115,59 +117,77 @@ async function allocate(row?: Row): Promise<ActionDef> {
 /**
  * Taking a payment at the counter.
  *
- * `POST /invoices/{id}/settle` marks the whole invoice paid in one move and
- * names the pupil, so a mistyped reference cannot clear someone else's bill.
- * That is all it records: there is no part payment, and nowhere to put a
- * method or a teller number, so the flow does not ask for either. The endpoint
- * that carries them is `collect-fees/{id}/pay`, which is not deployed yet.
+ * `POST /collect-fees/{id}/pay` settles the invoice with no gateway involved,
+ * and it insists that `amount + discount` equal the invoice exactly — there is
+ * no part payment. So the flow does not ask what was collected: it asks what
+ * was waived, and derives the rest. A clerk who could type both could type a
+ * pair that does not add up, and would learn that from a 4xx.
+ *
+ * It always starts from an invoice, because the queue behind it searches by
+ * pupil name and registration number: finding the bill is the search, and
+ * looking at it before touching money is the point of the screen.
  */
 function payment(row?: Row): ActionDef {
-  // Opened from a parent's record the flow already knows the household, which
-  // is worth showing; it still cannot know which of their children is paying.
-  const household = row?.name
+  const total = figure(row?.total)
 
   return {
     kicker: 'Finance · Fee collection',
     title: 'Take a payment',
     description:
-      'Find the pupil, pick the invoice being settled, then record it. The invoice is marked paid in full and the parent sees it straight away.',
-    // Only the household: the parent record keeps its children in a tab, not
-    // in a column, so a "Children" tile here would read as a dash every time.
-    summary: household ? [{ label: 'Parent', value: household }] : [],
+      'Record money collected over the counter. The invoice is settled in full, less any discount granted — there is no part payment and no undoing it from here.',
+    summary: [
+      { label: 'Pupil', value: row?.student ?? DASH },
+      { label: 'Reg. no.', value: row?.regno ?? DASH },
+      { label: 'Fee', value: row?.fee ?? DASH },
+      { label: 'Invoice', value: formatNaira(total) },
+    ],
     fields: [
       {
-        key: 'student_id',
-        label: 'Pupil',
+        key: 'payment_method',
+        label: 'How it was paid',
         required: true,
-        wide: true,
-        optionsFrom: 'students',
-        hint: 'Search by name or admission number.',
+        optionsFrom: 'payment-methods',
+        hint: 'The school\'s own list, not a fixed one.',
       },
       {
-        key: 'invoice_id',
-        label: 'Invoice to settle',
-        required: true,
+        key: 'discount',
+        label: 'Discount granted (₦)',
+        money: true,
+        placeholder: '0',
+        hint: 'Leave empty to collect the invoice in full.',
+      },
+      {
+        key: 'notes',
+        label: 'Note',
         wide: true,
-        optionsFrom: 'unpaid-invoices',
-        dependsOn: 'student_id',
-        hint: 'Only invoices still owing are listed. Settling clears the whole amount.',
+        multiline: true,
+        placeholder: 'Transfer ref 99881',
+        hint: 'The teller number or transfer reference. Kept on the payment.',
       },
     ],
+    // What the clerk will actually take, recomputed as the discount is typed.
+    tally: (values) => {
+      const { amount, discount } = collecting(total, values.discount)
+      return [
+        { label: 'Discount', value: formatNaira(discount) },
+        { label: 'To collect', value: formatNaira(amount) },
+      ]
+    },
     cta: 'Record payment',
-    footnote: 'Nothing is settled until you press this.',
-    // Named from the two feeds the selects just read, so the dialog says who
-    // is paying and what for rather than "the invoice you picked" — this is
-    // the last chance to notice the wrong one.
-    confirm: async (_total, values) => {
-      const pupil = String(values?.student_id ?? '')
-      const [pupils, invoices] = await Promise.all([
-        optionLabels('students'),
-        optionLabels('unpaid-invoices', pupil),
-      ])
+    footnote: 'Nothing is collected until you press this.',
+    confirm: (_total, values) => {
+      const { amount, discount } = collecting(total, values?.discount)
       return {
-        title: 'Settle this invoice?',
-        body: 'This records the invoice as paid in full and closes its transaction. There is no undoing it from here.',
-        subject: [pupils.get(pupil), invoices.get(String(values?.invoice_id ?? ''))]
+        title: 'Record this payment?',
+        body: 'This settles the invoice outright and writes the transaction against your name. There is no undoing it from here.',
+        // The pupil, the fee and the figure — the three things a counter
+        // checks before the money is committed to the wrong bill.
+        subject: [
+          row?.student,
+          row?.fee,
+          formatNaira(amount),
+          discount ? `less ${formatNaira(discount)}` : undefined,
+        ]
           .filter(Boolean)
           .join(' · '),
         cta: 'Record the payment',
@@ -175,12 +195,14 @@ function payment(row?: Row): ActionDef {
       }
     },
     run: async (values) => {
-      await invoicesService.settle(String(values.invoice_id), {
-        student_id: Number(values.student_id),
-      })
-      return { message: 'Payment recorded — invoice settled' }
+      const body = paymentBody(total, values)
+      const { transaction } = await collectFeesService.pay(String(row?.id ?? ''), body)
+      // The API mints the reference, and it is what a parent quotes back when
+      // they query the payment, so the toast hands it over rather than the
+      // fixed "Payment recorded" a `meta` would give.
+      return { message: `Payment recorded — ${transaction.payref}` }
     },
-    done: () => 'Payment recorded — invoice settled',
+    done: () => 'Payment recorded',
   }
 }
 
@@ -331,10 +353,9 @@ function lend(row?: Row): ActionDef {
  */
 export const adminFlows: Record<string, AdminFlow> = {
   fees: { label: 'Allocate to classes', build: allocate },
-  collect: { label: 'Take a payment', fromList: true, build: payment },
-  // Not on `invoices`: an invoice's own page settles it from the row action,
-  // and two buttons doing one thing is one too many.
-  parents: { label: 'Take a payment', build: payment },
+  // Record-scoped, not `fromList`: a payment needs the invoice it settles,
+  // and the queue's own search is how that invoice is found.
+  collect: { label: 'Take a payment', when: payAction, build: payment },
   students: { label: 'Promote or transfer', build: promote },
   applicants: { label: 'Review application', build: review },
   library: { label: 'Issue this book', build: lend },

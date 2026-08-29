@@ -48,6 +48,14 @@ export type ActionDef = {
   footnote: string
   /** Set by allocate: the per-pupil amount behind the running total. */
   unitAmount?: number
+  /**
+   * Figures recomputed from the answers as they are typed, shown beside the
+   * summary. A picker's running total comes off `unitAmount`; this is for a
+   * flow whose arithmetic is over its fields — the discount on a payment
+   * decides what is actually collected, and that has to be on screen before
+   * the button is pressed rather than only in the confirm.
+   */
+  tally?: (values: Record<string, unknown>) => { label: string; value: string }[]
   /** The toast, given how many items were picked. */
   done: (picked: number) => string
   /**
