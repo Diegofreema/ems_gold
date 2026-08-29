@@ -66,7 +66,7 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/parents', label: 'All parents', icon: House },
       { to: '/admin/parents-owing', label: 'Owing', icon: CreditCard },
       { to: '/admin/parents-cleared', label: 'Cleared', icon: Check },
-      { to: '/admin/parents-invited', label: 'Not yet signed up', icon: Mail },
+      { to: '/admin/parents-invited', label: 'Deactivated', icon: Mail },
     ],
   },
   {

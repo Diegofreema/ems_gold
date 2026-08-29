@@ -1,7 +1,7 @@
 import type { TagProps } from '@/components/common/tag'
 
-const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Available', 'Admitted']
-const BAD = ['Overdue', 'Unpaid', 'Suspended', 'Not marked', 'All out', 'Rejected', 'Declined', 'Owing']
+const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Available', 'Admitted', 'In this arm']
+const BAD = ['Overdue', 'Unpaid', 'Suspended', 'Not marked', 'All out', 'Rejected', 'Declined', 'Owing', 'Not placed']
 
 /**
  * The design colours a status by what it means, not by which table it is in:

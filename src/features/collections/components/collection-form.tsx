@@ -32,7 +32,8 @@ function renderField(field: FieldSpec) {
     span: field.wide ? (2 as const) : undefined,
   }
 
-  if (field.date) return <DateField<Values> key={field.key} {...shared} />
+  if (field.date)
+    return <DateField<Values> key={field.key} {...shared} past={field.past} />
   if (field.optionsFrom)
     return (
       <RemoteSelectField<Values>

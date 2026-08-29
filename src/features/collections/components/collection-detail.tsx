@@ -16,9 +16,15 @@ import type {
   Row,
 } from '../types'
 import { fileActionToast, isFileAction } from '../primary-action'
+import { cn } from '@/lib/utils'
 import { DetailTabPanel } from './detail-tab-panel'
 
-/** Shown when a collection defines no sub-tables of its own. */
+/**
+ * The prototype's placeholder, shown where a collection still has no sub-tables
+ * of its own. A collection read from the API never gets it: invented rows
+ * beside real ones read as records of things that happened, and on the activity
+ * log itself they would be fabricated audit entries.
+ */
 const ACTIVITY: DetailTab = {
   label: 'Activity',
   columns: [
@@ -46,7 +52,8 @@ export function CollectionDetail({
   flow?: FlowSpec
 }) {
   const navigate = useNavigate()
-  const editRoute = routes.edit
+  const editRoute = definition.readonly ? undefined : routes.edit
+  const tabs = definition.tabs ?? (definition.source ? [] : [ACTIVITY])
   const flowRoute = routes.flow
 
   // Same rule as the table: a state the record is not in gets no badge.
@@ -84,7 +91,7 @@ export function CollectionDetail({
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          {!editRoute ? (
+          {definition.readonly ? null : !editRoute ? (
             <Button
               onClick={() =>
                 toast(
@@ -139,10 +146,17 @@ export function CollectionDetail({
         />
       )}
 
-      <div className="grid gap-[34px] lg:grid-cols-[1.6fr_1fr]">
-        <DetailTabPanel tabs={definition.tabs ?? [ACTIVITY]} recordId={record.id} />
+      {/* The record reads alone where there are no sub-tables beside it,
+          rather than in a narrow column with the space they would have used. */}
+      <div
+        className={cn(
+          'grid gap-[34px]',
+          tabs.length > 0 && 'lg:grid-cols-[1.6fr_1fr]',
+        )}
+      >
+        <DetailTabPanel tabs={tabs} recordId={record.id} />
 
-        <aside>
+        <aside className={tabs.length > 0 ? undefined : 'max-w-[46ch]'}>
           <SectionHeading className="mb-3.5">Record</SectionHeading>
           <div className="border-t-2 border-divider">
             {(definition.detail ?? definition.columns).map((field) => (

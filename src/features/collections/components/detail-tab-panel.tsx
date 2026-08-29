@@ -11,6 +11,16 @@ import { toTableColumns } from './collection-columns'
 const SKELETON_ROWS = 3
 
 function TabTable({ tab, rows }: { tab: DetailTab; rows: Row[] }) {
+  // `TableView` draws a header and nothing else for an empty list, which reads
+  // as a table that has not loaded rather than one with nothing in it.
+  if (rows.length === 0) {
+    return (
+      <div className="px-6 py-12 text-center text-[13px] text-muted-foreground">
+        {tab.empty ?? 'Nothing to show'}
+      </div>
+    )
+  }
+
   return (
     <TableView
       columns={toTableColumns(tab.columns)}
@@ -51,6 +61,10 @@ export function DetailTabPanel({
 }) {
   const [active, setActive] = useState(0)
   const tab = tabs[active]
+
+  // A collection with nothing to show beside the record shows nothing, rather
+  // than an empty frame under a heading for a table that does not exist.
+  if (!tab) return null
 
   return (
     <section>

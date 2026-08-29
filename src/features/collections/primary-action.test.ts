@@ -76,3 +76,22 @@ test('a portal with no create route falls through to its own destination', () =>
     'link',
   )
 })
+
+test('a named destination wins over the portal’s create route', () => {
+  const named: CollectionDef = { ...def('Open fee collection'), actionTo: '/admin/collect' }
+  assert.equal(primaryActionKind(named, routes), 'link')
+  // Without one, the create route still answers as it always did.
+  assert.equal(primaryActionKind(def('Add parent'), routes), 'create')
+})
+
+test('a file action still beats a named destination', () => {
+  const both: CollectionDef = { ...def('Export CSV'), actionTo: '/admin/collect' }
+  assert.equal(primaryActionKind(both, routes), 'file')
+})
+
+test('a readonly collection offers no primary action at all', () => {
+  const log: CollectionDef = { ...def('Export log'), readonly: true }
+  assert.equal(primaryActionKind(log, routes), 'none')
+  // Even where the label would otherwise hand over a file, or name a page.
+  assert.equal(primaryActionKind({ ...log, actionTo: '/admin/collect' }, routes), 'none')
+})

@@ -82,6 +82,7 @@ export type ActionPath =
   | '/student/test'
   | '/parent/pay'
   | '/parent/children/add'
+  | '/admin/collect'
 
 /**
  * A guided flow a collection's records can be put through — allocating a fee
@@ -118,6 +119,13 @@ export type FilterSpec = {
   optionsFrom?: OptionsKey
   /** Names the filter this one is scoped by; arms belong to a class. */
   dependsOn?: string
+  /**
+   * This filter swaps which records are listed rather than narrowing the ones
+   * already there — staff are two separate registers, not one with a role
+   * column. There is no unnarrowed total for the count beside the search to
+   * measure against, so it reports matches alone.
+   */
+  replaces?: boolean
 }
 
 /**
@@ -161,6 +169,8 @@ export type FieldSpec = {
   numeric?: boolean
   email?: boolean
   date?: boolean
+  /** With `date`: the answer is already behind us, so the years read backwards. */
+  past?: boolean
 }
 
 export type FormSectionSpec = {
@@ -176,6 +186,8 @@ export type DetailTab = {
   rows?: Row[]
   /** Reads the tab from the API for the record being looked at. */
   source?: (recordId: string) => Promise<Row[]>
+  /** Shown in place of the table when the tab holds nothing. */
+  empty?: string
 }
 
 /**
@@ -191,11 +203,23 @@ export type CollectionDef = {
   /** Primary action label, e.g. "Create fee". */
   action: string
   searchHint: string
+  /**
+   * False where the collection's endpoint takes no search term. A box that
+   * accepts typing and narrows nothing is worse than no box.
+   */
+  searchable?: boolean
   footer: string
   emptyTitle: string
   emptyBody: string
   /** Singular noun used in delete confirms, e.g. "fee". */
   noun: string
+  /**
+   * The collection can only be read. An audit log is the case this exists for:
+   * the portal publishes create and edit routes for every collection, and an
+   * append-only record must not offer either — least of all a delete button on
+   * the entry that would record the deletion.
+   */
+  readonly?: boolean
   summary?: { label: string; value: string }[]
   /**
    * Summary tiles the API counts, replacing `summary` where a collection has

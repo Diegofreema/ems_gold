@@ -1,4 +1,4 @@
-import type { PageParams } from '../types'
+import type { PageParams } from '../types.ts'
 
 export type Subject = {
   id: number

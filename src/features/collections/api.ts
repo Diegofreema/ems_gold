@@ -38,6 +38,16 @@ async function fixtureRows(
   }
 }
 
+/**
+ * A list the API cannot answer for. The page still loads, pages and reports
+ * itself empty, so its empty state can explain what is missing rather than the
+ * route showing rows nobody counted.
+ */
+export const emptySource = async (): Promise<Paginated<Row>> => ({
+  items: [],
+  pagination: { page: 1, limit: PAGE_SIZE, total: 0, pages: 1 },
+})
+
 /** Keyed on the list path — unique across portals — plus any row scope. */
 export const collectionQuery = (definition: CollectionDef, params: ListParams) =>
   queryOptions({

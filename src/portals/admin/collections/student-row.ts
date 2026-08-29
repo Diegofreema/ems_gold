@@ -34,15 +34,26 @@ function asDate(value: string | null | undefined): string {
  * `fees` stays blank throughout: whether a pupil owes is `GET /users/fees/{id}`,
  * one request per pupil, so the column waits for an endpoint that answers for
  * a page at a time.
+ *
+ * `guardians` names the households the school holds, keyed by id. The pupil
+ * record carries `sparent_id` but no name to go with it, so without the
+ * lookup the column falls back to whichever parent was typed onto the pupil.
  */
-export function studentRow(student: Student): Row {
+export function studentRow(
+  student: Student,
+  guardians?: ReadonlyMap<string, string>,
+): Row {
   return {
     id: String(student.id),
     adm: text(student.regno ?? student.application_no),
     name: text([student.fname, student.mname, student.lname].filter(Boolean).join(' ')),
     arm: text(student.class_arm?.arm_name ?? student.department?.name),
-    // Neither parent's name is on the pupil record; only `sparent_id` is.
-    parent: text(student.fathersname || student.mothersname),
+    // The linked household where one is known, and otherwise whichever parent
+    // was typed onto the pupil — which is all the pupil record itself holds.
+    parent: text(
+      guardians?.get(String(student.sparent_id)) ??
+        (student.fathersname || student.mothersname),
+    ),
     fees: BLANK,
     // `status` is where they are in admission — every enrolled pupil reads
     // "Admitted". `studentstatus` is the one that says Active or Suspended.

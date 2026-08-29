@@ -1,5 +1,5 @@
-import type { PageParams } from '../types'
-import type { Admin, Privilege } from '../users/types'
+import type { PageParams } from '../types.ts'
+import type { Admin, Privilege } from '../users/types.ts'
 
 export type { Admin, Privilege }
 

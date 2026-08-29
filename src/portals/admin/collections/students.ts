@@ -1,3 +1,4 @@
+import { optionLabels } from '@/features/collections/option-feeds'
 import { sessionsService } from '@/api/calendar/service'
 import { departmentsService } from '@/api/departments/service'
 import { studentsService } from '@/api/students/service'
@@ -26,6 +27,9 @@ const APPLIED = 'Applied'
 const countStudents = (params: StudentListParams) => async () =>
   (await studentsService.list({ ...params, limit: 1 })).pagination.total
 
+/** The households the school holds, so the register can name a pupil's own. */
+const guardianNames = () => optionLabels('guardians')
+
 /** A filter's id as the endpoint wants it; an unset filter is left off. */
 function asId(value: string | undefined) {
   return Number(value) || undefined
@@ -42,19 +46,45 @@ const IDENTITY: FormSectionSpec = {
     { key: 'fname', label: 'First name', required: true, placeholder: 'Ngozi' },
     { key: 'lname', label: 'Surname', required: true, placeholder: 'Eze' },
     { key: 'mname', label: 'Middle name', placeholder: 'Chiamaka' },
-    { key: 'dob', label: 'Date of birth', date: true },
+    { key: 'dob', label: 'Date of birth', date: true, past: true },
     { key: 'gender', label: 'Gender', options: ['Female', 'Male'] },
     { key: 'religion', label: 'Religion', placeholder: 'Christian' },
+    // The pupil's own, not the household's — that one is on the guardian
+    // record, and this is the address the pupil signs in with.
+    {
+      key: 'email',
+      label: 'Email',
+      email: true,
+      placeholder: 'pupil@example.com',
+      hint: 'The pupil signs in with this.',
+    },
+    { key: 'phone', label: 'Phone', numeric: true, placeholder: '0705 883 1190' },
+    {
+      key: 'address',
+      label: 'Home address',
+      multiline: true,
+      wide: true,
+      placeholder: '14 Ogui Road, Enugu',
+      hint: 'Where the pupil lives, when that is not the household on the guardian record.',
+    },
   ],
 }
 
+/**
+ * Who to reach about this pupil. The household already holds the email, the
+ * phone and the address, so the form links to it by id rather than asking the
+ * office to copy three fields it has on file under Parents.
+ */
 const CONTACT: FormSectionSpec = {
-  title: 'Contact and guardian',
+  title: 'Guardian',
   fields: [
-    { key: 'email', label: 'Email', email: true, placeholder: 'pupil@example.com' },
-    { key: 'phone', label: 'Phone', numeric: true, placeholder: '0705 883 1190' },
-    { key: 'sparent_id', label: 'Guardian on record', optionsFrom: 'guardians' },
-    { key: 'address', label: 'Home address', multiline: true, wide: true, placeholder: '14 Ogui Road, Enugu' },
+    {
+      key: 'sparent_id',
+      label: 'Guardian on record',
+      wide: true,
+      optionsFrom: 'guardians',
+      hint: 'Their email, phone and address come with the household. Add it under Parents first if it is not listed.',
+    },
   ],
 }
 
@@ -156,18 +186,24 @@ export const students: CollectionDef = {
     { key: 'studentstatus', label: 'Any enrolment', options: ENROLMENT },
   ],
   source: async ({ page, q, filters }) => {
-    const { items, pagination } = await studentsService.list({
-      page,
-      limit: PAGE_SIZE,
-      q,
-      department_id: asId(filters.department_id),
-      class_arm_id: asId(filters.class_arm_id),
-      status: filters.status || undefined,
-      studentstatus: filters.studentstatus || undefined,
-    })
-    return { items: items.map(studentRow), pagination }
+    // Both at once: the register does not wait on the guardian names to know
+    // who is on it, and a slow directory cannot hold up the page.
+    const [{ items, pagination }, guardians] = await Promise.all([
+      studentsService.list({
+        page,
+        limit: PAGE_SIZE,
+        q,
+        department_id: asId(filters.department_id),
+        class_arm_id: asId(filters.class_arm_id),
+        status: filters.status || undefined,
+        studentstatus: filters.studentstatus || undefined,
+      }),
+      guardianNames(),
+    ])
+    return { items: items.map((student) => studentRow(student, guardians)), pagination }
   },
-  record: (recordId) => studentsService.get(recordId).then(studentRow),
+  record: async (recordId) =>
+    studentRow(await studentsService.get(recordId), await guardianNames()),
   save: async (values, recordId) => {
     if (recordId) return studentsService.update(recordId, studentBody(values))
 

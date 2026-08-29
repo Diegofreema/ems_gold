@@ -17,7 +17,7 @@ const asText = parseAsString.withDefault('')
  * `text` is what the box shows and `query` is what gets asked for: typing
  * moves the first immediately and the second once the typing stops, so a
  * search costs one request rather than one per keystroke.
- */
+ * */
 export function useListQuery(filterKeys: readonly string[] = []) {
   const [query, setQueryState] = useQueryState('q', asText)
   const [page, setPageState] = useQueryState('page', parseAsInteger.withDefault(1))

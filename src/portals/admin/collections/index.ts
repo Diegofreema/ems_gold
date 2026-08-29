@@ -1,6 +1,6 @@
 import { collect, fees, invoices, spendings } from './finance'
 import { classes, calendar, results, subjects } from './academics'
-import { parents, parentsCleared, parentsInvited, parentsOwing } from './parents'
+import { parents, parentsCleared, parentsDeactivated, parentsOwing } from './parents'
 import { elections, library, logs } from './school'
 import { staff, staffAdmin, staffOther, staffTeachers } from './staff'
 import { applicants, attendance, students } from './students'
@@ -22,7 +22,7 @@ export const adminCollections = {
   parents,
   'parents-owing': parentsOwing,
   'parents-cleared': parentsCleared,
-  'parents-invited': parentsInvited,
+  'parents-invited': parentsDeactivated,
   classes,
   subjects,
   calendar,

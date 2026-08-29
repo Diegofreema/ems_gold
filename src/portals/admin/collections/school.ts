@@ -1,4 +1,26 @@
+import { logsService } from '@/api/logs/service'
+import type { LogType } from '@/api/logs/types'
 import type { CollectionDef } from '@/features/collections/types'
+import { PAGE_SIZE } from '@/hooks/use-list-query'
+import { queryClient } from '@/lib/query-client'
+import { logRange, logRow, RANGES } from './log-row'
+
+/** The four actions the API records. Anything else it would not answer for. */
+const LOG_TYPES: readonly LogType[] = ['Add', 'Edit', 'Delete', 'Login']
+
+/**
+ * A count per type, from the one endpoint that answers for all four at once.
+ * The four tiles ask for it together, and react-query collapses that into a
+ * single request rather than counting the log four times over.
+ */
+const typeCounts = () =>
+  queryClient.ensureQueryData({
+    queryKey: ['logs', 'types'],
+    queryFn: () => logsService.types(),
+    staleTime: 60_000,
+  })
+
+const countLogs = (type: LogType) => async () => (await typeCounts())[type] ?? 0
 
 export const library: CollectionDef = {
   id: 'library',
@@ -92,28 +114,53 @@ export const logs: CollectionDef = {
   kicker: 'School',
   title: 'Activity log',
   description:
-    'Every administrative action, who performed it and when. The log cannot be edited.',
-  action: 'Export log',
-  searchHint: 'Search action or user',
-  footer: '7 of 41,208 entries',
+    'Every administrative action, who performed it and when. The log is written to, never edited.',
+  // Nothing is added here by hand, so nothing offers to. `readonly` also takes
+  // the pencil and the bin off the rows and 404s the edit URL behind them.
+  readonly: true,
+  action: 'Activity log',
+  searchHint: 'Search action, description or IP',
+  footer: 'Newest first',
   emptyTitle: 'No activity in this range',
   emptyBody: 'Widen the date range or clear the filters to see entries.',
   noun: 'entry',
   nameKey: 'action',
+  counts: [
+    { label: 'Added', count: countLogs('Add') },
+    { label: 'Edited', count: countLogs('Edit') },
+    { label: 'Deleted', count: countLogs('Delete') },
+    { label: 'Sign-ins', count: countLogs('Login') },
+  ],
   columns: [
     { key: 'when', label: 'When', cardRole: 'subtitle' },
     { key: 'user', label: 'User' },
-    { key: 'type', label: 'Type' },
+    { key: 'type', label: 'Type', tag: true },
     { key: 'action', label: 'Action', cardRole: 'title' },
     { key: 'ip', label: 'IP' },
   ],
-  rows: [
-    { id: 'lo-1', when: '09:42 today', user: 'A. Okonkwo', type: 'Payment', action: 'Recorded ₦95,000 against INV-25088', ip: '102.89.4.17' },
-    { id: 'lo-2', when: '09:31 today', user: 'C. Nnaji', type: 'Results', action: 'Uploaded BAT-1142 — Mathematics, SS1 A', ip: '102.89.4.55' },
-    { id: 'lo-3', when: '08:58 today', user: 'S. Idowu', type: 'Spending', action: 'Recorded diesel purchase ₦412,000', ip: '102.89.4.22' },
-    { id: 'lo-4', when: '17:20 yesterday', user: 'A. Okonkwo', type: 'Fees', action: 'Allocated ICT levy to 4 arms', ip: '102.89.4.17' },
-    { id: 'lo-5', when: '16:04 yesterday', user: 'H. Abubakar', type: 'Attendance', action: 'Marked attendance for Primary 1 A', ip: '102.89.4.61' },
-    { id: 'lo-6', when: '15:12 yesterday', user: 'A. Okonkwo', type: 'Students', action: 'Suspended NEB/2021/0559', ip: '102.89.4.17' },
-    { id: 'lo-7', when: '11:47 yesterday', user: 'E. Duru', type: 'Auth', action: 'Signed in', ip: '102.89.4.90' },
+  detail: [
+    { key: 'when', label: 'When' },
+    { key: 'user', label: 'User' },
+    { key: 'type', label: 'Type' },
+    { key: 'title', label: 'Action' },
+    { key: 'description', label: 'Detail' },
+    { key: 'ip', label: 'IP' },
   ],
+  filters: [
+    { key: 'type', label: 'Any type', options: LOG_TYPES },
+    { key: 'range', label: 'Any time', options: RANGES },
+  ],
+  source: async ({ page, q, filters }) => {
+    const { items, pagination } = await logsService.list({
+      page,
+      limit: PAGE_SIZE,
+      q,
+      type: LOG_TYPES.includes(filters.type as LogType)
+        ? (filters.type as LogType)
+        : undefined,
+      ...logRange(filters.range, new Date()),
+    })
+    return { items: items.map(logRow), pagination }
+  },
+  record: (recordId) => logsService.get(recordId).then(logRow),
 }

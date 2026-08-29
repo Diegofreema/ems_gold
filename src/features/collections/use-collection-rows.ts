@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useListQuery } from '@/hooks/use-list-query'
 import { collectionQuery } from './api'
@@ -9,6 +9,14 @@ import type { CollectionDef } from './types'
  * the paging and the narrowing happen wherever the rows come from — the server
  * for a live collection, `api.ts` for a fixture one — so this only reads the
  * answer.
+ *
+ * Deliberately not a suspending query. Every filter and every page turn changes
+ * the query key, and a suspending one would throw the whole page — header,
+ * search box, the dropdown still open under the cursor — back to its skeleton
+ * each time. This keeps the last answer on screen (`placeholderData` on the
+ * query itself) and reports `pending` while the next one is fetched, so only
+ * the rows change. `paged` is undefined until the first answer arrives, which
+ * is the one time there is nothing to keep showing.
  */
 export function useCollectionRows(definition: CollectionDef) {
   const keys = useMemo(
@@ -17,40 +25,53 @@ export function useCollectionRows(definition: CollectionDef) {
   )
   const list = useListQuery(keys)
   const { query, filters } = list
-  const { data } = useSuspenseQuery(
+  const { data, isPlaceholderData, isFetching } = useQuery(
     collectionQuery(definition, { page: list.page, q: query, filters }),
   )
-  const { pagination } = data
+  const pagination = data?.pagination
 
   // The count beside the search reads "matches of all", and only an unnarrowed
   // answer knows what "all" is — so the last one is kept while a search or a
   // filter cuts the list down. A link straight into a narrowed list has never
   // seen one, and stays undefined rather than passing the matches off as the
   // whole register. Adjusting state during render, as React documents.
-  const narrowed = Boolean(query) || Object.values(filters).some(Boolean)
+  // A filter that swaps the population has no whole to be a part of, so a
+  // collection carrying one never claims a total.
+  const swaps = definition.filters?.some((filter) => filter.replaces) ?? false
+  const narrowed =
+    swaps || Boolean(query) || Object.values(filters).some(Boolean)
   const [all, setAll] = useState<number | undefined>(
-    narrowed ? undefined : pagination.total,
+    narrowed ? undefined : pagination?.total,
   )
-  if (!narrowed && all !== pagination.total) setAll(pagination.total)
+  // Not while the shown rows are last question's answer: the total belongs to
+  // the list that is on screen, and that one has not been counted yet.
+  if (!narrowed && !isPlaceholderData && pagination && all !== pagination.total) {
+    setAll(pagination.total)
+  }
 
-  const start = (pagination.page - 1) * pagination.limit
+  const start = pagination ? (pagination.page - 1) * pagination.limit : 0
 
   return {
     text: list.text,
     query,
     filters,
     page: list.page,
+    /** The next set of rows is on its way; the ones on screen are the last set. */
+    pending: isPlaceholderData || isFetching,
     setQuery: list.setQuery,
     setFilter: list.setFilter,
     setPage: list.setPage,
     total: all,
-    paged: {
-      rows: data.items,
-      total: pagination.total,
-      from: pagination.total ? start + 1 : 0,
-      to: start + data.items.length,
-      isFirstPage: pagination.page <= 1,
-      isLastPage: pagination.page >= pagination.pages,
-    },
+    paged:
+      data && pagination
+        ? {
+            rows: data.items,
+            total: pagination.total,
+            from: pagination.total ? start + 1 : 0,
+            to: start + data.items.length,
+            isFirstPage: pagination.page <= 1,
+            isLastPage: pagination.page >= pagination.pages,
+          }
+        : undefined,
   }
 }

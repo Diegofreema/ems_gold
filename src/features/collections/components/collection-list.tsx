@@ -3,6 +3,7 @@ import { Download, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { EmptyState } from '@/components/feedback/empty-state'
+import { ListSkeleton } from '@/components/feedback/list-skeleton'
 import { DataTable } from '@/components/data-table/data-table'
 import { Pagination } from '@/components/data-table/pagination'
 import { FilterBar } from '@/components/page/filter-bar'
@@ -10,6 +11,7 @@ import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
+import { cn } from '@/lib/utils'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
 import { fileActionToast, primaryActionKind } from '../primary-action'
 import { useCollectionRows } from '../use-collection-rows'
@@ -29,8 +31,12 @@ export function CollectionList({
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
-  const { text, query, filters, page, setQuery, setFilter, setPage, total, paged } =
+  const { text, query, filters, page, pending, setQuery, setFilter, setPage, total, paged } =
     useCollectionRows(definition)
+
+  // The one moment with nothing to show: before the first answer. Every later
+  // one keeps the rows it has, so this is the only skeleton a reader sees.
+  if (!paged) return <ListSkeleton label={definition.title.toLowerCase()} />
 
   const params = (row: Row) => ({
     collection: definition.id,
@@ -50,7 +56,10 @@ export function CollectionList({
   // records has no create page to reach by URL either.
   const primary = primaryActionKind(definition, routes, flow)
   const primaryAction =
-    primary === 'file' ? (
+    // `none` elsewhere still means the prototype's placeholder toast — the
+    // student and parent portals publish no create route and lean on it. A
+    // readonly collection means there is no action, so it shows none.
+    definition.readonly ? null : primary === 'file' ? (
       <Button onClick={() => toast(fileActionToast(definition.action))}>
         <Download className="size-[15px]" strokeWidth={2} />
         {definition.action}
@@ -78,7 +87,9 @@ export function CollectionList({
       </Button>
     )
 
-  const editRoute = routes.edit
+  // A readonly collection has no edit route of its own, so its rows offer
+  // neither pencil nor bin.
+  const editRoute = definition.readonly ? undefined : routes.edit
 
   return (
     <>
@@ -105,6 +116,7 @@ export function CollectionList({
             query={text}
             onQueryChange={setQuery}
             placeholder={definition.searchHint}
+            searchable={definition.searchable ?? true}
             count={
               total === undefined
                 ? `${paged.total} found`
@@ -122,22 +134,32 @@ export function CollectionList({
 
           <CollectionSummary definition={definition} />
 
-          <DataTable
-            columns={toTableColumns(definition.columns)}
-            rows={paged.rows}
-            rowKey={(row) => row.id}
-            onRowClick={(row) =>
-              navigate({ to: routes.record, params: params(row) })
-            }
-            onEdit={
-              editRoute
-                ? (row) => navigate({ to: editRoute, params: params(row) })
-                : undefined
-            }
-            onDelete={editRoute ? askDelete : undefined}
-            searchQuery={query}
-            onClearSearch={() => setQuery('')}
-          />
+          {/* Dimmed rather than replaced: the rows on screen are the last
+              answer, still true until the next one arrives. */}
+          <div
+            aria-busy={pending}
+            className={cn(
+              'transition-opacity duration-200',
+              pending && 'pointer-events-none opacity-55',
+            )}
+          >
+            <DataTable
+              columns={toTableColumns(definition.columns)}
+              rows={paged.rows}
+              rowKey={(row) => row.id}
+              onRowClick={(row) =>
+                navigate({ to: routes.record, params: params(row) })
+              }
+              onEdit={
+                editRoute
+                  ? (row) => navigate({ to: editRoute, params: params(row) })
+                  : undefined
+              }
+              onDelete={editRoute ? askDelete : undefined}
+              searchQuery={query}
+              onClearSearch={() => setQuery('')}
+            />
+          </div>
 
           <Pagination
             page={page}

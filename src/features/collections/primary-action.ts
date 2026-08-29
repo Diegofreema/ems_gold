@@ -25,9 +25,14 @@ export function primaryActionKind(
   routes: CollectionRoutes,
   flow?: FlowSpec,
 ): PrimaryActionKind {
+  // Before everything: a collection nobody can add to has no primary action,
+  // whatever its label would otherwise have done.
+  if (definition.readonly) return 'none'
   if (isFileAction(definition.action)) return 'file'
   if (routes.flow && flow?.fromList) return 'flow'
-  if (routes.create) return 'create'
+  // Named before the create route: a collection that says where its button
+  // goes has a reason to, and a create page it cannot fill is not it.
   if (definition.actionTo) return 'link'
+  if (routes.create) return 'create'
   return 'none'
 }

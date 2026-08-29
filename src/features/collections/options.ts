@@ -6,7 +6,7 @@ export type Option = { value: string; label: string }
  * than listing choices, so every form offers the same classes, arms and
  * guardians the API knows about.
  */
-export type OptionsKey = 'classes' | 'arms' | 'guardians'
+export type OptionsKey = 'classes' | 'arms' | 'guardians' | 'teachers'
 
 /** Choices whose value is the text itself — a gender, a status, a term. */
 export function toOptions(labels: readonly string[]): Option[] {

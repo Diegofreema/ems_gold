@@ -129,3 +129,24 @@ test('a result is read whichever way the endpoint spells its columns', () => {
     grade: 'B',
   })
 })
+
+test('the parent column names the linked household', () => {
+  const linked = { ...(pupil as object), sparent_id: 7 } as never
+  const guardians = new Map([['7', 'Emmanuel Udo & Chidinma Udo']])
+  assert.equal(studentRow(linked, guardians).parent, 'Emmanuel Udo & Chidinma Udo')
+})
+
+test('a pupil linked to no household falls back to the typed-in parent', () => {
+  const typed = { ...(pupil as object), sparent_id: null, fathersname: 'Mr O. Udoye' } as never
+  assert.equal(studentRow(typed, new Map()).parent, 'Mr O. Udoye')
+})
+
+test('a household the directory does not name does not blank the column', () => {
+  const stale = { ...(pupil as object), sparent_id: 99, mothersname: 'Mrs J. Nwosu' } as never
+  assert.equal(studentRow(stale, new Map([['7', 'Someone else']])).parent, 'Mrs J. Nwosu')
+})
+
+test('the register still reads without a directory at all', () => {
+  const linked = { ...(pupil as object), sparent_id: 7, fathersname: 'Mr O. Udoye' } as never
+  assert.equal(studentRow(linked).parent, 'Mr O. Udoye')
+})

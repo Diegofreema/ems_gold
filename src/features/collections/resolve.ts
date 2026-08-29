@@ -51,7 +51,9 @@ export async function loadRecordForEdit(
   recordId: string,
 ) {
   const loaded = await loadRecord(registry, id, recordId)
-  if (!loaded) return undefined
+  // Reachable by URL even where no button offers it, so the guard lives here
+  // rather than only on the page that draws the pencil.
+  if (!loaded || loaded.definition.readonly) return undefined
   return {
     ...loaded,
     heading: {

@@ -8,6 +8,7 @@ export function FilterBar({
   placeholder,
   count,
   children,
+  searchable = true,
 }: {
   query: string
   onQueryChange: (query: string) => void
@@ -16,16 +17,20 @@ export function FilterBar({
   count: string
   /** Extra filter controls, rendered between the search box and the count. */
   children?: ReactNode
+  /** False where the endpoint takes no search term, so the box is left out. */
+  searchable?: boolean
 }) {
   return (
     <div className="mb-[18px] flex flex-wrap items-center gap-2.5">
-      <Input
-        value={query}
-        onChange={(event) => onQueryChange(event.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
-        className="min-w-[220px] max-w-[340px] flex-1"
-      />
+      {searchable && (
+        <Input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          className="min-w-[220px] max-w-[340px] flex-1"
+        />
+      )}
       {children}
       <div className="flex-1" />
       <div className="text-xs tabular-nums text-muted-foreground">{count}</div>
