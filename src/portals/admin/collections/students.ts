@@ -11,7 +11,7 @@ import type {
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { studentBody } from './student-body'
 import { applicantDocuments, applicantRow } from './applicant-row'
-import { invoiceRow, resultRow, studentRow } from './student-row'
+import { invoiceRow, resultRow, studentRow, suspendAction } from './student-row'
 
 /** The API accepts exactly these words for the two status fields. */
 const ADMISSION = ['Applied', 'Admitted', 'Declined'] as const
@@ -19,6 +19,14 @@ const ENROLMENT = ['Active', 'Suspended'] as const
 
 /** Where an application sits until somebody decides it. */
 const APPLIED = 'Applied'
+
+/**
+ * A pupil enrolled through this form is admitted and on the register from the
+ * moment they are created — the office never had another answer to give, so
+ * the form does not ask.
+ */
+const ADMITTED = 'Admitted'
+const ACTIVE = 'Active'
 
 /**
  * A summary figure, asked for as one row and read off the pagination the
@@ -35,11 +43,7 @@ function asId(value: string | undefined) {
   return Number(value) || undefined
 }
 
-/**
- * The parts of the record the office fills in the same way whether a pupil is
- * being enrolled or an application is being taken. Only what admission asks
- * for differs between the two forms.
- */
+/** Who the pupil is, as the enrolment form asks for them. */
 const IDENTITY: FormSectionSpec = {
   title: 'Pupil',
   fields: [
@@ -185,6 +189,18 @@ export const students: CollectionDef = {
     { key: 'status', label: 'Any admission', options: ADMISSION },
     { key: 'studentstatus', label: 'Any enrolment', options: ENROLMENT },
   ],
+  // Enrolment is its own endpoint rather than a field on the pupil, so it is
+  // offered where the office is already looking at the register.
+  rowAction: {
+    label: (row) => suspendAction(row.status).label,
+    confirm: (row) =>
+      row.status === 'Suspended'
+        ? undefined
+        : 'They stay on the register and keep their record. They cannot sign in, and their arm keeps the place until they are reinstated.',
+    done: (row) => `${row.name} ${suspendAction(row.status).done}`,
+    run: (row) =>
+      studentsService.setStatus(row.id, { status: suspendAction(row.status).next }),
+  },
   source: async ({ page, q, filters }) => {
     // Both at once: the register does not wait on the guardian names to know
     // who is on it, and a slow directory cannot hold up the page.
@@ -210,7 +226,11 @@ export const students: CollectionDef = {
     // A new pupil joins the session the school is currently running. Editing
     // one never moves them between sessions, so this is only asked for here.
     const session = await sessionsService.current().catch(() => undefined)
-    return studentsService.create(studentBody(values, session?.id))
+    return studentsService.create({
+      ...studentBody(values, session?.id),
+      status: ADMITTED,
+      studentstatus: ACTIVE,
+    })
   },
   form: [
     IDENTITY,
@@ -228,8 +248,6 @@ export const students: CollectionDef = {
           dependsOn: 'department_id',
           hint: 'Arms belong to a class, so pick the class first.',
         },
-        { key: 'admission', label: 'Admission', required: true, options: ADMISSION },
-        { key: 'studentstatus', label: 'Enrolment', required: true, options: ENROLMENT },
       ],
     },
     CONTACT,
@@ -243,7 +261,11 @@ export const applicants: CollectionDef = {
   title: 'Applicants',
   description:
     'Admission applications for the 2025/2026 session. Review the file, then admit into a class arm or decline.',
-  action: 'Add applicant',
+  // Applications arrive from families through the admission form, so the
+  // office never types one in. It reads the file and decides — which is the
+  // record's own flow, not anything this list creates.
+  action: 'Review application',
+  readonly: true,
   searchHint: 'Search applicant',
   footer: '2025/2026 session',
   emptyTitle: 'No applications',
@@ -307,26 +329,6 @@ export const applicants: CollectionDef = {
     return { items: items.map(applicantRow), pagination }
   },
   record: (recordId) => studentsService.get(recordId).then(applicantRow),
-  save: async (values, recordId) => {
-    // Editing an application never re-opens a decision already taken, so the
-    // status is only set where there is not one yet.
-    if (recordId) return studentsService.update(recordId, studentBody(values))
-
-    const session = await sessionsService.current().catch(() => undefined)
-    return studentsService.create({
-      ...studentBody(values, session?.id),
-      status: APPLIED,
-    })
-  },
-  form: [
-    { ...IDENTITY, title: 'Applicant' },
-    {
-      title: 'Applying to',
-      // No arm: an applicant is placed in one at the point they are admitted.
-      fields: [{ ...CLASS_FIELD, label: 'Class applied for' }],
-    },
-    CONTACT,
-  ],
 }
 
 export const attendance: CollectionDef = {

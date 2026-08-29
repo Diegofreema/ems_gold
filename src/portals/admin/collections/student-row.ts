@@ -26,6 +26,21 @@ function asDate(value: string | null | undefined): string {
 }
 
 /**
+ * Suspending is a switch, not an edit: the button offers whichever of the two
+ * states the pupil is not currently in, and says so in the past tense once the
+ * API has taken it.
+ */
+export function suspendAction(status: string): {
+  label: string
+  next: 'Active' | 'Suspended'
+  done: string
+} {
+  return status === 'Suspended'
+    ? { label: 'Reinstate', next: 'Active', done: 'reinstated' }
+    : { label: 'Suspend', next: 'Suspended', done: 'suspended' }
+}
+
+/**
  * A pupil, as both the register and their own record read them. The list
  * endpoint expands fewer relations than the detail one, so the fields only
  * `GET /students/{id}` answers for come back blank in the table — which never

@@ -1,11 +1,13 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronLeft, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Tag } from '@/components/common/tag'
 import { Rule } from '@/components/page/rule'
 import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
+import { useConfirm } from '@/hooks/use-confirm'
 import { toneForStatus } from '@/lib/status-tone'
 import { BLANK } from '../blank'
 import type {
@@ -16,6 +18,7 @@ import type {
   Row,
 } from '../types'
 import { fileActionToast, isFileAction } from '../primary-action'
+import { useRowAction } from '../use-row-action'
 import { cn } from '@/lib/utils'
 import { DetailTabPanel } from './detail-tab-panel'
 
@@ -52,9 +55,28 @@ export function CollectionDetail({
   flow?: FlowSpec
 }) {
   const navigate = useNavigate()
+  const confirm = useConfirm()
+  const rowAction = useRowAction(definition, confirm)
   const editRoute = definition.readonly ? undefined : routes.edit
+  // The same control the register offers, where the office is looking at the
+  // one record it applies to.
+  const actionLabel = rowAction.spec?.label(record)
   const tabs = definition.tabs ?? (definition.source ? [] : [ACTIVITY])
   const flowRoute = routes.flow
+
+  // Where it is the only thing the page offers, it is the page's main verb.
+  const flowButton =
+    flowRoute && flow ? (
+      <Button asChild variant={definition.readonly ? 'default' : 'outline'}>
+        <Link
+          to={flowRoute}
+          params={{ collection: definition.id }}
+          search={{ record: record.id }}
+        >
+          {flow.label}
+        </Link>
+      </Button>
+    ) : null
 
   // Same rule as the table: a state the record is not in gets no badge.
   const tagColumns = definition.columns.filter(
@@ -91,7 +113,11 @@ export function CollectionDetail({
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          {definition.readonly ? null : !editRoute ? (
+          {/* A flow is a decision taken about the record, not an edit of it, so
+              a collection nobody can change still offers the one it has. */}
+          {definition.readonly ? (
+            flowButton
+          ) : !editRoute ? (
             <Button
               onClick={() =>
                 toast(
@@ -116,15 +142,10 @@ export function CollectionDetail({
                 <Pencil className="size-[15px]" strokeWidth={2} />
                 Edit
               </Button>
-              {flowRoute && flow && (
-                <Button asChild variant="outline">
-                  <Link
-                    to={flowRoute}
-                    params={{ collection: definition.id }}
-                    search={{ record: record.id }}
-                  >
-                    {flow.label}
-                  </Link>
+              {flowButton}
+              {actionLabel && (
+                <Button variant="outline" onClick={() => rowAction.ask(record)}>
+                  {actionLabel}
                 </Button>
               )}
               <Button variant="outline" onClick={() => toast('Not wired up yet')}>
@@ -175,6 +196,8 @@ export function CollectionDetail({
           </div>
         </aside>
       </div>
+
+      <ConfirmDialog request={confirm.request} onOpenChange={confirm.setOpen} />
     </div>
   )
 }

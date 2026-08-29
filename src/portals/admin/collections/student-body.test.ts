@@ -10,8 +10,6 @@ const filled = {
   email: 'newR@school.ng',
   gender: 'Male',
   department_id: '1',
-  admission: 'Admitted',
-  studentstatus: 'Active',
   address: 'Owerri',
   phone: '',
   class_arm_id: '4',
@@ -29,8 +27,6 @@ test('the form goes out exactly as the endpoint asks for it', () => {
     gender: 'Male',
     department_id: 1,
     session_id: 1,
-    status: 'Admitted',
-    studentstatus: 'Active',
     address: 'Owerri',
     phone: undefined,
     class_arm_id: '4',
@@ -64,8 +60,10 @@ test('a class nobody picked is not sent as a zero', () => {
   assert.equal(studentBody({ fname: 'A', lname: 'B', department_id: '' }).department_id, undefined)
 })
 
-test('admission and enrolment stay two separate answers', () => {
+test('the body says nothing about admission or enrolment', () => {
+  // Whoever is creating the record decides that, and an edit must not quietly
+  // re-admit a pupil somebody suspended.
   const body = studentBody({ ...filled, admission: 'Applied', studentstatus: 'Suspended' }, 1)
-  assert.equal(body.status, 'Applied')
-  assert.equal(body.studentstatus, 'Suspended')
+  assert.equal('status' in body, false)
+  assert.equal('studentstatus' in body, false)
 })

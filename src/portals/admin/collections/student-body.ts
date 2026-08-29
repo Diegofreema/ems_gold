@@ -22,6 +22,9 @@ function isoDate(value: unknown): string | undefined {
  * one section of a pupil never clears another. `department_id` is the only
  * number the endpoint insists on; the arm and guardian go as the strings the
  * selects hold, which is what the API accepts for them.
+ *
+ * Admission and enrolment are not in here: the form does not ask for them, and
+ * each caller says for itself what a record it is creating starts out as.
  */
 export function studentBody(values: FormValues, sessionId?: number): StudentBody {
   const department = Number(values.department_id)
@@ -40,9 +43,5 @@ export function studentBody(values: FormValues, sessionId?: number): StudentBody
     class_arm_id: text(values.class_arm_id),
     sparent_id: text(values.sparent_id),
     session_id: sessionId,
-    // The two are different questions: where the pupil is in admission, and
-    // whether they are currently on the register.
-    status: text(values.admission),
-    studentstatus: text(values.studentstatus),
   }
 }

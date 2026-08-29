@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { invoiceRow, resultRow, studentRow } from './student-row.ts'
+import { invoiceRow, resultRow, studentRow, suspendAction } from './student-row.ts'
 
 /** Straight from GET /students/{id}, trimmed to what the page reads. */
 const pupil = {
@@ -149,4 +149,23 @@ test('a household the directory does not name does not blank the column', () => 
 test('the register still reads without a directory at all', () => {
   const linked = { ...(pupil as object), sparent_id: 7, fathersname: 'Mr O. Udoye' } as never
   assert.equal(studentRow(linked).parent, 'Mr O. Udoye')
+})
+
+test('the suspend button offers the state the pupil is not in', () => {
+  const active = suspendAction('Active')
+  assert.equal(active.label, 'Suspend')
+  assert.equal(active.next, 'Suspended')
+  assert.equal(active.done, 'suspended')
+
+  const suspended = suspendAction('Suspended')
+  assert.equal(suspended.label, 'Reinstate')
+  assert.equal(suspended.next, 'Active')
+  assert.equal(suspended.done, 'reinstated')
+})
+
+test('a pupil with no enrolment word on them can still be suspended', () => {
+  // The list endpoint leaves `studentstatus` null on some records, so the row
+  // falls back to the admission word. Only "Suspended" reverses the button.
+  assert.equal(suspendAction('Admitted').label, 'Suspend')
+  assert.equal(suspendAction('—').next, 'Suspended')
 })

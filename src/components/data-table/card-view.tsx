@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import type { Column } from './types'
+import type { Column, RowAction } from './types'
 
 /**
  * Under 640px every list becomes cards: the title column as a heading, the
@@ -14,6 +14,7 @@ export function CardView<TRow>({
   onRowClick,
   onEdit,
   onDelete,
+  action,
 }: {
   columns: Column<TRow>[]
   rows: TRow[]
@@ -21,6 +22,7 @@ export function CardView<TRow>({
   onRowClick?: (row: TRow) => void
   onEdit?: (row: TRow) => void
   onDelete?: (row: TRow) => void
+  action?: RowAction<TRow>
 }) {
   const byRole = (role: Column<TRow>['cardRole']) =>
     columns.find((column) => column.cardRole === role)
@@ -36,7 +38,7 @@ export function CardView<TRow>({
       column.cardRole !== 'hidden',
   )
 
-  const hasActions = Boolean(onEdit || onDelete)
+  const hasActions = Boolean(onEdit || onDelete || action)
 
   return (
     <>
@@ -89,6 +91,11 @@ export function CardView<TRow>({
               {onDelete && (
                 <Button variant="outline" onClick={() => onDelete(row)}>
                   Delete
+                </Button>
+              )}
+              {action?.label(row) && (
+                <Button variant="outline" onClick={() => action.onSelect(row)}>
+                  {action.label(row)}
                 </Button>
               )}
             </div>

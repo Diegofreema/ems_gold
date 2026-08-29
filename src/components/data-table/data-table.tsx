@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { CardView } from './card-view'
 import { TableView } from './table-view'
-import type { Column } from './types'
+import type { Column, RowAction } from './types'
 
 /**
  * Chooses the table or the card layout for the viewport, and owns the
@@ -15,6 +15,7 @@ export function DataTable<TRow>({
   onRowClick,
   onEdit,
   onDelete,
+  action,
   compact,
   searchQuery,
   onClearSearch,
@@ -25,6 +26,8 @@ export function DataTable<TRow>({
   onRowClick?: (row: TRow) => void
   onEdit?: (row: TRow) => void
   onDelete?: (row: TRow) => void
+  /** A button on every row, beside the link into the record. */
+  action?: RowAction<TRow>
   compact?: boolean
   searchQuery?: string
   onClearSearch?: () => void
@@ -41,6 +44,7 @@ export function DataTable<TRow>({
           onRowClick={onRowClick}
           onEdit={onEdit}
           onDelete={onDelete}
+          action={action}
         />
       ) : (
         <TableView
@@ -48,6 +52,7 @@ export function DataTable<TRow>({
           rows={rows}
           rowKey={rowKey}
           onRowClick={onRowClick}
+          action={action}
           compact={compact}
         />
       )}

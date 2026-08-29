@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
 import { fileActionToast, primaryActionKind } from '../primary-action'
 import { useCollectionRows } from '../use-collection-rows'
+import { useRowAction } from '../use-row-action'
 import { toTableColumns } from './collection-columns'
 import { CollectionFilters } from './collection-filters'
 import { CollectionSummary } from './collection-summary'
@@ -31,6 +32,7 @@ export function CollectionList({
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
+  const rowAction = useRowAction(definition, confirm)
   const { text, query, filters, page, pending, setQuery, setFilter, setPage, total, paged } =
     useCollectionRows(definition)
 
@@ -156,6 +158,12 @@ export function CollectionList({
                   : undefined
               }
               onDelete={editRoute ? askDelete : undefined}
+              action={
+                rowAction.spec && {
+                  label: rowAction.spec.label,
+                  onSelect: rowAction.ask,
+                }
+              }
               searchQuery={query}
               onClearSearch={() => setQuery('')}
             />

@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { Column } from './types'
+import type { Column, RowAction } from './types'
 
 /** The desktop table. Rows are clickable; a trailing chevron cell hints at that. */
 export function TableView<TRow>({
@@ -8,12 +9,14 @@ export function TableView<TRow>({
   rows,
   rowKey,
   onRowClick,
+  action,
   compact,
 }: {
   columns: Column<TRow>[]
   rows: TRow[]
   rowKey: (row: TRow) => string
   onRowClick?: (row: TRow) => void
+  action?: RowAction<TRow>
   compact?: boolean
 }) {
   // The design sets the record's name semibold. Column sets that declare a
@@ -36,6 +39,7 @@ export function TableView<TRow>({
               {column.label}
             </th>
           ))}
+          {action && <th className="border-b-2 border-divider" />}
           {onRowClick && <th className="w-11 border-b-2 border-divider" />}
         </tr>
       </thead>
@@ -64,6 +68,19 @@ export function TableView<TRow>({
                 {column.cell(row)}
               </td>
             ))}
+            {/* The row itself opens the record, so the cell holding the
+                button stops the click getting that far. */}
+            {action && (
+              <td
+                className={cn(
+                  'border-b border-divider text-right',
+                  compact ? 'px-2 py-[5px]' : 'px-2 py-[7px]',
+                )}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <RowActionButton row={row} action={action} />
+              </td>
+            )}
             {onRowClick && (
               <td
                 className={cn(
@@ -81,5 +98,22 @@ export function TableView<TRow>({
         ))}
       </tbody>
     </table>
+  )
+}
+
+function RowActionButton<TRow>({
+  row,
+  action,
+}: {
+  row: TRow
+  action: RowAction<TRow>
+}) {
+  const label = action.label(row)
+  if (!label) return null
+
+  return (
+    <Button variant="outline" size="sm" onClick={() => action.onSelect(row)}>
+      {label}
+    </Button>
   )
 }

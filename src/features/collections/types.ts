@@ -135,6 +135,27 @@ export type FilterSpec = {
  */
 export type ListSource = (params: ListParams) => Promise<Paginated<Row>>
 
+/**
+ * A control on every row of a list, beside the link into the record — a state
+ * a register turns on and off rather than edits, like suspending a pupil.
+ *
+ * Every part is read off the row, so one spec covers both directions of a
+ * state that toggles: the button offers whichever of the two the record is
+ * not currently in.
+ */
+export type RowActionSpec = {
+  /** What the button says for this row. Nothing at all leaves the row alone. */
+  label: (row: Row) => string | undefined
+  /**
+   * The confirm's body. Without one the action runs on the first click, which
+   * is right for putting a state back and wrong for taking it away.
+   */
+  confirm?: (row: Row) => string | undefined
+  /** What the toast says once the API has taken it. */
+  done: (row: Row) => string
+  run: (row: Row) => Promise<unknown>
+}
+
 /** A summary tile whose figure the API is asked for rather than written down. */
 export type CountTile = { label: string; count: () => Promise<number> }
 
@@ -214,10 +235,14 @@ export type CollectionDef = {
   /** Singular noun used in delete confirms, e.g. "fee". */
   noun: string
   /**
-   * The collection can only be read. An audit log is the case this exists for:
-   * the portal publishes create and edit routes for every collection, and an
-   * append-only record must not offer either — least of all a delete button on
-   * the entry that would record the deletion.
+   * The collection's records are not written from here. The portal publishes
+   * create and edit routes for every collection, and two kinds of list must
+   * offer neither: an append-only audit log, where a delete button would sit
+   * on the entry recording the deletion, and a list whose records arrive from
+   * outside — an application is submitted by a family, then decided on.
+   *
+   * A record-scoped flow still shows, since deciding about a record is not the
+   * same as editing it.
    */
   readonly?: boolean
   summary?: { label: string; value: string }[]
@@ -252,6 +277,8 @@ export type CollectionDef = {
   detail?: { key: string; label: string }[]
   /** The column holding the record's name — used in titles and confirms. */
   nameKey: string
+  /** A per-row control, offered on every row of the list. */
+  rowAction?: RowActionSpec
   form?: FormSectionSpec[]
   /** Sub-tables on the detail page. Defaults to the record's activity. */
   tabs?: DetailTab[]
