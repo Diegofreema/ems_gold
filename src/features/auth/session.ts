@@ -7,7 +7,14 @@ import type { Admin, User } from '@/api/users/types'
 import type { AccountSummary } from '@/lib/account'
 import { endSession, useSessionStore } from '@/stores/session.store'
 import { accountSummary } from './account-summary'
-import { isSuperAdmin, type Portal, portalFor, type Role, roleForAccount } from './role'
+import {
+  accountOfRecord,
+  isSuperAdmin,
+  type Portal,
+  portalFor,
+  type Role,
+  roleForAccount,
+} from './role'
 
 /** The signed-in account as the screens need it. All null while signed out. */
 export type Session = {
@@ -39,6 +46,10 @@ export function useSession(): Session {
  * `null` means the token was refused, and the session has been ended by the
  * time it returns. Anything else — a network failure, a 500 — is left to
  * throw: not being able to check is not the same as being signed out.
+ *
+ * The answer is checked against the account that signed in before it is
+ * believed, because this API's `me` can name somebody else entirely —
+ * `accountOfRecord` has the whole of it.
  */
 export async function loadAccount(queryClient: QueryClient): Promise<Account | null> {
   const account = await queryClient
@@ -53,8 +64,9 @@ export async function loadAccount(queryClient: QueryClient): Promise<Account | n
     return null
   }
 
-  useSessionStore.getState().setAccount(account)
-  return account
+  const believed = accountOfRecord(useSessionStore.getState().account, account)
+  useSessionStore.getState().setAccount(believed)
+  return believed
 }
 
 /**

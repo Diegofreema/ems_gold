@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
+import { sessionsService, termsService } from '@/api/calendar/service'
 import { classArmsService } from '@/api/class-arms/service'
 import { paymentMethods } from '@/api/collect-fees/hooks'
 import { departmentsService } from '@/api/departments/service'
@@ -9,7 +10,7 @@ import { subjectsService } from '@/api/subjects/service'
 import { teachersService } from '@/api/teachers/service'
 import { usersService } from '@/api/users/service'
 import { queryClient } from '@/lib/query-client'
-import { methodOptions } from '@/portals/admin/collections/collect-row'
+import { methodOptions } from './payment-methods'
 import { guardianOption } from './guardian-option'
 import { distinct, type Option, type OptionsKey } from './options'
 
@@ -81,6 +82,14 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
       // owns the subject, so it is offered beside the name.
       label: subject.department ? `${subject.name} · ${subject.department}` : subject.name,
     }))
+  }
+
+  if (key === 'sessions' || key === 'terms') {
+    // Newest first for sessions, as the endpoint already sends them: a family
+    // asking about a year is nearly always asking about this one or the last.
+    const service = key === 'sessions' ? sessionsService : termsService
+    const { items } = await service.list({ limit: ALL })
+    return items.map((record) => ({ value: String(record.id), label: record.name }))
   }
 
   if (key === 'roles') {

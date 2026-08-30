@@ -1,7 +1,7 @@
 import type { Spending, SpendingBody, SpendingMonth } from '../../../api/spendings/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
-import { when } from './when.ts'
+import { when } from '../../../features/collections/when.ts'
 import { formatNaira } from '../../../lib/format.ts'
 
 function text(value: string | null | undefined): string {

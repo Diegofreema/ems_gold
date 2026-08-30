@@ -7,13 +7,33 @@ export type QueueItem = {
   title: string
   detail: string
   cta: string
-  to: '/parent/pay' | '/parent/tests' | '/parent/attendance' | '/parent/results'
+  to:
+    | '/parent/pay'
+    | '/parent/invoices'
+    | '/parent/tests'
+    | '/parent/attendance'
+    | '/parent/results'
   /** Accent mark for anything that needs the parent now. */
   urgent?: boolean
 }
 
 /** "What needs you", sorted by how soon it matters. */
-export function ActionQueue({ items }: { items: QueueItem[] }) {
+export function ActionQueue({
+  items,
+  empty = 'Nothing needs you right now.',
+}: {
+  items: QueueItem[]
+  /** Said in place of the list — an empty queue is good news, not a fault. */
+  empty?: string
+}) {
+  if (!items.length) {
+    return (
+      <div className="mt-3.5 border-t-2 border-divider px-1 py-[13px] text-sm text-muted-foreground">
+        {empty}
+      </div>
+    )
+  }
+
   return (
     <div className="mt-3.5 border-t-2 border-divider">
       {items.map((item, index) => (

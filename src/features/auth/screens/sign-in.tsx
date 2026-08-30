@@ -38,10 +38,11 @@ export function SignInScreen() {
         password: values.password,
       })
 
-      // The token is stored by now, so this carries it. The account is read
-      // from `me` rather than from the login answer because `me` is what the
-      // portal guard reads on every reload afterwards — a disagreement
-      // between the two should surface here, not on the first refresh.
+      // The token and the account from the login answer are both stored by
+      // now, so this carries the token and is checked against the account.
+      // It is still read rather than skipped: `me` is what the portal guard
+      // reads on every reload afterwards, and whatever it can be trusted for
+      // — a role renamed since, a profile edited — is fresher here.
       const account = await loadAccount(queryClient)
       if (!account) {
         setFailure('Your password was accepted but the account would not load. Try again.')

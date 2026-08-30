@@ -1,7 +1,7 @@
 import type { Invoice, InvoiceBody } from '../../../api/invoices/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
-import { when } from './when.ts'
+import { when } from '../../../features/collections/when.ts'
 import { formatNaira } from '../../../lib/format.ts'
 
 function text(value: string | null | undefined): string {

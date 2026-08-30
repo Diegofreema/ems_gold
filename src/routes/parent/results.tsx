@@ -1,13 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { resultsFor } from '@/portals/parent/collections'
-import { CollectionPage } from '@/portals/parent/components/collection-page'
+import { ResultsPage } from '@/portals/parent/features/results/results-page'
 import { useSelectedChild } from '@/portals/parent/parent.store'
 
 export const Route = createFileRoute('/parent/results')({
   staticData: { title: 'Results', crumb: 'My children' },
-  component: ResultsList,
+  component: Results,
 })
 
-function ResultsList() {
-  return <CollectionPage definition={resultsFor(useSelectedChild())} />
+function Results() {
+  return <ResultsPage child={useSelectedChild()} />
 }

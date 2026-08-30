@@ -11,8 +11,7 @@ import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useRecordForm } from '@/hooks/use-record-form'
-import { CHILDREN } from '../../children'
-import { useParentStore } from '../../parent.store'
+import { useFamily, useParentStore } from '../../parent.store'
 
 const ABOUT = [
   'Fees and payments',
@@ -35,7 +34,8 @@ type Values = z.infer<typeof schema>
 
 /** Goes to the school office, about one child. */
 export function MessageSchoolForm() {
-  const childIndex = useParentStore((state) => state.childIndex)
+  const family = useFamily()
+  const childId = useParentStore((state) => state.childId)
   const selectChild = useParentStore((state) => state.selectChild)
   const form = useRecordForm<Values>(schema, {
     about: ABOUT[0],
@@ -71,10 +71,10 @@ export function MessageSchoolForm() {
               </Label>
               <SegmentedControl
                 name="msg-child"
-                value={String(childIndex)}
+                value={String(childId ?? family[0]?.id ?? '')}
                 onChange={(value) => selectChild(Number(value))}
-                options={CHILDREN.map((child, index) => ({
-                  value: String(index),
+                options={family.map((child) => ({
+                  value: String(child.id),
                   label: child.name,
                 }))}
               />

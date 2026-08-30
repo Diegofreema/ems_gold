@@ -22,6 +22,30 @@ export type Parent = {
   children?: Child[]
 }
 
+/**
+ * An invoice as a guardian's own list sends it — one call for every child on
+ * the record, and a different shape from the office register: the pupil and
+ * the fee arrive as names rather than as expanded records, and the amount as
+ * a string.
+ *
+ * `createdate` carries `+00:00` while every other endpoint stamps the same
+ * wall clock `+01:00`. It is the school's clock either way, so the offset is
+ * dropped rather than believed — see `schoolTime`.
+ */
+export type FamilyInvoice = {
+  id: number
+  student_id: number
+  /** The pupil's name, whole. Null where the record behind it has gone. */
+  student: string | null
+  fee: string | null
+  session: string | null
+  amount: string
+  /** "Unpaid" until settled, then "success" — the gateway's word, not ours. */
+  paystatus: string
+  payday: string | null
+  createdate: string
+}
+
 export type ParentStatus = 'active' | 'deactivated'
 
 export type ParentListParams = PageParams & {
@@ -61,6 +85,77 @@ export type ParentBody = {
 }
 
 export type ParentDashboard = Record<string, unknown>
+
+/**
+ * One approved subject result, as a guardian's own view sends it.
+ *
+ * The marks arrive as decimal strings, and three of them are the parts of the
+ * other two: `ca` is the continuous assessment already added up, `score` the
+ * examination mark, and `total` those two together. The register shows the
+ * three that add up and the record panel shows the parts they came from.
+ */
+export type ChildResult = {
+  id: number
+  subject: string | null
+  first_ca: string | null
+  second_ca: string | null
+  first_exam: string | null
+  ca: string | null
+  score: string | null
+  total: string | null
+  grade: string | null
+  remark: string | null
+  session: string | null
+  semester: string | null
+}
+
+/** What the whole sheet comes to, over the session and term asked for. */
+export type ResultSummary = {
+  subjects: number
+  total_marks: number
+  average: number
+}
+
+export type ChildResults = {
+  student: Child
+  results: ChildResult[]
+  summary: ResultSummary
+}
+
+/**
+ * One day's mark on a child's own register.
+ *
+ * The endpoint answered with an empty list for every child on this school, so
+ * the row is typed from `admin-attendances/report`, which reads the same
+ * table. Only the fields the register shows are declared: the pupil this
+ * endpoint has already named above the list, and anything else it sends is
+ * ignored rather than guessed at.
+ */
+export type ChildMark = {
+  id: number
+  /** YYYY-MM-DD. */
+  attendance_date: string
+  status: string
+  notes?: string | null
+}
+
+/** The rate counts a late mark as attended, as the API's own wording says. */
+export type AttendanceStats = {
+  present: number
+  absent: number
+  late: number
+  excused: number
+  total: number
+  rate: number
+}
+
+export type ChildAttendance = {
+  student: Child
+  /** The dates answered for, which is this month where none were asked for. */
+  range: { from: string; to: string }
+  attendance: ChildMark[]
+  stats: AttendanceStats
+}
 
 export type ChildResultParams = {
   session_id?: number

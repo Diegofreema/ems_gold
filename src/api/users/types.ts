@@ -106,8 +106,47 @@ export type UpdateAdminBody = UpdateProfileBody & {
   role_id?: number
 }
 
-/** Admin home counters plus the revenue and transaction graphs. */
-export type UsersDashboard = Record<string, unknown>
+/**
+ * The counters behind the admin home page. Every one is a count except the
+ * last two, which the API says are money and which do not agree with the
+ * ledgers they claim to total — `total_revenue` reads 0 on a school with
+ * settled invoices, and `fees_collected` matches no amount on record. Nothing
+ * on the dashboard reads either; the money comes from the invoice and
+ * spending ledgers instead.
+ */
+export type DashboardStats = {
+  students: number
+  applied: number
+  /** Reads 0 on a school with pupils enrolled. Use `students`. */
+  current_students: number
+  alumni: number
+  teachers: number
+  subjects: number
+  classes: number
+  fees: number
+  hostels: number
+  admins: number
+  parents: number
+  trequests: number
+  course_regs: number
+  exams_count: number
+  attendance_count: number
+  fees_collected: number
+  total_revenue: number
+}
+
+/**
+ * Admin home counters plus the revenue graph.
+ *
+ * `revenue_by_month` is a day per entry despite its name, and its figures come
+ * from the transactions table rather than the invoice ledger — the two do not
+ * reconcile, so the dashboard charts the invoices it can also total in tiles.
+ */
+export type UsersDashboard = {
+  stats: DashboardStats
+  revenue_by_month: { amount: number; txdate: string }[]
+  transactions_last_180_days: unknown[]
+}
 
 export type StudentFeeStatus = {
   student_id: number

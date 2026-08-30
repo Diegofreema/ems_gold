@@ -58,11 +58,7 @@ export function SettingsForm() {
 
   if (isError) {
     return (
-      <ErrorState
-        reference={error instanceof Error ? error.message : 'settings'}
-        dashboardPath="/admin"
-        onRetry={() => void refetch()}
-      />
+      <ErrorState error={error} homeTo="/admin" onRetry={() => void refetch()} />
     )
   }
 

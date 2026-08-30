@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { isSuperAdmin, isSuperAdminRole } from './role.ts'
+import { accountOfRecord, isSuperAdmin, isSuperAdminRole, roleForAccount } from './role.ts'
+import type { Account } from '../../api/auth/types.ts'
 
 const account = (role: { id: number; role_name: string } | null) =>
   ({ user: { fname: 'Ada', lname: 'Obi', username: 'ada' }, role }) as never
@@ -32,4 +33,41 @@ test('a role read off a record answers the same as one off the session', () => {
   // this account is a super administrator.
   assert.ok(!isSuperAdminRole('Administrator'))
   assert.ok(!isSuperAdminRole(undefined))
+})
+
+/** As POST /users/login answers for a guardian on bronze. */
+const PARENT = {
+  user: { id: 478, username: 'parent1@netpro.com', fname: 'Udoye', lname: 'Okagbue' },
+  role: { id: 4, role_name: 'Rector' },
+  profile_type: 'parent',
+} as unknown as Account
+
+/** As GET /users/me answers for everybody on bronze, token or none. */
+const SUPER_ADMIN = {
+  user: { id: 1, username: 'chukwudi.aniegboka@netpro.africa', fname: 'Chukwudi' },
+  role: { id: 5, role_name: 'Super Admin' },
+  profile_type: 'admin',
+} as unknown as Account
+
+test('a guardian is a parent however their role has been named', () => {
+  // The role on this account reads "Rector"; the profile type is the truth,
+  // and "rector" contains none of the four words the fallback looks for.
+  assert.equal(roleForAccount(PARENT), 'Parent')
+  assert.equal(roleForAccount({ ...PARENT, profile_type: 'sparent' } as Account), 'Parent')
+})
+
+test('a me that names somebody else is not believed over the sign-in', () => {
+  // Bronze hands the school's Super Admin to every caller. Adopting it puts a
+  // parent who has just signed in into the admin portal.
+  assert.equal(accountOfRecord(PARENT, SUPER_ADMIN), PARENT)
+  assert.equal(roleForAccount(accountOfRecord(PARENT, SUPER_ADMIN)), 'Parent')
+})
+
+test('a me for the same person is believed, and is the fresher record', () => {
+  const renamed = { ...PARENT, role: { id: 4, role_name: 'Guardian' } } as Account
+  assert.equal(accountOfRecord(PARENT, renamed), renamed)
+})
+
+test('with nobody signed in there is nothing to check against', () => {
+  assert.equal(accountOfRecord(null, SUPER_ADMIN), SUPER_ADMIN)
 })

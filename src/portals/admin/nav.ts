@@ -46,7 +46,9 @@ export const adminNav: NavGroup[] = [
     heading: 'Students',
     items: [
       { to: '/admin/students', label: 'Enrolled', icon: Users },
-      { to: '/admin/applicants', label: 'Applicants', icon: UserPlus, badge: '37' },
+      // No badge, for the reason above: the dashboard counts applicants from
+      // the API, and a written-in number beside it would be the one believed.
+      { to: '/admin/applicants', label: 'Applicants', icon: UserPlus },
       { to: '/admin/attendance', label: 'Attendance', icon: CalendarCheck },
       { to: '/admin/att-report', label: 'Attendance report', icon: FileText },
     ],

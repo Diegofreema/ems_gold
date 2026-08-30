@@ -14,7 +14,8 @@ const log: ActivityLog = {
   type: 'Add',
   ip: '102.89.4.17',
   user_id: 12,
-  user: { id: 12, username: 'aokonkwo' },
+  user: 'Amaka Okonkwo',
+  username: 'aokonkwo@netpro.africa',
 }
 
 test('today is a single inclusive day, not an open end', () => {
@@ -41,15 +42,20 @@ test('no preset is no range, so the log opens on everything', () => {
   assert.deepEqual(logRange('Last fortnight', TODAY), {})
 })
 
-test('an entry names the login that acted', () => {
-  assert.equal(logRow(log).user, 'aokonkwo')
+test('an entry names the person who acted, not their login', () => {
+  assert.equal(logRow(log).user, 'Amaka Okonkwo')
   assert.equal(logRow(log).action, 'Recorded ₦95,000 against INV-25088')
   assert.equal(logRow(log).ip, '102.89.4.17')
 })
 
 test('an entry whose author was deleted still says who it was', () => {
-  assert.equal(logRow({ ...log, user: null }).user, 'User 12')
-  assert.equal(logRow({ ...log, user: null, user_id: null }).user, 'Deleted account')
+  // The API drops both the name and the login together, leaving the id.
+  assert.equal(logRow({ ...log, user: null }).user, 'aokonkwo@netpro.africa')
+  assert.equal(logRow({ ...log, user: null, username: null }).user, 'User 12')
+  assert.equal(
+    logRow({ ...log, user: null, username: null, user_id: null }).user,
+    'Deleted account',
+  )
 })
 
 test('an entry with no description falls back to its title', () => {

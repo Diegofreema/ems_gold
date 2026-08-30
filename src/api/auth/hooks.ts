@@ -1,5 +1,5 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
-import { endSession } from '@/stores/session.store'
+import { endSession, useSessionStore } from '@/stores/session.store'
 import { setToken } from '../token'
 import { authKeys } from './keys'
 import { authService } from './service'
@@ -16,9 +16,11 @@ import type {
  * request that follows — and every query a redirect kicks off — already
  * carries it.
  *
- * The login answer is deliberately *not* written into the `me` cache: the two
- * endpoints may describe an account differently, and the app should be reading
- * the one it will still be reading after a reload.
+ * The account is stored too, and not into the `me` cache: it is what every
+ * later `me` answer is checked against. Only login is made to prove who is
+ * asking, so only login can say who this session belongs to — see
+ * `accountOfRecord`. The token is deliberately left out of it; it lives in one
+ * place already.
  */
 export function useLogin() {
   const queryClient = useQueryClient()
@@ -28,6 +30,12 @@ export function useLogin() {
     meta: { success: 'Signed in', ownsError: true },
     onSuccess: (result) => {
       setToken(result.token)
+      useSessionStore.getState().setAccount({
+        user: result.user,
+        role: result.role,
+        profile_type: result.profile_type,
+        profile: result.profile,
+      })
       queryClient.removeQueries({ queryKey: authKeys.me() })
     },
   })

@@ -1,158 +1,52 @@
-import type { CollectionDef, DetailTab } from '@/features/collections/types'
-import { CHILDREN, FAMILY_OWING, type Child } from '../children'
+import type { CollectionDef } from '@/features/collections/types'
+import { formatNaira } from '@/lib/format'
+import { familyOwing, type Child } from '../family'
 
-const naira = (value: number) => `₦${value.toLocaleString('en-NG')}`
+/** "1 invoice", "12 invoices" — a footer is prose, not a column. */
+const counted = (amount: number, one: string, many: string) =>
+  `${amount} ${amount === 1 ? one : many}`
 
-const historyTab: DetailTab[] = [
-  {
-    label: 'History',
-    columns: [
-      { key: 'what', label: 'What happened' },
-      { key: 'when', label: 'When' },
-    ],
-    rows: [
-      { id: 'h-1', what: 'Opened by you', when: 'Today, 08:31' },
-      { id: 'h-2', what: 'Reminder sent by the bursary', when: '17 Nov 2025, 09:00' },
-      { id: 'h-3', what: 'Invoice raised', when: '02 Sep 2025, 10:21' },
-    ],
-  },
-]
-
-export const children: CollectionDef = {
-  id: 'children',
-  path: '/parent/children',
-  kicker: 'My children',
-  title: 'My children',
-  description: 'Both children on your record, with their standing this term.',
-  action: 'Add a child',
-  actionTo: '/parent/children/add',
-  searchHint: 'Search child',
-  footer: '2 children · 2025/2026',
-  emptyTitle: 'No children linked',
-  emptyBody:
-    'Link a child to see their results, attendance and fees in one place.',
-  noun: 'child',
-  nameKey: 'name',
-  tabs: historyTab,
-  columns: [
-    { key: 'name', label: 'Child', cardRole: 'title' },
-    { key: 'arm', label: 'Arm', cardRole: 'subtitle' },
-    { key: 'adm', label: 'Admission no.' },
-    { key: 'avg', label: 'Average', align: 'right' },
-    { key: 'attendance', label: 'Attendance', align: 'right' },
-    { key: 'fees', label: 'Fees', tag: true, cardRole: 'tag' },
-  ],
-  rows: CHILDREN.map((child) => ({
-    id: child.adm,
-    name: child.full,
-    arm: child.arm,
-    adm: child.adm,
-    avg: child.average.toFixed(1),
-    attendance: `${child.attendance}%`,
-    fees: child.owing > 0 ? 'Owing' : 'Cleared',
-  })),
-}
-
-export const receipts: CollectionDef = {
-  id: 'receipts',
-  path: '/parent/receipts',
-  kicker: 'Finance',
-  title: 'Receipts',
-  description:
-    'Receipts for every payment that has cleared, across both children.',
-  action: 'Download all',
-  searchHint: 'Search receipt or child',
-  footer: '5 receipts · 2025/2026',
-  emptyTitle: 'No receipts yet',
-  emptyBody: 'A receipt is issued the moment a payment clears.',
-  noun: 'receipt',
-  nameKey: 'receipt',
-  tabs: historyTab,
-  columns: [
-    { key: 'receipt', label: 'Receipt', cardRole: 'title' },
-    { key: 'child', label: 'Child', cardRole: 'subtitle' },
-    { key: 'fee', label: 'Fee' },
-    { key: 'amount', label: 'Amount', align: 'right' },
-    { key: 'method', label: 'Method' },
-    { key: 'date', label: 'Date' },
-  ],
-  rows: [
-    { id: 'RCT-8841', receipt: 'RCT-8841', child: 'Chinedu Udo', fee: 'Tuition — SS', amount: '₦120,000', method: 'Transfer', date: '02 Oct 2025' },
-    { id: 'RCT-8802', receipt: 'RCT-8802', child: 'Amaka Udo', fee: 'ICT levy', amount: '₦15,000', method: 'Remita', date: '28 Sep 2025' },
-    { id: 'RCT-8790', receipt: 'RCT-8790', child: 'Amaka Udo', fee: 'Tuition — Primary', amount: '₦30,000', method: 'Cash', date: '24 Sep 2025' },
-    { id: 'RCT-8744', receipt: 'RCT-8744', child: 'Chinedu Udo', fee: 'ICT levy', amount: '₦15,000', method: 'Remita', date: '19 Sep 2025' },
-    { id: 'RCT-8701', receipt: 'RCT-8701', child: 'Chinedu Udo', fee: 'Examination', amount: '₦28,500', method: 'Transfer', date: '17 Sep 2025' },
-  ],
-}
-
-/** These four lists show one child at a time, so they are built per child. */
-export function resultsFor(child: Child): CollectionDef {
+export function childrenFor(family: Child[]): CollectionDef {
   return {
-    id: 'results',
-    path: '/parent/results',
-    scope: child.adm,
+    id: 'children',
+    path: '/parent/children',
     kicker: 'My children',
-    title: `Results — ${child.full}`,
-    description: `Approved results for the current term. Position is within ${child.arm}.`,
-    action: 'Download result sheet',
-    searchHint: 'Search subject',
-    footer: `${child.results.length} subjects approved · First Term`,
-    emptyTitle: 'No results yet',
-    emptyBody: 'A subject appears once the bursary approves the batch.',
-    noun: 'result',
-    nameKey: 'subject',
-    tabs: historyTab,
-    summary: [
-      { label: 'Term average', value: child.average.toFixed(1) },
-      { label: 'Position', value: child.position },
-      { label: 'Attendance', value: `${child.attendance}%` },
-    ],
+    title: 'My children',
+    description: 'Every child on your record, with what they owe and how they are being marked.',
+    action: 'Add a child',
+    actionTo: '/parent/children/add',
+    searchHint: 'Search child',
+    footer: `${counted(family.length, 'child', 'children')} on your record`,
+    emptyTitle: 'No children linked',
+    emptyBody:
+      'Link a child to see their results, attendance and fees in one place.',
+    noun: 'child',
+    nameKey: 'name',
+    // No sub-tables: the API keeps no history a parent may read, and the
+    // placeholder in its place would be invented audit entries.
+    tabs: [],
     columns: [
-      { key: 'subject', label: 'Subject', cardRole: 'title' },
-      { key: 'ca', label: 'CA', align: 'right' },
-      { key: 'exam', label: 'Exam', align: 'right' },
-      { key: 'total', label: 'Total', align: 'right', cardRole: 'subtitle' },
-      { key: 'grade', label: 'Grade', tag: true, cardRole: 'tag' },
-      { key: 'position', label: 'Position', align: 'right' },
+      { key: 'name', label: 'Child', cardRole: 'title' },
+      { key: 'arm', label: 'Arm', cardRole: 'subtitle' },
+      { key: 'adm', label: 'Admission no.' },
+      { key: 'owing', label: 'Owing', align: 'right' },
+      { key: 'present', label: 'Days present', align: 'right' },
+      { key: 'fees', label: 'Fees', tag: true, cardRole: 'tag' },
     ],
-    rows: child.results,
+    rows: family.map((child) => ({
+      id: String(child.id),
+      name: child.full,
+      arm: child.arm,
+      adm: child.adm,
+      owing: formatNaira(child.owing),
+      present: `${child.present} of ${child.marked}`,
+      fees: child.owing > 0 ? 'Owing' : 'Cleared',
+    })),
   }
 }
 
-export function attendanceFor(child: Child): CollectionDef {
-  const watchful = child.attendance > 95
-  return {
-    id: 'attendance',
-    path: '/parent/attendance',
-    scope: child.adm,
-    kicker: 'My children',
-    title: `Attendance — ${child.full}`,
-    description:
-      'Daily marks as recorded by the form teacher. Raise anything that looks wrong with the office.',
-    action: 'Report an absence',
-    searchHint: 'Search date or state',
-    footer: `Last 6 school days · ${child.attendance}% this term`,
-    emptyTitle: 'Nothing marked yet',
-    emptyBody: 'Daily marks appear here once the form teacher takes the register.',
-    noun: 'mark',
-    nameKey: 'date',
-    tabs: historyTab,
-    summary: [
-      { label: 'This term', value: `${child.attendance}%` },
-      { label: 'Absences', value: watchful ? '1' : '4' },
-      { label: 'Late marks', value: watchful ? '0' : '2' },
-    ],
-    columns: [
-      { key: 'date', label: 'Date', cardRole: 'title' },
-      { key: 'day', label: 'Day', cardRole: 'subtitle' },
-      { key: 'state', label: 'Mark', tag: true, cardRole: 'tag' },
-      { key: 'note', label: 'Note' },
-    ],
-    rows: child.attendanceRows,
-  }
-}
-
-export function invoicesFor(child: Child): CollectionDef {
+/** These lists show one child at a time, so they are built per child. */
+export function invoicesFor(child: Child, family: Child[]): CollectionDef {
   return {
     id: 'invoices',
     path: '/parent/invoices',
@@ -163,16 +57,19 @@ export function invoicesFor(child: Child): CollectionDef {
     action: 'Pay an invoice',
     actionTo: '/parent/pay',
     searchHint: 'Search invoice or fee',
-    footer: `${child.invoices.length} invoices · 2025/2026`,
+    footer: `${counted(child.invoices.length, 'invoice', 'invoices')}, every session`,
     emptyTitle: 'No invoices raised',
     emptyBody: 'Fees raised against this child appear here.',
     noun: 'invoice',
     nameKey: 'invoice',
-    tabs: historyTab,
+    tabs: [],
     summary: [
-      { label: 'Outstanding', value: naira(child.owing) },
-      { label: 'Children owing', value: String(CHILDREN.filter((c) => c.owing > 0).length) },
-      { label: 'Family total', value: naira(FAMILY_OWING) },
+      { label: 'Outstanding', value: formatNaira(child.owing) },
+      {
+        label: 'Children owing',
+        value: String(family.filter((one) => one.owing > 0).length),
+      },
+      { label: 'Family total', value: formatNaira(familyOwing(family)) },
     ],
     columns: [
       { key: 'invoice', label: 'Invoice', cardRole: 'title' },
@@ -181,6 +78,19 @@ export function invoicesFor(child: Child): CollectionDef {
       { key: 'paid', label: 'Paid', align: 'right' },
       { key: 'balance', label: 'Balance', align: 'right' },
       { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
+    ],
+    // The panel says more than the table has room for: which session the bill
+    // belongs to, when it was raised, and when it was settled.
+    detail: [
+      { key: 'invoice', label: 'Invoice' },
+      { key: 'fee', label: 'Fee' },
+      { key: 'session', label: 'Session' },
+      { key: 'amount', label: 'Amount' },
+      { key: 'paid', label: 'Paid' },
+      { key: 'balance', label: 'Balance' },
+      { key: 'state', label: 'State' },
+      { key: 'raised', label: 'Raised' },
+      { key: 'settledOn', label: 'Settled' },
     ],
     rows: child.invoices,
   }
@@ -196,12 +106,13 @@ export function testsFor(child: Child): CollectionDef {
     description: `Computer-based tests set for ${child.name}. You can sit with them while they answer, but the score belongs to them.`,
     action: 'Open the test',
     searchHint: 'Search test',
-    footer: `${child.tests.length} tests this term`,
-    emptyTitle: 'No tests set',
-    emptyBody: 'Tests appear here when a teacher opens one for this arm.',
+    footer: `${counted(child.tests.length, 'test', 'tests')}`,
+    emptyTitle: 'Tests cannot be read yet',
+    emptyBody:
+      'A paper set for your child is only readable by an account the school has linked to them. Ask the office to link yours.',
     noun: 'test',
     nameKey: 'title',
-    tabs: historyTab,
+    tabs: [],
     columns: [
       { key: 'title', label: 'Test', cardRole: 'title' },
       { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
@@ -214,13 +125,10 @@ export function testsFor(child: Child): CollectionDef {
 }
 
 /** Every parent list for one child, keyed by route id — used to resolve a record. */
-export function parentCollections(child: Child) {
+export function parentCollections(child: Child, family: Child[]) {
   return {
-    children,
-    receipts,
-    results: resultsFor(child),
-    attendance: attendanceFor(child),
-    invoices: invoicesFor(child),
+    children: childrenFor(family),
+    invoices: invoicesFor(child, family),
     tests: testsFor(child),
   }
 }

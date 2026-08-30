@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   MessageSquare,
   PenLine,
-  Receipt,
   SquareCheckBig,
   Users,
 } from 'lucide-react'
@@ -36,9 +35,10 @@ export const parentNav: NavGroup[] = [
   {
     heading: 'Finance',
     items: [
-      { to: '/parent/pay', label: 'Pay fees', icon: CreditCard, badge: '2' },
+      // No badge: the dashboard counts what is owing from the ledger, and a
+      // number written in here would be the one believed when they disagreed.
+      { to: '/parent/pay', label: 'Pay fees', icon: CreditCard },
       { to: '/parent/invoices', label: 'Invoices', icon: FileText },
-      { to: '/parent/receipts', label: 'Receipts', icon: Receipt },
     ],
   },
   {

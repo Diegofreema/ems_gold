@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { invoicesFor } from '@/portals/parent/collections'
 import { CollectionPage } from '@/portals/parent/components/collection-page'
-import { useSelectedChild } from '@/portals/parent/parent.store'
+import { useFamily, useSelectedChild } from '@/portals/parent/parent.store'
 
 export const Route = createFileRoute('/parent/invoices')({
   staticData: { title: 'Invoices', crumb: 'Finance' },
@@ -9,5 +9,5 @@ export const Route = createFileRoute('/parent/invoices')({
 })
 
 function InvoicesList() {
-  return <CollectionPage definition={invoicesFor(useSelectedChild())} />
+  return <CollectionPage definition={invoicesFor(useSelectedChild(), useFamily())} />
 }

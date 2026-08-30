@@ -1,8 +1,9 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { useSessionStore } from '@/stores/session.store'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { parentPortal } from '@/portals/parent/config'
 import { loadRecord } from '@/features/collections/resolve'
-import { CHILDREN } from '@/portals/parent/children'
+import { familyQuery, parentIdOf } from '@/portals/parent/api/family'
 import { parentCollections } from '@/portals/parent/collections'
 import { CollectionDetail } from '@/portals/parent/components/collection-detail'
 
@@ -12,13 +13,17 @@ export const Route = createFileRoute('/parent/$collection/$recordId')({
    * shared link opens even when the switcher is on the other child. The
    * definition returned is the one the record actually belongs to.
    */
-  loader: async ({ params }) => {
+  loader: async ({ context, params }) => {
+    const family = await context.queryClient.ensureQueryData(
+      familyQuery(parentIdOf(useSessionStore.getState().account)),
+    )
+
     // A collection that resolves without a record has looked and not found it;
     // the next child may still hold it, so only a hit ends the search.
     let looked
-    for (const child of CHILDREN) {
+    for (const child of family) {
       const loaded = await loadRecord(
-        parentCollections(child),
+        parentCollections(child, family),
         params.collection,
         params.recordId,
       )

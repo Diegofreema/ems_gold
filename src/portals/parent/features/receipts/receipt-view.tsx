@@ -1,63 +1,78 @@
-import { toast } from 'sonner'
-import { BackLink } from '@/components/page/back-link'
+import { Printer } from 'lucide-react'
+import type { Receipt } from '@/api/collect-fees/types'
+import type { Parent } from '@/api/parents/types'
+import { useSchoolSettings } from '@/api/settings/hooks'
 import { Button } from '@/components/ui/button'
-import type { Row } from '@/features/collections/types'
-import { parseNaira } from '@/lib/format'
+import { formatNaira } from '@/lib/format'
+import { useSessionStore } from '@/stores/session.store'
 import { amountInWords } from './amount-in-words'
+import { receiptFields } from './receipt'
 
 /** The printable official receipt: letterhead, figure, words, then the rows. */
-export function ReceiptView({ receipt }: { receipt: Row }) {
-  const amount = parseNaira(receipt.amount)
+export function ReceiptView({
+  receipt,
+  methods,
+}: {
+  receipt: Receipt
+  methods?: Record<string, string>
+}) {
+  const { data: settings } = useSchoolSettings()
+  const household = useSessionStore((state) => state.account)?.profile as
+    | Parent
+    | undefined
 
-  const fields = [
-    { label: 'Received from', value: 'Mr & Mrs Udo' },
-    { label: 'On behalf of', value: receipt.child },
-    { label: 'For', value: receipt.fee },
-    { label: 'Method', value: receipt.method },
-    { label: 'Date', value: receipt.date },
-    { label: 'Session', value: '2025/2026 · First Term' },
-  ]
+  // The slip carries the school's name itself; the rest of the letterhead is
+  // the one settings row, and is left off rather than invented when it is
+  // still loading.
+  const school = receipt.school?.trim() || (settings?.name as string | undefined)
+  const address = [settings?.address, settings?.phone]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter(Boolean)
+    .join(' · ')
 
   return (
     <div className="max-w-[640px]">
-      <BackLink to="/parent/receipts" label="Back to receipts" />
-
       <article className="border-2 border-foreground">
-        <header className="flex items-start gap-4 border-b-2 border-foreground px-6 py-[22px]">
-          <div className="size-[26px] flex-none bg-brand" aria-hidden />
-          <div className="flex-1">
-            <div className="font-heading text-base font-extrabold">
-              NETPRO EMS Bronze
+        <header className="border-b-2 border-foreground px-6 py-[22px]">
+          <div className="flex items-start gap-4">
+            <div className="size-[26px] flex-none bg-brand" aria-hidden />
+            <div className="flex-1">
+              <div className="font-heading text-base font-extrabold">{school}</div>
+              {address && (
+                <div className="mt-[3px] text-[11.5px] text-muted-foreground">
+                  {address}
+                </div>
+              )}
             </div>
-            <div className="mt-[3px] text-[11.5px] text-muted-foreground">
-              12 Awolowo Road, Ikoyi, Lagos · RC 442901
-            </div>
-          </div>
-          <div className="text-right">
             <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
               Official receipt
             </div>
-            {/* The receipt number is what identifies this page; it carries the
-                design's own type, but it has to be a heading. */}
-            <h2 className="mt-1 font-heading text-[19px] font-extrabold">
-              {receipt.receipt}
-            </h2>
           </div>
+
+          {/* The reference identifies this page, so it is the heading — but the
+              API mints it as one unbroken 37-character word, and beside the
+              school's name it squeezed both into columns two words wide. It
+              gets its own line instead. */}
+          <h2 className="mt-3.5 font-heading text-[17px] font-extrabold break-all">
+            {receipt.reference}
+          </h2>
         </header>
 
         <div className="border-b-2 border-divider p-6">
           <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
             Amount received
           </div>
+          {/* What was handed over, not what the invoice was closed for — a
+              discount is not money the school took. */}
           <div className="mt-1.5 font-heading text-receipt font-extrabold tracking-[-0.02em] tabular-nums">
-            ₦{amount.toLocaleString('en-NG')}
+            {formatNaira(receipt.amount)}
           </div>
           <div className="mt-1.5 text-[13px] text-muted-foreground">
-            {amountInWords(amount)}
+            {amountInWords(receipt.amount)}
           </div>
         </div>
 
-        {fields.map((field, index) => (
+        {receiptFields(receipt, household, methods).map((field, index) => (
           <div
             key={field.label}
             style={{ animationDelay: `${index * 26}ms` }}
@@ -77,17 +92,18 @@ export function ReceiptView({ receipt }: { receipt: Row }) {
           </div>
           <div className="text-right">
             <div className="w-[130px] border-b-2 border-foreground" />
-            <div className="mt-1.5 text-[11px] text-muted-foreground">
-              Bursar
-            </div>
+            <div className="mt-1.5 text-[11px] text-muted-foreground">Bursar</div>
           </div>
         </footer>
       </article>
 
-      <div className="mt-5 flex flex-wrap gap-2.5">
-        <Button onClick={() => toast('Not wired up yet')}>Download PDF</Button>
-        <Button variant="outline" onClick={() => toast('Not wired up yet')}>
-          Email it to me
+      {/* Printing is the whole point of the slip, and the only thing this page
+          can actually do with it — there is no endpoint that emails one or
+          hands it over as a PDF. */}
+      <div data-print-hide className="mt-5">
+        <Button onClick={() => window.print()}>
+          <Printer className="size-[15px]" strokeWidth={2} />
+          Print this receipt
         </Button>
       </div>
     </div>

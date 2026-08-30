@@ -22,6 +22,10 @@ export type OptionsKey =
   | 'countries'
   /** The states of the chosen country, valued by the school's own id. */
   | 'states'
+  /** The school years on record — 2024/2025, newest first. */
+  | 'sessions'
+  /** First, Second and Third Term. The API's table calls them semesters. */
+  | 'terms'
 
 /**
  * A choice as a definition writes it: a bare string where the value and the

@@ -12,9 +12,14 @@ export type LoginBody = {
 /**
  * Which kind of person the login belongs to, as the API spells it. This — not
  * the role name — is what decides the portal: `role_name` is free text a
- * school can rename ("Super Admin"), while this is one of a fixed set.
+ * school can rename, and it renames it badly. A guardian's login comes back
+ * under the role "Rector"; `profile_type` on the same answer says `parent`,
+ * which is the truth.
+ *
+ * A guardian is spelled both ways depending on the endpoint: the table is
+ * `sparents` and login answers `parent`.
  */
-export type ProfileType = 'admin' | 'teacher' | 'student' | 'sparent'
+export type ProfileType = 'admin' | 'teacher' | 'student' | 'sparent' | 'parent'
 
 /** The role record itself. Which of the four it is follows `profile_type`. */
 export type Profile = Admin | Teacher | Student | Parent

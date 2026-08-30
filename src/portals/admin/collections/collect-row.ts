@@ -7,10 +7,10 @@ import type {
   Transaction,
 } from '../../../api/collect-fees/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
-import type { Option } from '../../../features/collections/options.ts'
+import { methodLabel } from '../../../features/collections/payment-methods.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { formatNaira } from '../../../lib/format.ts'
-import { when } from './when.ts'
+import { when } from '../../../features/collections/when.ts'
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
@@ -108,25 +108,6 @@ export function transactionRow(entry: Transaction, methods?: Record<string, stri
     payref: text(entry.payref),
     notes: text(entry.notes),
   }
-}
-
-/**
- * The school's word for a method. `/collect-fees/payment-methods` is the only
- * place these are named, so a method taken before the list is loaded — or one
- * the API grows later — is shown as it was sent rather than dropped.
- */
-export function methodLabel(
-  method: string | null | undefined,
-  methods?: Record<string, string>,
-): string {
-  const key = method?.trim()
-  if (!key) return BLANK
-  return methods?.[key] ?? key
-}
-
-/** The methods as a select reads them, in the order the API listed them. */
-export function methodOptions(methods: Record<string, string>): Option[] {
-  return Object.entries(methods).map(([value, label]) => ({ value, label }))
 }
 
 /** The form's values, all strings from the inputs and selects. */

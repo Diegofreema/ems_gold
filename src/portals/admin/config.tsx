@@ -1,5 +1,5 @@
 import type { PortalConfig } from '@/lib/portal'
-import { CurrentTerm } from './components/current-term'
+import { CurrentTerm } from '@/components/layout/current-term'
 import { adminNotifications } from './api/notifications'
 import { adminNav } from './nav'
 
@@ -15,7 +15,7 @@ export const adminPortal: PortalConfig = {
   notFoundLinks: [
     { to: '/admin', label: 'Dashboard', hint: 'Money and people at a glance' },
     { to: '/admin/collect', label: 'Fee collection', hint: 'Outstanding invoices' },
-    { to: '/admin/students', label: 'Student register', hint: '1,842 pupils' },
+    { to: '/admin/students', label: 'Student register', hint: 'Every pupil on file' },
     { to: '/admin/logs', label: 'Activity log', hint: 'Who did what' },
   ],
   account: {

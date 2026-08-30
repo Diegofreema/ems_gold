@@ -87,8 +87,6 @@ import { Route as AdminCollectReportRouteImport } from './routes/admin/collect.r
 import { Route as ParentCollectionRecordIdRouteImport } from './routes/parent/$collection.$recordId'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
 import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.add'
-import { Route as ParentReceiptsIndexRouteImport } from './routes/parent/receipts.index'
-import { Route as ParentReceiptsRecordIdRouteImport } from './routes/parent/receipts.$recordId'
 import { Route as StudentCollectionRecordIdRouteImport } from './routes/student/$collection.$recordId'
 import { Route as StudentMaterialsIndexRouteImport } from './routes/student/materials.index'
 import { Route as StudentMaterialsRecordIdRouteImport } from './routes/student/materials.$recordId'
@@ -493,16 +491,6 @@ const ParentChildrenAddRoute = ParentChildrenAddRouteImport.update({
   path: '/children/add',
   getParentRoute: () => ParentRouteRoute,
 } as any)
-const ParentReceiptsIndexRoute = ParentReceiptsIndexRouteImport.update({
-  id: '/receipts/',
-  path: '/receipts/',
-  getParentRoute: () => ParentRouteRoute,
-} as any)
-const ParentReceiptsRecordIdRoute = ParentReceiptsRecordIdRouteImport.update({
-  id: '/receipts/$recordId',
-  path: '/receipts/$recordId',
-  getParentRoute: () => ParentRouteRoute,
-} as any)
 const StudentCollectionRecordIdRoute =
   StudentCollectionRecordIdRouteImport.update({
     id: '/$collection/$recordId',
@@ -652,7 +640,6 @@ export interface FileRoutesByFullPath {
   '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
-  '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
   '/student/materials/$recordId': typeof StudentMaterialsRecordIdRoute
   '/student/test/receipt': typeof StudentTestReceiptRoute
@@ -660,7 +647,6 @@ export interface FileRoutesByFullPath {
   '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
-  '/parent/receipts/': typeof ParentReceiptsIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
   '/student/test/': typeof StudentTestIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
@@ -742,7 +728,6 @@ export interface FileRoutesByTo {
   '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
-  '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
   '/student/materials/$recordId': typeof StudentMaterialsRecordIdRoute
   '/student/test/receipt': typeof StudentTestReceiptRoute
@@ -750,7 +735,6 @@ export interface FileRoutesByTo {
   '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
   '/admin/collect': typeof AdminCollectIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
-  '/parent/receipts': typeof ParentReceiptsIndexRoute
   '/student/materials': typeof StudentMaterialsIndexRoute
   '/student/test': typeof StudentTestIndexRoute
   '/teacher/uploads': typeof TeacherUploadsIndexRoute
@@ -838,7 +822,6 @@ export interface FileRoutesById {
   '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
-  '/parent/receipts/$recordId': typeof ParentReceiptsRecordIdRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
   '/student/materials/$recordId': typeof StudentMaterialsRecordIdRoute
   '/student/test/receipt': typeof StudentTestReceiptRoute
@@ -846,7 +829,6 @@ export interface FileRoutesById {
   '/teacher/uploads/$recordId': typeof TeacherUploadsRecordIdRoute
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
-  '/parent/receipts/': typeof ParentReceiptsIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
   '/student/test/': typeof StudentTestIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
@@ -934,7 +916,6 @@ export interface FileRouteTypes {
     | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
-    | '/parent/receipts/$recordId'
     | '/student/$collection/$recordId'
     | '/student/materials/$recordId'
     | '/student/test/receipt'
@@ -942,7 +923,6 @@ export interface FileRouteTypes {
     | '/teacher/uploads/$recordId'
     | '/admin/collect/'
     | '/parent/children/'
-    | '/parent/receipts/'
     | '/student/materials/'
     | '/student/test/'
     | '/teacher/uploads/'
@@ -1024,7 +1004,6 @@ export interface FileRouteTypes {
     | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
-    | '/parent/receipts/$recordId'
     | '/student/$collection/$recordId'
     | '/student/materials/$recordId'
     | '/student/test/receipt'
@@ -1032,7 +1011,6 @@ export interface FileRouteTypes {
     | '/teacher/uploads/$recordId'
     | '/admin/collect'
     | '/parent/children'
-    | '/parent/receipts'
     | '/student/materials'
     | '/student/test'
     | '/teacher/uploads'
@@ -1119,7 +1097,6 @@ export interface FileRouteTypes {
     | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
-    | '/parent/receipts/$recordId'
     | '/student/$collection/$recordId'
     | '/student/materials/$recordId'
     | '/student/test/receipt'
@@ -1127,7 +1104,6 @@ export interface FileRouteTypes {
     | '/teacher/uploads/$recordId'
     | '/admin/collect/'
     | '/parent/children/'
-    | '/parent/receipts/'
     | '/student/materials/'
     | '/student/test/'
     | '/teacher/uploads/'
@@ -1695,20 +1671,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentChildrenAddRouteImport
       parentRoute: typeof ParentRouteRoute
     }
-    '/parent/receipts/': {
-      id: '/parent/receipts/'
-      path: '/receipts'
-      fullPath: '/parent/receipts/'
-      preLoaderRoute: typeof ParentReceiptsIndexRouteImport
-      parentRoute: typeof ParentRouteRoute
-    }
-    '/parent/receipts/$recordId': {
-      id: '/parent/receipts/$recordId'
-      path: '/receipts/$recordId'
-      fullPath: '/parent/receipts/$recordId'
-      preLoaderRoute: typeof ParentReceiptsRecordIdRouteImport
-      parentRoute: typeof ParentRouteRoute
-    }
     '/student/$collection/$recordId': {
       id: '/student/$collection/$recordId'
       path: '/$collection/$recordId'
@@ -1895,9 +1857,7 @@ interface ParentRouteRouteChildren {
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCollectionRecordIdRoute: typeof ParentCollectionRecordIdRoute
   ParentChildrenAddRoute: typeof ParentChildrenAddRoute
-  ParentReceiptsRecordIdRoute: typeof ParentReceiptsRecordIdRoute
   ParentChildrenIndexRoute: typeof ParentChildrenIndexRoute
-  ParentReceiptsIndexRoute: typeof ParentReceiptsIndexRoute
 }
 
 const ParentRouteRouteChildren: ParentRouteRouteChildren = {
@@ -1912,9 +1872,7 @@ const ParentRouteRouteChildren: ParentRouteRouteChildren = {
   ParentIndexRoute: ParentIndexRoute,
   ParentCollectionRecordIdRoute: ParentCollectionRecordIdRoute,
   ParentChildrenAddRoute: ParentChildrenAddRoute,
-  ParentReceiptsRecordIdRoute: ParentReceiptsRecordIdRoute,
   ParentChildrenIndexRoute: ParentChildrenIndexRoute,
-  ParentReceiptsIndexRoute: ParentReceiptsIndexRoute,
 }
 
 const ParentRouteRouteWithChildren = ParentRouteRoute._addFileChildren(

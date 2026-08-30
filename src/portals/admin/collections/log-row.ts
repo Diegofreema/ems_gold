@@ -1,7 +1,7 @@
 import type { ActivityLog } from '../../../api/logs/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
-import { when } from './when.ts'
+import { when } from '../../../features/collections/when.ts'
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
@@ -52,18 +52,27 @@ export function logRange(preset: string | undefined, today: Date): Range {
 }
 
 /**
+ * Who acted, as the log can name them: their name, else the login they signed
+ * in with, else the id alone. All three go once the account is deleted — which
+ * is exactly when an audit entry matters most — so the column says so plainly
+ * rather than leaving the line unattributed.
+ */
+export function logAuthor(log: ActivityLog): string {
+  return (
+    log.user?.trim() ||
+    log.username?.trim() ||
+    (log.user_id ? `User ${log.user_id}` : 'Deleted account')
+  )
+}
+
+/**
  * One line of the audit trail.
- *
- * `user` is the login that acted, and the API sends a username rather than a
- * person's name — it expands nothing else, and the account may since have been
- * deleted, which is exactly when an audit entry matters most. So the column
- * says who it can and says so plainly when it cannot.
  */
 export function logRow(log: ActivityLog): Row {
   return {
     id: String(log.id),
     when: when(log.timestamp, true),
-    user: log.user?.username?.trim() || (log.user_id ? `User ${log.user_id}` : 'Deleted account'),
+    user: logAuthor(log),
     type: text(log.type),
     action: text(log.description || log.title),
     ip: text(log.ip),

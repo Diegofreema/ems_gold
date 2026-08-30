@@ -1,8 +1,9 @@
 import type { Receipt } from '../../../../api/collect-fees/types.ts'
 import { BLANK } from '../../../../features/collections/blank.ts'
 import { formatNaira } from '../../../../lib/format.ts'
-import { methodLabel, pupilName } from '../../collections/collect-row.ts'
-import { when } from '../../collections/when.ts'
+import { methodLabel } from '../../../../features/collections/payment-methods.ts'
+import { pupilName } from '../../collections/collect-row.ts'
+import { when } from '../../../../features/collections/when.ts'
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK

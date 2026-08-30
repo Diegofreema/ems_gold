@@ -1,8 +1,8 @@
-import { BLANK } from '../../../features/collections/blank.ts'
-import { formatDate } from '../../../lib/format.ts'
+import { BLANK } from './blank.ts'
+import { formatDate } from '../../lib/format.ts'
 
 /**
- * A timestamp as the registers show it — the day alone, or the day with the
+ * A timestamp as the screens show it — the day alone, or the day with the
  * time on it.
  *
  * This API writes dates three ways: an ISO timestamp carrying the school's own

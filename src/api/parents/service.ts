@@ -1,11 +1,13 @@
 import { paginated, request } from '../client'
 import type { Id } from '../types'
-import type { Invoice } from '../invoices/types'
 import type {
   Child,
   ChildAssignment,
+  ChildAttendance,
   ChildAttendanceParams,
   ChildResultParams,
+  ChildResults,
+  FamilyInvoice,
   Parent,
   ParentBody,
   ParentDashboard,
@@ -85,20 +87,29 @@ export const myFamilyService = {
   children: () =>
     request<{ children: Child[] }>('sparents/my-children').then((data) => data.children),
 
+  /**
+   * Every invoice raised against every child on the record, in one call —
+   * this is the only endpoint that answers for the household rather than for
+   * one pupil.
+   */
   invoices: (params: { page?: number; limit?: number } = {}) =>
     request<Record<string, unknown>>('sparents/my-invoices', { query: { ...params } }).then(
-      (data) => paginated<Invoice>(data, 'invoices'),
+      (data) => paginated<FamilyInvoice>(data, 'invoices'),
     ),
 
-  /** Approved results only. */
+  /**
+   * Approved results only, with the sheet's own totals. Both parameters are
+   * optional and narrow independently — a session with no term is that whole
+   * year, and neither is the current one.
+   */
   childResults: (childId: Id, params: ChildResultParams = {}) =>
-    request<Record<string, unknown>>(`sparents/my-children/${childId}/results`, {
+    request<ChildResults>(`sparents/my-children/${childId}/results`, {
       query: { ...params },
     }),
 
-  /** The rate counts late as attended. */
+  /** The rate counts late as attended. An empty range is the current month. */
   childAttendance: (childId: Id, params: ChildAttendanceParams = {}) =>
-    request<Record<string, unknown>>(`sparents/my-children/${childId}/attendance`, {
+    request<ChildAttendance>(`sparents/my-children/${childId}/attendance`, {
       query: { ...params },
     }),
 

@@ -53,6 +53,29 @@ export function roleForAccount(account: Account): Role | null {
   return NAMED_ROLES.find(([spelling]) => name.includes(spelling))?.[1] ?? null
 }
 
+/**
+ * Which account the app believes, when the one it signed in as and the one
+ * `/users/me` describes are not the same person.
+ *
+ * They should never differ: `me` exists to answer for the token, and the token
+ * was minted by the login that returned `signedInAs`. On bronze it does differ
+ * — `GET /users/me` ignores the Authorization header entirely and hands the
+ * school's Super Admin to every caller, token or none. Believing it puts a
+ * guardian who has just signed in into the admin portal.
+ *
+ * So a `me` that names a different user is not adopted. It is the weaker claim
+ * of the two: the login answer was made against credentials, and this one was
+ * made against nothing. Anything else about the account — a renamed role, an
+ * edited profile — is taken from `me` as usual, because there the ids agree
+ * and `me` is the fresher record.
+ *
+ * With nothing signed in there is nothing to check against, so `me` stands.
+ */
+export function accountOfRecord(signedInAs: Account | null, fresh: Account): Account {
+  if (!signedInAs) return fresh
+  return signedInAs.user?.id === fresh.user?.id ? fresh : signedInAs
+}
+
 export function portalFor(role: Role): Portal {
   return PORTALS.find((portal) => portal.role === role) ?? PORTALS[1]
 }

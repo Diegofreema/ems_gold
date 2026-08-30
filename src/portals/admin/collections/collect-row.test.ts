@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict'
+import { methodLabel, methodOptions } from '../../../features/collections/payment-methods.ts'
 import { test } from 'node:test'
 import type { CollectInvoice, Transaction } from '../../../api/collect-fees/types.ts'
 import {
   collecting,
   collectRow,
-  methodLabel,
-  methodOptions,
   payAction,
   paymentBody,
   pupilName,

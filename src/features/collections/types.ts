@@ -46,7 +46,6 @@ export type ListPath =
   | '/parent/results'
   | '/parent/attendance'
   | '/parent/invoices'
-  | '/parent/receipts'
   | '/parent/tests'
 
 /**

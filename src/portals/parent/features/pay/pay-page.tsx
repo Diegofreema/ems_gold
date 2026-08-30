@@ -15,7 +15,8 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { amountInWords } from '@/lib/amount-words'
 import { formatNaira } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { OUTSTANDING, PAY_METHODS } from './outstanding'
+import { outstandingFor, PAY_METHODS } from './outstanding'
+import { useFamily } from '../../parent.store'
 
 const methodParser = parseAsStringLiteral(PAY_METHODS).withDefault(
   PAY_METHODS[0],
@@ -24,14 +25,15 @@ const methodParser = parseAsStringLiteral(PAY_METHODS).withDefault(
 export function PayPage() {
   const navigate = useNavigate()
   const confirm = useConfirm()
+  const outstanding = outstandingFor(useFamily())
   const [method, setMethod] = useQueryState('method', methodParser)
-  const [invoiceId, setInvoiceId] = useQueryState(
-    'invoice',
-    parseAsString.withDefault(OUTSTANDING[0]?.id ?? ''),
-  )
+  // Empty rather than the first invoice: the default is read once, and the
+  // list is fetched, so a default built from it would stick at whatever the
+  // first render happened to hold.
+  const [invoiceId, setInvoiceId] = useQueryState('invoice', parseAsString.withDefault(''))
 
   const chosen =
-    OUTSTANDING.find((entry) => entry.id === invoiceId) ?? OUTSTANDING[0]
+    outstanding.find((entry) => entry.id === invoiceId) ?? outstanding[0]
   // Part payments are allowed, so the amount starts at the balance and is
   // then the parent's to change. Held unformatted — the field puts the
   // separators on, and `payable` puts them back for the copy that reads it.
@@ -41,7 +43,7 @@ export function PayPage() {
 
   const pick = (id: string) => {
     void setInvoiceId(id)
-    const next = OUTSTANDING.find((entry) => entry.id === id)
+    const next = outstanding.find((entry) => entry.id === id)
     if (next) setAmount(String(next.balanceValue))
   }
 
@@ -54,7 +56,7 @@ export function PayPage() {
       cta: 'Pay now',
       onConfirm: () => {
         toast(`Payment of ${payable} initiated — receipt follows`)
-        void navigate({ to: '/parent/receipts' })
+        void navigate({ to: '/parent/invoices' })
       },
     })
 
@@ -76,7 +78,7 @@ export function PayPage() {
           aria-label="Invoice"
           className="flex flex-col overflow-hidden border-2 border-divider bg-background"
         >
-          {OUTSTANDING.map((entry) => (
+          {outstanding.map((entry) => (
             <button
               key={entry.id}
               type="button"
