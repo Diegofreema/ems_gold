@@ -8,6 +8,7 @@ import type {
 } from '@/features/collections/types'
 import type { Paginated } from '@/api/types'
 import { emptySource } from '@/features/collections/api'
+import { superAdminSignedIn } from '@/features/auth/session'
 import { optionLabels } from '@/features/collections/option-feeds'
 import { usersService } from '@/api/users/service'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
@@ -111,6 +112,15 @@ function saveStaff(kind?: 'teacher' | 'admin') {
 function removeStaff(recordId: string): Promise<unknown> {
   const { kind, id } = parseStaffKey(recordId)
   return kind === 'admin' ? adminsService.remove(id) : teachersService.remove(id)
+}
+
+/**
+ * Who may delete what. Removing an office record is a super administrator's
+ * alone — the API refuses anyone else — and a teaching record is any
+ * administrator's, so on the mixed register the answer is per row.
+ */
+function canRemoveStaff(row: Row): boolean {
+  return parseStaffKey(row.id).kind !== 'admin' || superAdminSignedIn()
 }
 
 const ACTIVITY_LIMIT = 20
@@ -308,6 +318,7 @@ export const staff: CollectionDef = {
   save: saveStaff(),
   // Both registers delete, and the dialog says which one it is about.
   remove: removeStaff,
+  removeWhen: canRemoveStaff,
   removeBody: staffDeleteBody,
   // Asked first, because it decides what the rest of the form asks for: the
   // two halves of the register are two endpoints, and they take different

@@ -123,6 +123,11 @@ export function CollectionForm({
   const editing = Boolean(record)
   const save = useSaveRecord(definition, editing)
   const remove = useRemoveRecord(definition)
+  // Not every account may delete every record: an office record is a super
+  // administrator's to remove, and the API refuses anyone else.
+  const canDelete = Boolean(
+    record && definition.remove && (definition.removeWhen?.(record) ?? true),
+  )
   /**
    * Leaving the form goes back the way it was opened rather than pushing the
    * record on top of it — a form that was cancelled used to stay in the
@@ -195,8 +200,8 @@ export function CollectionForm({
         // Offered only where the API can actually delete. A collection with no
         // `remove` used to show the button anyway and answer with a toast
         // saying the record was deleted, which it never was.
-        deleteLabel={editing && definition.remove ? 'Delete this record' : undefined}
-        onDelete={editing && definition.remove ? askDelete : undefined}
+        deleteLabel={canDelete ? 'Delete this record' : undefined}
+        onDelete={canDelete ? askDelete : undefined}
       >
         {shown.map((section) => (
           <FormSection key={section.title} title={section.title}>

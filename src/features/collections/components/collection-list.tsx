@@ -215,6 +215,9 @@ export function CollectionList({
               // row used to offer Delete and answer with a toast saying the
               // record was gone, which it never was.
               onDelete={editRoute && definition.remove ? askDelete : undefined}
+              // A register may mix records only some of which this account can
+              // delete — teaching records beside office ones.
+              canDelete={definition.removeWhen}
               action={
                 rowAction.spec && {
                   label: rowAction.spec.label,

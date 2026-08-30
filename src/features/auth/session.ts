@@ -7,7 +7,7 @@ import type { Admin, User } from '@/api/users/types'
 import type { AccountSummary } from '@/lib/account'
 import { endSession, useSessionStore } from '@/stores/session.store'
 import { accountSummary } from './account-summary'
-import { type Portal, portalFor, type Role, roleForAccount } from './role'
+import { isSuperAdmin, type Portal, portalFor, type Role, roleForAccount } from './role'
 
 /** The signed-in account as the screens need it. All null while signed out. */
 export type Session = {
@@ -99,4 +99,15 @@ export function adminProfile(account: Account | null): Admin | null {
 /** What this administrator is allowed to reach, by name. Empty for anyone else. */
 export function privilegeNames(account: Account | null): string[] {
   return (adminProfile(account)?.privileges ?? []).map((privilege) => privilege.name)
+}
+
+/**
+ * Whether the person signed in may act on other administrators.
+ *
+ * Read from the store rather than through a hook, so the collection
+ * definitions — plain objects, built before React runs — can ask it at the
+ * moment a button is about to be drawn.
+ */
+export function superAdminSignedIn(): boolean {
+  return isSuperAdmin(useSessionStore.getState().account)
 }

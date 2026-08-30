@@ -1,26 +1,17 @@
-import type { Account } from '../../api/auth/types.ts'
-import type { Admin, UpdateProfileBody } from '../../api/users/types.ts'
+import type { UpdateProfileBody } from '../../api/users/types.ts'
 
 /**
- * The admin record spells the two halves of a name `surname` and `lastname`,
- * and the words alone do not say which is the family name. The same person is
- * on the account as `fname`/`lname`, so the pairing is read off the record
- * rather than guessed — and only falls back to the literal reading when the
- * record gives nothing to compare against.
+ * The two halves of the name, in the order the record itself keeps them.
+ *
+ * The admin record spells them `surname` and `lastname`, and the words alone
+ * do not say which is the family name — but the form is prefilled from that
+ * record, surname first, so the box is read back apart the same way round it
+ * was filled. Only an administrator can save a profile at all, and only from a
+ * form filled in from their own office record.
  */
-function nameFields(account: Account, first: string, family: string) {
-  const record = account.profile_type === 'admin' ? (account.profile as Admin | undefined) : undefined
-
-  if (record?.surname && record.surname === account.user.fname) {
-    return { surname: first, lastname: family }
-  }
-  return { surname: family, lastname: first }
-}
-
-/** Everything after the first word is the family name, so double-barrels survive. */
-function splitName(fullname: string): [first: string, family: string] {
+function splitName(fullname: string): { surname: string; lastname: string } {
   const [first = '', ...rest] = fullname.trim().split(/\s+/)
-  return [first, rest.join(' ')]
+  return { surname: first, lastname: rest.join(' ') }
 }
 
 /**
@@ -31,18 +22,18 @@ function splitName(fullname: string): [first: string, family: string] {
  * portal never rendered come out `undefined` and are dropped by `toFormData`,
  * so a partial form can never blank a field it did not show.
  */
-export function profileBody(
-  values: Record<string, unknown>,
-  account: Account,
-): UpdateProfileBody {
+export function profileBody(values: Record<string, unknown>): UpdateProfileBody {
   const text = (key: string) =>
     typeof values[key] === 'string' ? (values[key] as string).trim() : undefined
 
   const fullname = text('fullname')
 
   return {
-    ...(fullname ? nameFields(account, ...splitName(fullname)) : {}),
+    ...(fullname ? splitName(fullname) : {}),
     phone: text('phone'),
     address: text('address'),
+    // The job on the office record. The form calls it `job`, since `profile`
+    // is what the whole page is called.
+    profile: text('job'),
   }
 }

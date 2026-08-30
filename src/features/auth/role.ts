@@ -56,3 +56,22 @@ export function roleForAccount(account: Account): Role | null {
 export function portalFor(role: Role): Portal {
   return PORTALS.find((portal) => portal.role === role) ?? PORTALS[1]
 }
+
+/**
+ * The school's own super-administrator role. Its id is fixed on the server —
+ * bronze lists Admin 1, Super Admin 5, Bursar 7 — but a school may rename it,
+ * so the name is read first and the id answers when the name has been changed
+ * to something else.
+ */
+const SUPER_ADMIN_ROLE_ID = 5
+
+/**
+ * Whether this account may act on other administrators: granting and taking
+ * away privileges, and deleting an office record. The API enforces it either
+ * way; this is so the portal stops offering what it knows will be refused.
+ */
+export function isSuperAdmin(account: Account | null | undefined): boolean {
+  const role = account?.role
+  if (!role) return false
+  return /super\s*admin/i.test(role.role_name ?? '') || role.id === SUPER_ADMIN_ROLE_ID
+}

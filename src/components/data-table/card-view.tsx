@@ -14,6 +14,7 @@ export function CardView<TRow>({
   onRowClick,
   onEdit,
   onDelete,
+  canDelete,
   action,
 }: {
   columns: Column<TRow>[]
@@ -22,6 +23,8 @@ export function CardView<TRow>({
   onRowClick?: (row: TRow) => void
   onEdit?: (row: TRow) => void
   onDelete?: (row: TRow) => void
+  /** Which rows may actually be deleted. Every one of them without it. */
+  canDelete?: (row: TRow) => boolean
   action?: RowAction<TRow>
 }) {
   const byRole = (role: Column<TRow>['cardRole']) =>
@@ -88,7 +91,7 @@ export function CardView<TRow>({
                   Edit
                 </Button>
               )}
-              {onDelete && (
+              {onDelete && (canDelete?.(row) ?? true) && (
                 <Button variant="outline" onClick={() => onDelete(row)}>
                   Delete
                 </Button>

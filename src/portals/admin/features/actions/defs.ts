@@ -6,6 +6,7 @@ import { feesService } from '@/api/fees/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
 import { teachersService } from '@/api/teachers/service'
+import { superAdminSignedIn } from '@/features/auth/session'
 import type { Row } from '@/features/collections/types'
 import {
   ADMIT,
@@ -32,6 +33,8 @@ export type AdminFlow = {
   fromList?: boolean
   /** Records the flow can run against; offered on every record without it. */
   when?: (record: Row) => boolean
+  /** Whether the account signed in may run it at all. */
+  allowed?: () => boolean
   build: (row?: Row) => ActionDef | Promise<ActionDef>
 }
 
@@ -698,7 +701,16 @@ const teacherFlows: AdminFlow[] = [
 
 export const adminFlows: Record<string, AdminFlow[]> = {
   fees: [{ name: 'allocate', label: 'Allocate to classes', build: allocate }],
-  'staff-admin': [{ name: 'privileges', label: 'Set privileges', build: setPrivileges }],
+  // Granting and taking away privileges is a super administrator's alone; the
+  // API refuses everyone else, so nobody else is shown the button.
+  'staff-admin': [
+    {
+      name: 'privileges',
+      label: 'Set privileges',
+      allowed: superAdminSignedIn,
+      build: setPrivileges,
+    },
+  ],
   // The mixed register opens teaching records too, and a flow that cannot run
   // against an office record is not offered on one.
   staff: teacherFlows,

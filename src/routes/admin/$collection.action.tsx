@@ -1,4 +1,6 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { DeniedState } from '@/components/feedback/denied-state'
 import { adminCollections } from '@/portals/admin/collections'
 import { adminFlows } from '@/portals/admin/features/actions/defs'
 import { ActionPage } from '@/portals/admin/features/actions/action-page'
@@ -23,6 +25,17 @@ export const Route = createFileRoute('/admin/$collection/action')({
       : flows?.[0]
     if (!definition || !flow) throw notFound()
 
+    // Typed out rather than reached from a button, by an account the flow is
+    // not for. The page exists and the record is fine — what is missing is the
+    // privilege, so it says so instead of building a form the API will refuse.
+    if (flow.allowed && !flow.allowed()) {
+      return {
+        definition,
+        denied: flow.label,
+        heading: { title: flow.label, crumb: definition.kicker },
+      } as const
+    }
+
     // A live collection is asked for the record; a fixture one holds its own.
     const row = !deps.record
       ? undefined
@@ -36,7 +49,7 @@ export const Route = createFileRoute('/admin/$collection/action')({
       definition,
       action,
       heading: { title: action.title, crumb: action.kicker },
-    }
+    } as const
   },
   component: FlowRoute,
 })
@@ -48,8 +61,23 @@ export const Route = createFileRoute('/admin/$collection/action')({
  * that render keeps the 404 clean instead of crashing into the error boundary.
  */
 function FlowRoute() {
+  const navigate = useNavigate()
   const loaded = Route.useLoaderData()
   if (!loaded) return null
-  const { definition, action } = loaded
+  const { definition, denied, action } = loaded
+
+  if (denied) {
+    return (
+      <DeniedState
+        pageName={denied}
+        dashboardPath="/admin"
+        onRequestAccess={() => {
+          toast('The school office has been asked')
+          void navigate({ to: definition.path })
+        }}
+      />
+    )
+  }
+  if (!action) return null
   return <ActionPage definition={definition} action={action} />
 }

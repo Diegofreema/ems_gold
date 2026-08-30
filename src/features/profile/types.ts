@@ -26,6 +26,13 @@ export type ProfileConfig = {
   values: Record<string, string>
   account: { label: string; value: string }[]
   prefs: ProfilePref[]
+  /**
+   * The config was built from the person's own record rather than written
+   * down, so the session has nothing left to fill in — and must not, since the
+   * login it holds is a different row with a different name and phone from the
+   * office record the Save button writes to.
+   */
+  fromRecord?: boolean
   /** What signing the other devices out means for this role. */
   sessionNote: string
 }

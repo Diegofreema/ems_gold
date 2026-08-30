@@ -109,7 +109,7 @@ export function CollectionDetail({
   const flowButtons = !flowRoute
     ? []
     : (flows ?? [])
-        .filter((one) => one.when?.(record) ?? true)
+        .filter((one) => (one.allowed?.() ?? true) && (one.when?.(record) ?? true))
         .map((one) => (
           <Button
             key={one.name}

@@ -123,6 +123,13 @@ export type FlowSpec = {
    * that always fails. A flow without this is offered on every record.
    */
   when?: (record: Row) => boolean
+  /**
+   * Whether the person signed in may run it at all, whichever record they are
+   * looking at. Separate from `when` on purpose: a record this flow does not
+   * apply to is a different thing from a flow this account may not run, and
+   * only the second is worth a locked page when the URL is typed out.
+   */
+  allowed?: () => boolean
 }
 
 /** Every fixture cell is display text; the API returns the same shape. */
@@ -374,6 +381,13 @@ export type CollectionDef = {
    * without one keeps the prototype's toast, since it has no endpoint yet.
    */
   remove?: (recordId: string) => Promise<unknown>
+  /**
+   * Whether this record may be deleted by the person signed in. Only the API
+   * can enforce it; this is what stops the button being offered where it will
+   * come back refused — an office record can only be deleted by a super
+   * administrator, and the teaching record beside it by anyone.
+   */
+  removeWhen?: (row: Row) => boolean
   /**
    * What the delete confirm says, in place of the generic sentence. Set where
    * other records depend on this one and the API will refuse: the dialog is

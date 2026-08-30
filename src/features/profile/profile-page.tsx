@@ -29,8 +29,11 @@ export function ProfilePage({ config: portal }: { config: ProfileConfig }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { account } = useSession()
-  // The portal defines the page; the account fills in whoever is reading it.
-  const config = account ? profileFromAccount(portal, account) : portal
+  // The portal defines the page; the account fills in whoever is reading it —
+  // unless the portal already read that person's own record, which says more
+  // than the session does.
+  const config =
+    account && !portal.fromRecord ? profileFromAccount(portal, account) : portal
   const canSave = ownsProfile(account)
   const logout = useLogoutEverywhere()
   const save = useUpdateMyProfile()
@@ -42,7 +45,7 @@ export function ProfilePage({ config: portal }: { config: ProfileConfig }) {
     if (!account) return
     // A refusal has already been announced by the mutation cache; swallowing
     // it here only keeps it out of the submit handler.
-    const saved = await save.mutateAsync(profileBody(values, account)).catch(() => null)
+    const saved = await save.mutateAsync(profileBody(values)).catch(() => null)
     // The name is on the sidebar and in the greeting too, so the session has
     // to be re-read before either can go stale.
     if (saved) await refreshAccount(queryClient).catch(() => undefined)

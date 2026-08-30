@@ -1,36 +1,116 @@
-import type { ProfileConfig } from '@/features/profile/types'
+import type { Admin } from '../../api/users/types.ts'
+import { BLANK } from '../../features/collections/blank.ts'
+import type { ProfileConfig } from '../../features/profile/types.ts'
+import { formatDate } from '../../lib/format.ts'
 
-export const adminProfile: ProfileConfig = {
-  initials: 'AO',
-  meta: 'Bursar · STF-003 · Full access to Finance, People and School',
-  note: 'What the school office holds about you. Changes to your name or staff number have to go through the principal.',
-  sessionNote:
-    'Signs you out everywhere except this browser. Useful if you have used a shared computer in the office.',
-  fields: [
-    { key: 'fullname', label: 'Full name', required: true },
-    { key: 'staffno', label: 'Staff number', locked: true },
-    { key: 'role', label: 'Role', locked: true },
-    { key: 'email', label: 'Work email', required: true, email: true },
-    { key: 'phone', label: 'Phone', required: true },
-    { key: 'office', label: 'Office', required: true },
-  ],
+/**
+ * The office record, as its owner reads it.
+ *
+ * Built from `GET /admins/profile`, which is the same record `PATCH
+ * /users/profile` writes back to — so the boxes are prefilled from the thing
+ * the Save button edits. The login is a separate row with a separate name and
+ * a separate phone, and prefilling from that one would have quietly copied it
+ * over the office record on the first save.
+ */
+
+const NOTE =
+  'Your office record, which is what the school holds about you. Your sign-in name and what you can open are set elsewhere and are shown here to read.'
+
+const SESSION_NOTE =
+  'Signs you out everywhere except this browser. Useful if you have used a shared computer in the office.'
+
+const FIELDS: ProfileConfig['fields'] = [
+  { key: 'fullname', label: 'Full name', required: true },
+  { key: 'job', label: 'Job', placeholder: 'Bursar' },
+  { key: 'phone', label: 'Phone', required: true },
+  { key: 'address', label: 'Address', wide: true },
+  { key: 'gender', label: 'Gender', locked: true },
+  { key: 'role', label: 'Account', locked: true },
+  { key: 'klass', label: 'Class', locked: true },
+  { key: 'privileges', label: 'What you can open', locked: true, wide: true },
+]
+
+/** The prototype's page, for the moment before the record answers. */
+const EMPTY: ProfileConfig = {
+  initials: '··',
+  meta: '',
+  note: NOTE,
+  sessionNote: SESSION_NOTE,
+  fields: FIELDS,
   values: {
-    fullname: 'Amaka Okonkwo',
-    staffno: 'STF-003',
-    role: 'Bursar',
-    email: 'amaka.okonkwo@netpro.africa',
-    phone: '0803 441 9920',
-    office: 'Bursary, Block A',
+    fullname: '',
+    job: '',
+    phone: '',
+    address: '',
+    gender: BLANK,
+    role: BLANK,
+    klass: BLANK,
+    privileges: BLANK,
   },
-  account: [
-    { label: 'Signs in with', value: 'amaka.okonkwo@netpro.africa' },
-    { label: 'Last sign-in', value: 'Today, 07:52 · Lagos' },
-    { label: 'Password changed', value: '14 Aug 2025' },
-    { label: 'Two-step', value: 'Off' },
-  ],
+  // Left for the session to fill in: this shape is only reached when the
+  // record did not answer, and the login is the one thing still known.
+  account: [{ label: 'Signs in with', value: BLANK }],
   prefs: [
     { label: 'Email me about overdue fees', hint: 'A daily digest at 16:00', on: true },
     { label: 'Email me when a result batch needs approval', hint: 'As it happens', on: true },
     { label: 'SMS for anything marked urgent', hint: 'Charged to the school line', on: false },
   ],
+}
+
+function text(value: string | null | undefined): string {
+  return value?.trim() || BLANK
+}
+
+/** Two letters for the square, off whichever half of the name is filled in. */
+function initialsOf(parts: string[]): string {
+  const letters = parts.map((part) => part.trim()[0]).filter(Boolean)
+  return letters.length ? letters.join('').toUpperCase() : '··'
+}
+
+/** An ISO timestamp as the design writes dates. Anything else is left alone. */
+function asDate(value: string | null | undefined): string {
+  if (!value) return BLANK
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : formatDate(date)
+}
+
+export function adminProfile(admin?: Admin): ProfileConfig {
+  if (!admin) return EMPTY
+
+  const names = [admin.surname, admin.lastname].filter(Boolean)
+  const held = admin.privileges ?? []
+  // The job the office writes on the record — "Registrar", "ICT Director" —
+  // not the account's role, which is what the portal lets them open.
+  const job = admin.profile?.trim() ?? ''
+  const role = admin.user?.role?.role_name
+
+  return {
+    ...EMPTY,
+    initials: initialsOf(names),
+    meta: [role, admin.department?.name, job].filter(Boolean).join(' · '),
+    values: {
+      // The endpoint takes the two halves separately and the record puts the
+      // surname first, so that is the order this is read back apart in.
+      fullname: names.join(' '),
+      job,
+      phone: admin.phone ?? '',
+      address: admin.address ?? '',
+      gender: text(admin.gender),
+      role: text(role),
+      klass: text(admin.department?.name),
+      privileges: held.length
+        ? held.map((privilege) => privilege.name).join(', ')
+        : 'Nothing yet — ask another administrator to grant you a section.',
+    },
+    account: [
+      { label: 'Signs in with', value: text(admin.user?.username) },
+      { label: 'Account', value: text(role) },
+      // Whether the login works at all, which is a different thing from the
+      // office record's own always-"active" status.
+      { label: 'Sign-in', value: text(admin.user?.userstatus) },
+      { label: 'On record since', value: asDate(admin.date_created) },
+    ],
+    // Already the person's own record: the session has nothing to add to it.
+    fromRecord: true,
+  }
 }

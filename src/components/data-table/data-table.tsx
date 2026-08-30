@@ -15,6 +15,7 @@ export function DataTable<TRow>({
   onRowClick,
   onEdit,
   onDelete,
+  canDelete,
   action,
   compact,
   searchQuery,
@@ -26,6 +27,7 @@ export function DataTable<TRow>({
   onRowClick?: (row: TRow) => void
   onEdit?: (row: TRow) => void
   onDelete?: (row: TRow) => void
+  canDelete?: (row: TRow) => boolean
   /** A button on every row, beside the link into the record. */
   action?: RowAction<TRow>
   compact?: boolean
@@ -44,6 +46,7 @@ export function DataTable<TRow>({
           onRowClick={onRowClick}
           onEdit={onEdit}
           onDelete={onDelete}
+          canDelete={canDelete}
           action={action}
         />
       ) : (
