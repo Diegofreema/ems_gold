@@ -55,7 +55,7 @@ function NotFound() {
           The link may be out of date, or the page may have moved.
         </p>
         <Button asChild className="mt-6">
-          <Link to="/admin">Back to dashboard</Link>
+          <Link to="/">Back to the home page</Link>
         </Button>
       </div>
     </div>

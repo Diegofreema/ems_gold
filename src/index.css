@@ -171,6 +171,10 @@
     --animate-ems-shimmer: emsShimmer calc(1200ms * var(--ems-motion)) linear infinite;
     --animate-ems-shake: emsShake calc(420ms * var(--ems-motion)) both;
     --animate-ems-spin: emsSpin 800ms linear infinite;
+
+    /* Landing page only: a strip that never stops, and a cursor-square blink. */
+    --animate-ems-marquee: emsMarquee calc(38s * var(--ems-motion)) linear infinite;
+    --animate-ems-blink: emsBlink calc(2.4s * var(--ems-motion)) steps(1, end) infinite;
 }
 
 @keyframes emsUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
@@ -184,6 +188,8 @@
 @keyframes emsShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @keyframes emsShake { 10%, 90% { transform: translateX(-2px); } 30%, 70% { transform: translateX(3px); } 50% { transform: translateX(-3px); } }
 @keyframes emsSpin { to { transform: rotate(360deg); } }
+@keyframes emsMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes emsBlink { 0%, 60% { opacity: 1; } 61%, 100% { opacity: .15; } }
 
 @layer base {
     * {
@@ -197,7 +203,10 @@
     body {
         @apply bg-background text-foreground;
         margin: 0;
-        overflow-x: hidden;
+        /* `clip` rather than `hidden`: hiding an overflow makes the body a
+           scroll container, and the landing page's sticky header would then
+           have nothing to stick to. */
+        overflow-x: clip;
         font-size: 15px;
         line-height: 1.55;
     }
