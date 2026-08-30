@@ -138,3 +138,13 @@ test('the sign-in action offers whichever state the household is not in', () => 
   assert.equal(accessAction.confirm(blocked), undefined)
   assert.match(accessAction.done(blocked), /can sign in again/)
 })
+
+test('a household deleted from the register promises nothing about children', () => {
+  // The list is told no count, so neither of the other two sentences is true
+  // of it — this household has four pupils and the row cannot know.
+  const { children: _none, ...listed } = HOUSEHOLD
+  const body = parentDeleteBody(parentRow(listed))
+  assert.match(body, /the register will refuse/)
+  assert.match(body, /open the record first/)
+  assert.doesNotMatch(body, /pupils are linked/)
+})

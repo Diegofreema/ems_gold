@@ -72,6 +72,17 @@ const SUPER_ADMIN_ROLE_ID = 5
  */
 export function isSuperAdmin(account: Account | null | undefined): boolean {
   const role = account?.role
-  if (!role) return false
-  return /super\s*admin/i.test(role.role_name ?? '') || role.id === SUPER_ADMIN_ROLE_ID
+  return role ? isSuperAdminRole(role.role_name, role.id) : false
+}
+
+/**
+ * The same question of a role read off a record rather than off the session —
+ * the register carries the account's role by name, and that is all a row has
+ * to say who it belongs to.
+ */
+export function isSuperAdminRole(
+  name: string | null | undefined,
+  id?: number | null,
+): boolean {
+  return /super\s*admin/i.test(name ?? '') || id === SUPER_ADMIN_ROLE_ID
 }

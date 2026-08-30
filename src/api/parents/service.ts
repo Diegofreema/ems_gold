@@ -23,11 +23,27 @@ export const parentsService = {
   /**
    * With the household's children. They sit beside the record in the envelope
    * rather than on it, so returning `data.sparent` alone drops them silently.
+   *
+   * The two occupations are asked of the directory alongside, because this
+   * endpoint does not select them — a household whose father is on record as a
+   * trader answers here with no job at all, and the edit form would show the
+   * field empty over a value that exists. The directory is allowed to fail:
+   * it costs the jobs, not the record.
    */
   get: (id: Id) =>
-    request<{ sparent: Parent; children?: Child[] }>(`sparents/${id}`).then(
-      ({ sparent, children }) => ({ ...sparent, children }),
-    ),
+    Promise.all([
+      request<{ sparent: Parent; children?: Child[] }>(`sparents/${id}`),
+      request<{ parent: Pick<Parent, 'fathersjob' | 'mothersjob'> }>(
+        `admins/parents/${id}`,
+      )
+        .then((data) => data.parent)
+        .catch(() => undefined),
+    ]).then(([{ sparent, children }, jobs]) => ({
+      ...sparent,
+      fathersjob: jobs?.fathersjob ?? null,
+      mothersjob: jobs?.mothersjob ?? null,
+      children,
+    })),
 
   children: (id: Id) =>
     request<{ children: Child[] }>(`sparents/${id}/children`).then((data) => data.children),

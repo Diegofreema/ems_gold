@@ -8,13 +8,19 @@ const ROWS = (pageName: string) => [
   { label: 'Ask', value: 'The school office — 0803 000 0000' },
 ]
 
-/** Shown when the account lacks the privilege a route needs. */
+const PRIVILEGE_BODY =
+  'Your account does not carry the privilege this page needs. Nothing was changed, and the attempt is written to the activity log.'
+
+/** Shown when a route is closed to the person who asked for it. */
 export function DeniedState({
   pageName,
+  body = PRIVILEGE_BODY,
   dashboardPath,
   onRequestAccess,
 }: {
   pageName: string
+  /** Why it is closed, where it is not the ordinary want of a privilege. */
+  body?: string
   dashboardPath: string
   onRequestAccess: () => void
 }) {
@@ -24,10 +30,7 @@ export function DeniedState({
         <Lock className="size-[21px]" strokeWidth={2.1} />
       </div>
       <h2 className="mt-5 text-page-title">You cannot open this page</h2>
-      <p className="mt-2.5 text-sm text-muted-foreground">
-        Your account does not carry the privilege this page needs. Nothing was
-        changed, and the attempt is written to the activity log.
-      </p>
+      <p className="mt-2.5 text-sm text-muted-foreground">{body}</p>
 
       <div className="mt-[18px] border-t-2 border-divider">
         {ROWS(pageName).map((row) => (

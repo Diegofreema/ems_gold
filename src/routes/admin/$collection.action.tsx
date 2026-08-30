@@ -25,17 +25,6 @@ export const Route = createFileRoute('/admin/$collection/action')({
       : flows?.[0]
     if (!definition || !flow) throw notFound()
 
-    // Typed out rather than reached from a button, by an account the flow is
-    // not for. The page exists and the record is fine — what is missing is the
-    // privilege, so it says so instead of building a form the API will refuse.
-    if (flow.allowed && !flow.allowed()) {
-      return {
-        definition,
-        denied: flow.label,
-        heading: { title: flow.label, crumb: definition.kicker },
-      } as const
-    }
-
     // A live collection is asked for the record; a fixture one holds its own.
     const row = !deps.record
       ? undefined
@@ -43,6 +32,20 @@ export const Route = createFileRoute('/admin/$collection/action')({
         ? await definition.record(deps.record)
         : definition.rows?.find((one) => one.id === deps.record)
     if (deps.record && !row) throw notFound()
+
+    // Typed out rather than reached from a button, by an account this flow is
+    // closed to — or on a record it is closed on. The page exists and the
+    // record is fine, so it says which of those it was instead of building a
+    // form that must not be submitted. Asked after the record is in hand,
+    // because half the reasons are about the record.
+    if (flow.allowed && !flow.allowed(row)) {
+      return {
+        definition,
+        denied: flow.label,
+        deniedBody: flow.deniedBody?.(row),
+        heading: { title: flow.label, crumb: definition.kicker },
+      } as const
+    }
 
     const action = await flow.build(row)
     return {
@@ -64,12 +67,13 @@ function FlowRoute() {
   const navigate = useNavigate()
   const loaded = Route.useLoaderData()
   if (!loaded) return null
-  const { definition, denied, action } = loaded
+  const { definition, denied, deniedBody, action } = loaded
 
   if (denied) {
     return (
       <DeniedState
         pageName={denied}
+        body={deniedBody}
         dashboardPath="/admin"
         onRequestAccess={() => {
           toast('The school office has been asked')

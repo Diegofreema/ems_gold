@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { isSuperAdmin } from './role.ts'
+import { isSuperAdmin, isSuperAdminRole } from './role.ts'
 
 const account = (role: { id: number; role_name: string } | null) =>
   ({ user: { fname: 'Ada', lname: 'Obi', username: 'ada' }, role }) as never
@@ -20,4 +20,16 @@ test('everyone else in the office is not one', () => {
   // No role on the account at all, and no account: neither is a yes.
   assert.ok(!isSuperAdmin(account(null)))
   assert.ok(!isSuperAdmin(null))
+})
+
+test('a role read off a record answers the same as one off the session', () => {
+  // The register carries the role by name and nothing else, which is all the
+  // record page has to go on when it decides whether to offer the flow.
+  assert.ok(isSuperAdminRole('Super Admin'))
+  assert.ok(isSuperAdminRole('super admin'))
+  assert.ok(!isSuperAdminRole('Bursar'))
+  // The register's own fallback when the roles feed failed: not a claim that
+  // this account is a super administrator.
+  assert.ok(!isSuperAdminRole('Administrator'))
+  assert.ok(!isSuperAdminRole(undefined))
 })

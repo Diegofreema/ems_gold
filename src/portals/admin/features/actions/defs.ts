@@ -6,6 +6,7 @@ import { feesService } from '@/api/fees/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
 import { teachersService } from '@/api/teachers/service'
+import { isSuperAdminRole } from '@/features/auth/role'
 import { superAdminSignedIn } from '@/features/auth/session'
 import type { Row } from '@/features/collections/types'
 import {
@@ -33,8 +34,10 @@ export type AdminFlow = {
   fromList?: boolean
   /** Records the flow can run against; offered on every record without it. */
   when?: (record: Row) => boolean
-  /** Whether the account signed in may run it at all. */
-  allowed?: () => boolean
+  /** Whether it may be run at all — by this account, on this record. */
+  allowed?: (record?: Row) => boolean
+  /** Why it was refused, where want of a privilege is not the reason. */
+  deniedBody?: (record?: Row) => string | undefined
   build: (row?: Row) => ActionDef | Promise<ActionDef>
 }
 
@@ -702,12 +705,18 @@ const teacherFlows: AdminFlow[] = [
 export const adminFlows: Record<string, AdminFlow[]> = {
   fees: [{ name: 'allocate', label: 'Allocate to classes', build: allocate }],
   // Granting and taking away privileges is a super administrator's alone; the
-  // API refuses everyone else, so nobody else is shown the button.
+  // API refuses everyone else. And a super administrator's own privileges are
+  // not edited from here at all: the account is the school's way back in, and
+  // the section that puts a privilege back is one of the ones being taken.
   'staff-admin': [
     {
       name: 'privileges',
       label: 'Set privileges',
-      allowed: superAdminSignedIn,
+      allowed: (record) => superAdminSignedIn() && !isSuperAdminRole(record?.role),
+      deniedBody: (record) =>
+        isSuperAdminRole(record?.role)
+          ? 'A super administrator holds every section of the portal, and that is not edited from here — taking one away could leave the school with no account able to put it back. Their role is what decides it, and the role is changed on the login.'
+          : undefined,
       build: setPrivileges,
     },
   ],

@@ -50,7 +50,6 @@ export function parentRow(parent: Parent): Row {
     father: joined(parent.fathersname, parent.fatherphone, parent.fathersjob),
     mother: joined(parent.mothersname, parent.motherphone, parent.mothersjob),
     address: text(parent.address),
-    occupation: text(parent.occupation),
     username: text(parent.username),
     children: parent.children ? String(parent.children.length) : BLANK,
 
@@ -85,6 +84,12 @@ export function childRow(child: Child): Row {
 export function parentDeleteBody(row: Row | undefined): string {
   const count = Number(row?.children)
   const name = row?.name && row.name !== BLANK ? row.name : 'This household'
+  // The register is told nothing about children, so a row that came from the
+  // list cannot promise either sentence. Saying "permanently" over a household
+  // that has four pupils would be reassuring and wrong.
+  if (!Number.isFinite(count)) {
+    return `${name} loses the record and the login behind it, permanently. If a pupil is still linked to the household the register will refuse — open the record first to see who, or block the sign-in instead.`
+  }
   if (count > 0) {
     return `${count} ${count === 1 ? 'pupil is' : 'pupils are'} linked to this household, and the register will refuse to delete it while they are — every one of them would be left with no guardian. Move them to another household first, or block the sign-in instead.`
   }

@@ -124,12 +124,17 @@ export type FlowSpec = {
    */
   when?: (record: Row) => boolean
   /**
-   * Whether the person signed in may run it at all, whichever record they are
-   * looking at. Separate from `when` on purpose: a record this flow does not
-   * apply to is a different thing from a flow this account may not run, and
-   * only the second is worth a locked page when the URL is typed out.
+   * Whether this flow may be run at all — by the account signed in, on the
+   * record in front of them. Separate from `when` on purpose: a record this
+   * flow does not apply to is a different thing from one it is not permitted
+   * on, and only the second is worth a locked page when the URL is typed out.
    */
-  allowed?: () => boolean
+  allowed?: (record?: Row) => boolean
+  /**
+   * Why it was refused, where the general sentence about privileges is not the
+   * reason. Nothing means the reason is the ordinary one.
+   */
+  deniedBody?: (record?: Row) => string | undefined
 }
 
 /** Every fixture cell is display text; the API returns the same shape. */

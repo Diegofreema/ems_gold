@@ -46,7 +46,8 @@ export function primaryActionKind(
   // would otherwise have done.
   if (definition.readonly) return 'none'
   if (isFileAction(definition.action)) return 'file'
-  if (routes.flow && flows?.some((flow) => flow.fromList)) return 'flow'
+  if (routes.flow && flows?.some((flow) => flow.fromList && (flow.allowed?.() ?? true)))
+    return 'flow'
   if (routes.create) return 'create'
   return 'placeholder'
 }

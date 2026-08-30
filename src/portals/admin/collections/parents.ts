@@ -46,6 +46,10 @@ const HOUSEHOLD: FormSectionSpec = {
     {
       key: 'pemailaddress',
       label: 'Email',
+      // The login the API makes for the household is the email — it comes back
+      // from the save as the username. A household saved without one gets an
+      // account nobody can sign in to.
+      required: true,
       email: true,
       wide: true,
       placeholder: 'e.udo@example.com',
@@ -108,7 +112,6 @@ export const parents: CollectionDef = {
     { key: 'email', label: 'Email' },
     { key: 'children', label: 'Children' },
     { key: 'address', label: 'Address' },
-    { key: 'occupation', label: 'Occupation' },
     { key: 'username', label: 'Signs in with' },
   ],
   filters: [{ key: 'status', label: 'Any status', options: STATUSES }],
