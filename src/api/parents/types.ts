@@ -168,13 +168,49 @@ export type ChildAttendanceParams = {
   end_date?: string
 }
 
-/** Each child with the tests set for their class and their status on each. */
-export type ChildAssignment = Record<string, unknown>
+/**
+ * One computer-based test set for a child's class, and where that child
+ * stands on it.
+ *
+ * The two stamps are the same wall clock written two ways — `opendate` carries
+ * `+00:00` while `closedate` carries no zone at all, and the sample sends both
+ * as 09:52. Both are the school's own clock, so the offset is dropped rather
+ * than believed; see `schoolTime`.
+ */
+export type ChildAssignmentPaper = {
+  /** The paper. This is what identifies a test the child has not yet sat. */
+  setassignment_id: number
+  title: string | null
+  subject: string | null
+  /** Minutes allowed once opened. Null on a paper with no limit set. */
+  time_limit: number | null
+  opendate: string | null
+  closedate: string | null
+  /** 'available' until the child sits it, then 'completed'. */
+  status: string
+  /** The child's own sitting, once there is one. Null while unsat. */
+  assignment_id: number | null
+}
+
+/** Each child on the record, with the papers set for their class. */
+export type ChildAssignment = {
+  student: Child
+  assignments: ChildAssignmentPaper[]
+}
 
 /**
- * Question id to answer: an option id for multiple choice, free text for
- * theory. An option belonging to another question is discarded, and
- * re-submitting a completed test is a 409.
+ * One answer per question: a number for multiple choice, free text for theory
+ * — `{"2": 6, "3": "You add the two numbers together."}`.
+ *
+ * **What the key is has not been settled.** It was described as "the number of
+ * the question", which reads either as the question's id or as its position in
+ * the paper, and the sample cannot tell them apart: it answers 2 and 3 and
+ * leaves whatever 1 is unanswered. Getting it wrong files every answer against
+ * the wrong question, so the paper's own response body has to be seen before
+ * this is built against — `GET sparents/my-children/{id}/assignments/{id}`,
+ * which is refused on this deployment.
+ *
+ * Re-submitting a completed test is a 409.
  */
 export type SubmitAnswersBody = {
   answers: Record<string, number | string>

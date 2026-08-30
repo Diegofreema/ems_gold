@@ -1,5 +1,11 @@
-import type { CollectionDef } from '@/features/collections/types'
+import { myFamilyKeys } from '@/api/parents/keys'
+import { myFamilyService } from '@/api/parents/service'
+import type { ChildAssignment } from '@/api/parents/types'
+import { pageRows } from '@/features/collections/api'
+import type { CollectionDef, Row } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
+import { queryClient } from '@/lib/query-client'
+import { childPapers } from '../features/tests/assignments'
 import { familyOwing, type Child } from '../family'
 
 /** "1 invoice", "12 invoices" — a footer is prose, not a column. */
@@ -96,20 +102,43 @@ export function invoicesFor(child: Child, family: Child[]): CollectionDef {
   }
 }
 
+/**
+ * Every child's papers in one answer.
+ *
+ * The endpoint takes no pupil, so asking it per child would be the same
+ * request four times over. It goes through the cache instead: the register and
+ * the record page want the same answer on the same render, and react-query
+ * collapses them into one call. Nothing is held between visits.
+ */
+const allPapers = (): Promise<ChildAssignment[]> =>
+  queryClient.ensureQueryData({
+    queryKey: myFamilyKeys.assignments(),
+    queryFn: () => myFamilyService.assignments(),
+  })
+
 export function testsFor(child: Child): CollectionDef {
+  // `new Date()` per call rather than per definition: the definition is rebuilt
+  // on every render, and a paper closing while the page is open should read as
+  // closed on the next fetch, not on the next navigation.
+  const papers = (): Promise<Row[]> =>
+    allPapers().then((children) => childPapers(children, child.id, new Date()))
+
   return {
     id: 'tests',
     path: '/parent/tests',
     scope: child.adm,
     kicker: 'Tests',
     title: `Tests for ${child.name}`,
-    description: `Computer-based tests set for ${child.name}. You can sit with them while they answer, but the score belongs to them.`,
+    description: `Papers set for ${child.name}'s class, and where they stand on each. A test is sat in the pupil's own portal — this is the register of them.`,
+    // A parent cannot open a paper on their child's behalf, so the list offers
+    // no button rather than one that opens nothing.
     action: 'Open the test',
-    searchHint: 'Search test',
-    footer: `${counted(child.tests.length, 'test', 'tests')}`,
-    emptyTitle: 'Tests cannot be read yet',
+    readonly: true,
+    searchHint: 'Search test or subject',
+    footer: `Set for ${child.arm}`,
+    emptyTitle: 'No tests set',
     emptyBody:
-      'A paper set for your child is only readable by an account the school has linked to them. Ask the office to link yours.',
+      'A paper set for this class appears here as soon as a teacher publishes it, with the day it closes.',
     noun: 'test',
     nameKey: 'title',
     tabs: [],
@@ -117,10 +146,21 @@ export function testsFor(child: Child): CollectionDef {
       { key: 'title', label: 'Test', cardRole: 'title' },
       { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
       { key: 'closes', label: 'Closes' },
-      { key: 'score', label: 'Score', align: 'right' },
       { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
     ],
-    rows: child.tests,
+    detail: [
+      { key: 'title', label: 'Test' },
+      { key: 'subject', label: 'Subject' },
+      { key: 'state', label: 'State' },
+      { key: 'opens', label: 'Opens' },
+      { key: 'closes', label: 'Closes' },
+      { key: 'limit', label: 'Time allowed' },
+    ],
+    // Searched and paged here: the endpoint answers with the household whole
+    // and takes neither a page nor a query.
+    source: (params) => papers().then((rows) => pageRows(rows, params)),
+    record: (recordId) =>
+      papers().then((rows) => rows.find((row) => row.id === recordId)),
   }
 }
 

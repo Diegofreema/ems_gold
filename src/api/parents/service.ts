@@ -118,7 +118,11 @@ export const myFamilyService = {
       (data) => data.children,
     ),
 
-  /** The answer key is never included — options carry text and order only. */
+  /**
+   * The paper itself, with its questions. Its response body has not been seen
+   * — the route is refused here — so nothing is typed onto it yet and no
+   * screen reads it.
+   */
   assignment: (childId: Id, setassignmentId: Id) =>
     request<Record<string, unknown>>(
       `sparents/my-children/${childId}/assignments/${setassignmentId}`,

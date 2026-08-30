@@ -136,9 +136,6 @@ test('a child is what the three endpoints say between them', () => {
   assert.equal(child.present, 1)
   assert.equal(child.marked, 2)
   assert.equal(child.invoices.length, 3)
-  // A paper set for a child cannot be read without an account the API links
-  // to them, and it links none.
-  assert.deepEqual(child.tests, [])
 })
 
 test('a pupil the school has issued no number to is still identified', () => {

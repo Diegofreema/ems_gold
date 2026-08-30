@@ -3,7 +3,7 @@ import type { TagProps } from '@/components/common/tag'
 // 'Not current' is settled, not withdrawn: four sessions out of five are not
 // the current one, and outlining every last one of them in accent would read
 // as four problems.
-const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Not current', 'Present', 'Excused', 'Enabled', 'Available', 'Admitted', 'In this arm']
+const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Not current', 'Present', 'Excused', 'Enabled', 'Available', 'Completed', 'Admitted', 'In this arm']
 const BAD = ['Overdue', 'Unpaid', 'Suspended', 'Not marked', 'All out', 'Rejected', 'Declined', 'Owing', 'Not placed', 'Absent', 'Disabled', 'Deactivated']
 
 /**

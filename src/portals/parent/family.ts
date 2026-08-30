@@ -21,17 +21,18 @@ export const WEEKS_DRAWN = 6
 /** A school week is five days. */
 export const SCHOOL_WEEK = 5
 
-function text(value: string | null | undefined): string {
+/** A cell's text, or the dash the design shows where nothing is held. */
+export function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
 }
 
 /**
  * One child of the household, as every parent screen reads them.
  *
- * `results` and `tests` are carried and empty: no result has been approved for
- * any pupil on this school yet, and a paper set for a child can only be read
- * by an account the API identifies as theirs. Both pages say so themselves
- * rather than being fed something invented.
+ * Who they are, what they have been billed and which days they were marked —
+ * the three things read for the whole family at once. The pages that ask about
+ * one child at a time, for results, attendance or papers, read their own
+ * endpoints rather than being carried on here.
  */
 export type Child = {
   id: number
@@ -49,11 +50,6 @@ export type Child = {
   /** Attendance by week, oldest first — one entry per week drawn. */
   weeks: Week[]
   invoices: Row[]
-  /**
-   * Tests set for the child's class. Always empty: a paper is only readable
-   * by an account the API links to them, and it links none.
-   */
-  tests: Row[]
 }
 
 /** Every part of the name the school holds, in the order it writes them. */
@@ -224,7 +220,6 @@ export function familyChild(
     marked: marks.length,
     weeks: weeksPresent(marks, today),
     invoices: ledger.map(invoiceRow),
-    tests: [],
   }
 }
 

@@ -16,7 +16,6 @@ function child(over: Partial<Child>): Child {
     marked: 0,
     weeks: [],
     invoices: [],
-    tests: [],
     ...over,
   }
 }

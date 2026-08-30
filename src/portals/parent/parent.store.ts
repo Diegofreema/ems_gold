@@ -65,7 +65,6 @@ const NO_CHILD: Child = {
   marked: 0,
   weeks: [],
   invoices: [],
-  tests: [],
 }
 
 /** The child the switcher is on, or the first on the record. */
