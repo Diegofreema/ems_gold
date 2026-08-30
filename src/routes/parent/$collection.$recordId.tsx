@@ -1,4 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { parentPortal } from '@/portals/parent/config'
 import { loadRecord } from '@/features/collections/resolve'
 import { CHILDREN } from '@/portals/parent/children'
 import { parentCollections } from '@/portals/parent/collections'
@@ -26,6 +28,7 @@ export const Route = createFileRoute('/parent/$collection/$recordId')({
     if (looked) return looked
     throw notFound()
   },
+  notFoundComponent: portalNotFound(parentPortal),
   component: RecordDetail,
 })
 

@@ -10,6 +10,13 @@ function schemaForField(field: FieldSpec): ZodType {
     return field.required ? many.min(1, 'Pick at least one') : many
   }
 
+  if (field.file) {
+    // The browser will not let a file input be filled from code, so an edit
+    // form opens with nothing chosen even where the record has a cover.
+    // Requiring one here would refuse every edit that did not re-pick it.
+    return z.instanceof(File).optional()
+  }
+
   if (field.date) {
     return field.required
       ? z.date({ message: 'Required' })

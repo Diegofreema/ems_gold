@@ -2,7 +2,6 @@ import { toast } from 'sonner'
 import { parentsService } from '@/api/parents/service'
 import type { ParentStatus } from '@/api/parents/types'
 import type { CollectionDef, FormSectionSpec, ListPath } from '@/features/collections/types'
-import { emptySource } from '@/features/collections/api'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { parentBody } from './parent-body'
 import { accessAction, childRow, parentDeleteBody, parentRow } from './parent-row'
@@ -194,8 +193,9 @@ function parentSlice(
 }
 
 /**
- * Guardians blocked from signing in. This is the one distinction the API draws
- * between accounts, and the only one of these three views it can answer for.
+ * Guardians blocked from signing in. Active or deactivated is the one
+ * distinction the API draws between accounts, so it is the one slice of the
+ * register worth its own page.
  */
 export const parentsDeactivated = parentSlice(
   'parents-invited',
@@ -216,44 +216,4 @@ export const parentsDeactivated = parentSlice(
       return { items: items.map(parentRow), pagination }
     },
   },
-)
-
-/**
- * What a household owes is the sum of its children's invoices, and nothing
- * answers for that in one call — `GET /collect-fees` lists outstanding
- * invoices per pupil, not per guardian. Splitting the register on a figure
- * that would cost a request per child per row is not a list; these two say so
- * instead of showing a number nobody computed.
- */
-function balanceSlice(id: string, path: ListPath, title: string, description: string, body: string) {
-  return parentSlice(id, path, title, description, {
-    // What this page wanted to show lives on fee collection, invoice by
-    // invoice, so the button goes there rather than offering a new guardian.
-    action: 'Open fee collection',
-    actionTo: '/admin/collect',
-    footer: 'Needs a balance endpoint',
-    emptyTitle: 'Balances are not held against a guardian',
-    emptyBody: body,
-    searchable: false,
-    counts: undefined,
-    form: undefined,
-    save: undefined,
-    source: emptySource,
-  })
-}
-
-export const parentsOwing = balanceSlice(
-  'parents-owing',
-  '/admin/parents-owing',
-  'Parents owing',
-  'Guardians with a balance on at least one child.',
-  'Fees are owed by a pupil, not by a household, so this list cannot be built from what the API answers for today. Fee collection shows every outstanding invoice with the pupil it belongs to.',
-)
-
-export const parentsCleared = balanceSlice(
-  'parents-cleared',
-  '/admin/parents-cleared',
-  'Parents cleared',
-  'Nothing outstanding across any of their children this term.',
-  'Clearing a household means every invoice for every child is settled, and no endpoint answers that in one call. Fee collection shows what is still outstanding, pupil by pupil.',
 )

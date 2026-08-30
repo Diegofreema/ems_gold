@@ -3,11 +3,13 @@ import { classArmsService } from '@/api/class-arms/service'
 import { collectFeesService } from '@/api/collect-fees/service'
 import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
+import { libraryService } from '@/api/library/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
 import { teachersService } from '@/api/teachers/service'
 import { isSuperAdminRole } from '@/features/auth/role'
 import { superAdminSignedIn } from '@/features/auth/session'
+import { toApiDate } from '@/features/collections/date-range'
 import type { Row } from '@/features/collections/types'
 import {
   ADMIT,
@@ -332,32 +334,58 @@ function review(row?: Row): ActionDef {
   }
 }
 
+/** The standard loan, and what the due date opens on. */
+const LOAN_DAYS = 14
+
+function dueDate(days = LOAN_DAYS): Date {
+  const due = new Date()
+  due.setDate(due.getDate() + days)
+  return due
+}
+
+/**
+ * Lending a copy to a pupil.
+ *
+ * The pupil is picked from the admitted register rather than typed, because
+ * `POST /admins/books/{id}/lend` is keyed on the pupil's own id and a name
+ * would have to be guessed back into one. There is no field for how many
+ * copies: the body takes one pupil and one return date, so a loan is a copy.
+ */
 function lend(row?: Row): ActionDef {
   return {
     kicker: 'School · Library',
     title: `Issue ${row?.title ?? 'book'}`,
     description:
-      'Lend a copy to a pupil. Two weeks is the standard loan; overdue copies show on the library page.',
+      'Lend a copy to a pupil. Two weeks is the standard loan, and the date can be moved.',
     summary: [
       { label: 'Title', value: row?.title ?? DASH },
+      { label: 'Author', value: row?.author ?? DASH },
       { label: 'Copies held', value: row?.copies ?? DASH },
-      { label: 'On loan', value: row?.out ?? DASH },
     ],
     fields: [
       {
-        key: 'pupil',
+        key: 'student_id',
         label: 'Pupil',
         required: true,
         wide: true,
-        hint: 'Search by name or admission number.',
-        placeholder: 'Chinedu Udo — NEB/2021/0412',
+        optionsFrom: 'students',
+        hint: 'Admitted pupils, listed with their admission number.',
       },
-      { key: 'due', label: 'Due back', required: true, date: true, value: new Date(2025, 11, 3) },
-      { key: 'copies', label: 'Copies', required: true, options: ['1', '2', '3'] },
+      { key: 'datetoreturn', label: 'Due back', required: true, date: true, value: dueDate() },
     ],
     cta: 'Issue book',
-    footnote: 'Record the return from the same page when it comes back.',
+    footnote: 'The copy counts against the library until it is brought back.',
     done: () => 'Book issued',
+    run: async (values) => {
+      if (!row) throw new Error('That title could not be loaded.')
+      const due = toApiDate(values.datetoreturn as Date | undefined)
+      if (!due) throw new Error('Pick the date the book is due back.')
+      await libraryService.lend(row.id, {
+        student_id: Number(values.student_id),
+        datetoreturn: due,
+      })
+      return { message: `${row.title} is out on loan.` }
+    },
   }
 }
 
@@ -731,5 +759,14 @@ export const adminFlows: Record<string, AdminFlow[]> = {
   subjects: [{ name: 'classes', label: 'Teach to classes', build: teachTo }],
   students: [{ name: 'move', label: 'Promote or transfer', build: promote }],
   applicants: [{ name: 'review', label: 'Review application', build: review }],
-  library: [{ name: 'lend', label: 'Issue this book', build: lend }],
+  library: [
+    {
+      name: 'lend',
+      label: 'Issue this book',
+      // A title the catalogue has taken off lending is not offered; the
+      // endpoint would refuse it, and the button should not ask.
+      when: (record) => record.isavailable === 'Available',
+      build: lend,
+    },
+  ],
 }

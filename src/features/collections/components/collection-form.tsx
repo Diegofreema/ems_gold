@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { BackLink } from '@/components/page/back-link'
 import { CheckboxGroupField } from '@/components/form/checkbox-group-field'
 import { DateField } from '@/components/form/date-field'
+import { FileField } from '@/components/form/file-field'
 import { fromApiDate } from '../date-range'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
@@ -42,6 +43,8 @@ function renderField(field: FieldSpec) {
     return <CheckboxGroupField<Values> key={field.key} {...shared} from={field.optionsFrom} />
   if (field.money)
     return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
+  if (field.file)
+    return <FileField<Values> key={field.key} {...shared} accept={field.file} />
   if (field.date)
     return <DateField<Values> key={field.key} {...shared} past={field.past} />
   if (field.optionsFrom)
@@ -101,6 +104,12 @@ export function CollectionForm({
         // expensive: these keys replace the whole set, so a form that opened
         // with none ticked would save the class as charging no fees at all.
         defaults[field.key] = String(held ?? '').split(',').filter(Boolean)
+        continue
+      }
+      // An upload starts empty however the record reads: the value is a
+      // `File`, and the filename the row carries is not one.
+      if (field.file) {
+        defaults[field.key] = undefined
         continue
       }
       // A date opens on what the record holds, where the row wrote it in the

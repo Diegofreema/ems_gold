@@ -12,17 +12,15 @@ function matches(row: Row, needle: string) {
 }
 
 /**
- * The rows written into the definition, searched and paged here so that a
- * fixture list and a live one hand back exactly the same shape.
+ * Searching and paging done here rather than by the API.
+ *
+ * For a list the endpoint hands back whole — the book catalogue answers with
+ * every title and ignores `page` and `limit` — this is the only way the page
+ * gets pagination at all, and it searches every column the row carries rather
+ * than the one field a query parameter would narrow.
  */
-async function fixtureRows(
-  definition: CollectionDef,
-  { page, q }: ListParams,
-): Promise<ListResult> {
-  await new Promise((resolve) => setTimeout(resolve, LATENCY_MS))
-
+export function pageRows(all: Row[], { page, q }: ListParams): ListResult {
   const needle = q.trim().toLowerCase()
-  const all = definition.rows ?? []
   const found = needle ? all.filter((row) => matches(row, needle)) : all
   const start = (page - 1) * PAGE_SIZE
 
@@ -35,6 +33,18 @@ async function fixtureRows(
       pages: Math.max(1, Math.ceil(found.length / PAGE_SIZE)),
     },
   }
+}
+
+/**
+ * The rows written into the definition, searched and paged so that a fixture
+ * list and a live one hand back exactly the same shape.
+ */
+async function fixtureRows(
+  definition: CollectionDef,
+  params: ListParams,
+): Promise<ListResult> {
+  await new Promise((resolve) => setTimeout(resolve, LATENCY_MS))
+  return pageRows(definition.rows ?? [], params)
 }
 
 /**

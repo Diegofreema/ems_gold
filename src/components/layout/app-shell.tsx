@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useMatches } from '@tanstack/react-router'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import type { Heading } from '@/features/collections/resolve'
 import { NotificationBell } from '@/features/notifications/components/notification-bell'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
@@ -28,33 +28,37 @@ function headingOf(match: {
   return fromLoader
 }
 
-/** Routes describe their own header text; the shell reads the deepest one. */
+/**
+ * Routes describe their own header text; the shell reads the deepest one.
+ *
+ * A 404 has no route to ask, and its `notFoundComponent` renders inside this
+ * shell rather than around it — so the header is titled from the match's own
+ * state instead. The router marks the two kinds differently: a path that
+ * matched nothing sets `_notFound` on the closest route it did match, and a
+ * `notFound()` thrown from a loader leaves that route's own status at
+ * `notFound`. Missing either leaves the header blank over a 404.
+ *
+ * `_notFound` is the router's own flag and carries its underscore: if a future
+ * version drops it the build fails here, which is the whole cost.
+ */
 function useRouteHeading(): Heading {
   const matches = useMatches()
   for (const match of [...matches].reverse()) {
+    if (match._notFound || match.status === 'notFound') {
+      return { title: 'Not found', crumb: '' }
+    }
     const heading = headingOf(match)
     if (heading) return heading
   }
   return { title: '', crumb: '' }
 }
 
-export function AppShell({
-  config,
-  children,
-  heading,
-}: {
-  config: PortalConfig
-  /** Rendered instead of the matched route — used for the in-shell 404. */
-  children?: ReactNode
-  /** Header text when there is no matched route to read it from. */
-  heading?: Heading
-}) {
+export function AppShell({ config }: { config: PortalConfig }) {
   const narrow = useBreakpoint('narrow')
   const drawerOpen = useShellStore((state) => state.drawerOpen)
   const closeDrawer = useShellStore((state) => state.closeDrawer)
   const { pathname } = useLocation()
-  const routeHeading = useRouteHeading()
-  const { title, crumb, crumbTo } = heading ?? routeHeading
+  const { title, crumb, crumbTo } = useRouteHeading()
 
   const drawerVisible = narrow && drawerOpen
 
@@ -99,7 +103,7 @@ export function AppShell({
 
         {/* Keyed on the route so the entrance animation replays on navigation. */}
         <div key={pathname} className="flex-1 animate-ems-in p-content">
-          {children ?? <Outlet />}
+          <Outlet />
         </div>
       </main>
     </div>

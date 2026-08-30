@@ -1,4 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { teacherPortal } from '@/portals/teacher/config'
 import { uploads } from '@/portals/teacher/collections/assessment'
 import { BatchReview } from '@/portals/teacher/features/uploads/batch-review'
 
@@ -11,6 +13,7 @@ export const Route = createFileRoute('/teacher/uploads/$recordId')({
       heading: { title: batch.batch, crumb: 'Assessment · Upload batches', crumbTo: { to: '/teacher/uploads' } },
     }
   },
+  notFoundComponent: portalNotFound(teacherPortal),
   component: BatchReviewRoute,
 })
 

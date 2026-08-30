@@ -14,8 +14,9 @@ export const libraryService = {
   updateBook: (id: Id, body: BookBody) =>
     request<{ book: Book }>(`admins/books/${id}`, { method: 'POST', form: toFormData(body) }),
 
+  /** Answers under `loans` — `books` reads undefined and the tab renders empty. */
   borrowed: () =>
-    request<{ books: BorrowedBook[] }>('admins/borrowed-books').then((data) => data.books),
+    request<{ loans: BorrowedBook[] }>('admins/borrowed-books').then((data) => data.loans),
 
   /** Refused if the copy is already out. */
   lend: (id: Id, body: LendBookBody) =>

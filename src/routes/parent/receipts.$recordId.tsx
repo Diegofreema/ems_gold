@@ -1,4 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { parentPortal } from '@/portals/parent/config'
 import { receipts } from '@/portals/parent/collections'
 import { ReceiptView } from '@/portals/parent/features/receipts/receipt-view'
 
@@ -11,6 +13,7 @@ export const Route = createFileRoute('/parent/receipts/$recordId')({
       heading: { title: receipt.receipt, crumb: 'Finance · Receipts', crumbTo: { to: '/parent/receipts' } },
     }
   },
+  notFoundComponent: portalNotFound(parentPortal),
   component: Receipt,
 })
 

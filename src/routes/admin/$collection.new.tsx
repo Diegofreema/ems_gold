@@ -1,4 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { adminPortal } from '@/portals/admin/config'
 import { primaryActionKind } from '@/features/collections/primary-action'
 import { adminCollectionRoutes } from '@/portals/admin/collections/routes'
 import { loadCollection } from '@/portals/admin/collections/resolve'
@@ -19,6 +21,7 @@ export const Route = createFileRoute('/admin/$collection/new')({
     if (kind !== 'create') throw notFound()
     return loaded
   },
+  notFoundComponent: portalNotFound(adminPortal),
   component: NewRecord,
 })
 

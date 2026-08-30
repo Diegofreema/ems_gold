@@ -1,4 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { studentPortal } from '@/portals/student/config'
 import { materials } from '@/portals/student/collections/learning'
 import { MaterialViewer } from '@/portals/student/features/materials/material-viewer'
 
@@ -11,6 +13,7 @@ export const Route = createFileRoute('/student/materials/$recordId')({
       heading: { title: material.title, crumb: 'Learning · Course materials', crumbTo: { to: '/student/materials' } },
     }
   },
+  notFoundComponent: portalNotFound(studentPortal),
   component: MaterialViewerRoute,
 })
 

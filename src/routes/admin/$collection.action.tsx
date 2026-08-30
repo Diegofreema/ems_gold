@@ -1,4 +1,6 @@
 import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { adminPortal } from '@/portals/admin/config'
 import { toast } from 'sonner'
 import { DeniedState } from '@/components/feedback/denied-state'
 import { adminCollections } from '@/portals/admin/collections'
@@ -54,6 +56,7 @@ export const Route = createFileRoute('/admin/$collection/action')({
       heading: { title: action.title, crumb: action.kicker },
     } as const
   },
+  notFoundComponent: portalNotFound(adminPortal),
   component: FlowRoute,
 })
 

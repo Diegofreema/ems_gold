@@ -1,4 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { adminPortal } from '@/portals/admin/config'
 import { CollectionForm } from '@/portals/admin/components/collection-form'
 import { loadRecordForEdit } from '@/portals/admin/collections/resolve'
 
@@ -8,6 +10,7 @@ export const Route = createFileRoute('/admin/$collection/$recordId/edit')({
     if (!loaded) throw notFound()
     return loaded
   },
+  notFoundComponent: portalNotFound(adminPortal),
   component: RecordEdit,
 })
 

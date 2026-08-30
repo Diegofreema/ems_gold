@@ -7,7 +7,6 @@ import {
   Building2,
   CalendarCheck,
   CalendarDays,
-  Check,
   ChartColumn,
   ChartLine,
   ClipboardCheck,
@@ -19,7 +18,6 @@ import {
   Mail,
   Shield,
   SlidersHorizontal,
-  SquareCheckBig,
   UserPlus,
   Users,
 } from 'lucide-react'
@@ -65,8 +63,6 @@ export const adminNav: NavGroup[] = [
     heading: 'Parents',
     items: [
       { to: '/admin/parents', label: 'All parents', icon: House },
-      { to: '/admin/parents-owing', label: 'Owing', icon: CreditCard },
-      { to: '/admin/parents-cleared', label: 'Cleared', icon: Check },
       { to: '/admin/parents-invited', label: 'Deactivated', icon: Mail },
     ],
   },
@@ -83,7 +79,6 @@ export const adminNav: NavGroup[] = [
     heading: 'School',
     items: [
       { to: '/admin/library', label: 'Library', icon: Book },
-      { to: '/admin/elections', label: 'Elections', icon: SquareCheckBig },
       { to: '/admin/privileges', label: 'Roles & privileges', icon: Shield },
       { to: '/admin/logs', label: 'Activity log', icon: List },
       { to: '/admin/settings', label: 'Settings', icon: SlidersHorizontal },

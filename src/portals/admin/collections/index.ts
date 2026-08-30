@@ -1,8 +1,9 @@
 import { collect, fees, invoices, spendings } from './finance'
 import { arms, classes, subjects } from './academics'
 import { sessions, terms } from './calendar'
-import { parents, parentsCleared, parentsDeactivated, parentsOwing } from './parents'
-import { elections, library, logs } from './school'
+import { parents, parentsDeactivated } from './parents'
+import { library } from './library'
+import { logs } from './school'
 import { staff, staffAdmin, staffOther, staffTeachers } from './staff'
 import { applicants, students } from './students'
 import type { CollectionDef } from '@/features/collections/types'
@@ -20,8 +21,6 @@ export const adminCollections = {
   'staff-teachers': staffTeachers,
   'staff-other': staffOther,
   parents,
-  'parents-owing': parentsOwing,
-  'parents-cleared': parentsCleared,
   'parents-invited': parentsDeactivated,
   classes,
   arms,
@@ -29,7 +28,6 @@ export const adminCollections = {
   calendar: sessions,
   terms,
   library,
-  elections,
   logs,
 } satisfies Record<string, CollectionDef>
 

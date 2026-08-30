@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { NotFoundState } from '@/components/feedback/not-found-state'
+import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { AppShell } from '@/components/layout/app-shell'
 import { requirePortal } from '@/features/auth/guard'
 import { studentPortal } from '@/portals/student/config'
@@ -7,13 +7,9 @@ import { studentPortal } from '@/portals/student/config'
 export const Route = createFileRoute('/student')({
   beforeLoad: ({ context }) => requirePortal(context.queryClient, 'Student'),
   component: () => <AppShell config={studentPortal} />,
-  // Keeps the shell around a 404, as the design shows it.
-  notFoundComponent: () => (
-    <AppShell config={studentPortal} heading={{ title: 'Not found', crumb: '' }}>
-      <NotFoundState
-        links={studentPortal.notFoundLinks}
-        audience={studentPortal.notFoundAudience}
-      />
-    </AppShell>
-  ),
+  // A path that matched no route: the shell renders and this goes in its
+  // outlet, so it is the page content rather than a second shell — nesting one
+  // inside the other drew the whole sidebar twice. A `notFound()` thrown from
+  // a loader is a different case and is handled on the route that throws it.
+  notFoundComponent: portalNotFound(studentPortal),
 })

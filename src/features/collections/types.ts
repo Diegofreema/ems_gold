@@ -20,8 +20,6 @@ export type ListPath =
   | '/admin/staff-teachers'
   | '/admin/staff-other'
   | '/admin/parents'
-  | '/admin/parents-owing'
-  | '/admin/parents-cleared'
   | '/admin/parents-invited'
   | '/admin/classes'
   | '/admin/arms'
@@ -30,7 +28,6 @@ export type ListPath =
   | '/admin/terms'
   | '/admin/results'
   | '/admin/library'
-  | '/admin/elections'
   | '/admin/logs'
   | '/teacher/subjects'
   | '/teacher/students'
@@ -275,6 +272,12 @@ export type FieldSpec = {
   /** A figure in naira: masked as it is typed and spelled out beneath. */
   money?: boolean
   email?: boolean
+  /**
+   * An upload rather than typed text, and the `accept` attribute that narrows
+   * the picker — `'image/*'` for a book's cover. The form holds the `File`
+   * itself, so the collection's `save` must send multipart.
+   */
+  file?: string
   date?: boolean
   /** With `date`: the answer is already behind us, so the years read backwards. */
   past?: boolean
