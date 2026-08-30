@@ -2,6 +2,7 @@ import type { Invoice } from '../../../api/invoices/types.ts'
 import type { Student, StudentResult } from '../../../api/students/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
+import { payStatus } from './invoice-row.ts'
 import { formatDate, formatNaira } from '../../../lib/format.ts'
 
 function text(value: string | null | undefined): string {
@@ -77,7 +78,7 @@ export function studentRow(
     // Everything below is read by the record panel rather than the table.
     class: text(student.department?.name),
     gender: text(student.gender),
-    dob: text(student.dob),
+    born: text(student.dob),
     religion: text(student.religion),
     email: text(student.email),
     phone: text(student.phone),
@@ -94,6 +95,9 @@ export function studentRow(
     fname: student.fname ?? '',
     lname: student.lname ?? '',
     mname: student.mname ?? '',
+    // The API writes a birthday DD/MM/YYYY; the picker reads YYYY-MM-DD, so
+    // the row carries both — `born` to read, this one to edit from.
+    dob: isoBirthday(student.dob),
     department_id: id(student.department_id),
     class_arm_id: id(student.class_arm_id),
     sparent_id: id(student.sparent_id),
@@ -133,7 +137,9 @@ export function invoiceRow(invoice: Invoice): Row {
     invoice: text(invoice.invoiceid),
     fee: text(pick(invoice.fee, 'name', 'feename', 'fee_name', 'title')),
     amount: naira(invoice.amount),
-    state: text(invoice.paystatus),
+    // The API says `success`; every other invoice column in the app says Paid,
+    // and one pupil's fees tab is no place to start a second vocabulary.
+    state: payStatus(invoice.paystatus),
   }
 }
 
@@ -156,4 +162,18 @@ export function resultRow(result: StudentResult, index: number): Row {
     total: text(pick(record, 'total', 'totalscore', 'score', 'mark')),
     grade: text(pick(record, 'grade', 'gradename', 'remark')),
   }
+}
+
+/**
+ * A stored birthday as the date picker reads it. The API writes DD/MM/YYYY,
+ * which `new Date` would read as the wrong month half the year, so it is
+ * taken apart rather than parsed. Anything else is left for the picker to
+ * ignore, which opens it empty rather than on a date nobody chose.
+ */
+function isoBirthday(stored: string | null | undefined): string {
+  const parts = stored?.trim().split('/')
+  if (parts?.length !== 3) return ''
+  const [day, month, year] = parts
+  if (!day || !month || !year) return ''
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 }

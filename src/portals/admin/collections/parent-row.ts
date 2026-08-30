@@ -32,9 +32,10 @@ export function parentStatus(status: string | null | undefined): string {
 /**
  * A guardian, as the register and their own record read them.
  *
- * `children` and `owing` stay blank: the list endpoint counts neither, and
- * both would cost a request per row to answer — the children are on the
- * record's own tab instead, where one request answers for one household.
+ * `owing` stays blank: the list endpoint does not answer for it, and a
+ * household's balance is the sum of its children's invoices, which would cost
+ * a request a row. `children` is counted only where the detail expanded them —
+ * the register is told nothing about them, and blank says that.
  */
 export function parentRow(parent: Parent): Row {
   const name = parentName(parent)
@@ -51,6 +52,7 @@ export function parentRow(parent: Parent): Row {
     address: text(parent.address),
     occupation: text(parent.occupation),
     username: text(parent.username),
+    children: parent.children ? String(parent.children.length) : BLANK,
 
     // The edit form is keyed as the endpoint is, and prefills from here.
     fathersname: parent.fathersname ?? '',
@@ -73,4 +75,38 @@ export function childRow(child: Child): Row {
     arm: text(child.class_arm),
     status: text(child.studentstatus),
   }
+}
+
+/**
+ * What deleting a household would strand. The API refuses outright while a
+ * pupil still points at it, so this is the sentence that explains the refusal
+ * before the button rather than after it.
+ */
+export function parentDeleteBody(row: Row | undefined): string {
+  const count = Number(row?.children)
+  const name = row?.name && row.name !== BLANK ? row.name : 'This household'
+  if (count > 0) {
+    return `${count} ${count === 1 ? 'pupil is' : 'pupils are'} linked to this household, and the register will refuse to delete it while they are — every one of them would be left with no guardian. Move them to another household first, or block the sign-in instead.`
+  }
+  return `${name} loses the record and the login behind it, permanently. If they are only leaving for a while, deactivate the account instead — that closes the sign-in and keeps everything else.`
+}
+
+/**
+ * Blocking and unblocking a guardian's sign-in, as the row offers it. Taking
+ * the login away is asked about; giving it back is not.
+ */
+export const accessAction = {
+  label: (row: Row) => (row.status === 'Deactivated' ? 'Allow sign-in' : 'Block sign-in'),
+  title: (row: Row) =>
+    row.status === 'Deactivated' ? 'Let them sign in again?' : 'Stop them signing in?',
+  cta: (row: Row) =>
+    row.status === 'Deactivated' ? 'Allow the sign-in' : 'Block the sign-in',
+  confirm: (row: Row) =>
+    row.status === 'Deactivated'
+      ? undefined
+      : 'The household, its children and every invoice already raised stay exactly as they are — the guardian simply cannot sign in to see them until this is put back.',
+  done: (row: Row) =>
+    row.status === 'Deactivated'
+      ? `${row.name} can sign in again`
+      : `${row.name} can no longer sign in`,
 }

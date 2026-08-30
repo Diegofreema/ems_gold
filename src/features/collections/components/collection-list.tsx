@@ -78,12 +78,9 @@ export function CollectionList({
       body: definition.removeBody?.(row) ?? 'This removes the record from the register. Anything already raised against it stays in the audit log.',
       subject: row[definition.nameKey],
       cta: `Delete the ${definition.noun}`,
-      // A collection with no delete endpoint keeps the prototype's toast.
-      // The promise is handed back so the dialog holds until the API answers.
-      onConfirm: () => {
-        if (!definition.remove) return void toast(`${row[definition.nameKey]} deleted`)
-        return remove.mutateAsync(row.id)
-      },
+      // Handed back rather than fired, so the dialog holds with its button
+      // spinning until the API has actually answered.
+      onConfirm: () => remove.mutateAsync(row.id),
     })
 
   // One decision, shared with the create route so a list that does not create
@@ -207,7 +204,10 @@ export function CollectionList({
                   ? (row) => navigate({ to: editRoute, params: params(row) })
                   : undefined
               }
-              onDelete={editRoute ? askDelete : undefined}
+              // Only where the API can actually delete. Without a `remove` the
+              // row used to offer Delete and answer with a toast saying the
+              // record was gone, which it never was.
+              onDelete={editRoute && definition.remove ? askDelete : undefined}
               action={
                 rowAction.spec && {
                   label: rowAction.spec.label,

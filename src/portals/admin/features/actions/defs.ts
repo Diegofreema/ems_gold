@@ -1,3 +1,4 @@
+import { adminsService } from '@/api/admins/service'
 import { classArmsService } from '@/api/class-arms/service'
 import { collectFeesService } from '@/api/collect-fees/service'
 import { departmentsService } from '@/api/departments/service'
@@ -12,6 +13,7 @@ import {
 } from '@/portals/admin/collections/admission'
 import { applicantDocuments } from '@/portals/admin/collections/applicant-row'
 import { collecting, figure, payAction, paymentBody } from '@/portals/admin/collections/collect-row'
+import { parseStaffKey } from '@/portals/admin/collections/staff-row'
 import {
   moveOutcome,
   type MoveValues,
@@ -470,8 +472,61 @@ async function teachTo(row?: Row): Promise<ActionDef> {
   }
 }
 
+/**
+ * What an administrator can open.
+ *
+ * There is no privileges catalogue endpoint — `/privileges` is not deployed —
+ * so the list of eleven is read off the administrator being edited, which is
+ * the only route that carries it. `POST /admins/{id}/privileges` replaces the
+ * whole set, so what they already hold arrives ticked and unticking one is how
+ * it is taken away.
+ */
+async function setPrivileges(row?: Row): Promise<ActionDef> {
+  const id = parseStaffKey(String(row?.id ?? '')).id
+  const { admin, available } = await adminsService.privileges(id)
+  const held = (admin.privileges ?? []).map((one) => String(one.id))
+
+  return {
+    kicker: 'Staff · Administrators',
+    title: `What ${row?.name ?? 'this administrator'} can open`,
+    description:
+      'Tick every part of the portal this account may use. Unticking one takes it away at once — they stay signed in, but the section closes to them.',
+    summary: [
+      { label: 'Administrator', value: row?.name ?? DASH },
+      { label: 'Account', value: row?.role ?? DASH },
+      { label: 'Holds now', value: held.length ? String(held.length) : 'None' },
+    ],
+    picker: {
+      title: 'Privileges',
+      items: available.map((privilege) => ({
+        key: String(privilege.id),
+        label: privilege.name,
+        meta: held.includes(String(privilege.id)) ? 'Held now' : '',
+        count: 0,
+      })),
+      preselected: held,
+      note: 'Ticking none leaves the account able to sign in and nothing else. It does not delete anything, and it can be put back here.',
+    },
+    fields: [],
+    cta: 'Save these privileges',
+    footnote: 'Nothing changes until you press this.',
+    run: async (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      await adminsService.setPrivileges(id, { privileges: picked.map(Number) })
+      return {
+        message: picked.length
+          ? `${row?.name ?? 'The administrator'} holds ${picked.length} ${picked.length === 1 ? 'privilege' : 'privileges'}`
+          : `${row?.name ?? 'The administrator'} holds no privileges`,
+      }
+    },
+    done: (picked) =>
+      picked ? `${picked} privileges saved` : 'Every privilege was taken away',
+  }
+}
+
 export const adminFlows: Record<string, AdminFlow> = {
   fees: { label: 'Allocate to classes', build: allocate },
+  'staff-admin': { label: 'Set privileges', build: setPrivileges },
   // Record-scoped, not `fromList`: a payment needs the invoice it settles,
   // and the queue's own search is how that invoice is found.
   collect: { label: 'Take a payment', when: payAction, build: payment },

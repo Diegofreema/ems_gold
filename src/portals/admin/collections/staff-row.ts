@@ -104,16 +104,20 @@ export function teacherRow(teacher: Teacher): Row {
  * An office record. The API names the two halves of the name `surname` and
  * `lastname`, and takes them back under those same keys.
  */
-export function adminRow(admin: Admin): Row {
+export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row {
+  const held = admin.privileges ?? []
   return {
     id: staffKey('admin', admin.id),
     name: text(fullName(admin.surname, admin.lastname)),
-    // The login carries the real job title where it is expanded; the office
-    // record itself only knows that they are one.
-    role: admin.user?.role?.role_name?.trim() || 'Administrator',
+    // The list sends `role_id` and does not expand the role, so the name comes
+    // from `/users/roles` — without it every office record read the same word.
+    role: roleName(admin, roles),
     phone: text(admin.phone),
     gender: text(admin.gender),
-    status: text(admin.status),
+    // Whether the office record is live. Whether the person can sign in at all
+    // is `account`, which is a different question with a different answer.
+    status: titleCase(admin.status),
+    account: text(admin.user?.userstatus),
 
     qualification: BLANK,
     adviser: BLANK,
@@ -121,15 +125,67 @@ export function adminRow(admin: Admin): Row {
     joined: asDate(admin.date_created),
     cv: '',
 
-    // `surname` is the first half of the name here, not the family name.
-    surname: admin.surname ?? '',
+    // The API calls the first half of the name `surname`; the form calls it
+    // `firstname`, as it does for a teacher. Prefilling the wrong key left the
+    // field blank on an edit, and saving that would have cleared the name.
+    firstname: admin.surname ?? '',
     lastname: admin.lastname ?? '',
     department: text(admin.department?.name),
     department_id: id(admin.department_id),
     dob: text(admin.dob),
     username: text(admin.user?.username),
     user_id: String(admin.user_id),
+    // The job as the office writes it — "ICT Director", "Registrar".
+    title: text(admin.profile),
+
+    // Only the privileges endpoint expands these; a row off the list carries
+    // none, which is why the record page asks for them separately.
+    privileges: held.length ? held.map((one) => one.name).join(', ') : BLANK,
+    privilegeIds: held.map((one) => String(one.id)).join(','),
   }
+}
+
+/** The API lower-cases its statuses; the register does not. */
+function titleCase(value: string | null | undefined): string {
+  const word = value?.trim()
+  return word ? word[0].toUpperCase() + word.slice(1) : BLANK
+}
+
+/**
+ * What kind of account it is — Super Admin, Bursar, Secretary. The role is a
+ * number on the login and named nowhere else, so a register without the
+ * lookup says "Administrator" for all nine of them.
+ */
+function roleName(admin: Admin, roles?: ReadonlyMap<string, string>): string {
+  const named = admin.user?.role?.role_name?.trim()
+  if (named) return named
+  const byId = admin.user?.role_id ? roles?.get(String(admin.user.role_id)) : undefined
+  return byId?.trim() || 'Administrator'
+}
+
+/** One privilege on an administrator's tab, held or not. */
+export function privilegeRow(
+  privilege: { id: number; name: string },
+  held: ReadonlySet<string>,
+): Row {
+  return {
+    id: String(privilege.id),
+    name: privilege.name,
+    state: held.has(String(privilege.id)) ? 'Granted' : 'Not granted',
+  }
+}
+
+/**
+ * What deleting an office record takes with it. The API refuses two of these
+ * outright — the first administrator and your own account — and the dialog is
+ * where that belongs, before the button rather than in a toast after it.
+ */
+export function adminDeleteBody(row: Row | undefined): string {
+  if (row?.id === staffKey('admin', 1)) {
+    return 'This is the first administrator on the system and cannot be deleted — the school would be left with no way back in.'
+  }
+  const name = row?.name && row.name !== BLANK ? row.name : 'This administrator'
+  return `${name} loses the office record and the login behind it, permanently. Their activity trail stays. If they are only leaving for a while, disable the sign-in instead — that keeps the record and can be undone.`
 }
 
 /**

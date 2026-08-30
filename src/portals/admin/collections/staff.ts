@@ -8,9 +8,20 @@ import type {
 } from '@/features/collections/types'
 import type { Paginated } from '@/api/types'
 import { emptySource } from '@/features/collections/api'
+import { optionLabels } from '@/features/collections/option-feeds'
+import { queryClient } from '@/lib/query-client'
+import { usersService } from '@/api/users/service'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { adminBody, adminUpdate, teacherBody, teacherUpdate } from './staff-body'
-import { activityRow, adminRow, parseStaffKey, staffTarget, teacherRow } from './staff-row'
+import {
+  activityRow,
+  adminDeleteBody,
+  adminRow,
+  parseStaffKey,
+  privilegeRow,
+  staffTarget,
+  teacherRow,
+} from './staff-row'
 
 /**
  * The API keeps staff in two places, not one: `GET /teachers` is the teaching
@@ -28,8 +39,40 @@ async function listTeachers(page: number, q: string): Promise<Paginated<Row>> {
 
 async function listAdmins(page: number): Promise<Paginated<Row>> {
   // `GET /admins` takes no `q`, so the search box cannot narrow this one.
-  const { items, pagination } = await adminsService.list({ page, limit: PAGE_SIZE })
-  return { items: items.map(adminRow), pagination }
+  const [{ items, pagination }, roles] = await Promise.all([
+    adminsService.list({ page, limit: PAGE_SIZE }),
+    // A feed that fails costs the column its words, not the page its rows.
+    optionLabels('roles'),
+  ])
+  return { items: items.map((admin) => adminRow(admin, roles)), pagination }
+}
+
+/** Every office record on one page — a school has them in single figures. */
+const ALL_ADMINS = 200
+
+/**
+ * One administrator, read from the list.
+ *
+ * `GET /admins/{id}` answers "Admin not found." for seven of the nine on
+ * bronze — see the note on the service — so the record cannot be read the
+ * obvious way. The list expands the login and the department that the detail
+ * would have, and a school has these in single figures, so one cached page of
+ * all of them is both correct and cheaper than the endpoint that is broken.
+ */
+async function adminRecord(id: string): Promise<Row | undefined> {
+  const [admins, roles, granted] = await Promise.all([
+    queryClient.ensureQueryData({
+      queryKey: ['admins', 'all'],
+      queryFn: () => adminsService.list({ limit: ALL_ADMINS }).then((page) => page.items),
+    }),
+    optionLabels('roles'),
+    // The list carries no privileges; this is the only place they are said.
+    adminsService.privileges(id).catch(() => undefined),
+  ])
+
+  const admin = admins.find((one) => String(one.id) === id)
+  if (!admin) return undefined
+  return adminRow({ ...admin, privileges: granted?.admin?.privileges }, roles)
 }
 
 /** A summary figure, read off the pagination that comes back with one row. */
@@ -38,12 +81,19 @@ const countTeachers = async () =>
 
 const countAdmins = async () => (await adminsService.list({ limit: 1 })).pagination.total
 
+/** How many office logins can actually be used. */
+const countLogins = async () => {
+  const { items } = await adminsService.list({ limit: ALL_ADMINS })
+  return items.filter((admin) => admin.user?.userstatus === 'Enabled').length
+}
+
 /** Reads one record from whichever endpoint its id says it came from. */
-async function staffRecord(recordId: string): Promise<Row> {
+async function staffRecord(recordId: string): Promise<Row | undefined> {
   const { kind, id } = parseStaffKey(recordId)
-  return kind === 'admin'
-    ? adminRow(await adminsService.get(id))
-    : teacherRow(await teachersService.get(id))
+  if (kind !== 'admin') return teacherRow(await teachersService.get(id))
+  // Undefined rather than thrown: an id that is not on the register is the
+  // record page's own not-found state, not a crash.
+  return adminRecord(id)
 }
 
 /**
@@ -91,7 +141,7 @@ const ACCOUNT: FormSectionSpec = {
       wide: true,
       // The login is created with the record and never renamed from here, so
       // an edit leaves this empty and sends nothing.
-      hint: 'Only used when the account is first created.',
+      hint: 'What they type to sign in. Needed on a new record, and not changed from here afterwards.',
       placeholder: 'cnnaji',
     },
     { key: 'address', label: 'Home address', multiline: true, wide: true, placeholder: '2 Aba Road, Enugu' },
@@ -230,19 +280,95 @@ function staffSlice(
   }
 }
 
+/**
+ * Every privilege the school can grant, and the ones this administrator has.
+ * The catalogue lives nowhere else — there is no `/privileges` endpoint — so
+ * it is read off whichever administrator is being looked at.
+ */
+async function privilegeTab(recordId: string): Promise<Row[]> {
+  const { kind, id } = parseStaffKey(recordId)
+  if (kind !== 'admin') return []
+  const { admin, available } = await adminsService.privileges(id)
+  const held = new Set((admin.privileges ?? []).map((one) => String(one.id)))
+  return available.map((privilege) => privilegeRow(privilege, held))
+}
+
 export const staffAdmin = staffSlice(
   'staff-admin',
   '/admin/staff-admin',
   'Administrators',
-  'The people who run the office: the principal, the bursary and the heads of section. These accounts see the admin portal.',
+  'The people who run the office: the principal, the bursary and the heads of section. These accounts see the admin portal, and what each one can open is set by their privileges.',
   {
+    action: 'Add administrator',
     footer: 'Office records',
     emptyTitle: 'No office records',
     emptyBody: 'Add an administrator to give someone access to this portal.',
     // `GET /admins` takes no search parameter.
     searchable: false,
+    noun: 'administrator',
+    counts: [
+      { label: ADMINISTRATORS, count: countAdmins },
+      { label: 'Signed in with', count: countLogins },
+    ],
+    columns: [
+      { key: 'name', label: 'Name', cardRole: 'title' },
+      { key: 'title', label: 'Job', cardRole: 'subtitle' },
+      { key: 'role', label: 'Account' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'account', label: 'Sign-in', tag: true, cardRole: 'tag' },
+    ],
+    detail: [
+      { key: 'name', label: 'Name' },
+      { key: 'title', label: 'Job' },
+      { key: 'role', label: 'Account' },
+      { key: 'account', label: 'Sign-in' },
+      { key: 'username', label: 'Signs in with' },
+      { key: 'privileges', label: 'Privileges' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'gender', label: 'Gender' },
+      { key: 'address', label: 'Address' },
+      { key: 'department', label: 'Department' },
+      { key: 'joined', label: 'On record since' },
+    ],
+    // Turning the sign-in off keeps the record, the trail and the privileges,
+    // and is the answer to almost everything a delete is reached for.
+    rowAction: {
+      label: (row) => (row.account === 'Disabled' ? 'Enable sign-in' : 'Disable sign-in'),
+      title: (row) =>
+        row.account === 'Disabled' ? 'Let them sign in again?' : 'Stop them signing in?',
+      cta: (row) => (row.account === 'Disabled' ? 'Enable the sign-in' : 'Disable the sign-in'),
+      // Putting the state back needs no dialog; taking it away does.
+      confirm: (row) =>
+        row.account === 'Disabled'
+          ? undefined
+          : 'They keep the office record, the privileges and everything they have already done — they simply cannot sign in until this is put back.',
+      done: (row) =>
+        row.account === 'Disabled'
+          ? `${row.name} can sign in again`
+          : `${row.name} can no longer sign in`,
+      run: (row) =>
+        usersService.setStatus({
+          id: row.user_id,
+          status: row.account === 'Disabled' ? 'Enabled' : 'Disabled',
+        }),
+    },
     source: ({ page }) => listAdmins(page),
     save: saveStaff('admin'),
+    // Permanent, and the API refuses two of them outright.
+    remove: (recordId) => adminsService.remove(parseStaffKey(recordId).id),
+    removeBody: adminDeleteBody,
+    tabs: [
+      {
+        label: 'Privileges',
+        columns: [
+          { key: 'name', label: 'Privilege' },
+          { key: 'state', label: 'State', tag: true },
+        ],
+        empty: 'The API offered no privileges to grant.',
+        source: privilegeTab,
+      },
+      ...(ACTIVITY_TAB ?? []),
+    ],
     form: [IDENTITY, ACCOUNT],
   },
 )

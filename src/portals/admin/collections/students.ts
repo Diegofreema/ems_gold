@@ -102,7 +102,7 @@ const CLASS_FIELD: FieldSpec = {
 /** What the record panel reads about the person, whichever page opened it. */
 const PERSON_DETAIL = [
   { key: 'gender', label: 'Gender' },
-  { key: 'dob', label: 'Date of birth' },
+  { key: 'born', label: 'Date of birth' },
   { key: 'religion', label: 'Religion' },
   { key: 'email', label: 'Email' },
   { key: 'phone', label: 'Phone' },
@@ -144,7 +144,7 @@ export const students: CollectionDef = {
     'Every enrolled pupil across Primary 1 to SS3. Open a pupil for their record, fees and results.',
   action: 'Enrol a pupil',
   searchHint: 'Search name or admission no.',
-  footer: '2025/2026 session',
+  footer: 'Pupil register',
   emptyTitle: 'No pupils on the register',
   emptyBody: 'Enrol your first pupil, or admit one from the applicants list.',
   noun: 'pupil',
@@ -260,14 +260,14 @@ export const applicants: CollectionDef = {
   kicker: 'Students',
   title: 'Applicants',
   description:
-    'Admission applications for the 2025/2026 session. Review the file, then admit into a class arm or decline.',
+    'Admission applications waiting on a decision. Review the file, then admit into a class arm or decline.',
   // Applications arrive from families through the admission form, so the
   // office never types one in. It reads the file and decides — which is the
   // record's own flow, not anything this list creates.
   action: 'Review application',
   readonly: true,
   searchHint: 'Search applicant',
-  footer: '2025/2026 session',
+  footer: 'Applications',
   emptyTitle: 'No applications',
   emptyBody:
     'Applications appear here as families submit them through the admission form.',
@@ -331,41 +331,3 @@ export const applicants: CollectionDef = {
   record: (recordId) => studentsService.get(recordId).then(applicantRow),
 }
 
-export const attendance: CollectionDef = {
-  id: 'attendance',
-  path: '/admin/attendance',
-  kicker: 'Students',
-  title: 'Attendance',
-  description:
-    'Attendance taken today, arm by arm. Marks are entered by the form teacher and locked at 10:00.',
-  action: 'Export CSV',
-  searchHint: 'Search arm or teacher',
-  footer: '7 arms shown · 19 November 2025',
-  emptyTitle: 'No attendance for this date',
-  emptyBody:
-    'Either the day has not started, or no form teacher has marked a register yet.',
-  noun: 'register',
-  nameKey: 'arm',
-  summary: [
-    { label: 'Present today', value: '94%' },
-    { label: 'Absent', value: '82 pupils' },
-    { label: 'Arms not marked', value: '3' },
-  ],
-  columns: [
-    { key: 'arm', label: 'Arm', cardRole: 'title' },
-    { key: 'teacher', label: 'Form teacher', cardRole: 'subtitle' },
-    { key: 'roll', label: 'Roll', align: 'right' },
-    { key: 'present', label: 'Present', align: 'right' },
-    { key: 'rate', label: 'Rate', align: 'right' },
-    { key: 'state', label: 'Marking', tag: true, cardRole: 'tag' },
-  ],
-  rows: [
-    { id: 'at-1', arm: 'Primary 1 A', teacher: 'H. Abubakar', roll: '38', present: '37', rate: '97%', state: 'Marked' },
-    { id: 'at-2', arm: 'Primary 4 A', teacher: 'P. Akpan', roll: '41', present: '38', rate: '93%', state: 'Marked' },
-    { id: 'at-3', arm: 'Primary 6 B', teacher: 'G. Ekpo', roll: '36', present: '30', rate: '83%', state: 'Marked' },
-    { id: 'at-4', arm: 'JSS1 A', teacher: 'A. Mohammed', roll: '44', present: '43', rate: '98%', state: 'Marked' },
-    { id: 'at-5', arm: 'JSS3 C', teacher: 'E. Duru', roll: '39', present: '—', rate: '—', state: 'Not marked' },
-    { id: 'at-6', arm: 'SS1 A', teacher: 'C. Nnaji', roll: '35', present: '34', rate: '97%', state: 'Marked' },
-    { id: 'at-7', arm: 'SS3 A', teacher: 'R. Obiora', roll: '31', present: '—', rate: '—', state: 'Not marked' },
-  ],
-}

@@ -20,7 +20,14 @@ export const parentsService = {
       paginated<Parent>(data, 'sparents'),
     ),
 
-  get: (id: Id) => request<{ sparent: Parent }>(`sparents/${id}`).then((data) => data.sparent),
+  /**
+   * With the household's children. They sit beside the record in the envelope
+   * rather than on it, so returning `data.sparent` alone drops them silently.
+   */
+  get: (id: Id) =>
+    request<{ sparent: Parent; children?: Child[] }>(`sparents/${id}`).then(
+      ({ sparent, children }) => ({ ...sparent, children }),
+    ),
 
   children: (id: Id) =>
     request<{ children: Child[] }>(`sparents/${id}/children`).then((data) => data.children),

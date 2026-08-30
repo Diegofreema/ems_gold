@@ -74,8 +74,9 @@ test('a guardian is shown with the number to reach them on', () => {
 
 test('the join timestamp is written as a date, and a plain date is left alone', () => {
   assert.equal(studentRow(pupil).enrolled, '27 Aug 2026')
-  // `dob` arrives as the school typed it; reformatting it would guess an order.
-  assert.equal(studentRow(pupil).dob, '10/11/1986')
+  // `born` is the birthday as the school typed it; reformatting it would
+  // guess an order. `dob` is the same day for the picker — see below.
+  assert.equal(studentRow(pupil).born, '10/11/1986')
 })
 
 test('once enrolled it is the enrolment status that shows, not the admission one', () => {
@@ -168,4 +169,32 @@ test('a pupil with no enrolment word on them can still be suspended', () => {
   // falls back to the admission word. Only "Suspended" reverses the button.
   assert.equal(suspendAction('Admitted').label, 'Suspend')
   assert.equal(suspendAction('—').next, 'Suspended')
+})
+
+test('a birthday is carried twice — as the school writes it, and as the picker reads it', () => {
+  // The API stores DD/MM/YYYY. Handing that to the date field left every edit
+  // form opening on an empty picker, so the row also writes it YYYY-MM-DD.
+  const row = studentRow(pupil)
+  assert.equal(row.born, '10/11/1986')
+  assert.equal(row.dob, '1986-11-10')
+})
+
+test('a pupil with no birthday on file leaves the picker empty, not on today', () => {
+  assert.equal(studentRow({ ...(pupil as object), dob: null } as never).dob, '')
+  assert.equal(studentRow({ ...(pupil as object), dob: null } as never).born, '—')
+  // Anything that is not three parts is left alone rather than guessed at.
+  assert.equal(studentRow({ ...(pupil as object), dob: '1986' } as never).dob, '')
+})
+
+test('a single-digit day and month are padded, so the picker can read them', () => {
+  assert.equal(studentRow({ ...(pupil as object), dob: '2/8/2026' } as never).dob, '2026-08-02')
+})
+
+test('a settled invoice reads Paid on the fees tab, as it does everywhere else', () => {
+  const paid = invoiceRow({ id: 2450, invoiceid: 'TSS1/16', amount: '30000', paystatus: 'success', fee: { name: 'TUITION FEE' } } as never)
+  assert.equal(paid.state, 'Paid')
+  assert.equal(paid.amount, '₦30,000')
+  // Anything the API has not taught us is shown as it sent it.
+  const owing = invoiceRow({ id: 1, invoiceid: 'X/1', amount: '100', paystatus: 'Unpaid', fee: { name: 'BUS' } } as never)
+  assert.equal(owing.state, 'Unpaid')
 })

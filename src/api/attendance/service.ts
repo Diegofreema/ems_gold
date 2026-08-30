@@ -1,10 +1,10 @@
-import { paginated, request, requestBlob } from '../client'
+import { request, requestBlob } from '../client'
 import type {
   AttendanceClassArm,
   AttendanceDashboard,
   AttendanceDepartment,
   AttendanceExportParams,
-  AttendanceRecord,
+  AttendanceReport,
   AttendanceReportParams,
 } from './types'
 
@@ -13,12 +13,15 @@ export const attendanceService = {
   dashboard: (date?: string) =>
     request<AttendanceDashboard>('admin-attendances', { query: { date } }),
 
+  /**
+   * The whole payload, not just the page. `stats` counts the range rather than
+   * the page, and `filters` says which dates the endpoint actually used where
+   * none were given — both are on screen, so neither can be thrown away here.
+   */
   report: (params: AttendanceReportParams = {}) =>
-    request<Record<string, unknown>>('admin-attendances/report', {
-      query: { ...params },
-    }).then((data) => paginated<AttendanceRecord>(data, 'records')),
+    request<AttendanceReport>('admin-attendances/report', { query: { ...params } }),
 
-  /** Same filters as the report, handed back as a CSV file. */
+  /** Same filters as the report, arm included, handed back as a CSV file. */
   exportCsv: (params: AttendanceExportParams = {}) =>
     requestBlob('admin-attendances/export', { query: { ...params } }),
 

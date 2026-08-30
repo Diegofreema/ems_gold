@@ -7,10 +7,11 @@ import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
 import { teachersService } from '@/api/teachers/service'
+import { usersService } from '@/api/users/service'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from '@/portals/admin/collections/collect-row'
 import { guardianOption } from './guardian-option'
-import type { Option, OptionsKey } from './options'
+import { distinct, type Option, type OptionsKey } from './options'
 
 /** Everything on one page — a school has classes and arms in the dozens. */
 const ALL = 200
@@ -27,10 +28,15 @@ export function optionsQuery(key: OptionsKey, dependsOn: string) {
 async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[]> {
   if (key === 'classes') {
     const { items } = await departmentsService.list({ limit: ALL })
-    return items.map((department) => ({
-      value: String(department.id),
-      label: department.name,
-    }))
+    return distinct(
+      items.map((department) => ({
+        value: String(department.id),
+        label: department.name,
+        // Most schools code a class differently from its name; this one does
+        // not, so the code is only offered where it says something new.
+        meta: department.deptcode === department.name ? '' : department.deptcode,
+      })),
+    )
   }
 
   if (key === 'arms') {
@@ -77,6 +83,11 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     }))
   }
 
+  if (key === 'roles') {
+    const roles = await usersService.roles()
+    return roles.map((role) => ({ value: String(role.id), label: role.role_name }))
+  }
+
   if (key === 'payment-methods') {
     // Named by the API rather than listed here, so a school that stops
     // taking cheques stops being offered cheque.
@@ -85,11 +96,17 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
 
   if (key === 'teachers') {
     const { items } = await teachersService.list({ limit: ALL })
-    return items.map((teacher) => ({
-      value: String(teacher.id),
-      label: [teacher.firstname, teacher.lastname].filter(Boolean).join(' ').trim() ||
-        `Teacher ${teacher.id}`,
-    }))
+    return distinct(
+      items.map((teacher) => ({
+        value: String(teacher.id),
+        label:
+          [teacher.firstname, teacher.lastname].filter(Boolean).join(' ').trim() ||
+          `Teacher ${teacher.id}`,
+        // Two members of staff really can share a name; the middle one is
+        // what tells them apart before the id has to.
+        meta: teacher.middlename?.trim() ?? '',
+      })),
+    )
   }
 
   const parents = await parentsService.directory()

@@ -19,6 +19,13 @@ export const adminsService = {
   /** The caller's own office record. */
   profile: () => request<{ admin: Admin }>('admins/profile').then((data) => data.admin),
 
+  /**
+   * Broken on bronze: it answers "Admin not found." for any administrator
+   * whose login has no country or state on it — seven of the nine on record —
+   * apparently an inner join on tables that have no row 0. The list expands
+   * everything this would, so the register reads a record from there instead.
+   * Kept because it is the documented route and will work once that is fixed.
+   */
   get: (id: Id) => request<{ admin: Admin }>(`admins/${id}`).then((data) => data.admin),
 
   /** Creates the Users login and the Admins profile in one call. */
@@ -31,7 +38,10 @@ export const adminsService = {
   /** Permanent. Never your own, and admin 1 is protected. */
   remove: (id: Id) => request<unknown>(`admins/${id}`, { method: 'DELETE' }),
 
-  /** What they hold, plus the full list to choose from. */
+  /**
+   * What they hold, plus the full list to choose from. Unlike `get` this
+   * answers for every administrator, so it doubles as the way to read one.
+   */
   privileges: (id: Id) => request<AdminPrivileges>(`admins/${id}/privileges`),
 
   setPrivileges: (id: Id, body: SetPrivilegesBody) =>

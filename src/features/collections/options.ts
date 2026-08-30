@@ -16,6 +16,8 @@ export type OptionsKey =
   | 'subjects'
   /** The four ways the school takes money at the counter. */
   | 'payment-methods'
+  /** Super Admin, Bursar, Secretary — what kind of login an account is. */
+  | 'roles'
 
 /**
  * A choice as a definition writes it: a bare string where the value and the
@@ -28,5 +30,26 @@ export type Choice = string | Option
 export function toOptions(choices: readonly Choice[]): Option[] {
   return choices.map((choice) =>
     typeof choice === 'string' ? { value: choice, label: choice } : choice,
+  )
+}
+
+/**
+ * Options a reader can actually tell apart.
+ *
+ * This school has two classes both named SSS I, and both coded SSS I too, so
+ * a dropdown built straight off the names offers the same word twice with no
+ * way to know which one was picked. Only a repeated label is given anything
+ * extra — whatever `meta` the feed could find, and failing that the record's
+ * own id, which at least differs. A label that is already unique is left
+ * exactly as the school wrote it.
+ */
+export function distinct(options: readonly (Option & { meta?: string })[]): Option[] {
+  const seen = new Map<string, number>()
+  for (const one of options) seen.set(one.label, (seen.get(one.label) ?? 0) + 1)
+
+  return options.map(({ value, label, meta }) =>
+    (seen.get(label) ?? 0) < 2
+      ? { value, label }
+      : { value, label: `${label} · ${meta?.trim() || `#${value}`}` },
   )
 }

@@ -1,10 +1,11 @@
+import { toast } from 'sonner'
 import { parentsService } from '@/api/parents/service'
 import type { ParentStatus } from '@/api/parents/types'
 import type { CollectionDef, FormSectionSpec, ListPath } from '@/features/collections/types'
 import { emptySource } from '@/features/collections/api'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { parentBody } from './parent-body'
-import { childRow, parentRow } from './parent-row'
+import { accessAction, childRow, parentDeleteBody, parentRow } from './parent-row'
 
 /**
  * The two words the API accepts, shown as the register writes them. The value
@@ -105,11 +106,22 @@ export const parents: CollectionDef = {
     { key: 'father', label: 'Father' },
     { key: 'mother', label: 'Mother' },
     { key: 'email', label: 'Email' },
+    { key: 'children', label: 'Children' },
     { key: 'address', label: 'Address' },
     { key: 'occupation', label: 'Occupation' },
     { key: 'username', label: 'Signs in with' },
   ],
   filters: [{ key: 'status', label: 'Any status', options: STATUSES }],
+  // Blocking the sign-in is what a school actually wants nine times out of
+  // ten: the household, its children and its invoices all stay, and it is the
+  // one distinction the API draws between guardian accounts.
+  rowAction: {
+    ...accessAction,
+    run: (row) =>
+      row.status === 'Deactivated'
+        ? parentsService.activate(row.id)
+        : parentsService.deactivate(row.id),
+  },
   source: async ({ page, q, filters }) => {
     const { items, pagination } = await parentsService.list({
       page,
@@ -120,11 +132,42 @@ export const parents: CollectionDef = {
     return { items: items.map(parentRow), pagination }
   },
   record: (recordId) => parentsService.get(recordId).then(parentRow),
-  save: (values, recordId) =>
-    recordId
-      ? parentsService.update(recordId, parentBody(values))
-      : parentsService.create(parentBody(values)),
+  save: async (values, recordId) => {
+    if (recordId) return parentsService.update(recordId, parentBody(values))
+
+    const created = await parentsService.create(parentBody(values))
+    announceLogin(created)
+    return created
+  },
+  // Refused with 409 while a pupil still points at the household, which the
+  // confirm says before the button rather than a toast saying it after.
+  remove: (recordId) => parentsService.remove(recordId),
+  removeBody: parentDeleteBody,
   form: [FATHER, MOTHER, HOUSEHOLD],
+}
+
+/**
+ * The sign-in the API just made for the household.
+ *
+ * `POST /sparents` answers with the username and the first password, and
+ * nothing else ever will — there is no endpoint that reads a password back or
+ * re-issues one. So it is put on screen and left there until it is dismissed,
+ * rather than in a toast that clears itself while the office is still writing
+ * it down.
+ */
+function announceLogin(created: { username?: string; password?: string }) {
+  if (!created?.username || !created?.password) return
+  // Raised a tick late on purpose. The save's own "Parent created" toast goes
+  // up the moment this function returns, and sonner stacks the newest in
+  // front — announcing first would leave the one thing worth reading buried
+  // under the one that says nothing.
+  setTimeout(() => {
+    toast.success('Give the household these sign-in details', {
+      description: `${created.username} — first password ${created.password}. Shown once. If it is lost, the guardian resets it from the sign-in page.`,
+      duration: Infinity,
+      closeButton: true,
+    })
+  }, 0)
 }
 
 /** A view over the same guardians, pinned to one status — see `staffSlice`. */

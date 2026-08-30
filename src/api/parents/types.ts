@@ -15,6 +15,11 @@ export type Parent = {
   occupation: string | null
   status: ParentStatus
   username?: string
+  /**
+   * Expanded by the detail endpoint only, and as a sibling of the record in
+   * the envelope rather than a field on it — the service folds it on.
+   */
+  children?: Child[]
 }
 
 export type ParentStatus = 'active' | 'deactivated'

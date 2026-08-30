@@ -2,7 +2,15 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Teacher } from '../../../api/teachers/types.ts'
 import type { Admin } from '../../../api/users/types.ts'
-import { adminRow, parseStaffKey, staffKey, staffTarget, teacherRow } from './staff-row.ts'
+import {
+  adminDeleteBody,
+  adminRow,
+  parseStaffKey,
+  privilegeRow,
+  staffKey,
+  staffTarget,
+  teacherRow,
+} from './staff-row.ts'
 
 const teacher: Teacher = {
   id: 14, user_id: 90, firstname: 'Chukwuma', lastname: 'Nnaji', middlename: 'O',
@@ -46,7 +54,8 @@ test('an office record without an expanded login is still an administrator', () 
 test('the admin API calls the first half of the name surname', () => {
   const row = adminRow(admin)
   assert.equal(row.name, 'Samuel Idowu')
-  assert.equal(row.surname, 'Samuel')
+  // Held under the form's own spelling — see the prefill test below.
+  assert.equal(row.firstname, 'Samuel')
 })
 
 test('a key round-trips to the endpoint it came from', () => {
@@ -75,4 +84,99 @@ test('a pinned page overrides the form, which does not ask there', () => {
 test('an edit follows the record, never the form or the page', () => {
   assert.equal(staffTarget(undefined, 'Administrators', 't-14'), 'teacher')
   assert.equal(staffTarget('teacher', 'Teacher', 'a-3'), 'admin')
+})
+
+/** Francis Okorie as `GET /admins` answers on bronze, trimmed to the point. */
+const OFFICER: Admin = {
+  id: 4,
+  user_id: 30,
+  surname: 'Okorie',
+  lastname: 'Francis',
+  status: 'active',
+  date_created: '2021-07-26T06:36:48+01:00',
+  adminphoto: null,
+  gender: 'Male',
+  department_id: 1,
+  phone: '08037025918',
+  address: 'Nekede Imo State',
+  dob: '',
+  profile: 'ICT Director',
+  privileges: [
+    { id: 1, name: 'Admission' },
+    { id: 7, name: 'Admin' },
+  ],
+  department: { id: 1, name: 'JSS 1', deptcode: 'JSS 1' },
+  user: {
+    id: 30,
+    username: 'francis.okorie@claretianuniversity.edu.ng',
+    role_id: 1,
+    userstatus: 'Enabled',
+  } as Admin['user'],
+}
+
+const ROLES = new Map([
+  ['1', 'Admin'],
+  ['5', 'Super Admin'],
+])
+
+test('the role is named from the lookup, since the list only sends its number', () => {
+  // Without it every office record on the register read "Administrator".
+  assert.equal(adminRow(OFFICER, ROLES).role, 'Admin')
+  assert.equal(adminRow(OFFICER).role, 'Administrator')
+  const boss = { ...OFFICER, user: { ...OFFICER.user, role_id: 5 } } as Admin
+  assert.equal(adminRow(boss, ROLES).role, 'Super Admin')
+})
+
+test('the office record and the sign-in are two different states', () => {
+  const row = adminRow(OFFICER, ROLES)
+  // The API lower-cases one of them and title-cases the other.
+  assert.equal(row.status, 'Active')
+  assert.equal(row.account, 'Enabled')
+  const off = { ...OFFICER, user: { ...OFFICER.user, userstatus: 'Disabled' } } as Admin
+  assert.equal(adminRow(off, ROLES).account, 'Disabled')
+})
+
+test('the job and the sign-in address are read for the record panel', () => {
+  const row = adminRow(OFFICER, ROLES)
+  assert.equal(row.title, 'ICT Director')
+  assert.equal(row.username, 'francis.okorie@claretianuniversity.edu.ng')
+  assert.equal(row.user_id, '30')
+})
+
+test('privileges are named where they were expanded, and blank where not', () => {
+  const row = adminRow(OFFICER, ROLES)
+  assert.equal(row.privileges, 'Admission, Admin')
+  assert.equal(row.privilegeIds, '1,7')
+  // The list expands none, so a row off it must not read as "holds nothing".
+  const { privileges: _none, ...listed } = OFFICER
+  assert.equal(adminRow(listed as Admin, ROLES).privileges, '—')
+})
+
+test('a privilege says whether it is held, not merely that it exists', () => {
+  const held = new Set(['1', '7'])
+  assert.equal(privilegeRow({ id: 1, name: 'Admission' }, held).state, 'Granted')
+  assert.equal(privilegeRow({ id: 3, name: 'Result' }, held).state, 'Not granted')
+})
+
+test('the first administrator cannot be deleted, and the dialog says why', () => {
+  const body = adminDeleteBody({ id: staffKey('admin', 1), name: 'Surname Firstname' })
+  assert.match(body, /first administrator/)
+  assert.doesNotMatch(body, /permanently/)
+})
+
+test('deleting anyone else is named, permanent, and offers the lesser answer', () => {
+  const body = adminDeleteBody(adminRow(OFFICER, ROLES))
+  assert.match(body, /Okorie Francis/)
+  assert.match(body, /permanently/)
+  assert.match(body, /disable the sign-in instead/i)
+})
+
+test('the edit form prefills from the keys the form is actually keyed by', () => {
+  // The API names the first half of the name `surname`; the form's field is
+  // `firstname`. Emitting only the API's spelling left the box empty, and
+  // saving an untouched edit would have wiped the name.
+  const row = adminRow(OFFICER, ROLES)
+  assert.equal(row.firstname, 'Okorie')
+  assert.equal(row.lastname, 'Francis')
+  assert.equal(row.department_id, '1')
 })

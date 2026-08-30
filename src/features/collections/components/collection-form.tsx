@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { CheckboxGroupField } from '@/components/form/checkbox-group-field'
 import { DateField } from '@/components/form/date-field'
+import { fromApiDate } from '../date-range'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
@@ -98,7 +99,15 @@ export function CollectionForm({
         defaults[field.key] = String(held ?? '').split(',').filter(Boolean)
         continue
       }
-      defaults[field.key] = field.date ? undefined : (held === BLANK ? '' : (held ?? ''))
+      // A date opens on what the record holds, where the row wrote it in the
+      // one format that can be read back — YYYY-MM-DD. A row carrying a
+      // display date parses to nothing and the picker opens empty, which is
+      // where every date field used to start.
+      defaults[field.key] = field.date
+        ? fromApiDate(held)
+        : held === BLANK
+          ? ''
+          : (held ?? '')
     }
   }
 
@@ -127,17 +136,10 @@ export function CollectionForm({
         'This removes the record from the register. Anything already raised against it stays in the audit log.',
       subject: record?.[definition.nameKey] ?? '',
       cta: `Delete the ${definition.noun}`,
-      onConfirm: () => {
-        if (!definition.remove) {
-          toast(`${record?.[definition.nameKey]} deleted`)
-          return void navigate({ to: definition.path })
-        }
-        // Awaited rather than fired: the dialog's button spins until the
-        // record is actually gone, and a refusal leaves the form where it is.
-        return remove
-          .mutateAsync(record!.id)
-          .then(() => navigate({ to: definition.path }))
-      },
+      // Awaited rather than fired: the dialog's button spins until the record
+      // is actually gone, and a refusal leaves the form where it is.
+      onConfirm: () =>
+        remove.mutateAsync(record!.id).then(() => navigate({ to: definition.path })),
     })
 
   return (
@@ -166,8 +168,11 @@ export function CollectionForm({
           back()
         }}
         onCancel={back}
-        deleteLabel={editing ? 'Delete this record' : undefined}
-        onDelete={editing ? askDelete : undefined}
+        // Offered only where the API can actually delete. A collection with no
+        // `remove` used to show the button anyway and answer with a toast
+        // saying the record was deleted, which it never was.
+        deleteLabel={editing && definition.remove ? 'Delete this record' : undefined}
+        onDelete={editing && definition.remove ? askDelete : undefined}
       >
         {sections.map((section) => (
           <FormSection key={section.title} title={section.title}>

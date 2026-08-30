@@ -17,11 +17,15 @@ export const studentsService = {
       paginated<Student>(data, 'students'),
     ),
 
-  /** Everyone still sitting at `status: 'Applied'`. */
+  /**
+   * Everyone still sitting at `status: 'Applied'`. The envelope keys these
+   * under `applicants`, not `students` — reading the wrong one gave back
+   * undefined for every call.
+   */
   applicants: (sessionId?: number) =>
-    request<{ students: Student[] }>('students/applicants', {
+    request<{ applicants: Student[] }>('students/applicants', {
       query: { session_id: sessionId },
-    }).then((data) => data.students),
+    }).then((data) => data.applicants),
 
   get: (id: Id) => request<{ student: Student }>(`students/${id}`).then((data) => data.student),
 

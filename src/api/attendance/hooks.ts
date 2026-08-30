@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { saveBlob } from '@/lib/download'
 import { attendanceKeys } from './keys'
 import { attendanceService } from './service'
 import type { AttendanceExportParams, AttendanceReportParams } from './types'
@@ -33,10 +34,15 @@ export function useAttendanceClassArms(departmentId?: number) {
   })
 }
 
-/** A download, not a cache entry — hence a mutation. */
-export function useExportAttendanceCsv() {
+/**
+ * A download, not a cache entry — hence a mutation. The file is fetched with
+ * the bearer token and saved from memory, because the endpoint cannot be
+ * reached with a plain link.
+ */
+export function useExportAttendanceCsv(filename: string) {
   return useMutation({
     mutationFn: (params: AttendanceExportParams = {}) => attendanceService.exportCsv(params),
-    meta: { success: 'Attendance report exported' },
+    meta: { success: `${filename} downloaded` },
+    onSuccess: (blob) => saveBlob(blob, filename),
   })
 }

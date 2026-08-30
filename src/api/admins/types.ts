@@ -39,9 +39,10 @@ export type SetPrivilegesBody = {
 }
 
 export type AdminPrivileges = {
+  /** With `privileges` expanded — the ones this administrator actually holds. */
   admin: Admin
-  /** Everything that could be granted, not only what is held. */
-  privileges: Privilege[]
+  /** Everything that could be granted, whether held or not. */
+  available: Privilege[]
 }
 
 export type AdminActivity = {

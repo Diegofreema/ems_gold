@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Child, Parent } from '../../../api/parents/types.ts'
-import { childRow, parentName, parentRow, parentStatus } from './parent-row.ts'
+import {
+  accessAction,
+  childRow,
+  parentDeleteBody,
+  parentName,
+  parentRow,
+  parentStatus,
+} from './parent-row.ts'
 
 const parent: Parent = {
   id: 7, user_id: 41,
@@ -52,7 +59,9 @@ test('the panel lines join only the parts a record carries', () => {
 
 test('columns the list endpoint cannot answer for are not invented', () => {
   const row = parentRow(parent)
-  assert.equal('children' in row, false)
+  // Blank, never "0": the list is told nothing about the children, which is a
+  // different thing from being told the household has none.
+  assert.equal(row.children, '—')
   assert.equal('owing' in row, false)
 })
 
@@ -66,4 +75,66 @@ test('a child reads their class and arm apart', () => {
 
 test('a child not yet given a reg number reads blank', () => {
   assert.equal(childRow({ ...child, regno: null }).adm, '—')
+})
+
+/** The one household on bronze, as `GET /sparents/1` answers it. */
+const HOUSEHOLD: Parent = {
+  id: 1,
+  user_id: 478,
+  fathersname: 'Udoye Okagbue',
+  mothersname: 'Mgbeke Nuche',
+  pemailaddress: 'parent1@netpro.com',
+  fatherphone: '09000000000',
+  motherphone: '0900000',
+  fathersjob: null,
+  mothersjob: null,
+  address: 'ROAD 2, HOUSE 42, HEARTLAND COURT',
+  occupation: null,
+  status: 'active',
+  username: 'parent1@netpro.com',
+  children: [
+    { id: 7, regno: null, fname: 'NewOKEREKE', lname: 'NDIDI', mname: 'FGF', gender: 'Male', studentstatus: null, department_id: 1, department: 'JSS 1', class_arm: 'JSS1 A' },
+    { id: 8, regno: null, fname: 'NOKEREKE', lname: 'NDIDI', mname: 'FGF', gender: 'Male', studentstatus: null, department_id: 1, department: 'JSS 1', class_arm: 'JSS1 A' },
+  ],
+}
+
+test('children are counted where the detail expanded them, blank where not', () => {
+  // They sit beside the record in the envelope; the register is told nothing
+  // about them, and blank says that rather than claiming a household of none.
+  assert.equal(parentRow(HOUSEHOLD).children, '2')
+  const { children: _none, ...listed } = HOUSEHOLD
+  assert.equal(parentRow(listed).children, '—')
+})
+
+test('a household with children cannot be deleted, and the dialog says why', () => {
+  const body = parentDeleteBody(parentRow(HOUSEHOLD))
+  assert.match(body, /2 pupils are linked/)
+  assert.match(body, /refuse to delete/)
+  assert.doesNotMatch(body, /permanently/)
+})
+
+test('one child is named in the singular', () => {
+  const alone = { ...HOUSEHOLD, children: HOUSEHOLD.children!.slice(0, 1) }
+  assert.match(parentDeleteBody(parentRow(alone)), /1 pupil is linked/)
+})
+
+test('an empty household is deletable, and offered the lesser answer first', () => {
+  const empty = { ...HOUSEHOLD, children: [] }
+  const body = parentDeleteBody(parentRow(empty))
+  assert.match(body, /Udoye Okagbue & Mgbeke Nuche/)
+  assert.match(body, /permanently/)
+  assert.match(body, /deactivate the account instead/i)
+})
+
+test('the sign-in action offers whichever state the household is not in', () => {
+  const active = parentRow(HOUSEHOLD)
+  assert.equal(accessAction.label(active), 'Block sign-in')
+  // Taking it away is asked about; giving it back is not.
+  assert.ok(accessAction.confirm(active))
+  assert.match(accessAction.done(active), /can no longer sign in/)
+
+  const blocked = parentRow({ ...HOUSEHOLD, status: 'deactivated' })
+  assert.equal(accessAction.label(blocked), 'Allow sign-in')
+  assert.equal(accessAction.confirm(blocked), undefined)
+  assert.match(accessAction.done(blocked), /can sign in again/)
 })
