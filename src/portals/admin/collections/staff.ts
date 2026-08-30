@@ -9,18 +9,18 @@ import type {
 import type { Paginated } from '@/api/types'
 import { emptySource } from '@/features/collections/api'
 import { optionLabels } from '@/features/collections/option-feeds'
-import { queryClient } from '@/lib/query-client'
 import { usersService } from '@/api/users/service'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { adminBody, adminUpdate, teacherBody, teacherUpdate } from './staff-body'
 import {
   activityRow,
-  adminDeleteBody,
   adminRow,
   parseStaffKey,
   privilegeRow,
+  staffDeleteBody,
   staffTarget,
   teacherRow,
+  teacherSubjectRow,
 } from './staff-row'
 
 /**
@@ -51,29 +51,14 @@ async function listAdmins(page: number): Promise<Paginated<Row>> {
 const ALL_ADMINS = 200
 
 /**
- * One administrator, read from the list.
+ * One administrator, from `GET /users/admins/{id}`.
  *
- * `GET /admins/{id}` answers "Admin not found." for seven of the nine on
- * bronze — see the note on the service — so the record cannot be read the
- * obvious way. The list expands the login and the department that the detail
- * would have, and a school has these in single figures, so one cached page of
- * all of them is both correct and cheaper than the endpoint that is broken.
+ * The detail is the whole record in one call — the privileges, the class and
+ * the login with its role, country and state — so nothing here is stitched
+ * together out of the list. A 404 reaches the record page as a missing
+ * record, and the copy below says what that means.
  */
-async function adminRecord(id: string): Promise<Row | undefined> {
-  const [admins, roles, granted] = await Promise.all([
-    queryClient.ensureQueryData({
-      queryKey: ['admins', 'all'],
-      queryFn: () => adminsService.list({ limit: ALL_ADMINS }).then((page) => page.items),
-    }),
-    optionLabels('roles'),
-    // The list carries no privileges; this is the only place they are said.
-    adminsService.privileges(id).catch(() => undefined),
-  ])
-
-  const admin = admins.find((one) => String(one.id) === id)
-  if (!admin) return undefined
-  return adminRow({ ...admin, privileges: granted?.admin?.privileges }, roles)
-}
+const adminRecord = (id: string) => adminsService.get(id).then(adminRow)
 
 /** A summary figure, read off the pagination that comes back with one row. */
 const countTeachers = async () =>
@@ -118,6 +103,16 @@ function saveStaff(kind?: 'teacher' | 'admin') {
   }
 }
 
+/**
+ * Deletes from whichever of the two registers the record belongs to. Both are
+ * permanent, and the API refuses the first administrator and your own account
+ * outright — which the dialog says before the button rather than after it.
+ */
+function removeStaff(recordId: string): Promise<unknown> {
+  const { kind, id } = parseStaffKey(recordId)
+  return kind === 'admin' ? adminsService.remove(id) : teachersService.remove(id)
+}
+
 const ACTIVITY_LIMIT = 20
 
 const IDENTITY: FormSectionSpec = {
@@ -128,7 +123,7 @@ const IDENTITY: FormSectionSpec = {
     { key: 'middlename', label: 'Middle name', placeholder: 'Obinna' },
     { key: 'gender', label: 'Gender', options: ['Female', 'Male'] },
     { key: 'phone', label: 'Phone', numeric: true, placeholder: '0803 441 2280' },
-    { key: 'department_id', label: 'Department', optionsFrom: 'classes' },
+    { key: 'department_id', label: 'Class', optionsFrom: 'classes' },
   ],
 }
 
@@ -148,14 +143,56 @@ const ACCOUNT: FormSectionSpec = {
   ],
 }
 
+/**
+ * Whether the form is filling in a teaching record.
+ *
+ * Nothing chosen yet reads as teaching, which is what the save does with it
+ * too — the register's larger half, and the one the office reaches for.
+ */
+function isTeaching(values: Record<string, unknown>): boolean {
+  return values.role !== ADMINISTRATORS
+}
+
+/**
+ * Where they live, which only the teaching record takes — `POST /admins/new-admin`
+ * accepts neither field, so the office form does not ask for them.
+ */
+const PLACE: FormSectionSpec = {
+  title: 'Where they live',
+  when: isTeaching,
+  fields: [
+    {
+      key: 'country',
+      label: 'Country',
+      hint: 'The school’s server keeps its own list of countries and publishes no catalogue, so only the ones it has been seen to hold can be saved. Anything else is stored without a country.',
+      optionsFrom: 'countries',
+    },
+    {
+      key: 'state',
+      label: 'State',
+      optionsFrom: 'states',
+      dependsOn: 'country',
+    },
+  ],
+}
+
 const TEACHING: FormSectionSpec = {
   title: 'Teaching',
+  when: isTeaching,
   fields: [
     {
       key: 'qualification',
       label: 'Qualification',
       wide: true,
       placeholder: 'B.Sc Mathematics',
+      hint: 'Held on the teaching record only.',
+    },
+    {
+      key: 'profile',
+      label: 'About',
+      multiline: true,
+      wide: true,
+      placeholder: 'What pupils and parents see when they look this teacher up.',
       hint: 'Held on the teaching record only.',
     },
   ],
@@ -176,10 +213,10 @@ const STAFF_DETAIL = [
   { key: 'status', label: 'Status' },
   { key: 'gender', label: 'Gender' },
   { key: 'phone', label: 'Phone' },
-  { key: 'address', label: 'Address' },
+  { key: 'place', label: 'Address' },
   { key: 'qualification', label: 'Qualification' },
   { key: 'adviser', label: 'Form arm' },
-  { key: 'department', label: 'Department' },
+  { key: 'department', label: 'Class' },
   { key: 'joined', label: 'On record since' },
   { key: 'username', label: 'Signs in with' },
 ]
@@ -199,6 +236,9 @@ const ACTIVITY_TAB: CollectionDef['tabs'] = [
       { key: 'ip', label: 'IP' },
     ],
     empty: 'No activity recorded against this record.',
+    // Only the office record keeps a trail, so a teacher is not shown an
+    // empty one — on the mixed register or anywhere else.
+    when: (recordId) => parseStaffKey(recordId).kind === 'admin',
     source: async (recordId) => {
       const { kind, id } = parseStaffKey(recordId)
       if (kind !== 'admin') return []
@@ -208,9 +248,33 @@ const ACTIVITY_TAB: CollectionDef['tabs'] = [
   },
 ]
 
+/**
+ * What a teacher carries, read from the same call the record itself comes
+ * from — `GET /teachers/{id}` expands each subject with its class, so the tab
+ * names both without a second lookup.
+ */
+const SUBJECTS_TAB: NonNullable<CollectionDef['tabs']>[number] = {
+  label: 'Subjects',
+  columns: [
+    { key: 'name', label: 'Subject', cardRole: 'title' },
+    { key: 'code', label: 'Code' },
+    { key: 'klass', label: 'Class' },
+    { key: 'state', label: 'State', tag: true },
+  ],
+  empty: 'This teacher carries no subjects yet.',
+  // Subjects hang off the teaching record; an office record has none to show.
+  when: (recordId) => parseStaffKey(recordId).kind === 'teacher',
+  source: async (recordId) => {
+    const { kind, id } = parseStaffKey(recordId)
+    if (kind !== 'teacher') return []
+    const teacher = await teachersService.get(id)
+    return (teacher.subjects ?? []).map(teacherSubjectRow)
+  },
+}
+
 export const staff: CollectionDef = {
   id: 'staff',
-  tabs: ACTIVITY_TAB,
+  tabs: [...(ACTIVITY_TAB ?? []), SUBJECTS_TAB],
   path: '/admin/staff',
   kicker: 'Staff',
   title: 'Manage staff',
@@ -221,6 +285,10 @@ export const staff: CollectionDef = {
   footer: 'Teaching and office records',
   emptyTitle: 'No staff records',
   emptyBody: 'Add your teaching and office staff to assign subjects and arms.',
+  // This register opens both kinds, and they fail for different reasons.
+  missingTitle: 'This record could not be opened',
+  missingBody:
+    'Either nothing on the register carries this reference, or it is an office record the server will not return — it answers "Admin not found." for any administrator whose login has no country or state set on it. Send the reference below to your ICT desk.',
   noun: 'staff member',
   nameKey: 'name',
   counts: [
@@ -238,21 +306,28 @@ export const staff: CollectionDef = {
     filters.role === ADMINISTRATORS ? listAdmins(page) : listTeachers(page, q),
   record: staffRecord,
   save: saveStaff(),
+  // Both registers delete, and the dialog says which one it is about.
+  remove: removeStaff,
+  removeBody: staffDeleteBody,
+  // Asked first, because it decides what the rest of the form asks for: the
+  // two halves of the register are two endpoints, and they take different
+  // fields.
   form: [
-    IDENTITY,
     {
-      title: 'Role',
+      title: 'Kind of record',
       fields: [
         {
           key: 'role',
           label: 'Kind of record',
           required: true,
           options: ['Teacher', ADMINISTRATORS],
-          hint: 'A teaching record carries subjects; an office record carries privileges.',
+          hint: 'A teaching record carries subjects, a class and a qualification; an office record carries privileges. This is what decides which fields follow.',
         },
       ],
     },
+    IDENTITY,
     ACCOUNT,
+    PLACE,
     TEACHING,
   ],
 }
@@ -300,6 +375,13 @@ export const staffAdmin = staffSlice(
   'The people who run the office: the principal, the bursary and the heads of section. These accounts see the admin portal, and what each one can open is set by their privileges.',
   {
     action: 'Add administrator',
+    // Not "no such administrator": they are on the register, and the office
+    // can see them there. `GET /users/admins/{id}` refuses any record whose
+    // login carries country 0 — seven of the nine on bronze — so the page
+    // names the fault rather than blaming the link.
+    missingTitle: 'This record could not be opened',
+    missingBody:
+      'The administrator is on the register, but the server will not return their record — it answers "Admin not found." for any account whose login has no country or state set on it. Until that is set on the login, this page cannot open and their privileges cannot be changed; their sign-in can still be enabled or disabled from the register. Send the reference below to your ICT desk.',
     footer: 'Office records',
     emptyTitle: 'No office records',
     emptyBody: 'Add an administrator to give someone access to this portal.',
@@ -323,11 +405,12 @@ export const staffAdmin = staffSlice(
       { key: 'role', label: 'Account' },
       { key: 'account', label: 'Sign-in' },
       { key: 'username', label: 'Signs in with' },
-      { key: 'privileges', label: 'Privileges' },
+      { key: 'privilegeCount', label: 'Privileges' },
       { key: 'phone', label: 'Phone' },
       { key: 'gender', label: 'Gender' },
-      { key: 'address', label: 'Address' },
-      { key: 'department', label: 'Department' },
+      { key: 'dob', label: 'Date of birth' },
+      { key: 'place', label: 'Address' },
+      { key: 'department', label: 'Class' },
       { key: 'joined', label: 'On record since' },
     ],
     // Turning the sign-in off keeps the record, the trail and the privileges,
@@ -354,9 +437,6 @@ export const staffAdmin = staffSlice(
     },
     source: ({ page }) => listAdmins(page),
     save: saveStaff('admin'),
-    // Permanent, and the API refuses two of them outright.
-    remove: (recordId) => adminsService.remove(parseStaffKey(recordId).id),
-    removeBody: adminDeleteBody,
     tabs: [
       {
         label: 'Privileges',
@@ -365,6 +445,8 @@ export const staffAdmin = staffSlice(
           { key: 'state', label: 'State', tag: true },
         ],
         empty: 'The API offered no privileges to grant.',
+        // Privileges belong to the office record; a teaching record has none.
+        when: (recordId) => parseStaffKey(recordId).kind === 'admin',
         source: privilegeTab,
       },
       ...(ACTIVITY_TAB ?? []),
@@ -373,18 +455,45 @@ export const staffAdmin = staffSlice(
   },
 )
 
+/**
+ * What a teacher's record page reads. It is not the office panel: a teaching
+ * record carries a qualification, an arm and the subjects it is trusted with,
+ * and carries no privileges, no job title and no status of its own.
+ */
+const TEACHER_DETAIL = [
+  { key: 'name', label: 'Name' },
+  { key: 'status', label: 'Sign-in' },
+  { key: 'username', label: 'Signs in with' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'gender', label: 'Gender' },
+  { key: 'qualification', label: 'Qualification' },
+  { key: 'adviser', label: 'Form arm' },
+  { key: 'department', label: 'Class' },
+  { key: 'subjectCount', label: 'Subjects' },
+  { key: 'place', label: 'Address' },
+  { key: 'about', label: 'About' },
+  { key: 'joined', label: 'On record since' },
+]
+
 export const staffTeachers = staffSlice(
   'staff-teachers',
   '/admin/staff-teachers',
   'Teachers',
   'Everyone who carries a subject. These accounts see the teacher portal and enter scores.',
   {
+    action: 'Add teacher',
+    noun: 'teacher',
+    missingTitle: 'This teaching record could not be opened',
+    missingBody:
+      'No teaching record carries this reference. It may have been deleted since the link was made.',
     footer: 'Teaching records',
     emptyTitle: 'No teaching records',
     emptyBody: 'Add a teacher to assign them subjects and an arm.',
+    detail: TEACHER_DETAIL,
+    tabs: [SUBJECTS_TAB],
     source: ({ page, q }) => listTeachers(page, q),
     save: saveStaff('teacher'),
-    form: [IDENTITY, ACCOUNT, TEACHING],
+    form: [IDENTITY, ACCOUNT, PLACE, TEACHING],
   },
 )
 

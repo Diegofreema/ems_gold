@@ -8,7 +8,7 @@ export const Route = createFileRoute('/teacher/uploads/$recordId')({
     if (!batch) throw notFound()
     return {
       batch,
-      heading: { title: batch.batch, crumb: 'Assessment · Upload batches' },
+      heading: { title: batch.batch, crumb: 'Assessment · Upload batches', crumbTo: { to: '/teacher/uploads' } },
     }
   },
   component: BatchReviewRoute,

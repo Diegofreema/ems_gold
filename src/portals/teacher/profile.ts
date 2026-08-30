@@ -3,7 +3,7 @@ import type { ProfileConfig } from '@/features/profile/types'
 export const teacherProfile: ProfileConfig = {
   initials: 'CN',
   meta: 'STF-014 · Mathematics · SS1 A, SS2 A, SS3 A, JSS2 A',
-  note: 'What pupils and parents see when they look you up. Your staff number and subjects are set by the head of department.',
+  note: 'What pupils and parents see when they look you up. Your staff number and subjects are set by the school office.',
   sessionNote:
     'Signs you out of the staff room computers without touching this browser.',
   fields: [

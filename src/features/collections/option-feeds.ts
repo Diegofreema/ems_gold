@@ -88,6 +88,14 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     return roles.map((role) => ({ value: String(role.id), label: role.role_name }))
   }
 
+  if (key === 'countries' || key === 'states') {
+    // Imported here so the world's states land in a chunk of their own,
+    // fetched when a staff form is opened and not before.
+    const { countryOptions, stateOptions } = await import('./countries')
+    if (key === 'countries') return countryOptions()
+    return dependsOn ? stateOptions(dependsOn) : []
+  }
+
   if (key === 'payment-methods') {
     // Named by the API rather than listed here, so a school that stops
     // taking cheques stops being offered cheque.

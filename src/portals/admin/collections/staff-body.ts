@@ -1,5 +1,6 @@
 import type { CreateStaffBody, UpdateStaffBody } from '../../../api/teachers/types.ts'
 import type { CreateAdminBody, UpdateAdminRecordBody } from '../../../api/admins/types.ts'
+import { schoolCountryId } from '../../../features/collections/country-ids.ts'
 
 /** The form's values, all strings from the inputs and selects. */
 export type FormValues = Record<string, unknown>
@@ -39,6 +40,13 @@ export function teacherBody(values: FormValues): CreateStaffBody {
     firstname: text(values.firstname) ?? '',
     lastname: text(values.lastname) ?? '',
     qualification: text(values.qualification),
+    profile: text(values.profile),
+    // The form holds the ISO code, which is the one thing about a country that
+    // does not depend on whose list you are reading. The number the API wants
+    // is the school's own, and is looked up here — a country it has no id for
+    // is left off rather than sent as somebody else's number.
+    country_id: schoolCountryId(values.country),
+    state_id: asId(values.state),
   }
 }
 

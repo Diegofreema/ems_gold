@@ -11,14 +11,19 @@ export const Route = createFileRoute('/parent/$collection/$recordId')({
    * definition returned is the one the record actually belongs to.
    */
   loader: async ({ params }) => {
+    // A collection that resolves without a record has looked and not found it;
+    // the next child may still hold it, so only a hit ends the search.
+    let looked
     for (const child of CHILDREN) {
       const loaded = await loadRecord(
         parentCollections(child),
         params.collection,
         params.recordId,
       )
-      if (loaded) return loaded
+      if (loaded?.record) return loaded
+      looked ??= loaded
     }
+    if (looked) return looked
     throw notFound()
   },
   component: RecordDetail,

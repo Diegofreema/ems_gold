@@ -1,8 +1,8 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
 import { FormProvider } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { BackLink } from '@/components/page/back-link'
 import { DeclarationField } from '@/components/form/declaration-field'
 import { FormErrorBanner } from '@/components/form/form-error-banner'
 import { SelectField } from '@/components/form/select-field'
@@ -50,12 +50,11 @@ export function AddChildForm() {
 
   return (
     <div className="max-w-[680px]">
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to="/parent/children">
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to my children
-        </Link>
-      </Button>
+      <BackLink
+        to="/parent/children"
+        label="Back to my children"
+        backLabel="Cancel and go back"
+      />
 
       <PageHeader
         kicker="My children"

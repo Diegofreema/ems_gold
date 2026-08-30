@@ -8,14 +8,15 @@ export function CollectionDetail({
   record,
 }: {
   definition: CollectionDef
-  record: Row
+  /** Undefined where the record was asked for and did not come back. */
+  record?: Row
 }) {
   return (
     <SharedCollectionDetail
       definition={definition}
       record={record}
       routes={adminCollectionRoutes}
-      flow={adminFlows[definition.id]}
+      flows={adminFlows[definition.id]}
     />
   )
 }

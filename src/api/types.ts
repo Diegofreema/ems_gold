@@ -32,5 +32,16 @@ export type Paginated<TItem> = {
   pagination: Pagination
 }
 
+/**
+ * A country or a state, as the API expands one beside a record. It expands
+ * `state_id` and `country_id` independently and never checks they agree, so
+ * `country_id` here is what says whether the pair makes sense.
+ */
+export type Place = {
+  id: number
+  name: string
+  country_id?: number
+}
+
 /** Value the API accepts for an `id` path segment. */
 export type Id = number | string

@@ -7,7 +7,8 @@ export function CollectionDetail({
   record,
 }: {
   definition: CollectionDef
-  record: Row
+  /** Undefined where the record was asked for and did not come back. */
+  record?: Row
 }) {
   return (
     <SharedCollectionDetail

@@ -1,7 +1,7 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { toast } from 'sonner'
+import { BackLink } from '@/components/page/back-link'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { Tag } from '@/components/common/tag'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
@@ -44,12 +44,7 @@ export function BatchReview({ batch }: { batch: Row }) {
 
   return (
     <div>
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to="/teacher/uploads">
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to upload batches
-        </Link>
-      </Button>
+      <BackLink to="/teacher/uploads" label="Back to upload batches" />
 
       <div className="flex flex-wrap items-start justify-between gap-[18px]">
         <div className="max-w-[60ch]">

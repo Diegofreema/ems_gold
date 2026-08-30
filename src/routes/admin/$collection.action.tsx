@@ -6,12 +6,21 @@ import { ActionPage } from '@/portals/admin/features/actions/action-page'
 export const Route = createFileRoute('/admin/$collection/action')({
   // The record is optional: taking a payment starts without one, allocating a
   // fee starts from the fee. Keeping it in the URL makes the flow shareable.
-  validateSearch: (search: Record<string, unknown>): { record?: string } =>
-    typeof search.record === 'string' ? { record: search.record } : {},
-  loaderDeps: ({ search }) => ({ record: search.record }),
+  //
+  // `flow` names which of the collection's flows was opened, for the registers
+  // that have more than one. Left out, it is the first — which is what every
+  // link written before there were two of anything still says.
+  validateSearch: (search: Record<string, unknown>): { record?: string; flow?: string } => ({
+    ...(typeof search.record === 'string' ? { record: search.record } : {}),
+    ...(typeof search.flow === 'string' ? { flow: search.flow } : {}),
+  }),
+  loaderDeps: ({ search }) => ({ record: search.record, flow: search.flow }),
   loader: async ({ params, deps }) => {
     const definition = adminCollections[params.collection as keyof typeof adminCollections]
-    const flow = definition && adminFlows[params.collection]
+    const flows = definition ? adminFlows[params.collection] : undefined
+    const flow = deps.flow
+      ? flows?.find((one) => one.name === deps.flow)
+      : flows?.[0]
     if (!definition || !flow) throw notFound()
 
     // A live collection is asked for the record; a fixture one holds its own.

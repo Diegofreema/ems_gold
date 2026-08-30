@@ -1,6 +1,8 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronLeft, Pencil } from 'lucide-react'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
+import { BackLink } from '@/components/page/back-link'
+import { MissingState } from '@/components/feedback/missing-state'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Tag } from '@/components/common/tag'
@@ -37,7 +39,7 @@ const ACTIVITY: DetailTab = {
   rows: [
     { id: 'ac-1', what: 'Record opened by you', when: 'Today, 09:12' },
     { id: 'ac-2', what: 'Edited by you', when: '18 Nov 2025, 14:03' },
-    { id: 'ac-3', what: 'Seen by the head of department', when: '15 Nov 2025, 08:40' },
+    { id: 'ac-3', what: 'Seen by the school office', when: '15 Nov 2025, 08:40' },
     { id: 'ac-4', what: 'Created', when: '02 Sep 2025, 10:21' },
   ],
 }
@@ -47,36 +49,82 @@ export function CollectionDetail({
   definition,
   record,
   routes,
-  flow,
+  flows,
 }: {
   definition: CollectionDef
-  record: Row
+  /** Undefined where the record was asked for and did not come back. */
+  record?: Row
   routes: CollectionRoutes
-  flow?: FlowSpec
+  flows?: readonly FlowSpec[]
 }) {
   const navigate = useNavigate()
+  // Read off the route rather than threaded through four portals: every
+  // record page is mounted under `$recordId`, and it is only wanted where
+  // there is no record to take it from.
+  const { recordId } = useParams({ strict: false })
   const confirm = useConfirm()
   const rowAction = useRowAction(definition, confirm)
+  const back = (
+    <BackLink
+      to={definition.path}
+      label={`Back to ${definition.title.toLowerCase()}`}
+    />
+  )
+
+  // The page is the right page; the data is not there. Saying so in the shell
+  // beats the portal's 404, which claims the link itself was wrong.
+  if (!record) {
+    return (
+      <div>
+        {back}
+        <MissingState
+          title={definition.missingTitle ?? `This ${definition.noun} could not be opened`}
+          body={
+            definition.missingBody ??
+            `The register has no ${definition.noun} under this reference. It may have been deleted since the link was made.`
+          }
+          rows={[{ label: 'Reference', value: recordId ?? BLANK }]}
+          action={
+            <Button asChild>
+              <Link to={definition.path}>Back to {definition.title.toLowerCase()}</Link>
+            </Button>
+          }
+        />
+      </div>
+    )
+  }
+
   const editRoute = definition.readonly ? undefined : routes.edit
   // The same control the register offers, where the office is looking at the
   // one record it applies to.
   const actionLabel = rowAction.spec?.label(record)
-  const tabs = definition.tabs ?? (definition.source ? [] : [ACTIVITY])
+  const tabs = (definition.tabs ?? (definition.source ? [] : [ACTIVITY])).filter(
+    (tab) => tab.when?.(record.id) ?? true,
+  )
   const flowRoute = routes.flow
 
-  // Where it is the only thing the page offers, it is the page's main verb.
-  const flowButton =
-    flowRoute && flow && (flow.when?.(record) ?? true) ? (
-      <Button asChild variant={definition.readonly ? 'default' : 'outline'}>
-        <Link
-          to={flowRoute}
-          params={{ collection: definition.id }}
-          search={{ record: record.id }}
-        >
-          {flow.label}
-        </Link>
-      </Button>
-    ) : null
+  // Where a flow is the only thing the page offers, it is the page's main
+  // verb. A record can be in more than one — a teacher is given subjects and
+  // is written to — and each is offered only where it applies.
+  const flowButtons = !flowRoute
+    ? []
+    : (flows ?? [])
+        .filter((one) => one.when?.(record) ?? true)
+        .map((one) => (
+          <Button
+            key={one.name}
+            asChild
+            variant={definition.readonly ? 'default' : 'outline'}
+          >
+            <Link
+              to={flowRoute}
+              params={{ collection: definition.id }}
+              search={{ record: record.id, flow: one.name }}
+            >
+              {one.label}
+            </Link>
+          </Button>
+        ))
 
   // Same rule as the table: a state the record is not in gets no badge.
   const tagColumns = definition.columns.filter(
@@ -88,12 +136,7 @@ export function CollectionDetail({
 
   return (
     <div>
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to={definition.path}>
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to {definition.title.toLowerCase()}
-        </Link>
-      </Button>
+      {back}
 
       <div className="flex flex-wrap items-start justify-between gap-[18px]">
         <div className="max-w-[60ch]">
@@ -116,7 +159,7 @@ export function CollectionDetail({
           {/* A flow is a decision taken about the record, not an edit of it, so
               a collection nobody can change still offers the one it has. */}
           {definition.readonly ? (
-            flowButton
+            flowButtons
           ) : !editRoute ? (
             <Button
               onClick={() =>
@@ -142,7 +185,7 @@ export function CollectionDetail({
                 <Pencil className="size-[15px]" strokeWidth={2} />
                 Edit
               </Button>
-              {flowButton}
+              {flowButtons}
               {actionLabel && (
                 <Button variant="outline" onClick={() => rowAction.ask(record)}>
                   {actionLabel}

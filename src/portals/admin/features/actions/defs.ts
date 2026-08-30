@@ -5,6 +5,7 @@ import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
+import { teachersService } from '@/api/teachers/service'
 import type { Row } from '@/features/collections/types'
 import {
   ADMIT,
@@ -23,6 +24,8 @@ import { formatNaira, parseNaira } from '@/lib/format'
 import type { ActionDef } from './types'
 
 export type AdminFlow = {
+  /** Which flow this is, and what `?flow=` in the URL calls it. */
+  name: string
   /** Button label on the record, e.g. "Allocate to classes". */
   label: string
   /** The flow needs no record, so the list's primary action opens it. */
@@ -34,6 +37,10 @@ export type AdminFlow = {
 
 /** Everything on one page — a school has classes in the dozens. */
 const ALL_CLASSES = 200
+
+/** Same again for the two registers a teacher's flows read whole. */
+const ALL_SUBJECTS = 300
+const ALL_TEACHERS = 300
 
 const DASH = '—'
 
@@ -524,15 +531,184 @@ async function setPrivileges(row?: Row): Promise<ActionDef> {
   }
 }
 
-export const adminFlows: Record<string, AdminFlow> = {
-  fees: { label: 'Allocate to classes', build: allocate },
-  'staff-admin': { label: 'Set privileges', build: setPrivileges },
+/**
+ * What a teacher is trusted with.
+ *
+ * `POST /teachers/{id}/subjects` replaces the whole set, so the subjects they
+ * already carry arrive ticked and unticking one is how it is taken off them.
+ * Every subject comes back with its class expanded, which is the only thing
+ * telling two "MATHEMATICS" apart on a register that teaches it to five
+ * classes.
+ */
+async function assignSubjects(row?: Row): Promise<ActionDef> {
+  const id = parseStaffKey(String(row?.id ?? '')).id
+  const subjects = await subjectsService
+    .list({ limit: ALL_SUBJECTS })
+    .then((page) => page.items)
+  const held = row?.subjectIds ? row.subjectIds.split(',').filter(Boolean) : []
+
+  return {
+    kicker: 'Staff · Teachers',
+    title: `What ${row?.name ?? 'this teacher'} teaches`,
+    description:
+      'Tick every subject this teacher carries. Unticking one takes it off them — it stays on the timetable for whoever else teaches it.',
+    summary: [
+      { label: 'Teacher', value: row?.name ?? DASH },
+      { label: 'Class', value: row?.department ?? DASH },
+      { label: 'Carries now', value: held.length ? String(held.length) : 'None' },
+    ],
+    picker: {
+      title: 'Subjects',
+      items: subjects.map((subject) => ({
+        key: String(subject.id),
+        // The class, because a school teaches the same subject to several and
+        // the name alone would offer the reader five identical rows.
+        meta: [subject.department, subject.is_active === false ? 'Inactive' : '']
+          .filter(Boolean)
+          .join(' · '),
+        label: subject.name,
+        count: 0,
+      })),
+      preselected: held,
+      note: 'This replaces what they carry. Ticking none leaves them with no subject and no result sheet to enter, which is how a teacher is stood down without deleting them.',
+    },
+    fields: [],
+    cta: 'Save these subjects',
+    footnote: 'Nothing changes until you press this.',
+    run: async (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      await teachersService.assignSubjects(id, { subjects: picked.map(Number) })
+      const who = row?.name ?? 'The teacher'
+      return {
+        message: picked.length
+          ? `${who} carries ${picked.length} ${picked.length === 1 ? 'subject' : 'subjects'}`
+          : `${who} carries no subjects`,
+      }
+    },
+    done: (picked) =>
+      picked ? `${picked} ${picked === 1 ? 'subject' : 'subjects'} saved` : 'Every subject was taken off',
+  }
+}
+
+/**
+ * Writing to staff.
+ *
+ * The endpoint takes logins rather than teaching records — `user_ids`, not
+ * teacher ids — so the picker is keyed on the login behind each row. It is
+ * opened from one teacher with them already ticked, and anyone else on the
+ * register can be added to the same message.
+ *
+ * At least one is insisted on: the API is documented as mailing every member
+ * of staff for an empty list, and a whole-school email is not something to
+ * arrive at by unticking the last name on a picker.
+ */
+async function mailStaff(row?: Row): Promise<ActionDef> {
+  const teachers = await teachersService
+    .list({ limit: ALL_TEACHERS })
+    .then((page) => page.items)
+
+  return {
+    kicker: 'Staff · Teachers',
+    title: 'Write to staff',
+    description:
+      'One message, to everyone ticked. It goes to the address each of them signs in with.',
+    summary: [
+      { label: 'On the register', value: String(teachers.length) },
+      { label: 'Opened from', value: row?.name ?? 'The register' },
+    ],
+    picker: {
+      title: 'Who it goes to',
+      items: teachers.map((teacher) => ({
+        key: String(teacher.user_id),
+        label: [teacher.firstname, teacher.middlename, teacher.lastname]
+          .filter(Boolean)
+          .join(' '),
+        meta: teacher.user?.username ?? '',
+        count: 1,
+      })),
+      preselected: row?.user_id ? [row.user_id] : undefined,
+      note: 'Everyone ticked gets the same message. There is no draft and no undo — it is sent when you press the button.',
+      requiredMessage: 'Pick at least one person to write to.',
+    },
+    fields: [
+      {
+        key: 'subject',
+        label: 'Subject',
+        required: true,
+        wide: true,
+        placeholder: 'Staff meeting, Friday 3pm',
+      },
+      {
+        key: 'message',
+        label: 'Message',
+        required: true,
+        wide: true,
+        multiline: true,
+        placeholder: 'What you want them to know.',
+      },
+    ],
+    tally: (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      return [
+        {
+          label: 'Going to',
+          value: `${picked.length} ${picked.length === 1 ? 'person' : 'people'}`,
+        },
+      ]
+    },
+    cta: 'Send this email',
+    footnote: 'Sent the moment you press this.',
+    confirm: (_total, values) => {
+      const picked = (values?.picks as string[] | undefined) ?? []
+      return {
+        title: 'Send this email?',
+        body: 'It leaves the school straight away and cannot be recalled. Check who it is going to and what it says.',
+        subject: `${picked.length} ${picked.length === 1 ? 'person' : 'people'} · ${String(values?.subject ?? '').trim() || 'No subject'}`,
+        cta: 'Send it',
+        cancel: 'Go back',
+      }
+    },
+    run: async (values) => {
+      const picked = (values.picks as string[] | undefined) ?? []
+      await teachersService.mail({
+        user_ids: picked.map(Number),
+        subject: String(values.subject ?? '').trim(),
+        message: String(values.message ?? '').trim(),
+      })
+      return {
+        message: `Email sent to ${picked.length} ${picked.length === 1 ? 'person' : 'people'}`,
+      }
+    },
+    done: (picked) => `Email sent to ${picked} ${picked === 1 ? 'person' : 'people'}`,
+  }
+}
+
+/** Both of a teacher's flows, on the mixed register as on their own. */
+const isTeacher = (record: Row) => parseStaffKey(record.id).kind === 'teacher'
+
+const teacherFlows: AdminFlow[] = [
+  {
+    name: 'subjects',
+    label: 'Assign subjects',
+    when: isTeacher,
+    build: assignSubjects,
+  },
+  { name: 'mail', label: 'Send email', when: isTeacher, build: mailStaff },
+]
+
+export const adminFlows: Record<string, AdminFlow[]> = {
+  fees: [{ name: 'allocate', label: 'Allocate to classes', build: allocate }],
+  'staff-admin': [{ name: 'privileges', label: 'Set privileges', build: setPrivileges }],
+  // The mixed register opens teaching records too, and a flow that cannot run
+  // against an office record is not offered on one.
+  staff: teacherFlows,
+  'staff-teachers': teacherFlows,
   // Record-scoped, not `fromList`: a payment needs the invoice it settles,
   // and the queue's own search is how that invoice is found.
-  collect: { label: 'Take a payment', when: payAction, build: payment },
-  arms: { label: 'Place pupils', build: placePupils },
-  subjects: { label: 'Teach to classes', build: teachTo },
-  students: { label: 'Promote or transfer', build: promote },
-  applicants: { label: 'Review application', build: review },
-  library: { label: 'Issue this book', build: lend },
+  collect: [{ name: 'pay', label: 'Take a payment', when: payAction, build: payment }],
+  arms: [{ name: 'place', label: 'Place pupils', build: placePupils }],
+  subjects: [{ name: 'classes', label: 'Teach to classes', build: teachTo }],
+  students: [{ name: 'move', label: 'Promote or transfer', build: promote }],
+  applicants: [{ name: 'review', label: 'Review application', build: review }],
+  library: [{ name: 'lend', label: 'Issue this book', build: lend }],
 }

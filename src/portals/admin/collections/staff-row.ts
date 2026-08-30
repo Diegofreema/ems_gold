@@ -1,7 +1,9 @@
 import type { ActivityLog } from '../../../api/admins/types.ts'
-import type { Teacher } from '../../../api/teachers/types.ts'
+import type { Place } from '../../../api/types.ts'
+import type { Teacher, TeacherSubject } from '../../../api/teachers/types.ts'
 import type { Admin } from '../../../api/users/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
+import { countryIso } from '../../../features/collections/country-ids.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { formatDate } from '../../../lib/format.ts'
 
@@ -67,36 +69,100 @@ function asDate(value: string | null | undefined): string {
 /**
  * A teacher, as the register and their own record read them.
  *
- * `status` stays blank: the teaching record carries no such field — whether
- * they can sign in at all is `userstatus` on the login behind it, which this
- * endpoint does not expand.
+ * The two endpoints behind this are not the same shape: the register sends the
+ * teaching record with its login expanded, and `GET /teachers/{id}` adds the
+ * class and the subjects on top. Everything the detail alone carries reads
+ * blank on a register row rather than being fetched a second time per line.
  */
 export function teacherRow(teacher: Teacher): Row {
+  const subjects = teacher.subjects ?? []
   return {
     id: staffKey('teacher', teacher.id),
     name: text(fullName(teacher.firstname, teacher.middlename, teacher.lastname)),
     role: 'Teacher',
     phone: text(teacher.phone),
     gender: text(teacher.gender),
-    status: BLANK,
+    // The teaching record has no status of its own; whether they can sign in
+    // is `userstatus` on the login, which both endpoints expand.
+    status: text(teacher.user?.userstatus),
 
     // Read by the record panel rather than the table.
     qualification: text(teacher.qualification),
     // The API spells this Yes/No; the panel says what it means.
     adviser: teacher.isadviser === 'Yes' ? 'Takes an arm' : 'No arm',
+    // Two different things under two keys on purpose. `place` is for reading —
+    // the street with the state and country after it — and `address` is the
+    // API's own field, which the edit form writes straight back: prefilling
+    // the composed line there would have saved the country into the street.
+    place: text(placeOf(teacher)),
     address: text(teacher.address),
+    about: text(teacher.profile),
     joined: asDate(teacher.date_created),
-    cv: teacher.cv?.trim() || '',
-    // The teaching record expands neither of these, and the panel shows both.
-    department: BLANK,
-    username: BLANK,
+    username: text(teacher.user?.username),
+    // Detail only. The register knows the id and not the name.
+    department: text(teacher.department?.name),
+    subjects: subjects.length ? subjects.map((one) => one.name).join(', ') : BLANK,
+    subjectCount: teacher.subjects ? String(subjects.length) : BLANK,
+    // What the assign flow opens ticked. Only the detail carries them, so a
+    // row read off the register arrives with none — which is why that flow is
+    // reached from the record page and not from the list.
+    subjectIds: subjects.map((one) => String(one.id)).join(','),
 
     // The edit form is keyed as the endpoint is, and prefills from here.
     firstname: teacher.firstname ?? '',
     lastname: teacher.lastname ?? '',
     middlename: teacher.middlename ?? '',
     department_id: id(teacher.department_id),
+    profile: teacher.profile ?? '',
+    // The form picks a country by ISO code and a state by the school's own id,
+    // so an edit opens on what the record holds. A country the school's table
+    // numbers but this app has never seen reads blank rather than wrong.
+    country: countryIso(teacher.country_id),
+    state: id(teacher.state_id),
     user_id: String(teacher.user_id),
+  }
+}
+
+/**
+ * Where they live, as one line.
+ *
+ * The API expands `state_id` and `country_id` independently and never checks
+ * that they agree, so a record can come back as a state in one country beside
+ * the name of another — one teacher on bronze reads "Andaman and Nicobar
+ * Islands" under Nigeria. A state that does not belong to the country on the
+ * record is dropped: a wrong address is worse than a short one.
+ *
+ * Written against the three fields rather than against a teacher, because an
+ * administrator keeps the address on the office record and the country and
+ * state on the login behind it.
+ */
+function placeOf(place: {
+  address: string | null | undefined
+  state?: Place | null
+  country?: Place | null
+}): string {
+  const country = place.country?.name
+  const state =
+    place.state && place.state.country_id === place.country?.id
+      ? place.state.name
+      : undefined
+  return [place.address, state, country]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(', ')
+}
+
+/**
+ * One subject on a teacher's record. The class comes expanded on the subject
+ * itself, so the tab names it without a second lookup.
+ */
+export function teacherSubjectRow(subject: TeacherSubject): Row {
+  return {
+    id: String(subject.id),
+    name: text(subject.name),
+    code: text(subject.subjectcode),
+    klass: text(subject.department?.name),
+    state: subject.status === 1 ? 'Active' : 'Inactive',
   }
 }
 
@@ -121,9 +187,18 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
 
     qualification: BLANK,
     adviser: BLANK,
+    // The office record holds the address; the login holds the country and the
+    // state, and only the detail expands them. Read as one line under `place`;
+    // `address` stays the API's own field, which the edit form writes back.
+    place: text(
+      placeOf({
+        address: admin.address,
+        state: admin.user?.state,
+        country: admin.user?.country,
+      }),
+    ),
     address: text(admin.address),
     joined: asDate(admin.date_created),
-    cv: '',
 
     // The API calls the first half of the name `surname`; the form calls it
     // `firstname`, as it does for a teacher. Prefilling the wrong key left the
@@ -141,6 +216,9 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     // Only the privileges endpoint expands these; a row off the list carries
     // none, which is why the record page asks for them separately.
     privileges: held.length ? held.map((one) => one.name).join(', ') : BLANK,
+    // The panel says how many and the tab says which. Eleven names joined into
+    // one cell of a narrow column is a paragraph nobody reads.
+    privilegeCount: held.length ? String(held.length) : BLANK,
     privilegeIds: held.map((one) => String(one.id)).join(','),
   }
 }
@@ -186,6 +264,26 @@ export function adminDeleteBody(row: Row | undefined): string {
   }
   const name = row?.name && row.name !== BLANK ? row.name : 'This administrator'
   return `${name} loses the office record and the login behind it, permanently. Their activity trail stays. If they are only leaving for a while, disable the sign-in instead — that keeps the record and can be undone.`
+}
+
+/**
+ * What deleting a teaching record takes with it.
+ *
+ * Deliberately says less than the office record's: `DELETE /teachers/{id}` has
+ * not been run against the school's server, so what it does to the login, the
+ * subjects and the results entered under it is the server's business to state
+ * and not this dialog's to guess.
+ */
+export function teacherDeleteBody(row: Row | undefined): string {
+  const name = row?.name && row.name !== BLANK ? row.name : 'This teacher'
+  return `${name} is taken off the teaching register for good, along with the subjects assigned to them. This cannot be undone from here.`
+}
+
+/** Whichever of the two the record belongs to. The register mixes them. */
+export function staffDeleteBody(row: Row | undefined): string {
+  return parseStaffKey(String(row?.id ?? '')).kind === 'admin'
+    ? adminDeleteBody(row)
+    : teacherDeleteBody(row)
 }
 
 /**

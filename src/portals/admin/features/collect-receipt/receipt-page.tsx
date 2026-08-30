@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ChevronLeft, Printer } from 'lucide-react'
+import { Printer } from 'lucide-react'
 import { paymentMethods } from '@/api/collect-fees/hooks'
 import { collectFeeKeys } from '@/api/collect-fees/keys'
 import { collectFeesService } from '@/api/collect-fees/service'
+import { BackLink } from '@/components/page/back-link'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { PageHeader } from '@/components/page/page-header'
@@ -34,12 +35,7 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
 
   const header = (
     <div data-print-hide>
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to="/admin/collect">
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to fee collection
-        </Link>
-      </Button>
+      <BackLink to="/admin/collect" label="Back to fee collection" />
       <PageHeader
         kicker="Finance · Fee collection"
         title="Receipt"

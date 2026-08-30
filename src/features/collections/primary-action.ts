@@ -35,7 +35,7 @@ export type PrimaryActionKind =
 export function primaryActionKind(
   definition: CollectionDef,
   routes: CollectionRoutes,
-  flow?: FlowSpec,
+  flows?: readonly FlowSpec[],
 ): PrimaryActionKind {
   // Before everything: a destination the collection named itself. Read-only
   // does not suppress it, because a link is not a way of adding to the list —
@@ -46,7 +46,7 @@ export function primaryActionKind(
   // would otherwise have done.
   if (definition.readonly) return 'none'
   if (isFileAction(definition.action)) return 'file'
-  if (routes.flow && flow?.fromList) return 'flow'
+  if (routes.flow && flows?.some((flow) => flow.fromList)) return 'flow'
   if (routes.create) return 'create'
   return 'placeholder'
 }

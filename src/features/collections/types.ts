@@ -79,6 +79,14 @@ export type CollectionRoutes =
     }
   | { record: RecordPath; edit?: never; create?: never; flow?: never }
 
+/**
+ * Where a breadcrumb leads. A crumb naming a register links to it; one naming
+ * a record — the edit page's does — links to the record it is editing.
+ */
+export type CrumbLink =
+  | { to: ListPath; params?: never }
+  | { to: RecordPath; params: { collection: string; recordId: string } }
+
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
   | '/student/test'
@@ -98,6 +106,13 @@ export type ActionPath =
  * the flow itself is defined by the portal that mounts it.
  */
 export type FlowSpec = {
+  /**
+   * Which of the collection's flows this is, and what the URL calls it. A
+   * register usually has one; teachers have two — what they are trusted with,
+   * and writing to them — and the flow page has to know which it was opened
+   * for.
+   */
+  name: string
   /** Button label, e.g. "Allocate to classes". */
   label: string
   /** The flow needs no record, so the list's primary action opens it. */
@@ -256,6 +271,17 @@ export type FieldSpec = {
 export type FormSectionSpec = {
   title: string
   fields: FieldSpec[]
+  /**
+   * Whether this section applies to what is being filled in. The staff form
+   * writes to two different endpoints, and half its fields belong to only one
+   * of them — asking an office record for a qualification it cannot store is
+   * asking for something that will be thrown away.
+   *
+   * A conditional section's fields must be optional: the validator is built
+   * from the whole definition, so a required field in a hidden section would
+   * refuse the form for a reason nobody can see.
+   */
+  when?: (values: Record<string, unknown>) => boolean
 }
 
 /** A sub-table shown beside a record's fields on its detail page. */
@@ -268,6 +294,12 @@ export type DetailTab = {
   source?: (recordId: string) => Promise<Row[]>
   /** Shown in place of the table when the tab holds nothing. */
   empty?: string
+  /**
+   * Which records the tab belongs to. A register that mixes two populations
+   * carries the tabs of both, and a tab that can never fill for the record in
+   * front of you is worse than no tab: it reads as data that failed to load.
+   */
+  when?: (recordId: string) => boolean
 }
 
 /**
@@ -289,6 +321,9 @@ export type CollectionDef = {
    */
   searchable?: boolean
   footer: string
+  /** Shown where the record asked for did not come back. */
+  missingTitle?: string
+  missingBody?: string
   emptyTitle: string
   emptyBody: string
   /** Singular noun used in delete confirms, e.g. "fee". */

@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { ChevronLeft, CircleAlert } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { FormProvider } from 'react-hook-form'
 import { toast } from 'sonner'
+import { BackLink } from '@/components/page/back-link'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
@@ -195,12 +196,11 @@ export function ActionPage({
 
   return (
     <div className="max-w-[760px]">
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to={definition.path}>
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Cancel and go back
-        </Link>
-      </Button>
+      <BackLink
+        to={definition.path}
+        label="Cancel and go back"
+        backLabel="Cancel and go back"
+      />
 
       <PageHeader
         kicker={action.kicker}

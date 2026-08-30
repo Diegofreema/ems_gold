@@ -1,9 +1,9 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
 import { collectFeeKeys } from '@/api/collect-fees/keys'
 import { collectFeesService } from '@/api/collect-fees/service'
+import { BackLink } from '@/components/page/back-link'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { DataTable } from '@/components/data-table/data-table'
 import { EmptyState } from '@/components/feedback/empty-state'
@@ -61,12 +61,7 @@ export function PupilLookupPage() {
 
   const header = (
     <>
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to="/admin/collect">
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to fee collection
-        </Link>
-      </Button>
+      <BackLink to="/admin/collect" label="Back to fee collection" />
       <PageHeader
         kicker="Finance · Fee collection"
         title="Find a pupil"

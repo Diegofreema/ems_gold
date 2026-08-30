@@ -30,8 +30,19 @@ export const teachersService = {
   assignSubjects: (id: Id, body: AssignSubjectsBody) =>
     request<unknown>(`teachers/${id}/subjects`, { method: 'POST', body }),
 
-  /** 404 when nothing has been uploaded. */
+  /**
+   * The CV as a file. 404 "No CV has been uploaded for this member of staff."
+   * where there is none, which is every teaching record on the school's server
+   * today — so what a success actually answers with has not been seen, and the
+   * caller reads a file body or an envelope naming one.
+   */
   cv: (id: Id) => requestBlob(`teachers/${id}/cv`),
 
+  /**
+   * One message to many logins — `user_ids` are the logins behind the teaching
+   * records, not the teacher ids. Path confirmed by the school; it cannot be
+   * probed, since bronze answers a GET the same way for a route it does not
+   * have and for a POST-only route it does.
+   */
   mail: (body: MailStaffBody) => request<unknown>('teachers/mail', { method: 'POST', body }),
 }

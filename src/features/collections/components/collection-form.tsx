@@ -1,5 +1,7 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
+import { useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
+import { BackLink } from '@/components/page/back-link'
 import { CheckboxGroupField } from '@/components/form/checkbox-group-field'
 import { DateField } from '@/components/form/date-field'
 import { fromApiDate } from '../date-range'
@@ -82,6 +84,8 @@ export function CollectionForm({
   routes: CollectionRoutes
 }) {
   const navigate = useNavigate()
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
   const confirm = useConfirm()
   const sections = definition.form ?? fallbackSections(definition)
 
@@ -112,16 +116,28 @@ export function CollectionForm({
   }
 
   const form = useRecordForm<Values>(schemaFromSections(sections), defaults)
+  // Sections that ask about the record's own kind — the staff form's teaching
+  // half — appear once the kind is chosen, and never for the other one.
+  const values = useWatch({ control: form.control })
+  const shown = sections.filter((section) => section.when?.(values) ?? true)
   const editing = Boolean(record)
   const save = useSaveRecord(definition, editing)
   const remove = useRemoveRecord(definition)
-  const back = () =>
-    record
+  /**
+   * Leaving the form goes back the way it was opened rather than pushing the
+   * record on top of it — a form that was cancelled used to stay in the
+   * history, so the back button on the page behind it led straight back into
+   * the form that had just been abandoned.
+   */
+  const back = () => {
+    if (canGoBack) return router.history.back()
+    return record
       ? navigate({
           to: routes.record,
           params: { collection: definition.id, recordId: record.id },
         })
       : navigate({ to: definition.path })
+  }
 
   /**
    * The list is where a deleted record's page has to end up, so the navigation
@@ -146,6 +162,14 @@ export function CollectionForm({
     <>
       <RecordForm
         form={form}
+        // Cold-opened, a form has no page behind it; the register it belongs
+        // to is the one place that is certain to exist either way.
+        back={
+          <BackLink
+            to={definition.path}
+            label={`Back to ${definition.title.toLowerCase()}`}
+          />
+        }
         kicker={`${definition.kicker} · ${definition.title}`}
         title={editing ? `Edit ${definition.noun}` : definition.action}
         description={
@@ -174,7 +198,7 @@ export function CollectionForm({
         deleteLabel={editing && definition.remove ? 'Delete this record' : undefined}
         onDelete={editing && definition.remove ? askDelete : undefined}
       >
-        {sections.map((section) => (
+        {shown.map((section) => (
           <FormSection key={section.title} title={section.title}>
             {section.fields.map(renderField)}
           </FormSection>

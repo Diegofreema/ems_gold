@@ -20,13 +20,18 @@ export const adminsService = {
   profile: () => request<{ admin: Admin }>('admins/profile').then((data) => data.admin),
 
   /**
-   * Broken on bronze: it answers "Admin not found." for any administrator
-   * whose login has no country or state on it — seven of the nine on record —
-   * apparently an inner join on tables that have no row 0. The list expands
-   * everything this would, so the register reads a record from there instead.
-   * Kept because it is the documented route and will work once that is fixed.
+   * One office record, whole: the privileges, the class and the login with its
+   * role, country and state expanded — everything the record page shows, in
+   * one call.
+   *
+   * It answers 404 "Admin not found." for any administrator whose login holds
+   * `country_id`/`state_id` of 0, which on bronze is seven of the nine: the
+   * query joins Countries and States, and there is no row 0 to join to. That
+   * is a fault on the server, not a record that is missing, and the page says
+   * so rather than inventing a record out of the list.
    */
-  get: (id: Id) => request<{ admin: Admin }>(`admins/${id}`).then((data) => data.admin),
+  get: (id: Id) =>
+    request<{ admin: Admin }>(`users/admins/${id}`).then((data) => data.admin),
 
   /** Creates the Users login and the Admins profile in one call. */
   create: (body: CreateAdminBody) =>

@@ -1,8 +1,13 @@
+import { Link } from '@tanstack/react-router'
 import { Menu } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import type { CrumbLink } from '@/features/collections/types'
+import { cn } from '@/lib/utils'
 import { useShellStore } from '@/stores/shell.store'
 import { ThemeToggle } from './theme-toggle'
+
+const CRUMB = 'truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground'
 
 /**
  * Sticky bar: breadcrumb over page title on the left, portal status and the
@@ -10,12 +15,15 @@ import { ThemeToggle } from './theme-toggle'
  */
 export function AppHeader({
   crumb,
+  crumbTo,
   title,
   status,
   narrow,
   children,
 }: {
   crumb: string
+  /** Where the crumb leads. Text where the crumb names no page of its own. */
+  crumbTo?: CrumbLink
   title: string
   status?: ReactNode
   narrow: boolean
@@ -41,9 +49,18 @@ export function AppHeader({
       {/* One line each: a long record name would otherwise wrap into the
           status beside it. The page below repeats the title in full. */}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-          {crumb}
-        </div>
+        {/* A crumb that names a page is the way up to it; one that names only
+            the section it sits in has nowhere to lead, and stays text. */}
+        {crumbTo ? (
+          <Link
+            {...crumbTo}
+            className={cn(CRUMB, 'block w-fit max-w-full hover:text-brand')}
+          >
+            {crumb}
+          </Link>
+        ) : (
+          <div className={CRUMB}>{crumb}</div>
+        )}
         <div className="truncate font-heading text-[17px] leading-[1.15] font-extrabold">
           {title}
         </div>

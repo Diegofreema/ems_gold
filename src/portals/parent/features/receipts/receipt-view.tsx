@@ -1,6 +1,5 @@
-import { Link } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
+import { BackLink } from '@/components/page/back-link'
 import { Button } from '@/components/ui/button'
 import type { Row } from '@/features/collections/types'
 import { parseNaira } from '@/lib/format'
@@ -21,12 +20,7 @@ export function ReceiptView({ receipt }: { receipt: Row }) {
 
   return (
     <div className="max-w-[640px]">
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to="/parent/receipts">
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to receipts
-        </Link>
-      </Button>
+      <BackLink to="/parent/receipts" label="Back to receipts" />
 
       <article className="border-2 border-foreground">
         <header className="flex items-start gap-4 border-b-2 border-foreground px-6 py-[22px]">

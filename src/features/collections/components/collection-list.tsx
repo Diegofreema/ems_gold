@@ -25,12 +25,12 @@ import { CollectionSummary } from './collection-summary'
 export function CollectionList({
   definition,
   routes,
-  flow,
+  flows,
 }: {
   definition: CollectionDef
   routes: CollectionRoutes
-  /** The guided flow these records enter, when the portal has one for them. */
-  flow?: FlowSpec
+  /** The guided flows these records enter, when the portal has any for them. */
+  flows?: readonly FlowSpec[]
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
@@ -85,7 +85,10 @@ export function CollectionList({
 
   // One decision, shared with the create route so a list that does not create
   // records has no create page to reach by URL either.
-  const primary = primaryActionKind(definition, routes, flow)
+  const primary = primaryActionKind(definition, routes, flows)
+  // At most one flow opens without a record, and it is the one the button on
+  // this page is for.
+  const listFlow = flows?.find((one) => one.fromList)
   const primaryAction =
     // One decision, taken in `primaryActionKind`. A second `readonly` gate
     // here used to overrule the destination such a collection had named.
@@ -94,9 +97,13 @@ export function CollectionList({
         <Download className="size-[15px]" strokeWidth={2} />
         {definition.action}
       </Button>
-    ) : primary === 'flow' && routes.flow ? (
+    ) : primary === 'flow' && routes.flow && listFlow ? (
       <Button asChild>
-        <Link to={routes.flow} params={{ collection: definition.id }}>
+        <Link
+          to={routes.flow}
+          params={{ collection: definition.id }}
+          search={{ flow: listFlow.name }}
+        >
           {definition.action}
         </Link>
       </Button>

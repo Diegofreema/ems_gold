@@ -1,18 +1,27 @@
 import { Outlet, useLocation, useMatches } from '@tanstack/react-router'
 import { useEffect, type ReactNode } from 'react'
+import type { Heading } from '@/features/collections/resolve'
 import { NotificationBell } from '@/features/notifications/components/notification-bell'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
+import type { ListPath } from '@/features/collections/types'
 import type { PortalConfig } from '@/lib/portal'
 import { useShellStore } from '@/stores/shell.store'
 import { AppHeader } from './header/app-header'
 import { OfflineBanner } from './offline-banner'
 import { Sidebar } from './sidebar/sidebar'
 
-type Heading = { title: string; crumb: string }
-
-function headingOf(match: { staticData: { title?: string; crumb?: string }; loaderData?: unknown }): Heading | undefined {
+function headingOf(match: {
+  staticData: { title?: string; crumb?: string; crumbTo?: ListPath }
+  loaderData?: unknown
+}): Heading | undefined {
   if (match.staticData.title) {
-    return { title: match.staticData.title, crumb: match.staticData.crumb ?? '' }
+    return {
+      title: match.staticData.title,
+      crumb: match.staticData.crumb ?? '',
+      // A static route names its parent page as a path; a route whose crumb
+      // is only the section it sits in names none, and gets no link.
+      crumbTo: match.staticData.crumbTo && { to: match.staticData.crumbTo },
+    }
   }
   // Routes whose title depends on the record publish it from their loader.
   const fromLoader = (match.loaderData as { heading?: Heading } | undefined)?.heading
@@ -45,7 +54,7 @@ export function AppShell({
   const closeDrawer = useShellStore((state) => state.closeDrawer)
   const { pathname } = useLocation()
   const routeHeading = useRouteHeading()
-  const { title, crumb } = heading ?? routeHeading
+  const { title, crumb, crumbTo } = heading ?? routeHeading
 
   const drawerVisible = narrow && drawerOpen
 
@@ -75,6 +84,7 @@ export function AppShell({
       <main className="flex min-w-0 flex-1 flex-col">
         <AppHeader
           crumb={crumb}
+          crumbTo={crumbTo}
           title={title}
           status={config.headerStatus}
           narrow={narrow}

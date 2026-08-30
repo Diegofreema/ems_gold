@@ -1,7 +1,7 @@
-import { Link } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { parseAsInteger, useQueryState } from 'nuqs'
 import { toast } from 'sonner'
+import { BackLink } from '@/components/page/back-link'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import type { Row } from '@/features/collections/types'
@@ -25,12 +25,7 @@ export function MaterialViewer({ material }: { material: Row }) {
 
   return (
     <div>
-      <Button asChild variant="ghost" className="mb-3.5 px-1 text-brand">
-        <Link to="/student/materials">
-          <ChevronLeft className="size-3.5" strokeWidth={2} />
-          Back to course materials
-        </Link>
-      </Button>
+      <BackLink to="/student/materials" label="Back to course materials" />
 
       <div className="flex flex-wrap items-start justify-between gap-[18px]">
         <div className="max-w-[60ch]">

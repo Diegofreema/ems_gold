@@ -8,7 +8,7 @@ export const Route = createFileRoute('/student/materials/$recordId')({
     if (!material) throw notFound()
     return {
       material,
-      heading: { title: material.title, crumb: 'Learning · Course materials' },
+      heading: { title: material.title, crumb: 'Learning · Course materials', crumbTo: { to: '/student/materials' } },
     }
   },
   component: MaterialViewerRoute,

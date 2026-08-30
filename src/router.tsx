@@ -1,4 +1,5 @@
 import { createRouter } from '@tanstack/react-router'
+import type { ListPath } from '@/features/collections/types'
 import { queryClient } from '@/lib/query-client'
 import { routeTree } from './routeTree.gen'
 
@@ -19,5 +20,7 @@ declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
     title?: string
     crumb?: string
+    /** The page the crumb names, where it names one — it links there. */
+    crumbTo?: ListPath
   }
 }

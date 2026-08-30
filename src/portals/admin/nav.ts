@@ -59,7 +59,6 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/staff', label: 'Manage staff', icon: Briefcase },
       { to: '/admin/staff-admin', label: 'Administrators', icon: Shield },
       { to: '/admin/staff-teachers', label: 'Teachers', icon: BookOpen },
-      { to: '/admin/staff-other', label: 'Other staff', icon: Users },
     ],
   },
   {

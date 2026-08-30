@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { TestReceipt } from '@/portals/student/features/test/test-receipt'
 
 export const Route = createFileRoute('/student/test/receipt')({
-  staticData: { title: 'Test submitted', crumb: 'Assessment · Take a test' },
+  staticData: { title: 'Test submitted', crumb: 'Assessment · Take a test', crumbTo: '/student/tests' },
   validateSearch: (search: Record<string, unknown>) => ({
     answered: Number(search.answered) || 0,
   }),

@@ -9,7 +9,7 @@ export function CollectionPage({ definition }: { definition: CollectionDef }) {
     <SharedCollectionPage
       definition={definition}
       routes={adminCollectionRoutes}
-      flow={adminFlows[definition.id]}
+      flows={adminFlows[definition.id]}
     />
   )
 }

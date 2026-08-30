@@ -11,11 +11,11 @@ import { CollectionList } from './collection-list'
 export function CollectionPage({
   definition,
   routes,
-  flow,
+  flows,
 }: {
   definition: CollectionDef
   routes: CollectionRoutes
-  flow?: FlowSpec
+  flows?: readonly FlowSpec[]
 }) {
-  return <CollectionList definition={definition} routes={routes} flow={flow} />
+  return <CollectionList definition={definition} routes={routes} flows={flows} />
 }

@@ -22,7 +22,7 @@ export const subjects: CollectionDef = {
   footer: '4 subjects · First Term 2025/2026',
   emptyTitle: 'No subjects yet',
   emptyBody:
-    'Once the head of department assigns you a subject it appears here.',
+    'Once the school office assigns you a subject it appears here.',
   noun: 'subject',
   nameKey: 'name',
   columns: [
@@ -49,10 +49,10 @@ export const subjects: CollectionDef = {
       fields: [
         {
           key: 'reason',
-          label: 'Note to the head of department',
+          label: 'Note to the school office',
           multiline: true,
           wide: true,
-          placeholder: 'One or two lines the HOD will read.',
+          placeholder: 'One or two lines the office will read.',
         },
       ],
     },
@@ -105,12 +105,12 @@ export const topics: CollectionDef = {
   kicker: 'Teaching',
   title: 'Topics taught',
   description:
-    'A record of what you have covered, week by week. The head of department reads this.',
+    'A record of what you have covered, week by week. The school office reads this.',
   action: 'Add topic',
   searchHint: 'Search topic',
   footer: '7 topics recorded this term',
   emptyTitle: 'Nothing recorded yet',
-  emptyBody: 'Record what you cover each week so the HOD can follow the scheme.',
+  emptyBody: 'Record what you cover each week so the office can follow the scheme.',
   noun: 'topic',
   nameKey: 'topic',
   columns: [
@@ -145,7 +145,7 @@ export const topics: CollectionDef = {
       fields: [
         {
           key: 'note',
-          label: 'Note for the HOD',
+          label: 'Note for the school office',
           multiline: true,
           wide: true,
           placeholder: 'Optional. What went well, what needs a second pass.',

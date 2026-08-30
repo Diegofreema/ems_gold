@@ -1,4 +1,26 @@
-import type { PageParams } from '../types.ts'
+import type { PageParams, Place } from '../types.ts'
+import type { User } from '../users/types.ts'
+
+/** A class, as the API expands it beside a staff record or a subject. */
+export type StaffDepartment = {
+  id: number
+  name: string
+  deptcode: string | null
+}
+
+/**
+ * A subject the teacher carries. Each arrives with the class it is taught in
+ * already expanded, so a teacher's subjects need no second call to be read.
+ */
+export type TeacherSubject = {
+  id: number
+  name: string
+  subjectcode: string | null
+  department_id: number | null
+  /** 1 while the subject is in use. */
+  status: number
+  department?: StaffDepartment | null
+}
 
 export type Teacher = {
   id: number
@@ -21,6 +43,17 @@ export type Teacher = {
   staffdepartment_id: number | null
   /** The API spells this Yes/No rather than as a boolean. */
   isadviser: 'Yes' | 'No'
+  /**
+   * Expanded by `GET /teachers/{id}` alone — the list sends `department_id`
+   * and nothing else, so a row read off the register knows no class name.
+   */
+  department?: StaffDepartment | null
+  /** Detail only, and the only place the school says what a teacher teaches. */
+  subjects?: TeacherSubject[]
+  state?: Place | null
+  country?: Place | null
+  /** The login behind the record. Both the list and the detail expand it. */
+  user?: User | null
 }
 
 export type StaffListParams = PageParams & {

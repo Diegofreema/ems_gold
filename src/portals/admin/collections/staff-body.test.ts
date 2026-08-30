@@ -43,3 +43,82 @@ test('qualification is a teaching field and does not reach the office record', (
   assert.equal(teacherBody(values).qualification, 'B.Sc Mathematics')
   assert.equal('qualification' in adminBody(values), false)
 })
+
+/** The staff form as the endpoints' own documentation writes their bodies. */
+const TEACHING_FORM = {
+  username: 'newteachingstaff@school.ng',
+  firstname: 'ADAMA',
+  lastname: 'StaffLAST',
+  middlename: 'M',
+  gender: 'Male',
+  address: 'OWERRI IMO STATE',
+  phone: '08000000000',
+  country: 'NG',
+  state: '2647',
+  department_id: '1',
+  qualification: 'BSc',
+  profile: 'About this teacher',
+}
+
+test('the teacher body is exactly what POST /teachers documents', () => {
+  assert.deepEqual(teacherBody(TEACHING_FORM), {
+    username: 'newteachingstaff@school.ng',
+    firstname: 'ADAMA',
+    lastname: 'StaffLAST',
+    middlename: 'M',
+    gender: 'Male',
+    address: 'OWERRI IMO STATE',
+    phone: '08000000000',
+    country_id: 160,
+    state_id: 2647,
+    department_id: 1,
+    qualification: 'BSc',
+    profile: 'About this teacher',
+  })
+})
+
+test('a country the school has no id for is left off rather than guessed', () => {
+  // The form holds an ISO code; the number belongs to the school's own table,
+  // and sending somebody else's numbering would file the teacher elsewhere.
+  const body = teacherBody({ ...TEACHING_FORM, country: 'FR', state: '' })
+  assert.equal(body.country_id, undefined)
+  assert.equal(body.state_id, undefined)
+  // Everything else still goes.
+  assert.equal(body.firstname, 'ADAMA')
+})
+
+test('the admin body is exactly what POST /admins/new-admin documents', () => {
+  assert.deepEqual(
+    adminBody({
+      username: 'newadmin@school.ng',
+      firstname: 'Surname',
+      lastname: 'Firstname',
+      middlename: '',
+      gender: 'Male',
+      department_id: '1',
+      phone: '08000000000',
+      address: 'Address',
+      // The office endpoint takes none of these, so none may reach it.
+      country: 'NG',
+      state: '2647',
+      qualification: 'BSc',
+      profile: 'About',
+    }),
+    {
+      username: 'newadmin@school.ng',
+      surname: 'Surname',
+      lastname: 'Firstname',
+      middlename: undefined,
+      gender: 'Male',
+      department_id: 1,
+      phone: '08000000000',
+      address: 'Address',
+    },
+  )
+})
+
+test('an update sends everything but the sign-in name', () => {
+  assert.equal('username' in teacherUpdate(TEACHING_FORM), false)
+  assert.equal(teacherUpdate(TEACHING_FORM).country_id, 160)
+  assert.equal('username' in adminUpdate(TEACHING_FORM), false)
+})

@@ -6,7 +6,7 @@ export const Route = createFileRoute('/admin/collect/receipt/$invoiceId')({
   // JSON-encodes search values, and `?invoice=%222443%22` is not a link to
   // hand anybody. Every other URL in the app reads plainly and so does this.
   loader: ({ params }) => ({ invoiceId: params.invoiceId }),
-  staticData: { title: 'Receipt', crumb: 'Finance · Fee collection' },
+  staticData: { title: 'Receipt', crumb: 'Finance · Fee collection', crumbTo: '/admin/collect' },
   component: ReceiptRoute,
 })
 

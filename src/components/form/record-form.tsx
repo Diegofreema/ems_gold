@@ -12,6 +12,7 @@ import { FormFooter } from './form-footer'
  */
 export function RecordForm<TValues extends FieldValues>({
   form,
+  back,
   kicker,
   title,
   description,
@@ -23,6 +24,11 @@ export function RecordForm<TValues extends FieldValues>({
   children,
 }: {
   form: UseFormReturn<TValues>
+  /**
+   * The way out, above the heading. Cancel at the foot of a long form is a
+   * scroll away from where someone realises they are on the wrong record.
+   */
+  back?: ReactNode
   kicker: string
   title: string
   description?: string
@@ -37,6 +43,7 @@ export function RecordForm<TValues extends FieldValues>({
 
   return (
     <div className="max-w-[780px]">
+      {back}
       <PageHeader kicker={kicker} title={title} description={description} />
       <Rule />
 

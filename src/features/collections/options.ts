@@ -18,6 +18,10 @@ export type OptionsKey =
   | 'payment-methods'
   /** Super Admin, Bursar, Secretary — what kind of login an account is. */
   | 'roles'
+  /** Every country, off `country-state-city`; the value is the ISO code. */
+  | 'countries'
+  /** The states of the chosen country, valued by the school's own id. */
+  | 'states'
 
 /**
  * A choice as a definition writes it: a bare string where the value and the

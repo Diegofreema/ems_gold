@@ -54,7 +54,9 @@ const def = (action: string): CollectionDef => ({
 test('a create route alone is not enough to publish a create page', () => {
   // Fee collection: the list opens the payment flow, so /new is not its page.
   assert.equal(
-    primaryActionKind(def('Take a payment'), routes, { label: 'Take a payment', fromList: true }),
+    primaryActionKind(def('Take a payment'), routes, [
+      { name: 'pay', label: 'Take a payment', fromList: true },
+    ]),
     'flow',
   )
   // A download never reaches a form, whatever routes the portal publishes.
@@ -63,7 +65,9 @@ test('a create route alone is not enough to publish a create page', () => {
   assert.equal(primaryActionKind(def('Create fee'), routes), 'create')
   // A record-scoped flow does not take over the list's button.
   assert.equal(
-    primaryActionKind(def('Create fee'), routes, { label: 'Allocate to classes' }),
+    primaryActionKind(def('Create fee'), routes, [
+      { name: 'allocate', label: 'Allocate to classes' },
+    ]),
     'create',
   )
 })

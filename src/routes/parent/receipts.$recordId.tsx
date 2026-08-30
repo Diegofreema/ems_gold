@@ -8,7 +8,7 @@ export const Route = createFileRoute('/parent/receipts/$recordId')({
     if (!receipt) throw notFound()
     return {
       receipt,
-      heading: { title: receipt.receipt, crumb: 'Finance · Receipts' },
+      heading: { title: receipt.receipt, crumb: 'Finance · Receipts', crumbTo: { to: '/parent/receipts' } },
     }
   },
   component: Receipt,

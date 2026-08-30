@@ -14,7 +14,7 @@ export const teacherPortal: PortalConfig = {
     { to: '/teacher', label: 'Dashboard', hint: 'Today’s periods and open sheets' },
     { to: '/teacher/scores', label: 'Enter scores', hint: 'Two sheets still open' },
     { to: '/teacher/students', label: 'My students', hint: '143 pupils across 4 arms' },
-    { to: '/teacher/topics', label: 'Topics taught', hint: 'What the HOD reads' },
+    { to: '/teacher/topics', label: 'Topics taught', hint: 'What the office reads' },
   ],
   account: {
     name: 'Chukwuma Nnaji',

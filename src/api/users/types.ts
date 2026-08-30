@@ -1,4 +1,4 @@
-import type { Id, PageParams } from '../types.ts'
+import type { Id, PageParams, Place } from '../types.ts'
 
 /** A login account. Every portal's person hangs off one of these. */
 export type User = {
@@ -22,6 +22,12 @@ export type User = {
   useruniquid: string | null
   userstatus: UserStatus
   role?: Role
+  /**
+   * Expanded by `GET /users/admins/{id}` only. The same join is why that
+   * endpoint refuses a login whose ids are 0 — see the note on the service.
+   */
+  country?: Place
+  state?: Place
 }
 
 /** The API spells these two exactly; anything else is refused. */
