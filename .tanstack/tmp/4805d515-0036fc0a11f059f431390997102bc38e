@@ -64,9 +64,7 @@ import { Route as StudentCoursesRouteImport } from './routes/student/courses'
 import { Route as StudentInvoicesRouteImport } from './routes/student/invoices'
 import { Route as StudentNotificationsRouteImport } from './routes/student/notifications'
 import { Route as StudentProfileRouteImport } from './routes/student/profile'
-import { Route as StudentRecordRouteImport } from './routes/student/record'
 import { Route as StudentResultsRouteImport } from './routes/student/results'
-import { Route as StudentTestsRouteImport } from './routes/student/tests'
 import { Route as StudentTimetableRouteImport } from './routes/student/timetable'
 import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
 import { Route as TeacherEclassesRouteImport } from './routes/teacher/eclasses'
@@ -89,13 +87,14 @@ import { Route as ParentChildrenIndexRouteImport } from './routes/parent/childre
 import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.add'
 import { Route as StudentCollectionRecordIdRouteImport } from './routes/student/$collection.$recordId'
 import { Route as StudentMaterialsIndexRouteImport } from './routes/student/materials.index'
-import { Route as StudentTestIndexRouteImport } from './routes/student/test.index'
-import { Route as StudentTestReceiptRouteImport } from './routes/student/test.receipt'
+import { Route as StudentTestsIndexRouteImport } from './routes/student/tests.index'
 import { Route as TeacherCollectionNewRouteImport } from './routes/teacher/$collection.new'
 import { Route as TeacherUploadsIndexRouteImport } from './routes/teacher/uploads.index'
 import { Route as AdminCollectionRecordIdIndexRouteImport } from './routes/admin/$collection.$recordId.index'
 import { Route as AdminCollectionRecordIdEditRouteImport } from './routes/admin/$collection.$recordId.edit'
 import { Route as AdminCollectReceiptInvoiceIdRouteImport } from './routes/admin/collect.receipt.$invoiceId'
+import { Route as StudentTestsTestIdIndexRouteImport } from './routes/student/tests.$testId.index'
+import { Route as StudentTestsTestIdResultRouteImport } from './routes/student/tests.$testId.result'
 import { Route as TeacherCollectionRecordIdIndexRouteImport } from './routes/teacher/$collection.$recordId.index'
 import { Route as TeacherCollectionRecordIdEditRouteImport } from './routes/teacher/$collection.$recordId.edit'
 
@@ -373,19 +372,9 @@ const StudentProfileRoute = StudentProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => StudentRouteRoute,
 } as any)
-const StudentRecordRoute = StudentRecordRouteImport.update({
-  id: '/record',
-  path: '/record',
-  getParentRoute: () => StudentRouteRoute,
-} as any)
 const StudentResultsRoute = StudentResultsRouteImport.update({
   id: '/results',
   path: '/results',
-  getParentRoute: () => StudentRouteRoute,
-} as any)
-const StudentTestsRoute = StudentTestsRouteImport.update({
-  id: '/tests',
-  path: '/tests',
   getParentRoute: () => StudentRouteRoute,
 } as any)
 const StudentTimetableRoute = StudentTimetableRouteImport.update({
@@ -500,14 +489,9 @@ const StudentMaterialsIndexRoute = StudentMaterialsIndexRouteImport.update({
   path: '/materials/',
   getParentRoute: () => StudentRouteRoute,
 } as any)
-const StudentTestIndexRoute = StudentTestIndexRouteImport.update({
-  id: '/test/',
-  path: '/test/',
-  getParentRoute: () => StudentRouteRoute,
-} as any)
-const StudentTestReceiptRoute = StudentTestReceiptRouteImport.update({
-  id: '/test/receipt',
-  path: '/test/receipt',
+const StudentTestsIndexRoute = StudentTestsIndexRouteImport.update({
+  id: '/tests/',
+  path: '/tests/',
   getParentRoute: () => StudentRouteRoute,
 } as any)
 const TeacherCollectionNewRoute = TeacherCollectionNewRouteImport.update({
@@ -537,6 +521,17 @@ const AdminCollectReceiptInvoiceIdRoute =
     id: '/collect/receipt/$invoiceId',
     path: '/collect/receipt/$invoiceId',
     getParentRoute: () => AdminRouteRoute,
+  } as any)
+const StudentTestsTestIdIndexRoute = StudentTestsTestIdIndexRouteImport.update({
+  id: '/tests/$testId/',
+  path: '/tests/$testId/',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
+const StudentTestsTestIdResultRoute =
+  StudentTestsTestIdResultRouteImport.update({
+    id: '/tests/$testId/result',
+    path: '/tests/$testId/result',
+    getParentRoute: () => StudentRouteRoute,
   } as any)
 const TeacherCollectionRecordIdIndexRoute =
   TeacherCollectionRecordIdIndexRouteImport.update({
@@ -603,9 +598,7 @@ export interface FileRoutesByFullPath {
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/profile': typeof StudentProfileRoute
-  '/student/record': typeof StudentRecordRoute
   '/student/results': typeof StudentResultsRoute
-  '/student/tests': typeof StudentTestsRoute
   '/student/timetable': typeof StudentTimetableRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
@@ -628,17 +621,18 @@ export interface FileRoutesByFullPath {
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
-  '/student/test/receipt': typeof StudentTestReceiptRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
-  '/student/test/': typeof StudentTestIndexRoute
+  '/student/tests/': typeof StudentTestsIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
   '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
+  '/student/tests/$testId/result': typeof StudentTestsTestIdResultRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
+  '/student/tests/$testId/': typeof StudentTestsTestIdIndexRoute
   '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -689,9 +683,7 @@ export interface FileRoutesByTo {
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/profile': typeof StudentProfileRoute
-  '/student/record': typeof StudentRecordRoute
   '/student/results': typeof StudentResultsRoute
-  '/student/tests': typeof StudentTestsRoute
   '/student/timetable': typeof StudentTimetableRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
@@ -714,17 +706,18 @@ export interface FileRoutesByTo {
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
-  '/student/test/receipt': typeof StudentTestReceiptRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/admin/collect': typeof AdminCollectIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
   '/student/materials': typeof StudentMaterialsIndexRoute
-  '/student/test': typeof StudentTestIndexRoute
+  '/student/tests': typeof StudentTestsIndexRoute
   '/teacher/uploads': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
   '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
+  '/student/tests/$testId/result': typeof StudentTestsTestIdResultRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId': typeof AdminCollectionRecordIdIndexRoute
+  '/student/tests/$testId': typeof StudentTestsTestIdIndexRoute
   '/teacher/$collection/$recordId': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRoutesById {
@@ -781,9 +774,7 @@ export interface FileRoutesById {
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/notifications': typeof StudentNotificationsRoute
   '/student/profile': typeof StudentProfileRoute
-  '/student/record': typeof StudentRecordRoute
   '/student/results': typeof StudentResultsRoute
-  '/student/tests': typeof StudentTestsRoute
   '/student/timetable': typeof StudentTimetableRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
@@ -806,17 +797,18 @@ export interface FileRoutesById {
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
-  '/student/test/receipt': typeof StudentTestReceiptRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
-  '/student/test/': typeof StudentTestIndexRoute
+  '/student/tests/': typeof StudentTestsIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
   '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
+  '/student/tests/$testId/result': typeof StudentTestsTestIdResultRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
+  '/student/tests/$testId/': typeof StudentTestsTestIdIndexRoute
   '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -873,9 +865,7 @@ export interface FileRouteTypes {
     | '/student/invoices'
     | '/student/notifications'
     | '/student/profile'
-    | '/student/record'
     | '/student/results'
-    | '/student/tests'
     | '/student/timetable'
     | '/teacher/eclasses'
     | '/teacher/msg-admin'
@@ -898,17 +888,18 @@ export interface FileRouteTypes {
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/student/$collection/$recordId'
-    | '/student/test/receipt'
     | '/teacher/$collection/new'
     | '/admin/collect/'
     | '/parent/children/'
     | '/student/materials/'
-    | '/student/test/'
+    | '/student/tests/'
     | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
     | '/admin/collect/receipt/$invoiceId'
+    | '/student/tests/$testId/result'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
+    | '/student/tests/$testId/'
     | '/teacher/$collection/$recordId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -959,9 +950,7 @@ export interface FileRouteTypes {
     | '/student/invoices'
     | '/student/notifications'
     | '/student/profile'
-    | '/student/record'
     | '/student/results'
-    | '/student/tests'
     | '/student/timetable'
     | '/teacher/eclasses'
     | '/teacher/msg-admin'
@@ -984,17 +973,18 @@ export interface FileRouteTypes {
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/student/$collection/$recordId'
-    | '/student/test/receipt'
     | '/teacher/$collection/new'
     | '/admin/collect'
     | '/parent/children'
     | '/student/materials'
-    | '/student/test'
+    | '/student/tests'
     | '/teacher/uploads'
     | '/admin/$collection/$recordId/edit'
     | '/admin/collect/receipt/$invoiceId'
+    | '/student/tests/$testId/result'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId'
+    | '/student/tests/$testId'
     | '/teacher/$collection/$recordId'
   id:
     | '__root__'
@@ -1050,9 +1040,7 @@ export interface FileRouteTypes {
     | '/student/invoices'
     | '/student/notifications'
     | '/student/profile'
-    | '/student/record'
     | '/student/results'
-    | '/student/tests'
     | '/student/timetable'
     | '/teacher/eclasses'
     | '/teacher/msg-admin'
@@ -1075,17 +1063,18 @@ export interface FileRouteTypes {
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/student/$collection/$recordId'
-    | '/student/test/receipt'
     | '/teacher/$collection/new'
     | '/admin/collect/'
     | '/parent/children/'
     | '/student/materials/'
-    | '/student/test/'
+    | '/student/tests/'
     | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
     | '/admin/collect/receipt/$invoiceId'
+    | '/student/tests/$testId/result'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
+    | '/student/tests/$testId/'
     | '/teacher/$collection/$recordId/'
   fileRoutesById: FileRoutesById
 }
@@ -1485,25 +1474,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentProfileRouteImport
       parentRoute: typeof StudentRouteRoute
     }
-    '/student/record': {
-      id: '/student/record'
-      path: '/record'
-      fullPath: '/student/record'
-      preLoaderRoute: typeof StudentRecordRouteImport
-      parentRoute: typeof StudentRouteRoute
-    }
     '/student/results': {
       id: '/student/results'
       path: '/results'
       fullPath: '/student/results'
       preLoaderRoute: typeof StudentResultsRouteImport
-      parentRoute: typeof StudentRouteRoute
-    }
-    '/student/tests': {
-      id: '/student/tests'
-      path: '/tests'
-      fullPath: '/student/tests'
-      preLoaderRoute: typeof StudentTestsRouteImport
       parentRoute: typeof StudentRouteRoute
     }
     '/student/timetable': {
@@ -1660,18 +1635,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentMaterialsIndexRouteImport
       parentRoute: typeof StudentRouteRoute
     }
-    '/student/test/': {
-      id: '/student/test/'
-      path: '/test'
-      fullPath: '/student/test/'
-      preLoaderRoute: typeof StudentTestIndexRouteImport
-      parentRoute: typeof StudentRouteRoute
-    }
-    '/student/test/receipt': {
-      id: '/student/test/receipt'
-      path: '/test/receipt'
-      fullPath: '/student/test/receipt'
-      preLoaderRoute: typeof StudentTestReceiptRouteImport
+    '/student/tests/': {
+      id: '/student/tests/'
+      path: '/tests'
+      fullPath: '/student/tests/'
+      preLoaderRoute: typeof StudentTestsIndexRouteImport
       parentRoute: typeof StudentRouteRoute
     }
     '/teacher/$collection/new': {
@@ -1708,6 +1676,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/collect/receipt/$invoiceId'
       preLoaderRoute: typeof AdminCollectReceiptInvoiceIdRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/student/tests/$testId/': {
+      id: '/student/tests/$testId/'
+      path: '/tests/$testId'
+      fullPath: '/student/tests/$testId/'
+      preLoaderRoute: typeof StudentTestsTestIdIndexRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
+    '/student/tests/$testId/result': {
+      id: '/student/tests/$testId/result'
+      path: '/tests/$testId/result'
+      fullPath: '/student/tests/$testId/result'
+      preLoaderRoute: typeof StudentTestsTestIdResultRouteImport
+      parentRoute: typeof StudentRouteRoute
     }
     '/teacher/$collection/$recordId/': {
       id: '/teacher/$collection/$recordId/'
@@ -1845,15 +1827,14 @@ interface StudentRouteRouteChildren {
   StudentInvoicesRoute: typeof StudentInvoicesRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentProfileRoute: typeof StudentProfileRoute
-  StudentRecordRoute: typeof StudentRecordRoute
   StudentResultsRoute: typeof StudentResultsRoute
-  StudentTestsRoute: typeof StudentTestsRoute
   StudentTimetableRoute: typeof StudentTimetableRoute
   StudentIndexRoute: typeof StudentIndexRoute
   StudentCollectionRecordIdRoute: typeof StudentCollectionRecordIdRoute
-  StudentTestReceiptRoute: typeof StudentTestReceiptRoute
   StudentMaterialsIndexRoute: typeof StudentMaterialsIndexRoute
-  StudentTestIndexRoute: typeof StudentTestIndexRoute
+  StudentTestsIndexRoute: typeof StudentTestsIndexRoute
+  StudentTestsTestIdResultRoute: typeof StudentTestsTestIdResultRoute
+  StudentTestsTestIdIndexRoute: typeof StudentTestsTestIdIndexRoute
 }
 
 const StudentRouteRouteChildren: StudentRouteRouteChildren = {
@@ -1861,15 +1842,14 @@ const StudentRouteRouteChildren: StudentRouteRouteChildren = {
   StudentInvoicesRoute: StudentInvoicesRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,
   StudentProfileRoute: StudentProfileRoute,
-  StudentRecordRoute: StudentRecordRoute,
   StudentResultsRoute: StudentResultsRoute,
-  StudentTestsRoute: StudentTestsRoute,
   StudentTimetableRoute: StudentTimetableRoute,
   StudentIndexRoute: StudentIndexRoute,
   StudentCollectionRecordIdRoute: StudentCollectionRecordIdRoute,
-  StudentTestReceiptRoute: StudentTestReceiptRoute,
   StudentMaterialsIndexRoute: StudentMaterialsIndexRoute,
-  StudentTestIndexRoute: StudentTestIndexRoute,
+  StudentTestsIndexRoute: StudentTestsIndexRoute,
+  StudentTestsTestIdResultRoute: StudentTestsTestIdResultRoute,
+  StudentTestsTestIdIndexRoute: StudentTestsTestIdIndexRoute,
 }
 
 const StudentRouteRouteWithChildren = StudentRouteRoute._addFileChildren(

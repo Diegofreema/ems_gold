@@ -1,14 +1,9 @@
-import { allRows, pageRows } from '@/features/collections/api'
+import { pageRows } from '@/features/collections/api'
 import type { CollectionDef } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
 import { queryClient } from '@/lib/query-client'
-import {
-  studentInvoicesQuery,
-  studentRecordQuery,
-  studentStatsQuery,
-} from '../api/queries'
+import { studentInvoicesQuery, studentStatsQuery } from '../api/queries'
 import { invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
-import { recordRows } from '../features/record/record'
 
 /**
  * The pupil's fee ledger, from `GET /students/me/invoices` — one answer
@@ -94,39 +89,4 @@ export const invoices: CollectionDef = {
   ],
   source: (params) => rows().then((all) => pageRows(all, params)),
   record: (recordId) => rows().then((all) => all.find((row) => row.id === recordId)),
-}
-
-const held = () =>
-  queryClient.ensureQueryData(studentRecordQuery).then((student) => recordRows(student))
-
-export const record: CollectionDef = {
-  id: 'record',
-  path: '/student/record',
-  kicker: 'Finance',
-  title: 'My record',
-  description:
-    'What the school holds about you, field by field. Your phone and your address are yours to correct; ask the office about anything else that is wrong.',
-  action: 'Correct my details',
-  actionTo: '/student/profile',
-  readonly: true,
-  searchHint: 'Search field',
-  footer: 'Everything on your record, including what has been left blank',
-  emptyTitle: 'Nothing on file',
-  emptyBody: 'The office has not filled in your record yet.',
-  noun: 'field',
-  nameKey: 'field',
-  // No history. The API keeps no audit a pupil may read, and the placeholder
-  // in its place would be invented entries about their own record.
-  tabs: [],
-  columns: [
-    { key: 'field', label: 'Field', cardRole: 'title' },
-    { key: 'value', label: 'Value', cardRole: 'subtitle' },
-  ],
-  detail: [
-    { key: 'field', label: 'Field' },
-    { key: 'value', label: 'Value' },
-    { key: 'who', label: 'Who can change it' },
-  ],
-  source: (params) => held().then((all) => allRows(all, params)),
-  record: (recordId) => held().then((all) => all.find((row) => row.id === recordId)),
 }

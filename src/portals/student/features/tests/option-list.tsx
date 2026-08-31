@@ -1,42 +1,55 @@
+import type { QuestionOption } from '@/api/assignments/types'
 import { cn } from '@/lib/utils'
 
-const LETTERS = 'ABCD'
+const LETTERS = 'ABCDEFGH'
 
-/** A–D answer rows; picking one tints the row and fills its letter square. */
+/**
+ * A–D answer rows; picking one tints the row and fills its letter square.
+ *
+ * Keyed and reported by the option's own id rather than its position, because
+ * that is what a submission is scored against — an option id belonging to a
+ * different question is discarded rather than marked wrong.
+ */
 export function OptionList({
   options,
   chosen,
   onChoose,
+  disabled,
 }: {
-  options: string[]
+  options: QuestionOption[]
   chosen?: number
-  onChoose: (index: number) => void
+  onChoose: (optionId: number) => void
+  disabled?: boolean
 }) {
   return (
     <div className="flex flex-col overflow-hidden border-2 border-divider bg-background">
       {options.map((option, index) => (
         <button
-          key={option}
+          key={option.id}
           type="button"
-          onClick={() => onChoose(index)}
-          aria-pressed={index === chosen}
+          disabled={disabled}
+          onClick={() => onChoose(option.id)}
+          aria-pressed={option.id === chosen}
           className={cn(
-            'flex cursor-pointer items-center gap-3.5 border-b-2 border-divider px-[18px] py-4 text-left text-[15px] last:border-b-0',
-            'transition-[background-color,padding-left] duration-150 hover:bg-neutral-200 hover:pl-[22px]',
-            index === chosen ? 'bg-brand/12' : 'bg-background',
+            'flex items-center gap-3.5 border-b-2 border-divider px-[18px] py-4 text-left text-[15px] last:border-b-0',
+            'transition-[background-color,padding-left] duration-150',
+            disabled
+              ? 'cursor-default'
+              : 'cursor-pointer hover:bg-neutral-200 hover:pl-[22px]',
+            option.id === chosen ? 'bg-brand/12' : 'bg-background',
           )}
         >
           <span
             className={cn(
               'grid size-[26px] flex-none place-items-center border-2 font-heading text-xs font-extrabold',
-              index === chosen
+              option.id === chosen
                 ? 'border-brand bg-brand text-background'
                 : 'border-divider bg-transparent text-foreground',
             )}
           >
-            {LETTERS[index]}
+            {LETTERS[index] ?? index + 1}
           </span>
-          <span className="flex-1">{option}</span>
+          <span className="flex-1">{option.option_text?.trim() || `Option ${index + 1}`}</span>
         </button>
       ))}
     </div>

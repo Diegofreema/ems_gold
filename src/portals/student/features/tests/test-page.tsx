@@ -1,125 +1,79 @@
-import { useNavigate } from '@tanstack/react-router'
-import { parseAsInteger, useQueryState } from 'nuqs'
+import { Link } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
-import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
-import { useConfirm } from '@/hooks/use-confirm'
-import { cn } from '@/lib/utils'
-import { formatClock, isRunningOut } from './clock'
-import { OptionList } from './option-list'
-import { PAPER } from './paper'
-import { QuestionPips } from './question-pips'
-import { useCountdown } from './use-countdown'
+import { studentPaperQuery } from '../../api/queries'
+import { PaperBrief } from './paper-brief'
+import { PaperSitting } from './paper-sitting'
+import { questionsOf, windowProblem } from './paper'
+import { stateOf } from './tests'
 
-/** Which option the pupil picked, by question index. */
-type Answers = Record<number, number>
+/**
+ * One paper: its terms first, and its questions only once the pupil says they
+ * are ready.
+ *
+ * The brief is not ceremony. A paper can be sat once, the clock starts when it
+ * is started, and `actual_start_time` is sent back as part of the submission —
+ * so the moment the questions appear has to be a moment the pupil chose.
+ */
+export function TestPage({ testId }: { testId: string }) {
+  const { data: paper } = useSuspenseQuery(studentPaperQuery(testId))
+  const [openedAt, setOpenedAt] = useState<Date | null>(null)
 
-const LAST = PAPER.questions.length - 1
+  const submission = paper.my_submission
+  const problem = windowProblem(paper)
+  const questions = questionsOf(paper)
 
-export function TestPage() {
-  const navigate = useNavigate()
-  const confirm = useConfirm()
-  const { seconds, stop } = useCountdown(PAPER.seconds)
-  const [answers, setAnswers] = useState<Answers>({})
-  const [questionParam, setQuestion] = useQueryState(
-    'q',
-    parseAsInteger.withDefault(1),
-  )
+  // The register's four states, worked out from the detail route's fields:
+  // this route nulls `submitted` and `window_problem` inside `assignment` and
+  // sends the truth beside it.
+  const state = stateOf({
+    ...paper.assignment,
+    submitted: Boolean(submission),
+    window_problem: problem ?? null,
+  })
 
-  const index = Math.min(Math.max(1, questionParam), PAPER.questions.length) - 1
-  const question = PAPER.questions[index]
-  const answered = Object.keys(answers).length
-
-  const goTo = (next: number) => void setQuestion(next + 1)
-
-  const submit = () =>
-    confirm.ask({
-      title: 'Submit and finish?',
-      body: 'Once you submit you cannot come back to this paper or change an answer. Any question you left blank is marked zero.',
-      subject: `${answered} of ${PAPER.questions.length} questions answered`,
-      cancel: 'Keep working',
-      cta: 'Submit test',
-      onConfirm: () => {
-        stop()
-        void navigate({ to: '/student/test/receipt', search: { answered } })
-      },
-    })
-
-  return (
-    <div className="max-w-[820px]">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
-            Computer-based test
-          </div>
-          <h2 className="mt-2 text-page-title">{PAPER.title}</h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">{PAPER.meta}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-            Time left
-          </div>
-          <div
-            role="timer"
-            aria-live="off"
-            className={cn(
-              'font-heading text-[30px] font-extrabold tabular-nums',
-              isRunningOut(seconds) && 'text-brand',
-            )}
-          >
-            {formatClock(seconds)}
-          </div>
-        </div>
-      </div>
-      <Rule />
-
-      <QuestionPips
-        count={PAPER.questions.length}
-        current={index}
-        answered={(at) => answers[at] !== undefined}
-        onJump={goTo}
+  if (submission) {
+    return (
+      <PaperBrief
+        paper={paper}
+        state="Submitted"
+        note="You have already sat this paper. It can only be taken once, so what was sent is what will be marked."
+        action={
+          <Button asChild>
+            <Link to="/student/tests/$testId/result" params={{ testId }}>
+              See how you did
+            </Link>
+          </Button>
+        }
       />
+    )
+  }
 
-      <div key={index} className="animate-ems-up">
-        <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-          Question {index + 1} of {PAPER.questions.length}
-        </div>
-        <h3 className="my-2.5 mb-[22px] text-2xl leading-[1.25] text-pretty">
-          {question.text}
-        </h3>
-        <OptionList
-          options={question.options}
-          chosen={answers[index]}
-          onChoose={(choice) =>
-            setAnswers((previous) => ({ ...previous, [index]: choice }))
-          }
-        />
-      </div>
+  if (problem) {
+    return <PaperBrief paper={paper} state={state} note={problem} />
+  }
 
-      <div className="mt-[26px] flex flex-wrap items-center gap-2.5">
-        <Button
-          variant="outline"
-          disabled={index === 0}
-          onClick={() => goTo(index - 1)}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          disabled={index === LAST}
-          onClick={() => goTo(index + 1)}
-        >
-          Next question
-        </Button>
-        <div className="flex-1" />
-        <div className="text-xs text-muted-foreground">
-          {answered} of {PAPER.questions.length} answered
-        </div>
-        <Button onClick={submit}>Submit test</Button>
-      </div>
+  if (!questions.length) {
+    return (
+      <PaperBrief
+        paper={paper}
+        state={state}
+        note="Your teacher has not written any questions into this paper yet. There is nothing to answer, so nothing to submit — check back before it closes."
+      />
+    )
+  }
 
-      <ConfirmDialog request={confirm.request} onOpenChange={confirm.setOpen} />
-    </div>
-  )
+  if (!openedAt) {
+    return (
+      <PaperBrief
+        paper={paper}
+        state={state}
+        note="Read the terms above before you begin. The paper can be taken once: when you submit it, that is the attempt the school marks."
+        action={<Button onClick={() => setOpenedAt(new Date())}>Start the test</Button>}
+      />
+    )
+  }
+
+  return <PaperSitting paper={paper} testId={testId} openedAt={openedAt} />
 }

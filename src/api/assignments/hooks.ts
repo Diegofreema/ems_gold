@@ -21,22 +21,26 @@ export function useAssignment(setassignmentId: Id | undefined) {
   })
 }
 
-/** Submitting closes the paper, so the list's `my_status` is stale. */
+/**
+ * Submitting closes the paper, so both the register's `my_status` and the
+ * paper's own `my_submission` are stale the moment it answers.
+ */
 export function useSubmitAssignment(setassignmentId: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SubmitAssignmentBody) =>
       assignmentsService.submit(setassignmentId, body),
-    meta: { success: 'Assignment submitted' },
+    meta: { success: 'Your answers were submitted' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
   })
 }
 
-export function useAssignmentResult(assignmentId: Id | undefined) {
+/** Keyed on the submission id, off `my_submission.id`. See the service. */
+export function useAssignmentResult(submissionId: Id | undefined) {
   return useQuery({
-    queryKey: assignmentKeys.result(assignmentId ?? ''),
-    queryFn: () => assignmentsService.result(assignmentId!),
-    enabled: assignmentId !== undefined,
+    queryKey: assignmentKeys.result(submissionId ?? ''),
+    queryFn: () => assignmentsService.result(submissionId!),
+    enabled: submissionId !== undefined,
   })
 }
 
@@ -48,10 +52,10 @@ export function useAssignmentSubmissions(setassignmentId: Id | undefined) {
   })
 }
 
-export function useAssignmentSubmission(assignmentId: Id | undefined) {
+export function useAssignmentSubmission(submissionId: Id | undefined) {
   return useQuery({
-    queryKey: assignmentKeys.submission(assignmentId ?? ''),
-    queryFn: () => assignmentsService.submission(assignmentId!),
-    enabled: assignmentId !== undefined,
+    queryKey: assignmentKeys.submission(submissionId ?? ''),
+    queryFn: () => assignmentsService.submission(submissionId!),
+    enabled: submissionId !== undefined,
   })
 }

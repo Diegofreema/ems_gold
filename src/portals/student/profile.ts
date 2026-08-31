@@ -28,7 +28,6 @@ const FIELDS: ProfileConfig['fields'] = [
   { key: 'email', label: 'Email', locked: true },
   { key: 'phone', label: 'Phone', required: true },
   { key: 'address', label: 'Home address', required: true, wide: true },
-  { key: 'guardian', label: 'Guardian on record', locked: true, wide: true },
 ]
 
 /** The page for the moment before the record answers. */
@@ -45,7 +44,6 @@ const EMPTY: ProfileConfig = {
     email: BLANK,
     phone: '',
     address: '',
-    guardian: BLANK,
   },
   // Left for the session to fill in: this shape is only reached when the
   // record did not answer, and the login is the one thing still known.
@@ -55,25 +53,6 @@ const EMPTY: ProfileConfig = {
     { label: 'Remind me before a test closes', hint: 'The evening before', on: true },
     { label: 'Email me when a teacher shares material', hint: 'A daily digest', on: false },
   ],
-}
-
-/**
- * The guardian, in the pupil's own words rather than the office's.
- *
- * The record keeps the two parents by name, and separately an `sparent_id` for
- * the household account that signs in — a pupil can have either, both or
- * neither, and each says a different thing.
- */
-function guardianOf(student: Student): string {
-  const named = [student.fathersname, student.mothersname]
-    .map((name) => name?.trim())
-    .filter(Boolean)
-    .join(' and ')
-
-  if (named) return named
-  return student.sparent_id
-    ? 'A parent account is linked to yours; the office holds the name.'
-    : 'None on record — ask the office to add a parent or guardian.'
 }
 
 export function studentProfile(student?: Student): ProfileConfig {
@@ -94,7 +73,6 @@ export function studentProfile(student?: Student): ProfileConfig {
       email: text(student.email),
       phone: student.phone ?? '',
       address: student.address ?? '',
-      guardian: guardianOf(student),
     },
     account: [
       { label: 'Signs in with', value: text(student.user?.username) },
@@ -102,12 +80,6 @@ export function studentProfile(student?: Student): ProfileConfig {
       // admitted: a pupil kept on the roll can still have a disabled account.
       { label: 'Sign-in', value: text(student.user?.userstatus) },
       { label: 'On record since', value: asDate(student.joindate) },
-      {
-        label: 'Guardian access',
-        value: student.sparent_id
-          ? 'Yes — parent portal linked'
-          : 'No — ask the office to link one',
-      },
     ],
     // Already the pupil's own record: the session has nothing to add to it.
     fromRecord: true,

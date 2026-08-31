@@ -41,7 +41,6 @@ export type ListPath =
   | '/student/tests'
   | '/student/results'
   | '/student/invoices'
-  | '/student/record'
   | '/parent/children'
   | '/parent/results'
   | '/parent/attendance'
@@ -85,8 +84,6 @@ export type CrumbLink =
 
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
-  | '/student/test'
-  | '/student/profile'
   | '/admin/arms'
   | '/admin/classes'
   | '/admin/calendar'

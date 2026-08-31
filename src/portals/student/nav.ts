@@ -6,9 +6,7 @@ import {
   CreditCard,
   FileText,
   LayoutGrid,
-  PenLine,
   SquareCheckBig,
-  UserRound,
 } from 'lucide-react'
 import type { NavGroup } from '@/lib/portal'
 
@@ -31,7 +29,6 @@ export const studentNav: NavGroup[] = [
     heading: 'Assessment',
     items: [
       { to: '/student/tests', label: 'Tests open to me', icon: SquareCheckBig },
-      { to: '/student/test', label: 'Take a test', icon: PenLine },
       { to: '/student/results', label: 'My results', icon: ChartLine },
     ],
   },
@@ -39,7 +36,6 @@ export const studentNav: NavGroup[] = [
     heading: 'Finance',
     items: [
       { to: '/student/invoices', label: 'My invoices', icon: CreditCard },
-      { to: '/student/record', label: 'My record', icon: UserRound },
     ],
   },
 ]

@@ -49,21 +49,11 @@ test('an email the school never took reads as blank, not as a box', () => {
   assert.equal(config.fields.find((field) => field.key === 'email')?.locked, true)
 })
 
-test('the guardian is named where the record names one', () => {
-  const named = studentProfile({
-    ...STUDENT,
-    fathersname: 'Mr Okigbo',
-    mothersname: 'Mrs Okigbo',
-  })
-  assert.equal(named.values.guardian, 'Mr Okigbo and Mrs Okigbo')
-})
-
-test('an unnamed guardian is told apart from no guardian at all', () => {
-  assert.match(studentProfile(STUDENT).values.guardian, /parent account is linked/)
-  assert.match(
-    studentProfile({ ...STUDENT, sparent_id: null }).values.guardian,
-    /None on record/,
-  )
+test('no guardian anywhere on the page — it is the office\'s record, not the pupil\'s', () => {
+  const config = studentProfile({ ...STUDENT, fathersname: 'Mr Okigbo' })
+  assert.equal(config.fields.some((field) => field.key === 'guardian'), false)
+  assert.equal(config.values.guardian, undefined)
+  assert.equal(config.account.some((row) => /guardian/i.test(row.label)), false)
 })
 
 test('the login is read beside the record, not typed into', () => {
@@ -71,7 +61,6 @@ test('the login is read beside the record, not typed into', () => {
     { label: 'Signs in with', value: 'UDOYE2608264308' },
     { label: 'Sign-in', value: 'Enabled' },
     { label: 'On record since', value: '26 Aug 2026' },
-    { label: 'Guardian access', value: 'Yes — parent portal linked' },
   ])
 })
 

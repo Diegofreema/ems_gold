@@ -1,9 +1,19 @@
 import { pageRows } from '@/features/collections/api'
 import type { CollectionDef } from '@/features/collections/types'
 import { queryClient } from '@/lib/query-client'
-import { studentResultsQuery } from '../api/queries'
+import { studentResultsQuery, studentTestsQuery } from '../api/queries'
 import { resultRows } from '../features/results/results'
-import { historyTab } from './history'
+import { testRows, testTally } from '../features/tests/tests'
+
+/**
+ * Every paper set for the pupil's arm, through the cache so the register and
+ * the three tiles above it read one answer between them.
+ *
+ * The rows are not what the paper page reads: opening a test asks
+ * `/assignments/{id}` for the questions, which this list does not carry.
+ */
+const papers = () => queryClient.ensureQueryData(studentTestsQuery).then(testRows)
+const tally = () => papers().then(testTally)
 
 export const tests: CollectionDef = {
   id: 'tests',
@@ -11,20 +21,25 @@ export const tests: CollectionDef = {
   kicker: 'Assessment',
   title: 'Tests open to me',
   description:
-    'Computer-based tests set for your arm. Each one can be taken once.',
+    'Computer-based tests set for your arm, the open ones first. Each one can be taken once — open a test to see its questions.',
+  // No button, and no `actionTo`: which paper "Start the open test" would open
+  // depends on which of them is open, and a fixed link cannot know. The rows
+  // are the way in.
   action: 'Start the open test',
-  actionTo: '/student/test',
+  readonly: true,
   searchHint: 'Search test or subject',
-  footer: '5 tests this term',
+  footer: 'Open first, then what is still to come',
   emptyTitle: 'No tests set',
-  emptyBody: 'Tests appear here when a teacher opens one for your arm.',
+  emptyBody: 'Tests appear here when a teacher opens one for your arm. Only papers set for your own class are ever listed.',
   noun: 'test',
   nameKey: 'title',
-  tabs: historyTab,
-  summary: [
-    { label: 'Open now', value: '1' },
-    { label: 'Submitted', value: '3' },
-    { label: 'Closed, missed', value: '1' },
+  // No history: the API keeps no record of a pupil opening a paper, only of
+  // submitting one, and that is the state column.
+  tabs: [],
+  counts: [
+    { label: 'Open now', count: () => tally().then((counted) => counted.open) },
+    { label: 'Submitted', count: () => tally().then((counted) => counted.submitted) },
+    { label: 'Closed, missed', count: () => tally().then((counted) => counted.missed) },
   ],
   columns: [
     { key: 'title', label: 'Test', cardRole: 'title' },
@@ -34,13 +49,15 @@ export const tests: CollectionDef = {
     { key: 'closes', label: 'Closes' },
     { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 't-1', title: 'Quadratic equations quiz', subject: 'Mathematics', questions: '20', minutes: '25', closes: 'Fri 22 Nov', state: 'Open' },
-    { id: 't-2', title: 'Cell biology test 2', subject: 'Biology', questions: '15', minutes: '20', closes: 'Mon 18 Nov', state: 'Submitted' },
-    { id: 't-3', title: 'Spreadsheet functions', subject: 'Computer Studies', questions: '18', minutes: '20', closes: 'Thu 14 Nov', state: 'Submitted' },
-    { id: 't-4', title: 'Comprehension test 3', subject: 'English Language', questions: '25', minutes: '30', closes: 'Fri 08 Nov', state: 'Submitted' },
-    { id: 't-5', title: 'Mole concept quiz', subject: 'Chemistry', questions: '15', minutes: '20', closes: 'Wed 06 Nov', state: 'Missed' },
-  ],
+  /*
+   * Read whole and searched here. The endpoint takes a `subject_id` and
+   * nothing else — no search term, no state — and a pupil cannot list the
+   * subjects to fill a dropdown with, so the box matches the title, the
+   * subject and the state at once instead.
+   */
+  source: (params) => papers().then((all) => pageRows(all, params)),
+  // No `record`: a row opens the paper at `/student/tests/{id}`, which reads
+  // the questions the register never asked for.
 }
 
 const marks = () =>
