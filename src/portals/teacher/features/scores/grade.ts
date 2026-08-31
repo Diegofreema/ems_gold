@@ -1,22 +1,10 @@
-export const GRADES = ['A', 'B', 'C', 'D', 'E', 'F'] as const
-export type Grade = (typeof GRADES)[number]
-
-/** The design's mark caps: continuous assessment out of 30, exam out of 70. */
-export const CA_MAX = 30
-export const EXAM_MAX = 70
-
-/** Lowest total that still earns each grade, best first. */
-const BANDS: [Grade, number][] = [
-  ['A', 75],
-  ['B', 65],
-  ['C', 55],
-  ['D', 45],
-  ['E', 40],
-]
-
-export function gradeFor(total: number): Grade {
-  return BANDS.find(([, floor]) => total >= floor)?.[0] ?? 'F'
-}
+/**
+ * The endpoint's own caps: `POST /teachers/me/scores` refuses a CA above 40 or
+ * an exam above 60. The design drew 30 and 70; the API is what marks are
+ * actually filed against, so it is what the sheet enforces.
+ */
+export const CA_MAX = 40
+export const EXAM_MAX = 60
 
 /** Blank and non-numeric entries count as zero, exactly as the sheet shows. */
 export function markOf(value: string): number {

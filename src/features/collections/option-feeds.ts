@@ -7,6 +7,7 @@ import { feesService } from '@/api/fees/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
+import { teachingService } from '@/api/teaching/service'
 import { teachersService } from '@/api/teachers/service'
 import { usersService } from '@/api/users/service'
 import { queryClient } from '@/lib/query-client'
@@ -81,6 +82,30 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
       // Two schools' worth of "Mathematics" are told apart by the class that
       // owns the subject, so it is offered beside the name.
       label: subject.department ? `${subject.name} · ${subject.department}` : subject.name,
+    }))
+  }
+
+  if (key === 'my-subjects') {
+    // A teacher cannot read `/subjects` at all — it answers "restricted to
+    // administrators" — and has no business filing a topic under a subject
+    // that is not theirs, so the feed is the one the office gave them.
+    const subjects = await teachingService.subjects()
+    return distinct(
+      subjects.map((subject) => ({
+        value: String(subject.id),
+        label: subject.name,
+        meta: subject.department?.name ?? '',
+      })),
+    )
+  }
+
+  if (key === 'my-arms') {
+    // The arms come back beside the roll rather than on it, and one pupil is
+    // enough of the roll to read them off.
+    const { class_arms } = await teachingService.students({ limit: 1 })
+    return class_arms.map((arm) => ({
+      value: String(arm.id),
+      label: arm.department?.name ? `${arm.department.name} · ${arm.arm_name}` : arm.arm_name,
     }))
   }
 

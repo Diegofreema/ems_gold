@@ -1,20 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { gradeFor, markOf, sheetAverage, totalOf } from './grade.ts'
+import { CA_MAX, EXAM_MAX, markOf, sheetAverage, totalOf } from './grade.ts'
 
-test('grade bands match the design', () => {
-  assert.equal(gradeFor(100), 'A')
-  assert.equal(gradeFor(75), 'A')
-  assert.equal(gradeFor(74), 'B')
-  assert.equal(gradeFor(65), 'B')
-  assert.equal(gradeFor(64), 'C')
-  assert.equal(gradeFor(55), 'C')
-  assert.equal(gradeFor(54), 'D')
-  assert.equal(gradeFor(45), 'D')
-  assert.equal(gradeFor(44), 'E')
-  assert.equal(gradeFor(40), 'E')
-  assert.equal(gradeFor(39), 'F')
-  assert.equal(gradeFor(0), 'F')
+test('the caps are the endpoint\u2019s, not the design\u2019s', () => {
+  // `POST /teachers/me/scores` refuses a CA above 40 or an exam above 60; the
+  // handoff drew 30 and 70, and a sheet drawn to those would be refused.
+  assert.equal(CA_MAX, 40)
+  assert.equal(EXAM_MAX, 60)
 })
 
 test('blank and junk marks count as zero', () => {

@@ -33,10 +33,15 @@ test('the admin endpoint takes the first name under surname', () => {
   assert.equal(body.lastname, 'Nnaji')
 })
 
-test('an edit never sends the username, which would rename a sign-in', () => {
-  assert.equal('username' in teacherUpdate(values), false)
-  assert.equal('username' in adminUpdate(values), false)
+test('both edits carry the email', () => {
+  assert.equal(teacherUpdate(values).username, 'cnnaji')
+  assert.equal(adminUpdate(values).username, 'cnnaji')
   assert.equal(teacherBody(values).username, 'cnnaji')
+})
+
+test('an email left empty is left alone rather than blanked', () => {
+  assert.equal('username' in teacherUpdate({ ...values, username: '  ' }), false)
+  assert.equal('username' in adminUpdate({ ...values, username: '  ' }), false)
 })
 
 test('qualification is a teaching field and does not reach the office record', () => {
@@ -117,8 +122,8 @@ test('the admin body is exactly what POST /admins/new-admin documents', () => {
   )
 })
 
-test('an update sends everything but the sign-in name', () => {
-  assert.equal('username' in teacherUpdate(TEACHING_FORM), false)
+test('an update sends everything the create does', () => {
+  assert.equal(teacherUpdate(TEACHING_FORM).username, 'newteachingstaff@school.ng')
   assert.equal(teacherUpdate(TEACHING_FORM).country_id, 160)
-  assert.equal('username' in adminUpdate(TEACHING_FORM), false)
+  assert.equal(adminUpdate(TEACHING_FORM).username, 'newteachingstaff@school.ng')
 })

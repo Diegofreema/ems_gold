@@ -1,12 +1,10 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useLogoutEverywhere } from '@/api/auth/hooks'
-import { useUpdateMyProfile } from '@/api/users/hooks'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { DetailRows } from '@/features/auth/components/detail-rows'
-import { refreshAccount, useSession } from '@/features/auth/session'
+import { useSession } from '@/features/auth/session'
 import { AppearancePicker } from './components/appearance-picker'
 import { ChangePassword } from './components/change-password'
 import { ContactPrefs } from './components/contact-prefs'
@@ -16,40 +14,36 @@ import {
 } from './components/personal-details'
 import { ProfileIdentity } from './components/profile-identity'
 import { useRecordForm } from '@/hooks/use-record-form'
-import { ownsProfile, profileFromAccount } from './from-account'
+import { profileFromAccount } from './from-account'
 import { profileSchema } from './schema'
-import { profileBody } from './to-body'
-import type { ProfileConfig } from './types'
+import type { ProfileConfig, ProfileSave } from './types'
 
 /**
  * The account page, shared by all four portals. The form lives here rather than
  * in `PersonalDetails` so the heading can show the name as it is being typed.
+ *
+ * What saving means is the portal's, since each role's record is a different
+ * endpoint — this only reads the config and collects the form.
  */
-export function ProfilePage({ config: portal }: { config: ProfileConfig }) {
+export function ProfilePage({
+  config: portal,
+  save,
+}: {
+  config: ProfileConfig
+  save?: ProfileSave
+}) {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { account } = useSession()
   // The portal defines the page; the account fills in whoever is reading it —
   // unless the portal already read that person's own record, which says more
   // than the session does.
   const config =
     account && !portal.fromRecord ? profileFromAccount(portal, account) : portal
-  const canSave = ownsProfile(account)
   const logout = useLogoutEverywhere()
-  const save = useUpdateMyProfile()
   const form = useRecordForm<ProfileValues>(
     profileSchema(config.fields),
     config.values,
   )
-  async function saveProfile(values: ProfileValues) {
-    if (!account) return
-    // A refusal has already been announced by the mutation cache; swallowing
-    // it here only keeps it out of the submit handler.
-    const saved = await save.mutateAsync(profileBody(values)).catch(() => null)
-    // The name is on the sidebar and in the greeting too, so the session has
-    // to be re-read before either can go stale.
-    if (saved) await refreshAccount(queryClient).catch(() => undefined)
-  }
 
   const edited = form.watch('fullname')
   const name =
@@ -71,8 +65,8 @@ export function ProfilePage({ config: portal }: { config: ProfileConfig }) {
             note={config.note}
             fields={config.fields}
             values={config.values}
-            saving={save.isPending}
-            onSave={canSave ? saveProfile : undefined}
+            saving={save?.pending}
+            onSave={save?.save}
           />
           <ChangePassword />
         </section>

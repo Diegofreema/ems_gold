@@ -12,6 +12,7 @@ import { TermSection } from './components/term-section'
 import { TrustSection } from './components/trust-section'
 import { VoicesSection } from './components/voices-section'
 import { WalkthroughSection } from './components/walkthrough-section'
+import { useAnchorScroll } from './use-anchor-scroll'
 
 /**
  * What a visitor lands on.
@@ -23,6 +24,8 @@ import { WalkthroughSection } from './components/walkthrough-section'
  * way down, because a school already using it did not come here to be sold to.
  */
 export function LandingPage() {
+  useAnchorScroll()
+
   return (
     <div className="bg-background text-foreground">
       <LandingHeader />

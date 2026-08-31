@@ -31,7 +31,10 @@ export type CreateAdminBody = {
   address?: string
 }
 
-export type UpdateAdminRecordBody = Omit<CreateAdminBody, 'username'>
+export type UpdateAdminRecordBody = Omit<CreateAdminBody, 'username'> & {
+  /** Optional on an edit: left empty, the sign-in is not touched. */
+  username?: string
+}
 
 /** Replaces the privilege set with exactly these ids. */
 export type SetPrivilegesBody = {

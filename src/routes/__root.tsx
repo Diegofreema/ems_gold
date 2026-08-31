@@ -1,46 +1,49 @@
-import type { QueryClient } from '@tanstack/react-query'
-import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
-import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
-import { lazy, Suspense } from 'react'
-import { Button } from '@/components/ui/button'
-import { Toaster } from '@/components/ui/sonner'
+import { Button } from '@/components/ui/button';
+import { Toaster } from '@/components/ui/sonner';
+import type { QueryClient } from '@tanstack/react-query';
+import {
+  createRootRouteWithContext,
+  Link,
+  Outlet,
+} from '@tanstack/react-router';
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router';
 
-const Devtools = import.meta.env.PROD
-  ? () => null
-  : lazy(async () => {
-      const [router, query] = await Promise.all([
-        import('@tanstack/react-router-devtools'),
-        import('@tanstack/react-query-devtools'),
-      ])
-      return {
-        default: () => (
-          <>
-            <router.TanStackRouterDevtools position="bottom-left" />
-            <query.ReactQueryDevtools buttonPosition="bottom-right" />
-          </>
-        ),
-      }
-    })
+// const Devtools = import.meta.env.PROD
+//   ? () => null
+//   : lazy(async () => {
+//       const [router, query] = await Promise.all([
+//         import('@tanstack/react-router-devtools'),
+//         import('@tanstack/react-query-devtools'),
+//       ])
+//       return {
+//         default: () => (
+//           <>
+//             <router.TanStackRouterDevtools position="bottom-left" />
+//             <query.ReactQueryDevtools buttonPosition="bottom-right" />
+//           </>
+//         ),
+//       }
+//     })
 
 export type RouterContext = {
-  queryClient: QueryClient
-}
+  queryClient: QueryClient;
+};
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
   notFoundComponent: NotFound,
-})
+});
 
 function RootLayout() {
   return (
     <NuqsAdapter>
       <Outlet />
       <Toaster position="bottom-center" />
-      <Suspense>
+      {/* <Suspense>
         <Devtools />
-      </Suspense>
+      </Suspense> */}
     </NuqsAdapter>
-  )
+  );
 }
 
 function NotFound() {
@@ -59,5 +62,5 @@ function NotFound() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

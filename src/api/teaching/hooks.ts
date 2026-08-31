@@ -117,6 +117,24 @@ export function useMyResults(params: MyResultParams = {}) {
   })
 }
 
+/**
+ * A whole sheet, one mark at a time — the endpoint takes a single pupil, and a
+ * school's network is not the place for thirty concurrent writes. It stops at
+ * the first refusal: the marks already taken stay, and the sheet is re-read
+ * either way, so what stuck is what shows.
+ */
+export function useEnterScores() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (rows: EnterScoreBody[]) => {
+      for (const row of rows) await teachingService.enterScore(row)
+      return rows.length
+    },
+    meta: { success: 'Scores saved' },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: teachingKeys.all }),
+  })
+}
+
 /** One score in, every results view stale. */
 export function useEnterScore() {
   const queryClient = useQueryClient()

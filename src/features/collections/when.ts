@@ -31,3 +31,17 @@ export function when(value: string | null | undefined, withTime = false): string
     hour12: false,
   })
 }
+
+/**
+ * A timestamp read as the school's own clock.
+ *
+ * The same wall clock reaches the portal stamped three ways — `+01:00` on most
+ * endpoints, `+00:00` on the household's invoices, and with no zone at all on
+ * an assignment's closing time. It is the school's time in every case, so the
+ * offset is dropped rather than believed: taken at face value it would move an
+ * invoice raised in the last hour of a day onto the next one, and shut a paper
+ * an hour early.
+ */
+export function schoolTime(stamp: string | null | undefined): string | null | undefined {
+  return stamp?.replace(/(?:Z|[+-]\d{2}:?\d{2})$/, '') ?? stamp
+}

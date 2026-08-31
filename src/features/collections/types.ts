@@ -242,6 +242,8 @@ export type ColumnSpec = {
   tag?: boolean
   /** The value is a stored filename; the cell fetches and saves it. */
   download?: boolean
+  /** The value is a URL somewhere else — a meeting room — and opens in a tab. */
+  link?: boolean
   cardRole?: CardRole
 }
 

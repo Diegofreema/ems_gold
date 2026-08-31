@@ -1,8 +1,8 @@
 import type { ChildAssignment, ChildAssignmentPaper } from '../../../../api/parents/types.ts'
 import { BLANK } from '../../../../features/collections/blank.ts'
 import type { Row } from '../../../../features/collections/types.ts'
-import { when } from '../../../../features/collections/when.ts'
-import { schoolTime, text } from '../../family.ts'
+import { schoolTime, when } from '../../../../features/collections/when.ts'
+import { text } from '../../family.ts'
 
 /** The API's word for a paper the child has not sat yet. */
 const OPEN = 'available'

@@ -6,7 +6,7 @@ import type {
 } from '../../api/parents/types.ts'
 import { BLANK } from '../../features/collections/blank.ts'
 import type { Row } from '../../features/collections/types.ts'
-import { when } from '../../features/collections/when.ts'
+import { schoolTime, when } from '../../features/collections/when.ts'
 import { formatNaira } from '../../lib/format.ts'
 
 /** The API's word for an invoice that has been paid. */
@@ -68,20 +68,6 @@ export function childFull(child: EnrolledChild): string {
  */
 export function childName(child: EnrolledChild): string {
   return child.fname?.trim() || childFull(child)
-}
-
-/**
- * A timestamp read as the school's own clock.
- *
- * The household's invoice list stamps `createdate` `+00:00` while every other
- * endpoint sends the same wall clock as `+01:00` — invoice 2450 is
- * `11:34:46+01:00` on the counter's ledger and `11:34:46+00:00` here. The wall
- * clock is the school's in both, so the offset is dropped rather than
- * believed: taken at face value it would move an invoice raised in the last
- * hour of a day onto the next one.
- */
-export function schoolTime(stamp: string | null | undefined): string | null | undefined {
-  return stamp?.replace(/(?:Z|[+-]\d{2}:?\d{2})$/, '') ?? stamp
 }
 
 /**

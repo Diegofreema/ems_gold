@@ -1,14 +1,31 @@
-import type { CollectionDef, Row } from '@/features/collections/types'
+import { teachingService } from '@/api/teaching/service';
+import { pageRows } from '@/features/collections/api';
+import type { CollectionDef, Row } from '@/features/collections/types';
+import { myEClasses, myMarks, myRoll, mySubjects, myTopics } from './mine';
+import { topicBody, topicUpdate } from './teaching-body';
+import {
+  eclassRow,
+  mySubjectRow,
+  pupilRow,
+  scoreRow,
+  subjectNames,
+  topicRow,
+} from './teaching-row';
 
-const ARMS = ['SS1 A', 'SS2 A', 'SS3 A', 'JSS2 A'] as const
-const SUBJECTS = ['Mathematics', 'Further Maths', 'Basic Science'] as const
+const subjectRows = async (): Promise<Row[]> =>
+  (await mySubjects()).map(mySubjectRow);
 
-const SUBJECT_ROWS: Row[] = [
-  { id: 'sb-1', code: 'MTH', name: 'Mathematics', arms: 'SS1 A, SS2 A', pupils: '71', periods: '8' },
-  { id: 'sb-2', code: 'FMT', name: 'Further Mathematics', arms: 'SS2 A', pupils: '18', periods: '4' },
-  { id: 'sb-3', code: 'MTH', name: 'Mathematics (remedial)', arms: 'SS3 A', pupils: '12', periods: '2' },
-  { id: 'sb-4', code: 'BSC', name: 'Basic Science', arms: 'JSS2 A', pupils: '42', periods: '3' },
-]
+const topicRows = async (): Promise<Row[]> => {
+  const [topics, subjects] = await Promise.all([myTopics(), mySubjects()]);
+  const names = subjectNames(subjects);
+  return topics.map((topic) => topicRow(topic, names));
+};
+
+const eclassRows = async (): Promise<Row[]> =>
+  (await myEClasses()).map(eclassRow);
+
+const pupilRows = async (): Promise<Row[]> =>
+  (await myRoll()).items.map(pupilRow);
 
 export const subjects: CollectionDef = {
   id: 'subjects',
@@ -16,48 +33,39 @@ export const subjects: CollectionDef = {
   kicker: 'Teaching',
   title: 'My subjects',
   description:
-    'The subjects you carry this term and the arms you carry them in.',
-  action: 'Request a subject',
-  searchHint: 'Search subject',
-  footer: '4 subjects · First Term 2025/2026',
+    'The subjects the school office has put in your hands, and the class each one belongs to.',
+  // A teacher is given subjects; they do not take them. Assigning one is the
+  // office's own endpoint, so nothing here offers to add, edit or remove.
+  readonly: true,
+  action: 'My subjects',
+  searchHint: 'Search subject, code or class',
+  footer: 'Set by the school office',
   emptyTitle: 'No subjects yet',
   emptyBody:
-    'Once the school office assigns you a subject it appears here.',
+    'Once the school office assigns you a subject it appears here, with the class it is taught to.',
   noun: 'subject',
   nameKey: 'name',
   columns: [
     { key: 'code', label: 'Code', cardRole: 'subtitle' },
     { key: 'name', label: 'Subject', cardRole: 'title' },
-    { key: 'arms', label: 'Arms' },
-    { key: 'pupils', label: 'Pupils', align: 'right' },
-    { key: 'periods', label: 'Periods / wk', align: 'right' },
+    { key: 'klass', label: 'Class' },
+    { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
-  rows: SUBJECT_ROWS,
-  form: [
-    {
-      title: 'Subject',
-      fields: [
-        { key: 'code', label: 'Subject code', required: true, placeholder: 'MTH' },
-        { key: 'name', label: 'Subject name', required: true, placeholder: 'Mathematics' },
-        { key: 'arms', label: 'Arms', required: true, wide: true, placeholder: 'SS1 A, SS2 A' },
-        { key: 'pupils', label: 'Pupils', numeric: true, placeholder: '35' },
-        { key: 'periods', label: 'Periods per week', numeric: true, placeholder: '8' },
-      ],
-    },
-    {
-      title: 'Why you are requesting it',
-      fields: [
-        {
-          key: 'reason',
-          label: 'Note to the school office',
-          multiline: true,
-          wide: true,
-          placeholder: 'One or two lines the office will read.',
-        },
-      ],
-    },
+  detail: [
+    { key: 'name', label: 'Subject' },
+    { key: 'code', label: 'Code' },
+    { key: 'klass', label: 'Class' },
+    { key: 'status', label: 'Status' },
+    { key: 'added', label: 'Given to you' },
   ],
-}
+  // The endpoint answers whole and takes no search term, so the page is paged
+  // and searched here — which also means the box matches every column.
+  source: async (params) => pageRows(await subjectRows(), params),
+  // There is no endpoint for one of these, so the record is found in the list
+  // the register already asked for.
+  record: async (recordId) =>
+    (await subjectRows()).find((subject) => subject.id === String(recordId)),
+};
 
 export const students: CollectionDef = {
   id: 'students',
@@ -65,39 +73,75 @@ export const students: CollectionDef = {
   kicker: 'Teaching',
   title: 'My students',
   description:
-    'Every pupil registered to a subject you teach. Open a pupil for their scores in your subjects only.',
-  action: 'Export list',
-  searchHint: 'Search pupil or admission no.',
-  footer: '8 of 143 pupils',
-  emptyTitle: 'No pupils registered',
+    'Every pupil in the class you take. Open a pupil for what the school holds about them and their marks in your subjects.',
+  // The office admits pupils and places them in arms; a teacher reads the roll.
+  readonly: true,
+  action: 'My students',
+  searchHint: 'Search pupil, admission no. or arm',
+  footer: 'The classes you take',
+  emptyTitle: 'No pupils on your roll',
   emptyBody:
-    'Pupils appear here once the office registers them to one of your subjects.',
+    'Pupils appear here once the office has placed them in an arm you take.',
   noun: 'pupil',
   nameKey: 'name',
-  summary: [
-    { label: 'Pupils', value: '143' },
-    { label: 'Arms', value: '4' },
-    { label: 'At risk', value: '11' },
+  counts: [
+    { label: 'Pupils', count: async () => (await myRoll()).pagination.total },
+    // The arms come back beside the roll rather than on it, which is the only
+    // way an arm the teacher takes but which holds nobody is counted at all.
+    { label: 'Classes', count: async () => (await myRoll()).class_arms.length },
   ],
   columns: [
     { key: 'adm', label: 'Adm. no.', cardRole: 'subtitle' },
     { key: 'name', label: 'Name', cardRole: 'title' },
     { key: 'arm', label: 'Arm' },
-    { key: 'subject', label: 'Subject' },
-    { key: 'avg', label: 'Average', align: 'right' },
-    { key: 'standing', label: 'Standing', tag: true, cardRole: 'tag' },
+    { key: 'klass', label: 'Class' },
+    { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'ts-1', adm: 'NEB/2022/0871', name: 'Ngozi Eze', arm: 'SS1 A', subject: 'Mathematics', avg: '78', standing: 'Strong' },
-    { id: 'ts-2', adm: 'NEB/2021/0412', name: 'Chinedu Udo', arm: 'SS2 A', subject: 'Further Maths', avg: '64', standing: 'Steady' },
-    { id: 'ts-3', adm: 'NEB/2020/0233', name: 'David Ogunleye', arm: 'SS3 A', subject: 'Mathematics', avg: '41', standing: 'At risk' },
-    { id: 'ts-4', adm: 'NEB/2022/0904', name: 'Halima Yusuf', arm: 'SS1 A', subject: 'Mathematics', avg: '82', standing: 'Strong' },
-    { id: 'ts-5', adm: 'NEB/2023/1044', name: 'Segun Bakare', arm: 'SS2 A', subject: 'Mathematics', avg: '57', standing: 'Steady' },
-    { id: 'ts-6', adm: 'NEB/2023/1180', name: 'Fatima Bello', arm: 'JSS2 A', subject: 'Basic Science', avg: '69', standing: 'Steady' },
-    { id: 'ts-7', adm: 'NEB/2021/0559', name: 'Ibrahim Sani', arm: 'JSS2 A', subject: 'Basic Science', avg: '38', standing: 'At risk' },
-    { id: 'ts-8', adm: 'NEB/2024/1610', name: 'Blessing Okoro', arm: 'SS1 A', subject: 'Mathematics', avg: '74', standing: 'Strong' },
+  detail: [
+    { key: 'name', label: 'Name' },
+    { key: 'adm', label: 'Admission no.' },
+    { key: 'arm', label: 'Arm' },
+    { key: 'klass', label: 'Class' },
+    { key: 'status', label: 'Status' },
+    { key: 'gender', label: 'Gender' },
+    { key: 'born', label: 'Born' },
+    { key: 'email', label: 'Email' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'address', label: 'Address' },
+    { key: 'father', label: 'Father' },
+    { key: 'mother', label: 'Mother' },
+    { key: 'enrolled', label: 'On the roll since' },
+    { key: 'username', label: 'Signs in with' },
   ],
-}
+  // The endpoint pages but ignores a search term, so the roll is read whole
+  // and searched here — on every column, not the one field a parameter would
+  // have narrowed.
+  source: async (params) => pageRows(await pupilRows(), params),
+  record: async (recordId) =>
+    (await pupilRows()).find((pupil) => pupil.id === String(recordId)),
+  tabs: [
+    {
+      label: 'Marks in my subjects',
+      columns: [
+        { key: 'subject', label: 'Subject' },
+        { key: 'ca', label: 'CA', align: 'right' },
+        { key: 'exam', label: 'Exam', align: 'right' },
+        { key: 'total', label: 'Total', align: 'right' },
+        { key: 'grade', label: 'Grade' },
+        { key: 'state', label: 'Approval', tag: true },
+      ],
+      source: async (recordId) => {
+        const [marks, subjects] = await Promise.all([myMarks(), mySubjects()]);
+        const names = subjectNames(subjects);
+        return marks.items
+          .filter((mark) => String(mark.student_id) === String(recordId))
+          .map((mark) => scoreRow(mark, names));
+      },
+      empty:
+        'No mark has been recorded for this pupil in any of your subjects.',
+    },
+  ],
+};
 
 export const topics: CollectionDef = {
   id: 'topics',
@@ -105,55 +149,66 @@ export const topics: CollectionDef = {
   kicker: 'Teaching',
   title: 'Topics taught',
   description:
-    'A record of what you have covered, week by week. The school office reads this.',
+    'A record of what you have covered, subject by subject. The school office reads this.',
   action: 'Add topic',
-  searchHint: 'Search topic',
-  footer: '7 topics recorded this term',
+  searchHint: 'Search topic or subject',
+  footer: 'Your own record of the scheme',
   emptyTitle: 'Nothing recorded yet',
-  emptyBody: 'Record what you cover each week so the office can follow the scheme.',
+  emptyBody:
+    'Record what you cover so the office can follow the scheme. A topic can only be filed under a subject you teach.',
   noun: 'topic',
-  nameKey: 'topic',
+  nameKey: 'title',
   columns: [
-    { key: 'week', label: 'Week', cardRole: 'subtitle' },
-    { key: 'topic', label: 'Topic', cardRole: 'title' },
+    { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
+    { key: 'title', label: 'Topic', cardRole: 'title' },
+  ],
+  detail: [
+    { key: 'title', label: 'Topic' },
     { key: 'subject', label: 'Subject' },
-    { key: 'arm', label: 'Arm' },
-    { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
+    { key: 'contents', label: 'What was covered' },
   ],
-  rows: [
-    { id: 'tp-1', week: 'Week 9', topic: 'Quadratic equations — factorisation', subject: 'Mathematics', arm: 'SS1 A', state: 'In progress' },
-    { id: 'tp-2', week: 'Week 8', topic: 'Indices and logarithms', subject: 'Mathematics', arm: 'SS1 A', state: 'Covered' },
-    { id: 'tp-3', week: 'Week 8', topic: 'Binomial expansion', subject: 'Further Maths', arm: 'SS2 A', state: 'Covered' },
-    { id: 'tp-4', week: 'Week 7', topic: 'Simultaneous equations', subject: 'Mathematics', arm: 'SS2 A', state: 'Covered' },
-    { id: 'tp-5', week: 'Week 6', topic: 'Living and non-living things', subject: 'Basic Science', arm: 'JSS2 A', state: 'Covered' },
-    { id: 'tp-6', week: 'Week 5', topic: 'Number bases', subject: 'Mathematics', arm: 'SS1 A', state: 'Covered' },
-    { id: 'tp-7', week: 'Week 4', topic: 'Sets and Venn diagrams', subject: 'Mathematics', arm: 'SS1 A', state: 'Covered' },
-  ],
+  // Whole, like the subject list beside it: the endpoint takes no page, no
+  // limit and no search term.
+  source: async (params) => pageRows(await topicRows(), params),
+  record: async (recordId) =>
+    (await topicRows()).find((topic) => topic.id === String(recordId)),
+  save: (values, recordId) =>
+    recordId
+      ? teachingService.updateTopic(recordId, topicUpdate(values))
+      : teachingService.addTopic(topicBody(values)),
+  // No endpoint deletes one, so no row offers to. A topic recorded in error is
+  // corrected on its own page.
   form: [
     {
       title: 'What you taught',
       fields: [
-        { key: 'week', label: 'Week', required: true, options: ['Week 9', 'Week 8', 'Week 7', 'Week 6'] },
-        { key: 'state', label: 'State', required: true, options: ['In progress', 'Covered'] },
-        { key: 'topic', label: 'Topic', required: true, wide: true, placeholder: 'Quadratic equations — factorisation' },
-        { key: 'subject', label: 'Subject', required: true, options: SUBJECTS },
-        { key: 'arm', label: 'Arm', required: true, options: ARMS },
-      ],
-    },
-    {
-      title: 'Notes',
-      fields: [
         {
-          key: 'note',
-          label: 'Note for the school office',
+          key: 'subject_id',
+          label: 'Subject',
+          required: true,
+          optionsFrom: 'my-subjects',
+          hint: 'One of your own subjects. Chosen when the topic is added and not changed afterwards.',
+        },
+        {
+          key: 'title',
+          label: 'Topic',
+          required: true,
+          wide: true,
+          placeholder: 'Quadratic equations — factorisation',
+        },
+        {
+          key: 'contents',
+          label: 'What was covered',
+          required: true,
           multiline: true,
           wide: true,
-          placeholder: 'Optional. What went well, what needs a second pass.',
+          placeholder:
+            'A few lines on what the class did, and anything left for next week.',
         },
       ],
     },
   ],
-}
+};
 
 export const eclasses: CollectionDef = {
   id: 'eclasses',
@@ -161,50 +216,29 @@ export const eclasses: CollectionDef = {
   kicker: 'Teaching',
   title: 'E-classes',
   description:
-    'Online sessions you have scheduled, and the materials attached to each.',
-  action: 'Schedule an e-class',
-  searchHint: 'Search e-class',
-  footer: '5 e-classes',
-  emptyTitle: 'No e-classes scheduled',
-  emptyBody: 'Schedule a session and attach the materials pupils will need.',
+    'The online rooms opened for your classes. Follow a link to join the meeting.',
+  // The endpoint reads; nothing in the API opens a room from here, so nothing
+  // offers to schedule, edit or cancel one.
+  readonly: true,
+  action: 'E-classes',
+  searchHint: 'Search room or link',
+  footer: 'Newest first',
+  emptyTitle: 'No e-classes yet',
+  emptyBody:
+    'Rooms opened for your classes appear here with the link to join them.',
   noun: 'e-class',
-  nameKey: 'title',
+  nameKey: 'room',
   columns: [
-    { key: 'when', label: 'When', cardRole: 'subtitle' },
-    { key: 'title', label: 'Title', cardRole: 'title' },
-    { key: 'arm', label: 'Arm' },
-    { key: 'materials', label: 'Materials', align: 'right' },
-    { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
+    { key: 'room', label: 'Room', cardRole: 'title' },
+    { key: 'link', label: 'Meeting link', link: true },
+    { key: 'created', label: 'Opened', cardRole: 'subtitle' },
   ],
-  rows: [
-    { id: 'ec-1', when: 'Thu 21 Nov, 16:00', title: 'Quadratics revision clinic', arm: 'SS1 A', materials: '3', state: 'Scheduled' },
-    { id: 'ec-2', when: 'Tue 19 Nov, 16:00', title: 'Binomial expansion drill', arm: 'SS2 A', materials: '2', state: 'Held' },
-    { id: 'ec-3', when: 'Thu 14 Nov, 16:00', title: 'Indices past questions', arm: 'SS1 A', materials: '4', state: 'Held' },
-    { id: 'ec-4', when: 'Tue 12 Nov, 16:00', title: 'WAEC problem set 2', arm: 'SS3 A', materials: '1', state: 'Held' },
-    { id: 'ec-5', when: 'Thu 07 Nov, 16:00', title: 'Cells and tissues', arm: 'JSS2 A', materials: '2', state: 'Cancelled' },
+  detail: [
+    { key: 'room', label: 'Room' },
+    { key: 'link', label: 'Meeting link' },
+    { key: 'created', label: 'Opened' },
   ],
-  form: [
-    {
-      title: 'Session',
-      fields: [
-        { key: 'title', label: 'Title', required: true, wide: true, placeholder: 'Quadratics revision clinic' },
-        { key: 'when', label: 'When', required: true, placeholder: 'Thu 21 Nov, 16:00' },
-        { key: 'arm', label: 'Arm', required: true, options: ARMS },
-        { key: 'materials', label: 'Materials attached', numeric: true, placeholder: '3' },
-        { key: 'state', label: 'State', options: ['Scheduled', 'Held', 'Cancelled'] },
-      ],
-    },
-    {
-      title: 'Invitation',
-      fields: [
-        {
-          key: 'note',
-          label: 'Note sent with the invitation',
-          multiline: true,
-          wide: true,
-          placeholder: 'Pupils and parents receive this with the link.',
-        },
-      ],
-    },
-  ],
-}
+  source: async (params) => pageRows(await eclassRows(), params),
+  record: async (recordId) =>
+    (await eclassRows()).find((eclass) => eclass.id === String(recordId)),
+};

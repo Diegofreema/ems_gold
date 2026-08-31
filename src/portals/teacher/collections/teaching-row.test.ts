@@ -1,0 +1,152 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import type {
+  EClass,
+  TeacherResult,
+  TeacherStudent,
+  TeacherSubject,
+} from '../../../api/teaching/types.ts'
+import {
+  eclassRow,
+  mySubjectRow,
+  pupilRow,
+  roomOf,
+  scoreRow,
+  subjectNames,
+  topicRow,
+} from './teaching-row.ts'
+
+/** Verbatim from GET /teachers/me/subjects. */
+const SUBJECT = {
+  id: 1,
+  name: 'ENGLISH LANGUAGE',
+  subjectcode: 'EL',
+  department_id: 1,
+  status: 1,
+  _joinData: {
+    id: 1,
+    teacher_id: 2,
+    subject_id: 1,
+    created_date: '2026-08-26T12:43:05+01:00',
+  },
+  department: { id: 1, name: 'JSS 1', deptcode: 'JSS 1' },
+} as unknown as TeacherSubject
+
+/** Verbatim from GET /teachers/me/students. */
+const PUPIL = {
+  id: 10,
+  fname: 'Aniegbokas',
+  lname: 'Chukwudi',
+  mname: null,
+  dob: '10/11/1986',
+  joindate: '2026-08-27T08:15:52+01:00',
+  email: 'chukd5@outlook.com',
+  phone: '90889988765',
+  address: 'Heartland Estate Owerri',
+  fathersname: '',
+  fatherphone: '',
+  regno: 'MGS/2020535',
+  status: 'Admitted',
+  studentstatus: null,
+  gender: 'Male',
+  class_arm_id: 3,
+  user: { id: 501, username: 'chukd5@outlook.com' },
+  class_arm: { id: 3, arm_name: 'JSS1 A' },
+  department: { id: 1, name: 'JSS 1' },
+} as unknown as TeacherStudent
+
+/** Verbatim from GET /teachers/me/results. */
+const MARK = {
+  id: 11,
+  student_id: 10,
+  regno: 'MGS/2020535',
+  subject_id: 1,
+  ca: '6',
+  score: '62.00',
+  total: '68',
+  grade: 'B',
+  approval_status: 'pending',
+} as unknown as TeacherResult
+
+test('a subject reads its code, its class and whether it is still offered', () => {
+  const row = mySubjectRow(SUBJECT)
+  assert.equal(row.code, 'EL')
+  assert.equal(row.name, 'ENGLISH LANGUAGE')
+  assert.equal(row.klass, 'JSS 1')
+  assert.equal(row.status, 'Active')
+  assert.equal(row.added, '26 Aug 2026')
+})
+
+test('a withdrawn subject is not read as an active one', () => {
+  assert.equal(mySubjectRow({ ...SUBJECT, status: 0 }).status, 'Inactive')
+})
+
+test('a pupil reads their admission number, arm and class', () => {
+  const row = pupilRow(PUPIL)
+  assert.equal(row.adm, 'MGS/2020535')
+  assert.equal(row.name, 'Aniegbokas Chukwudi')
+  assert.equal(row.arm, 'JSS1 A')
+  assert.equal(row.klass, 'JSS 1')
+  assert.equal(row.born, '10/11/1986')
+  assert.equal(row.username, 'chukd5@outlook.com')
+})
+
+test('the standing shown is the one the school filled in', () => {
+  // Admission is all the roll carries for a pupil the office has not marked.
+  assert.equal(pupilRow(PUPIL).status, 'Admitted')
+  assert.equal(pupilRow({ ...PUPIL, studentstatus: 'Suspended' }).status, 'Suspended')
+})
+
+test('a parent nobody typed onto the record is left blank, not half-joined', () => {
+  assert.equal(pupilRow(PUPIL).father, '—')
+  assert.equal(
+    pupilRow({ ...PUPIL, fathersname: 'Emeka Udo', fatherphone: '08033' }).father,
+    'Emeka Udo · 08033',
+  )
+})
+
+test('a mark is read as a number and named by the subject list', () => {
+  const row = scoreRow(MARK, subjectNames([SUBJECT]))
+  assert.equal(row.subject, 'ENGLISH LANGUAGE')
+  assert.equal(row.ca, '6')
+  assert.equal(row.exam, '62')
+  assert.equal(row.total, '68')
+  assert.equal(row.grade, 'B')
+  assert.equal(row.state, 'Pending')
+})
+
+test('a mark against a subject not on the list keeps its id rather than vanishing', () => {
+  assert.equal(scoreRow({ ...MARK, subject_id: 99 }, subjectNames([SUBJECT])).subject, 'Subject 99')
+})
+
+/** Verbatim from GET /teachers/me/eclasses, which keys them `classes`. */
+const ECLASS = {
+  id: 5,
+  meetinglink: 'https://meet.jit.si/EBUSCED6a830d152bede',
+  teacher_id: 2,
+  datecreated: '2026-08-17T13:31:05+01:00',
+} as unknown as EClass
+
+test('a topic is named by the subject the teacher was given', () => {
+  const row = topicRow(
+    { id: 3, subject_id: 1, title: 'Sets and Venn diagrams', contents: 'Two lessons.' },
+    subjectNames([SUBJECT]),
+  )
+  assert.equal(row.title, 'Sets and Venn diagrams')
+  assert.equal(row.subject, 'ENGLISH LANGUAGE')
+  assert.equal(row.contents, 'Two lessons.')
+  // The edit form prefills the select from the id, not from the name.
+  assert.equal(row.subject_id, '1')
+})
+
+test('an e-class is named by the room its link ends in', () => {
+  const row = eclassRow(ECLASS)
+  assert.equal(row.room, 'EBUSCED6a830d152bede')
+  assert.equal(row.link, 'https://meet.jit.si/EBUSCED6a830d152bede')
+  assert.equal(row.created, '17 Aug 2026, 13:31')
+})
+
+test('an e-class with no link still reads as a row', () => {
+  assert.equal(eclassRow({ ...ECLASS, meetinglink: null }).room, '—')
+  assert.equal(roomOf('https://meet.jit.si/ROOM/'), 'ROOM')
+})

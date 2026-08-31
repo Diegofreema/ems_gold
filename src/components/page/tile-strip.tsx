@@ -1,14 +1,14 @@
-import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
+import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 export type Tile = {
-  label: string
+  label: string;
   /** A node so a tile can animate its figure — see `CountUp`. */
-  value: ReactNode
+  value: ReactNode;
   /** Optional third line, e.g. "+12% on last term". */
-  delta?: string
-  deltaTone?: 'brand' | 'muted'
-}
+  delta?: string;
+  deltaTone?: 'brand' | 'muted';
+};
 
 /**
  * Tiles share one 2px frame and are separated by inset shadows rather than
@@ -19,10 +19,10 @@ export function TileStrip({
   size = 'sm',
   className,
 }: {
-  tiles: Tile[]
+  tiles: Tile[];
   /** `lg` is the dashboard figure size; `sm` is the list-page summary. */
-  size?: 'sm' | 'lg'
-  className?: string
+  size?: 'sm' | 'lg';
+  className?: string;
 }) {
   return (
     <div
@@ -31,16 +31,16 @@ export function TileStrip({
         className,
       )}
     >
-      {tiles.map((tile, index) => (
+      {tiles?.map((tile, index) => (
         <div
           key={tile.label}
           style={{ animationDelay: `${index * 40}ms` }}
           className={cn(
             'min-w-0 flex-[1_1_240px] animate-ems-up bg-background shadow-[inset_-2px_0_0_var(--ems-divider),inset_0_-2px_0_var(--ems-divider)] transition-colors hover:bg-neutral-100',
-            size === 'lg' ? 'px-4 py-[18px]' : 'px-4 py-3.5',
+            size === 'lg' ? 'px-4 py-4.5' : 'px-4 py-3.5',
           )}
         >
-          <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             {tile.label}
           </div>
           <div
@@ -66,5 +66,5 @@ export function TileStrip({
         </div>
       ))}
     </div>
-  )
+  );
 }

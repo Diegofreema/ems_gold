@@ -1,7 +1,12 @@
-import type { CollectionDef } from '@/features/collections/types'
+import { teachingService } from '@/api/teaching/service'
+import { pageRows } from '@/features/collections/api'
+import type { CollectionDef, Row } from '@/features/collections/types'
+import { termFromResults } from '../term'
+import { batchRow, lineRow, parseBatchKey } from './batch-row'
+import { myBatches, myMarks, myRoll } from './mine'
+import { uploadBody } from './teaching-body'
 
-const ARMS = ['SS1 A', 'SS2 A', 'SS3 A', 'JSS2 A'] as const
-const SUBJECTS = ['Mathematics', 'Further Maths', 'Basic Science'] as const
+const batchRows = async (): Promise<Row[]> => (await myBatches()).map(batchRow)
 
 export const uploads: CollectionDef = {
   id: 'uploads',
@@ -9,46 +14,92 @@ export const uploads: CollectionDef = {
   kicker: 'Assessment',
   title: 'Upload batches',
   description:
-    'Result files you have uploaded, and whether the bursary has approved them.',
+    'Result files you have uploaded, and whether the office has approved them. A batch is one subject, one class and one term.',
   action: 'Upload CSV / XLSX',
-  searchHint: 'Search batch or subject',
-  footer: '6 batches this term',
+  searchHint: 'Search subject, class or term',
+  footer: 'Grouped by subject, class and term',
   emptyTitle: 'Nothing uploaded yet',
   emptyBody:
-    'Upload a CSV or XLSX of scores and the bursary reads every line before approving it.',
+    'Upload a spreadsheet of marks and the office reads every line before approving it. Marks entered by hand on the score sheet do not appear here.',
   noun: 'batch',
-  nameKey: 'batch',
-  summary: [
-    { label: 'Uploaded', value: '6' },
-    { label: 'Approved', value: '3' },
-    { label: 'Awaiting approval', value: '2' },
-  ],
+  nameKey: 'subject',
   columns: [
-    { key: 'batch', label: 'Batch', cardRole: 'subtitle' },
-    { key: 'file', label: 'File', cardRole: 'title' },
-    { key: 'subject', label: 'Subject' },
-    { key: 'arm', label: 'Arm' },
-    { key: 'scores', label: 'Scores', align: 'right' },
+    { key: 'subject', label: 'Subject', cardRole: 'title' },
+    { key: 'klass', label: 'Class', cardRole: 'subtitle' },
+    { key: 'term', label: 'Term' },
+    { key: 'lines', label: 'Lines', align: 'right' },
     { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'BAT-1142', batch: 'BAT-1142', file: 'mth-ss1a-firstterm.xlsx', subject: 'Mathematics', arm: 'SS1 A', scores: '35', state: 'Approved' },
-    { id: 'BAT-1121', batch: 'BAT-1121', file: 'fmt-ss2a-firstterm.xlsx', subject: 'Further Maths', arm: 'SS2 A', scores: '18', state: 'Rejected' },
-    { id: 'BAT-1118', batch: 'BAT-1118', file: 'mth-ss2a-ca.csv', subject: 'Mathematics', arm: 'SS2 A', scores: '36', state: 'Approved' },
-    { id: 'BAT-1109', batch: 'BAT-1109', file: 'bsc-jss2a-ca.csv', subject: 'Basic Science', arm: 'JSS2 A', scores: '42', state: 'Awaiting approval' },
-    { id: 'BAT-1104', batch: 'BAT-1104', file: 'mth-ss3a-remedial.csv', subject: 'Mathematics', arm: 'SS3 A', scores: '12', state: 'Awaiting approval' },
-    { id: 'BAT-1098', batch: 'BAT-1098', file: 'mth-ss1a-ca.csv', subject: 'Mathematics', arm: 'SS1 A', scores: '35', state: 'Approved' },
+  detail: [
+    { key: 'subject', label: 'Subject' },
+    { key: 'klass', label: 'Class' },
+    { key: 'term', label: 'Term' },
+    { key: 'session', label: 'Session' },
+    { key: 'lines', label: 'Lines' },
+    { key: 'state', label: 'State' },
+    { key: 'uploaded', label: 'Uploaded' },
   ],
+  // The endpoint answers whole and takes no search term.
+  source: async (params) => pageRows(await batchRows(), params),
+  record: async (recordId) =>
+    (await batchRows()).find((batch) => batch.id === String(recordId)),
+  save: async (values) => {
+    const [roll, marks] = await Promise.all([myRoll(), myMarks()])
+    const arm = roll.class_arms.find(
+      (one) => String(one.id) === String(values.class_arm_id),
+    )
+    return teachingService.uploadResults(
+      uploadBody(values, arm, termFromResults(marks.items)),
+    )
+  },
+  // Nothing withdraws a batch once it is with the office; a corrected file is
+  // uploaded over it.
   form: [
     {
-      title: 'Batch',
+      title: 'The file',
       fields: [
-        { key: 'file', label: 'File', required: true, wide: true, placeholder: 'mth-ss1a-firstterm.xlsx' },
-        { key: 'subject', label: 'Subject', required: true, options: SUBJECTS },
-        { key: 'arm', label: 'Arm', required: true, options: ARMS },
-        { key: 'scores', label: 'Scores in file', numeric: true, placeholder: '35' },
-        { key: 'batch', label: 'Batch reference', placeholder: 'Generated on upload' },
+        {
+          key: 'result',
+          label: 'Results spreadsheet',
+          required: true,
+          wide: true,
+          file: '.csv,.xls,.xlsx',
+          hint: 'Column A the admission number, B the CA, then C, D and E the three exam scores. The batch lands with the office as pending.',
+        },
+        {
+          key: 'subject_id',
+          label: 'Subject',
+          required: true,
+          optionsFrom: 'my-subjects',
+        },
+        {
+          key: 'class_arm_id',
+          label: 'Arm',
+          required: true,
+          optionsFrom: 'my-arms',
+          hint: 'The class comes with the arm. The term is the one your marks are already filed into.',
+        },
       ],
+    },
+  ],
+  tabs: [
+    {
+      label: 'Lines',
+      columns: [
+        { key: 'pupil', label: 'Pupil' },
+        { key: 'adm', label: 'Adm. no.' },
+        { key: 'ca', label: 'CA', align: 'right' },
+        { key: 'exam', label: 'Exam', align: 'right' },
+        { key: 'total', label: 'Total', align: 'right' },
+        { key: 'grade', label: 'Grade' },
+        { key: 'state', label: 'State', tag: true },
+      ],
+      source: async (recordId) => {
+        const key = parseBatchKey(recordId)
+        if (!key) return []
+        return (await teachingService.uploadBatch(key)).map(lineRow)
+      },
+      empty: 'The office reads this batch line by line; nothing has come back for it yet.',
     },
   ],
 }

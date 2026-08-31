@@ -13,9 +13,9 @@ import {
   familyChild,
   familyOwing,
   invoiceRow,
-  schoolTime,
   weeksPresent,
 } from './family.ts'
+import { schoolTime } from '../../features/collections/when.ts'
 
 /** Verbatim from GET /sparents/1/children. */
 const ENROLLED: EnrolledChild = {

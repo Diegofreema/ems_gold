@@ -1,56 +1,105 @@
-import { parseAsStringLiteral, useQueryState } from 'nuqs'
-import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { useQueryState } from 'nuqs'
+import { useState } from 'react'
+import { useEnterScores } from '@/api/teaching/hooks'
+import { useMySubjects, useMyResults, useMyStudents } from '@/api/teaching/hooks'
 import { SegmentedControl } from '@/components/common/segmented-control'
+import { EmptyState } from '@/components/feedback/empty-state'
+import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { termFromResults } from '../../term'
 import { sheetAverage } from './grade'
-import { rosterFor, SCORE_ARMS, SCORE_SUBJECTS, type Pupil } from './roster'
-import { markSheet } from './mark-sheet'
 import { ScoreSheet } from './score-sheet'
+import { changedMarks, type Edits, editKey, sheetRows } from './sheet'
 
-type Mark = 'ca' | 'exam'
-/** Unsaved edits, keyed subject + arm + pupil so switching sheets keeps them. */
-type Edits = Record<string, Partial<Pick<Pupil, Mark>>>
-
-const subjectParser = parseAsStringLiteral(SCORE_SUBJECTS).withDefault(
-  SCORE_SUBJECTS[0],
-)
-const armParser = parseAsStringLiteral(SCORE_ARMS).withDefault(SCORE_ARMS[0])
+/** A teacher's whole roll and mark sheet, both of which page at the endpoint. */
+const ALL = 500
 
 export function ScoresPage() {
-  const [subject, setSubject] = useQueryState('subject', subjectParser)
-  const [arm, setArm] = useQueryState('arm', armParser)
+  const subjects = useMySubjects()
+  const roll = useMyStudents({ limit: ALL })
+  const marks = useMyResults({ limit: ALL })
+  const save = useEnterScores()
   const [edits, setEdits] = useState<Edits>({})
+  const [chosenSubject, setSubject] = useQueryState('subject')
+  const [chosenArm, setArm] = useQueryState('arm')
 
-  const rows = useMemo(() => {
-    const pupils = rosterFor(subject, arm).map((pupil) => ({
-      ...pupil,
-      ...edits[`${subject}|${arm}|${pupil.name}`],
-    }))
-    return markSheet(pupils)
-  }, [subject, arm, edits])
+  if (subjects.isPending || roll.isPending || marks.isPending) {
+    return (
+      <>
+        <Header />
+        <TableSkeleton rows={6} />
+      </>
+    )
+  }
 
-  const average = sheetAverage(rows.map((row) => row.total))
+  const mine = subjects.data ?? []
+  const arms = roll.data?.class_arms ?? []
+  const pupils = roll.data?.items ?? []
+  const held = marks.data?.items ?? []
 
-  const setMark = (name: string, field: Mark, value: string) =>
+  if (!mine.length || !arms.length) {
+    return (
+      <>
+        <Header />
+        <EmptyState
+          title="Nothing to mark yet"
+          body={
+            mine.length
+              ? 'You are not class teacher of an arm this session, so there is no roll to mark.'
+              : 'The school office has not given you a subject yet. Marks are entered against a subject you teach.'
+          }
+        />
+      </>
+    )
+  }
+
+  // The first of each is the sheet a teacher lands on; the URL holds whichever
+  // they picked, so a sheet is shareable and survives a reload.
+  const subjectId = Number(chosenSubject) || mine[0].id
+  const armId = Number(chosenArm) || arms[0].id
+  const subject = mine.find((one) => one.id === subjectId) ?? mine[0]
+  const arm = arms.find((one) => one.id === armId) ?? arms[0]
+
+  const rows = sheetRows(
+    pupils.filter((pupil) => pupil.class_arm_id === arm.id),
+    held,
+    subject.id,
+    edits,
+  )
+  const term = termFromResults(held)
+  const pending = rows.filter((row) => row.edited)
+  const problems = rows.filter((row) => row.problem)
+
+  const setMark = (studentId: number, field: 'ca' | 'exam', value: string) =>
     setEdits((previous) => {
-      const key = `${subject}|${arm}|${name}`
+      const key = editKey(subject.id, studentId)
       return { ...previous, [key]: { ...previous[key], [field]: value } }
     })
 
+  const submit = async () => {
+    if (!term) return
+    await save
+      .mutateAsync(changedMarks(rows, subject.id, term))
+      // A refusal has already been announced by the mutation cache. What was
+      // taken before it stays taken, and the sheet is re-read either way.
+      .catch(() => undefined)
+    setEdits({})
+  }
+
   return (
     <>
-      <PageHeader
-        kicker="Assessment"
-        title="Enter scores"
-        description="One sheet at a time. Totals compute as you type; the sheet is only submitted when you press Submit."
+      <Header
         action={
           <Button
-            onClick={() => toast(`${subject} · ${arm} submitted for approval`)}
+            pending={save.isPending}
+            disabled={!term || pending.length === 0 || problems.length > 0}
+            onClick={submit}
           >
-            Submit sheet
+            {pending.length
+              ? `Save ${pending.length} mark${pending.length === 1 ? '' : 's'}`
+              : 'Save marks'}
           </Button>
         }
       />
@@ -60,15 +109,15 @@ export function ScoresPage() {
         <Picker
           name="subject"
           label="Subject"
-          options={SCORE_SUBJECTS}
-          value={subject}
+          value={String(subject.id)}
+          options={mine.map((one) => ({ value: String(one.id), label: one.name }))}
           onChange={(value) => void setSubject(value)}
         />
         <Picker
           name="arm"
           label="Arm"
-          options={SCORE_ARMS}
-          value={arm}
+          value={String(arm.id)}
+          options={arms.map((one) => ({ value: String(one.id), label: one.arm_name }))}
           onChange={(value) => void setArm(value)}
         />
         <div className="flex-1" />
@@ -77,21 +126,53 @@ export function ScoresPage() {
             Sheet average
           </div>
           <div className="font-heading text-2xl font-extrabold tabular-nums">
-            {average}
+            {sheetAverage(rows.map((row) => row.total))}
           </div>
         </div>
       </div>
 
-      <ScoreSheet rows={rows} onMarkChange={setMark} />
+      {rows.length ? (
+        <ScoreSheet rows={rows} onMarkChange={setMark} />
+      ) : (
+        <EmptyState
+          title="No pupils in this arm"
+          body="The office places pupils in arms. Once one is placed here, they appear on this sheet."
+        />
+      )}
 
       <div className="mt-3.5 text-xs text-muted-foreground">
-        {rows.length} pupils · {subject} · {arm} · not yet submitted
+        {term ? (
+          <>
+            {rows.length} pupils · {subject.name} · {arm.arm_name} · filed into{' '}
+            {term.label}
+            {problems.length > 0 && ' · fix the flagged marks before saving'}
+          </>
+        ) : (
+          // Without a session and a term the endpoint has nothing to file
+          // against, and a teaching login cannot read the school calendar.
+          <>
+            Marks cannot be filed yet: this portal reads the term off your own
+            marks, and you have none. Ask the school office to record your first
+            mark of the term, or to open the calendar to teaching logins.
+          </>
+        )}
       </div>
     </>
   )
 }
 
-function Picker<TValue extends string>({
+function Header({ action }: { action?: React.ReactNode }) {
+  return (
+    <PageHeader
+      kicker="Assessment"
+      title="Enter scores"
+      description="One arm and one subject at a time. Totals compute as you type; nothing is filed until you save, and the school works out the grade."
+      action={action}
+    />
+  )
+}
+
+function Picker({
   name,
   label,
   options,
@@ -100,21 +181,16 @@ function Picker<TValue extends string>({
 }: {
   name: string
   label: string
-  options: readonly TValue[]
-  value: TValue
-  onChange: (value: TValue) => void
+  options: { value: string; label: string }[]
+  value: string
+  onChange: (value: string) => void
 }) {
   return (
     <div className="min-w-[200px]">
       <div className="mb-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </div>
-      <SegmentedControl
-        name={name}
-        value={value}
-        onChange={onChange}
-        options={options.map((option) => ({ value: option, label: option }))}
-      />
+      <SegmentedControl name={name} value={value} onChange={onChange} options={options} />
     </div>
   )
 }

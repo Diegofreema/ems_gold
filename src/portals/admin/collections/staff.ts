@@ -142,12 +142,12 @@ const ACCOUNT: FormSectionSpec = {
   fields: [
     {
       key: 'username',
-      label: 'Sign-in name',
+      label: 'Email',
+      required: true,
+      email: true,
       wide: true,
-      // The login is created with the record and never renamed from here, so
-      // an edit leaves this empty and sends nothing.
-      hint: 'What they type to sign in. Needed on a new record, and not changed from here afterwards.',
-      placeholder: 'cnnaji',
+      hint: 'The address they sign in with.',
+      placeholder: 'c.nnaji@school.ng',
     },
     { key: 'address', label: 'Home address', multiline: true, wide: true, placeholder: '2 Aba Road, Enugu' },
   ],

@@ -80,7 +80,7 @@ export type CreateStaffBody = {
   profile?: string
 }
 
-export type UpdateStaffBody = Partial<Omit<CreateStaffBody, 'username'>> & {
+export type UpdateStaffBody = Partial<CreateStaffBody> & {
   /** Reassigns which arm they take. */
   class_arm_id?: number
 }

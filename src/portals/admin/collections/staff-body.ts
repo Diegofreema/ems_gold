@@ -29,9 +29,8 @@ function common(values: FormValues) {
 }
 
 /**
- * The staff form as `POST /teachers` wants it. The username is the login being
- * created alongside the record, so it is only sent when there is no record yet
- * — `PATCH`ing it would rename somebody's sign-in.
+ * The staff form as `POST /teachers` wants it. The username is the login's
+ * email address, created alongside the record.
  */
 export function teacherBody(values: FormValues): CreateStaffBody {
   return {
@@ -50,9 +49,14 @@ export function teacherBody(values: FormValues): CreateStaffBody {
   }
 }
 
+/**
+ * The same body on an edit, which takes the email too — a teacher who has
+ * changed address is corrected here rather than left signing in as who they
+ * were. An empty box means "leave it alone", not "rename to nothing".
+ */
 export function teacherUpdate(values: FormValues): UpdateStaffBody {
-  const { username: _username, ...body } = teacherBody(values)
-  return body
+  const { username, ...body } = teacherBody(values)
+  return username ? { ...body, username } : body
 }
 
 /**
@@ -68,7 +72,8 @@ export function adminBody(values: FormValues): CreateAdminBody {
   }
 }
 
+/** The same on the office record: a corrected address is saved, a blank one ignored. */
 export function adminUpdate(values: FormValues): UpdateAdminRecordBody {
-  const { username: _username, ...body } = adminBody(values)
-  return body
+  const { username, ...body } = adminBody(values)
+  return username ? { ...body, username } : body
 }

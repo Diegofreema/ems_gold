@@ -5,6 +5,17 @@ export type ProfileField = FieldSpec & {
   locked?: boolean
 }
 
+/**
+ * Saving belongs to whoever owns the record — the office record is `PATCH
+ * /users/profile`, a teaching record is `POST /teachers/me`, and a pupil or a
+ * guardian has no endpoint at all. The page only collects the form, so the
+ * portal hands it this; left out, the record is read-only and the buttons go.
+ */
+export type ProfileSave = {
+  pending: boolean
+  save: (values: Record<string, unknown>) => Promise<void>
+}
+
 export type ProfilePref = {
   label: string
   hint: string
