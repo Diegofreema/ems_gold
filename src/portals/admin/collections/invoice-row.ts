@@ -1,6 +1,7 @@
 import type { Invoice, InvoiceBody } from '../../../api/invoices/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
+import { money, named, SETTLED } from '../../../features/collections/invoice.ts'
 import { when } from '../../../features/collections/when.ts'
 import { formatNaira } from '../../../lib/format.ts'
 
@@ -12,21 +13,6 @@ function text(value: string | null | undefined): string {
 function id(value: number | null | undefined): string {
   return value ? String(value) : ''
 }
-
-/** Reads a named string off one of the relations the API expands. */
-function named(record: Record<string, unknown> | undefined, key: string): string {
-  const value = record?.[key]
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-/** The API sends money as a string; anything unreadable is nothing owed. */
-function money(amount: string | number | null | undefined): number {
-  const parsed = Number(amount)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-/** The API's own word for a settled invoice. */
-export const SETTLED = 'success'
 
 /**
  * The word the register shows for a `paystatus`.

@@ -1,5 +1,27 @@
+import { allRows, pageRows } from '@/features/collections/api'
 import type { CollectionDef } from '@/features/collections/types'
-import { historyTab } from './history'
+import { formatNaira } from '@/lib/format'
+import { queryClient } from '@/lib/query-client'
+import {
+  studentInvoicesQuery,
+  studentRecordQuery,
+  studentStatsQuery,
+} from '../api/queries'
+import { invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
+import { recordRows } from '../features/record/record'
+
+/**
+ * The pupil's fee ledger, from `GET /students/me/invoices` — one answer
+ * carrying both the bills and the payments taken against them.
+ *
+ * Through the cache rather than fetched per panel: the list, the record it
+ * opens, the payments tab beside it and all three tiles want the same answer
+ * on the same render, and react-query collapses them into one call.
+ */
+const ledger = () => queryClient.ensureQueryData(studentInvoicesQuery)
+const counters = () => queryClient.ensureQueryData(studentStatsQuery)
+
+const rows = () => ledger().then((data) => invoiceRows(data.invoices, data.transactions))
 
 export const invoices: CollectionDef = {
   id: 'invoices',
@@ -7,19 +29,32 @@ export const invoices: CollectionDef = {
   kicker: 'Finance',
   title: 'My invoices',
   description:
-    'Fees raised against your record and what has been paid. Receipts are issued the moment a payment clears.',
+    'Fees raised against your record and what has been paid. The school lists a bill here once it has been settled — ask the bursary about anything you are still owing.',
+  // No button. The design's was "Download receipt", and a pupil login can
+  // reach no receipt endpoint; what a receipt would say — the reference, the
+  // method, the bursary's own note — is on the record panel instead.
   action: 'Download receipt',
+  readonly: true,
   searchHint: 'Search invoice or fee',
-  footer: '5 invoices · 2025/2026',
+  footer: 'Newest first, across every session',
   emptyTitle: 'No invoices raised',
-  emptyBody: 'Fees raised against your record appear here.',
+  emptyBody: 'Fees raised against your record appear here once they are settled.',
   noun: 'invoice',
   nameKey: 'invoice',
-  tabs: historyTab,
-  summary: [
-    { label: 'Billed this term', value: '₦135,000' },
-    { label: 'Paid', value: '₦135,000' },
-    { label: 'Outstanding', value: '₦0' },
+  counts: [
+    {
+      label: 'Paid',
+      count: () => ledger().then((data) => paidTotal(data.invoices)),
+      format: formatNaira,
+    },
+    {
+      label: 'Unpaid',
+      count: () => counters().then((data) => data.stats?.invoices_unpaid ?? 0),
+    },
+    {
+      label: 'Raised for you',
+      count: () => counters().then((data) => data.stats?.invoices_total ?? 0),
+    },
   ],
   columns: [
     { key: 'invoice', label: 'Invoice', cardRole: 'title' },
@@ -29,14 +64,40 @@ export const invoices: CollectionDef = {
     { key: 'method', label: 'Method' },
     { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'i-1', invoice: 'INV-25133', fee: 'Tuition — SS', amount: '₦120,000', paid: '₦120,000', method: 'Transfer', state: 'Paid' },
-    { id: 'i-2', invoice: 'INV-25074', fee: 'ICT levy', amount: '₦15,000', paid: '₦15,000', method: 'Remita', state: 'Paid' },
-    { id: 'i-3', invoice: 'INV-24980', fee: 'Tuition — SS', amount: '₦120,000', paid: '₦120,000', method: 'Transfer', state: 'Paid' },
-    { id: 'i-4', invoice: 'INV-24902', fee: 'Boarding', amount: '₦85,000', paid: '₦85,000', method: 'Cash', state: 'Paid' },
-    { id: 'i-5', invoice: 'INV-24871', fee: 'Examination', amount: '₦28,500', paid: '₦28,500', method: 'Remita', state: 'Paid' },
+  // The panel says more than the table has room for: which session the bill
+  // belongs to, when it was raised, and the reference on the payment.
+  detail: [
+    { key: 'invoice', label: 'Invoice' },
+    { key: 'fee', label: 'Fee' },
+    { key: 'session', label: 'Session' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'paid', label: 'Paid' },
+    { key: 'state', label: 'State' },
+    { key: 'method', label: 'Method' },
+    { key: 'payref', label: 'Payment reference' },
+    { key: 'raised', label: 'Raised' },
+    { key: 'settledOn', label: 'Settled' },
   ],
+  tabs: [
+    {
+      label: 'Payments',
+      columns: [
+        { key: 'paidOn', label: 'Paid on' },
+        { key: 'amount', label: 'Amount', align: 'right' },
+        { key: 'method', label: 'Method' },
+        { key: 'payref', label: 'Reference' },
+        { key: 'note', label: 'Office note' },
+      ],
+      source: (recordId) => ledger().then((data) => paymentRows(data.transactions, recordId)),
+      empty: 'Nothing has been taken against this invoice yet.',
+    },
+  ],
+  source: (params) => rows().then((all) => pageRows(all, params)),
+  record: (recordId) => rows().then((all) => all.find((row) => row.id === recordId)),
 }
+
+const held = () =>
+  queryClient.ensureQueryData(studentRecordQuery).then((student) => recordRows(student))
 
 export const record: CollectionDef = {
   id: 'record',
@@ -44,27 +105,28 @@ export const record: CollectionDef = {
   kicker: 'Finance',
   title: 'My record',
   description:
-    'What the school holds about you. Ask the office to correct anything wrong here.',
-  action: 'Request a change',
+    'What the school holds about you, field by field. Your phone and your address are yours to correct; ask the office about anything else that is wrong.',
+  action: 'Correct my details',
+  actionTo: '/student/profile',
+  readonly: true,
   searchHint: 'Search field',
-  footer: 'Last updated 12 September 2025',
+  footer: 'Everything on your record, including what has been left blank',
   emptyTitle: 'Nothing on file',
   emptyBody: 'The office has not filled in your record yet.',
   noun: 'field',
   nameKey: 'field',
-  tabs: historyTab,
+  // No history. The API keeps no audit a pupil may read, and the placeholder
+  // in its place would be invented entries about their own record.
+  tabs: [],
   columns: [
     { key: 'field', label: 'Field', cardRole: 'title' },
     { key: 'value', label: 'Value', cardRole: 'subtitle' },
   ],
-  rows: [
-    { id: 'rc-1', field: 'Full name', value: 'Amara Chiamaka Okeke' },
-    { id: 'rc-2', field: 'Admission number', value: 'NEB/2022/0871' },
-    { id: 'rc-3', field: 'Class arm', value: 'SS1 A' },
-    { id: 'rc-4', field: 'Date of birth', value: '14 March 2010' },
-    { id: 'rc-5', field: 'Parent / guardian', value: 'Mr & Mrs Okeke' },
-    { id: 'rc-6', field: 'Parent phone', value: '0705 883 1190' },
-    { id: 'rc-7', field: 'Address', value: '14 Ogui Road, Enugu' },
-    { id: 'rc-8', field: 'Boarding status', value: 'Day' },
+  detail: [
+    { key: 'field', label: 'Field' },
+    { key: 'value', label: 'Value' },
+    { key: 'who', label: 'Who can change it' },
   ],
+  source: (params) => held().then((all) => allRows(all, params)),
+  record: (recordId) => held().then((all) => all.find((row) => row.id === recordId)),
 }

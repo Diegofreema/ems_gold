@@ -1,5 +1,16 @@
+import { pageRows } from '@/features/collections/api'
 import type { CollectionDef } from '@/features/collections/types'
-import { historyTab } from './history'
+import { queryClient } from '@/lib/query-client'
+import { studentCoursesQuery, studentMaterialsQuery } from '../api/queries'
+import { courseRows } from '../features/courses/courses'
+import { materialRows } from '../features/materials/materials'
+
+/**
+ * The subjects the pupil is registered for, through the cache so the list and
+ * the record it opens read one answer between them.
+ */
+const registered = () =>
+  queryClient.ensureQueryData(studentCoursesQuery).then((all) => courseRows(all))
 
 export const courses: CollectionDef = {
   id: 'courses',
@@ -7,94 +18,118 @@ export const courses: CollectionDef = {
   kicker: 'Learning',
   title: 'My courses',
   description:
-    'The ten subjects you are registered for this term, and who teaches each.',
+    'The subjects you are registered for, and who teaches each. Ask the office about anything missing from this list.',
+  // No button. The design's was "Download timetable", and there is no
+  // timetable on this API — not a shut endpoint, no endpoint at all.
   action: 'Download timetable',
-  searchHint: 'Search subject',
-  footer: '7 of 10 subjects shown',
-  emptyTitle: 'No courses yet',
-  emptyBody: 'Your subjects appear here once the office registers you for them.',
+  readonly: true,
+  searchHint: 'Search subject, code or teacher',
+  footer: 'Every subject on your registration, in alphabetical order',
+  emptyTitle: 'No subjects yet',
+  emptyBody:
+    'Your subjects appear here once the office registers you for them. Your marks are on My results whether or not a subject is listed here.',
   noun: 'course',
   nameKey: 'name',
-  tabs: historyTab,
+  // No history and no tiles: this is a list of what a pupil takes, and the
+  // API keeps no record of when they were put on it.
+  tabs: [],
   columns: [
     { key: 'code', label: 'Code', cardRole: 'title' },
     { key: 'name', label: 'Subject', cardRole: 'subtitle' },
+    { key: 'klass', label: 'Class' },
     { key: 'teacher', label: 'Teacher' },
-    { key: 'periods', label: 'Periods / wk', align: 'right' },
-    { key: 'ca', label: 'CA so far', align: 'right' },
   ],
-  rows: [
-    { id: 'c-1', code: 'MTH', name: 'Mathematics', teacher: 'C. Nnaji', periods: '8', ca: '26 / 30' },
-    { id: 'c-2', code: 'ENG', name: 'English Language', teacher: 'A. Mohammed', periods: '6', ca: '24 / 30' },
-    { id: 'c-3', code: 'BIO', name: 'Biology', teacher: 'R. Obiora', periods: '4', ca: '22 / 30' },
-    { id: 'c-4', code: 'CMP', name: 'Computer Studies', teacher: 'E. Duru', periods: '3', ca: '27 / 30' },
-    { id: 'c-5', code: 'CHM', name: 'Chemistry', teacher: 'O. Balogun', periods: '4', ca: '19 / 30' },
-    { id: 'c-6', code: 'PHY', name: 'Physics', teacher: 'O. Balogun', periods: '4', ca: '21 / 30' },
-    { id: 'c-7', code: 'GOV', name: 'Government', teacher: 'K. Musa', periods: '3', ca: '25 / 30' },
+  detail: [
+    { key: 'name', label: 'Subject' },
+    { key: 'code', label: 'Code' },
+    { key: 'klass', label: 'Taught to' },
+    { key: 'teacher', label: 'Teacher' },
   ],
+  source: (params) => registered().then((all) => pageRows(all, params)),
+  record: (recordId) => registered().then((all) => all.find((row) => row.id === recordId)),
 }
+
+/**
+ * The notes and papers shared with the pupil's class, through the cache so the
+ * list and the record it opens read one answer between them.
+ */
+const shared = () =>
+  queryClient.ensureQueryData(studentMaterialsQuery).then((all) => materialRows(all))
 
 export const materials: CollectionDef = {
   id: 'materials',
   path: '/student/materials',
   kicker: 'Learning',
   title: 'Course materials',
-  description: 'Notes, slides and past papers your teachers have shared.',
+  description:
+    'Notes, slides and past papers your teachers have shared with your class, newest first.',
+  // No button. The design's was "Download all", and there is nothing to
+  // download: this endpoint sends no file and no address to fetch one from.
   action: 'Download all',
-  searchHint: 'Search material',
-  footer: '6 of 41 materials',
+  readonly: true,
+  searchHint: 'Search material or subject',
+  footer: 'Everything shared with your class this session',
   emptyTitle: 'Nothing shared yet',
   emptyBody:
-    'Notes, slides and past papers appear here as your teachers share them.',
+    'Notes, slides and past papers appear here as your teachers share them. None have been shared with any class yet.',
   noun: 'material',
   nameKey: 'title',
-  tabs: historyTab,
+  // No history and no tiles: a pupil may read what was shared with them, and
+  // the API keeps no record of who opened what.
+  tabs: [],
   columns: [
     { key: 'title', label: 'Material', cardRole: 'title' },
     { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
-    { key: 'type', label: 'Type' },
-    { key: 'size', label: 'Size', align: 'right' },
     { key: 'added', label: 'Added' },
   ],
-  rows: [
-    { id: 'm-1', title: 'Quadratic equations — worked examples', subject: 'Mathematics', type: 'PDF', size: '1.8 MB', added: '18 Nov' },
-    { id: 'm-2', title: 'Cell structure diagrams', subject: 'Biology', type: 'PDF', size: '3.4 MB', added: '15 Nov' },
-    { id: 'm-3', title: 'Spreadsheet basics — slides', subject: 'Computer Studies', type: 'PPTX', size: '5.1 MB', added: '14 Nov' },
-    { id: 'm-4', title: 'Indices past questions 2019–2024', subject: 'Mathematics', type: 'PDF', size: '2.2 MB', added: '11 Nov' },
-    { id: 'm-5', title: 'Comprehension passages set 3', subject: 'English Language', type: 'DOCX', size: '620 KB', added: '08 Nov' },
-    { id: 'm-6', title: 'Periodic table reference', subject: 'Chemistry', type: 'PNG', size: '410 KB', added: '04 Nov' },
+  detail: [
+    { key: 'title', label: 'Material' },
+    { key: 'subject', label: 'Subject' },
+    { key: 'klass', label: 'Shared with' },
+    { key: 'sharedOn', label: 'Shared on' },
   ],
+  source: (params) => shared().then((all) => pageRows(all, params)),
+  record: (recordId) => shared().then((all) => all.find((row) => row.id === recordId)),
 }
 
+/**
+ * The one pupil page with nothing behind it.
+ *
+ * There is no timetable on this API — not a shut endpoint, no endpoint. No
+ * route in the whole collection mentions a timetable, a period, a schedule or
+ * a slot, and `students/me/timetable` answers "Controller class Error could
+ * not be found." rather than a 403, which is what a route that exists but is
+ * refused would say.
+ *
+ * So the page keeps its place in the design and says so. Its fixture — eight
+ * periods with rooms in it, "Block B, Rm 4" — was the one invention on this
+ * portal that could send a pupil to the wrong room, and no room number exists
+ * anywhere on this API to have checked it against.
+ */
 export const timetable: CollectionDef = {
   id: 'timetable',
   path: '/student/timetable',
   kicker: 'Learning',
   title: 'My timetable',
-  description: 'Your periods for the week, in order.',
+  description: 'The week as the school runs it.',
+  // No button. The design's was "Download PDF", and there is no timetable to
+  // put in one.
   action: 'Download PDF',
+  readonly: true,
   searchHint: 'Search subject or day',
-  footer: '8 periods shown · Monday to Friday',
-  emptyTitle: 'No periods scheduled',
-  emptyBody: 'Your timetable appears here once the office publishes it.',
+  footer: '',
+  emptyTitle: 'No timetable to show',
+  emptyBody:
+    "The school does not publish the week's periods in the portal yet. Ask your class teacher for them — the subjects you take, and who teaches each, are on My courses.",
   noun: 'period',
   nameKey: 'subject',
-  tabs: historyTab,
+  tabs: [],
+  // No rows and no source: there is nothing to read, so the page is the empty
+  // state and nothing else. Columns stay for the day the endpoint exists.
   columns: [
     { key: 'day', label: 'Day', cardRole: 'title' },
     { key: 'time', label: 'Time', cardRole: 'subtitle' },
     { key: 'subject', label: 'Subject' },
     { key: 'teacher', label: 'Teacher' },
-    { key: 'room', label: 'Room' },
-  ],
-  rows: [
-    { id: 'tt-1', day: 'Monday', time: '08:00 – 08:40', subject: 'Mathematics', teacher: 'C. Nnaji', room: 'Block B, Rm 4' },
-    { id: 'tt-2', day: 'Monday', time: '08:40 – 09:20', subject: 'English Language', teacher: 'A. Mohammed', room: 'Block A, Rm 2' },
-    { id: 'tt-3', day: 'Monday', time: '10:00 – 10:40', subject: 'Biology', teacher: 'R. Obiora', room: 'Lab 2' },
-    { id: 'tt-4', day: 'Tuesday', time: '08:00 – 08:40', subject: 'Chemistry', teacher: 'O. Balogun', room: 'Lab 1' },
-    { id: 'tt-5', day: 'Tuesday', time: '11:20 – 12:00', subject: 'Computer Studies', teacher: 'E. Duru', room: 'ICT Suite' },
-    { id: 'tt-6', day: 'Wednesday', time: '09:20 – 10:00', subject: 'Physics', teacher: 'O. Balogun', room: 'Lab 3' },
-    { id: 'tt-7', day: 'Thursday', time: '08:40 – 09:20', subject: 'Government', teacher: 'K. Musa', room: 'Block A, Rm 5' },
-    { id: 'tt-8', day: 'Friday', time: '10:00 – 10:40', subject: 'Mathematics', teacher: 'C. Nnaji', room: 'Block B, Rm 4' },
   ],
 }

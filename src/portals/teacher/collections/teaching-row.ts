@@ -6,6 +6,7 @@ import type {
   Topic,
 } from '../../../api/teaching/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
+import { mark } from '../../../features/collections/mark.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { when } from '../../../features/collections/when.ts'
 
@@ -16,12 +17,6 @@ function text(value: string | null | undefined): string {
 /** Joins the parts a record actually carries, e.g. "Mr O. Udoye · 0803 441 2280". */
 function joined(...parts: (string | null | undefined)[]): string {
   return parts.map((part) => part?.trim()).filter(Boolean).join(' · ') || BLANK
-}
-
-/** The API quotes its marks — "77.00" — so each is read as a number. */
-function mark(value: string | number | null | undefined): string {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? String(Math.round(parsed * 100) / 100) : BLANK
 }
 
 /**

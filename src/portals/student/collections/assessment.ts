@@ -1,4 +1,8 @@
+import { pageRows } from '@/features/collections/api'
 import type { CollectionDef } from '@/features/collections/types'
+import { queryClient } from '@/lib/query-client'
+import { studentResultsQuery } from '../api/queries'
+import { resultRows } from '../features/results/results'
 import { historyTab } from './history'
 
 export const tests: CollectionDef = {
@@ -39,42 +43,56 @@ export const tests: CollectionDef = {
   ],
 }
 
+const marks = () =>
+  queryClient.ensureQueryData(studentResultsQuery).then((all) => resultRows(all))
+
 export const results: CollectionDef = {
   id: 'results',
   path: '/student/results',
   kicker: 'Assessment',
   title: 'My results',
   description:
-    'Approved results for this term. A subject appears once the bursary approves the batch.',
+    'Every mark the office has approved for you, newest term first. A subject appears once your teacher has filed it and the office has approved the batch it came in.',
+  // No button. The design's was "Download result sheet", and a pupil login can
+  // reach no result sheet — nor any endpoint that would rank one.
   action: 'Download result sheet',
-  searchHint: 'Search subject',
-  footer: '7 of 10 subjects approved',
+  readonly: true,
+  searchHint: 'Search subject, term or grade',
+  footer: 'Approved marks only, across every term',
   emptyTitle: 'No results yet',
   emptyBody:
-    'A subject appears here once your teacher submits it and the bursary approves the batch.',
+    'A subject appears here once your teacher has filed the mark and the office has approved the batch it came in. A mark still waiting on either is never sent.',
   noun: 'result',
   nameKey: 'subject',
-  tabs: historyTab,
-  summary: [
-    { label: 'Term average', value: '74.2' },
-    { label: 'Position in arm', value: '4 of 35' },
-    { label: 'Subjects approved', value: '7 of 10' },
-  ],
+  // No history, and no tiles. An average over marks from different terms is
+  // not a term average, and a position needs a ranking this API does not keep.
+  tabs: [],
   columns: [
     { key: 'subject', label: 'Subject', cardRole: 'title' },
+    { key: 'term', label: 'Term', cardRole: 'subtitle' },
     { key: 'ca', label: 'CA', align: 'right' },
     { key: 'exam', label: 'Exam', align: 'right' },
-    { key: 'total', label: 'Total', align: 'right', cardRole: 'subtitle' },
+    { key: 'total', label: 'Total', align: 'right' },
     { key: 'grade', label: 'Grade', tag: true, cardRole: 'tag' },
-    { key: 'position', label: 'Position', align: 'right' },
   ],
-  rows: [
-    { id: 'r-1', subject: 'Mathematics', ca: '26', exam: '52', total: '78', grade: 'A', position: '3' },
-    { id: 'r-2', subject: 'English Language', ca: '24', exam: '48', total: '72', grade: 'B', position: '6' },
-    { id: 'r-3', subject: 'Biology', ca: '22', exam: '49', total: '71', grade: 'B', position: '5' },
-    { id: 'r-4', subject: 'Computer Studies', ca: '27', exam: '58', total: '85', grade: 'A', position: '1' },
-    { id: 'r-5', subject: 'Chemistry', ca: '19', exam: '41', total: '60', grade: 'C', position: '12' },
-    { id: 'r-6', subject: 'Physics', ca: '21', exam: '45', total: '66', grade: 'B', position: '8' },
-    { id: 'r-7', subject: 'Government', ca: '25', exam: '54', total: '79', grade: 'A', position: '2' },
+  detail: [
+    { key: 'subject', label: 'Subject' },
+    { key: 'klass', label: 'Class' },
+    { key: 'session', label: 'Session' },
+    { key: 'semester', label: 'Term' },
+    { key: 'ca', label: 'CA' },
+    { key: 'exam', label: 'Exam' },
+    { key: 'total', label: 'Total' },
+    { key: 'grade', label: 'Grade' },
+    { key: 'remark', label: 'Remark' },
+    { key: 'filed', label: 'Filed on' },
   ],
+  /*
+   * Read whole and searched here. The endpoint takes a session and a term, and
+   * a pupil cannot name either of them — `/sessions` and `/semesters` are shut
+   * to a pupil login — so a dropdown would have nothing to put in it. The box
+   * matches the subject, the term and the grade at once instead.
+   */
+  source: (params) => marks().then((all) => pageRows(all, params)),
+  record: (recordId) => marks().then((all) => all.find((row) => row.id === recordId)),
 }

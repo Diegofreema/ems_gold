@@ -15,6 +15,9 @@ export type State = { id: number; name: string; country_id: number }
 
 export type Lga = { id: number; name: string }
 
+/** The year of study, as the API's university template names it. */
+export type Level = { id: number; name: string }
+
 /** A pupil record. Applicants are the same row with `status: 'Applied'`. */
 export type Student = {
   id: number
@@ -57,11 +60,13 @@ export type Student = {
   /** The guardian record, when one has been linked. No name comes with it. */
   sparent_id: number | null
   session_id: number | null
+  level_id: number | null
   religion: string | null
   /** Expanded by the list endpoint; absent on the leaner responses. */
   user?: User
   class_arm?: ClassArm
   department?: Department
+  level?: Level | null
   /**
    * Only `GET /students/{id}` expands these, and each comes back null where
    * the pupil has no such row — a record entered without one has no state.

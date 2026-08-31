@@ -42,6 +42,24 @@ export function pageRows(all: Row[], { page, q }: ListParams): ListResult {
 }
 
 /**
+ * The same, in one page.
+ *
+ * For a list that is a record rather than a register — the fields the school
+ * holds about one pupil — paging is the wrong shape: a person checking their
+ * own details for a mistake should not have to turn four pages to find it.
+ * The search box still narrows it.
+ */
+export function allRows(all: Row[], { q }: ListParams): ListResult {
+  const needle = q.trim().toLowerCase()
+  const found = needle ? all.filter((row) => matches(row, needle)) : all
+
+  return {
+    items: found,
+    pagination: { page: 1, limit: found.length, total: found.length, pages: 1 },
+  }
+}
+
+/**
  * The rows written into the definition, searched and paged so that a fixture
  * list and a live one hand back exactly the same shape.
  */

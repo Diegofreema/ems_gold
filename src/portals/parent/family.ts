@@ -5,12 +5,12 @@ import type {
   FamilyInvoice,
 } from '../../api/parents/types.ts'
 import { BLANK } from '../../features/collections/blank.ts'
+import { SETTLED } from '../../features/collections/invoice.ts'
 import type { Row } from '../../features/collections/types.ts'
 import { schoolTime, when } from '../../features/collections/when.ts'
 import { formatNaira } from '../../lib/format.ts'
 
-/** The API's word for an invoice that has been paid. */
-export const SETTLED = 'success'
+export { SETTLED }
 
 /** Marks that count as the child having been in school. */
 const ATTENDED = ['present', 'late']

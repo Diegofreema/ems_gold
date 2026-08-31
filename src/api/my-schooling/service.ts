@@ -1,8 +1,9 @@
 import { request } from '../client'
-import type { Invoice } from '../invoices/types'
 import type {
-  Course,
-  CourseMaterial,
+  MyCourse,
+  MyInvoices,
+  MyMaterial,
+  MyResult,
   MyResultParams,
   Student,
   StudentDashboard,
@@ -18,18 +19,22 @@ export const mySchoolingService = {
 
   dashboard: () => request<StudentDashboard>('students/me/dashboard'),
 
+  /** Subjects the caller is registered for. Empty school-wide — see `MyCourse`. */
   courses: () =>
-    request<{ courses: Course[] }>('students/me/courses').then((data) => data.courses),
+    request<{ courses: MyCourse[] }>('students/me/courses').then((data) => data.courses ?? []),
 
-  invoices: () =>
-    request<{ invoices: Invoice[] }>('students/me/invoices').then((data) => data.invoices),
+  /** The bills and the payments taken against them, in one answer. */
+  invoices: () => request<MyInvoices>('students/me/invoices'),
 
   /** Approved results only — a pending upload is never shown. */
   results: (params: MyResultParams = {}) =>
-    request<Record<string, unknown>>('students/me/results', { query: { ...params } }),
+    request<{ results: MyResult[] }>('students/me/results', { query: { ...params } }).then(
+      (data) => data.results ?? [],
+    ),
 
+  /** Files shared with the caller's class. Empty school-wide — see `MyMaterial`. */
   materials: () =>
-    request<{ materials: CourseMaterial[] }>('students/me/materials').then(
-      (data) => data.materials,
+    request<{ materials: MyMaterial[] }>('students/me/materials').then(
+      (data) => data.materials ?? [],
     ),
 }

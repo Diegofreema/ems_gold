@@ -3,8 +3,8 @@ import type {
   UpdateMyTeachingProfileBody,
 } from '../../api/teaching/types.ts'
 import { BLANK } from '../../features/collections/blank.ts'
+import { asDate, fullName, initialsOf, text } from '../../features/profile/record.ts'
 import type { ProfileConfig } from '../../features/profile/types.ts'
-import { formatDate } from '../../lib/format.ts'
 
 /**
  * The teaching record, as its owner reads it.
@@ -59,27 +59,6 @@ const EMPTY: ProfileConfig = {
   ],
 }
 
-function text(value: string | null | undefined): string {
-  return value?.trim() || BLANK
-}
-
-function fullName(...parts: (string | null | undefined)[]): string {
-  return parts.map((part) => part?.trim()).filter(Boolean).join(' ')
-}
-
-/** Two letters for the square, off whichever half of the name is filled in. */
-function initialsOf(parts: (string | null | undefined)[]): string {
-  const letters = parts.map((part) => part?.trim()[0]).filter(Boolean)
-  return letters.length ? letters.join('').toUpperCase() : '··'
-}
-
-/** An ISO timestamp as the design writes dates. Anything else is left alone. */
-function asDate(value: string | null | undefined): string {
-  if (!value) return BLANK
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : formatDate(date)
-}
-
 export function teacherProfile(profile?: MyTeachingProfile): ProfileConfig {
   if (!profile) return EMPTY
 
@@ -124,8 +103,8 @@ export function teacherProfile(profile?: MyTeachingProfile): ProfileConfig {
 export function teacherContactBody(
   values: Record<string, unknown>,
 ): UpdateMyTeachingProfileBody {
-  const text = (key: string) =>
+  const box = (key: string) =>
     typeof values[key] === 'string' ? (values[key] as string).trim() || undefined : undefined
 
-  return { phone: text('phone'), address: text('address') }
+  return { phone: box('phone'), address: box('address') }
 }

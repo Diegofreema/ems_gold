@@ -1,53 +1,58 @@
-import { queryOptions } from '@tanstack/react-query'
+import type { StudentDashboard } from '@/api/my-schooling/types'
+import type { Invoice } from '@/api/invoices/types'
 import type { Bar } from '@/components/charts/bar-chart'
+import type { ActivityEntry } from '@/components/common/activity-list'
 import type { DashboardFigure } from '@/components/common/figure-tiles'
-import type { WeekItem } from '../features/week-list'
+import {
+  billEntries,
+  feeBars,
+  studentAction,
+  type StudentAction,
+  studentFigures,
+  studentNote,
+  unlistedNote,
+} from '../features/dashboard/dashboard'
 
-export type StudentDashboard = {
+export type StudentHome = {
   figures: DashboardFigure[]
-  week: WeekItem[]
-  scores: Bar[]
+  /** The line under the greeting, which says whether anything is waiting. */
+  note: string
+  /** Where the button beside the greeting points. */
+  action: StudentAction
+  /** The bills the school has raised, newest first. */
+  bills: ActivityEntry[]
+  /** What the invoice list left out, where it left anything out. */
+  unlisted: string | null
+  fees: { bars: Bar[]; peak: number }
 }
 
-/** A subject below this is shown in accent — it needs attention. */
-const WEAK_SCORE = 65
+/**
+ * The page is two endpoints, not one: the counters know what is unpaid and the
+ * invoice list knows what each bill was for, and neither knows both.
+ *
+ * Shaped here rather than in the fetch so each cache entry holds what its
+ * endpoint actually sent — the sidebar reads the same counters for its fee
+ * tag, and a cache holding this page's tiles would have answered it with
+ * figures where it expected the stats.
+ */
+export function studentHome(
+  dashboard: StudentDashboard | undefined,
+  invoices: Invoice[],
+): StudentHome {
+  const stats = dashboard?.stats ?? {
+    invoices_total: invoices.length,
+    invoices_unpaid: 0,
+    results_available: 0,
+    materials_available: 0,
+    fees_settled_this_session: 0,
+  }
 
-function scoreBar(label: string, score: number): Bar {
   return {
-    label,
-    value: score,
-    display: String(score),
-    highlight: score < WEAK_SCORE,
+    figures: studentFigures(stats, invoices),
+    note: studentNote(stats),
+    action: studentAction(stats),
+    bills: billEntries(invoices),
+    unlisted: unlistedNote(stats, invoices.length),
+    fees: feeBars(invoices),
   }
 }
-
-/** Stand-in for `GET /students/me/dashboard`. Replace the body with a fetch. */
-async function fetchDashboard(): Promise<StudentDashboard> {
-  return {
-    figures: [
-      { label: 'Term average', amount: 74.2, format: 'decimal', delta: 'Position 4 of 35' },
-      { label: 'Tests open', amount: 1, format: 'number', delta: 'Closes Friday', hot: true },
-      { label: 'Subjects', amount: 10, format: 'number', delta: '7 results approved' },
-      { label: 'Outstanding fees', amount: 0, format: 'number', delta: 'Cleared for this term' },
-    ],
-    week: [
-      { id: 'w1', day: 'Today', title: 'Quadratic equations quiz', subject: 'Mathematics', state: 'Open' },
-      { id: 'w2', day: 'Wed', title: 'Biology practical write-up due', subject: 'Biology', state: 'Due' },
-      { id: 'w3', day: 'Thu', title: 'E-class: quadratics clinic, 16:00', subject: 'Mathematics', state: 'Booked' },
-      { id: 'w4', day: 'Fri', title: 'Quadratics quiz closes 15:00', subject: 'Mathematics', state: 'Deadline' },
-      { id: 'w5', day: 'Mon', title: 'Comprehension set 3 submission', subject: 'English Language', state: 'Due' },
-    ],
-    scores: [
-      scoreBar('MTH', 78),
-      scoreBar('ENG', 72),
-      scoreBar('BIO', 71),
-      scoreBar('CMP', 85),
-      scoreBar('CHM', 60),
-    ],
-  }
-}
-
-export const studentDashboardQuery = queryOptions({
-  queryKey: ['student', 'dashboard'],
-  queryFn: fetchDashboard,
-})

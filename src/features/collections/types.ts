@@ -86,6 +86,7 @@ export type CrumbLink =
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
   | '/student/test'
+  | '/student/profile'
   | '/admin/arms'
   | '/admin/classes'
   | '/admin/calendar'

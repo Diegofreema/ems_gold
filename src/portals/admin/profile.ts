@@ -1,7 +1,7 @@
 import type { Admin } from '../../api/users/types.ts'
 import { BLANK } from '../../features/collections/blank.ts'
+import { asDate, initialsOf, text } from '../../features/profile/record.ts'
 import type { ProfileConfig } from '../../features/profile/types.ts'
-import { formatDate } from '../../lib/format.ts'
 
 /**
  * The office record, as its owner reads it.
@@ -55,23 +55,6 @@ const EMPTY: ProfileConfig = {
     { label: 'Email me when a result batch needs approval', hint: 'As it happens', on: true },
     { label: 'SMS for anything marked urgent', hint: 'Charged to the school line', on: false },
   ],
-}
-
-function text(value: string | null | undefined): string {
-  return value?.trim() || BLANK
-}
-
-/** Two letters for the square, off whichever half of the name is filled in. */
-function initialsOf(parts: string[]): string {
-  const letters = parts.map((part) => part.trim()[0]).filter(Boolean)
-  return letters.length ? letters.join('').toUpperCase() : '··'
-}
-
-/** An ISO timestamp as the design writes dates. Anything else is left alone. */
-function asDate(value: string | null | undefined): string {
-  if (!value) return BLANK
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : formatDate(date)
 }
 
 export function adminProfile(admin?: Admin): ProfileConfig {

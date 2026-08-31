@@ -3,7 +3,7 @@ import type { ActivityLog } from '../../../../api/logs/types.ts'
 import type { SpendingMonth } from '../../../../api/spendings/types.ts'
 import type { DashboardStats } from '../../../../api/users/types.ts'
 import { formatCount } from '../../../../lib/format.ts'
-import { SETTLED } from '../../collections/invoice-row.ts'
+import { SETTLED } from '../../../../features/collections/invoice.ts'
 import { logAuthor } from '../../collections/log-row.ts'
 import { monthKey, spentIn } from '../../collections/spending-row.ts'
 

@@ -1,6 +1,6 @@
-import { Tag } from '@/components/common/tag'
 import type { PortalConfig } from '@/lib/portal'
 import { studentNotifications } from './api/notifications'
+import { StudentContext } from './features/identity/student-context'
 import { studentNav } from './nav'
 
 export const studentPortal: PortalConfig = {
@@ -17,24 +17,17 @@ export const studentPortal: PortalConfig = {
   },
   notFoundAudience: 'pupils',
   notFoundLinks: [
-    { to: '/student', label: 'Dashboard', hint: 'This week and your scores' },
-    { to: '/student/tests', label: 'Tests open to me', hint: 'One closes Friday' },
-    { to: '/student/results', label: 'My results', hint: '7 of 10 subjects approved' },
-    { to: '/student/materials', label: 'Course materials', hint: '41 shared with you' },
+    // Hints describe the page, not its contents: nothing here has counted
+    // anything, and a figure written in would be read as one that had.
+    { to: '/student', label: 'Dashboard', hint: 'Where your term stands' },
+    { to: '/student/tests', label: 'Tests open to me', hint: 'Papers you can still sit' },
+    { to: '/student/results', label: 'My results', hint: 'What the office has approved' },
+    { to: '/student/materials', label: 'Course materials', hint: 'What your teachers shared' },
   ],
-  context: (
-    <div className="border-b-2 border-divider px-4 pt-3.5 pb-3">
-      <div className="font-heading text-sm font-extrabold">Amara Okeke</div>
-      <div className="mt-0.5 text-[11.5px] text-muted-foreground">
-        SS1 A · NEB/2022/0871
-      </div>
-      <Tag className="mt-2">Fees cleared</Tag>
-    </div>
-  ),
-  headerStatus: (
-    <>
-      <div className="uppercase tracking-[0.06em]">First Term · Week 9</div>
-      <div>Exams begin 02 Dec</div>
-    </>
-  ),
+  context: <StudentContext />,
+  // No `headerStatus`. The design's "First Term · Week 9 · Exams begin 02 Dec"
+  // wants the school calendar, and a pupil login is refused every endpoint
+  // that holds it — `/settings`, `/sessions` and `/semesters` all answer
+  // "restricted to administrators". What a pupil can be told about themselves
+  // is in the sidebar instead, where it is read off their own record.
 }
