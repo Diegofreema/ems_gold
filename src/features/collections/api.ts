@@ -1,13 +1,19 @@
 import { keepPreviousData, queryOptions } from '@tanstack/react-query'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
+import { plainText } from './rich-text'
 import type { CollectionDef, ListParams, ListResult, Row } from './types'
 
 /** The design shows its loading skeleton for about this long on a navigation. */
 const LATENCY_MS = 420
 
+/**
+ * Cells are matched on the words in them: a row carrying a rich-text body
+ * would otherwise answer to "p", "strong" and every other tag it is written
+ * with. Plain cells have no markup to take off, so they are unaffected.
+ */
 function matches(row: Row, needle: string) {
   return Object.entries(row).some(
-    ([key, value]) => key !== 'id' && value.toLowerCase().includes(needle),
+    ([key, value]) => key !== 'id' && plainText(value).toLowerCase().includes(needle),
   )
 }
 

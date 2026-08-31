@@ -1,7 +1,9 @@
+import { lazy, Suspense } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { BackLink } from '@/components/page/back-link'
+import { ExternalLink } from '@/components/common/external-link'
 import { MissingState } from '@/components/feedback/missing-state'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { SectionHeading } from '@/components/common/section-heading'
@@ -15,6 +17,7 @@ import { BLANK } from '../blank'
 import type {
   CollectionDef,
   CollectionRoutes,
+  DetailFieldSpec,
   DetailTab,
   FlowSpec,
   Row,
@@ -23,6 +26,13 @@ import { fileActionToast, isFileAction } from '../primary-action'
 import { useRowAction } from '../use-row-action'
 import { cn } from '@/lib/utils'
 import { DetailTabPanel } from './detail-tab-panel'
+
+/** Fetched by the record pages that have a body to draw, and by no others. */
+const RichTextView = lazy(() =>
+  import('@/components/editor/rich-text-view').then((module) => ({
+    default: module.RichTextView,
+  })),
+)
 
 /**
  * The prototype's placeholder, shown where a collection still has no sub-tables
@@ -133,6 +143,8 @@ export function CollectionDetail({
   const statColumns = definition.columns
     .filter((column) => column.align === 'right')
     .slice(0, 3)
+  // A collection with no `detail` of its own reads back the columns it lists.
+  const fields: DetailFieldSpec[] = definition.detail ?? definition.columns
 
   return (
     <div>
@@ -223,19 +235,40 @@ export function CollectionDetail({
         <aside className={tabs.length > 0 ? undefined : 'max-w-[46ch]'}>
           <SectionHeading className="mb-3.5">Record</SectionHeading>
           <div className="border-t-2 border-divider">
-            {(definition.detail ?? definition.columns).map((field) => (
-              <div
-                key={field.key}
-                className="flex gap-3.5 border-b border-divider px-0.5 py-[11px]"
-              >
-                <div className="w-[45%] text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-                  {field.label}
+            {fields.map((field) =>
+              /* A written body is read down the panel rather than across it:
+                 a scheme of work in the right-hand half of a label row is a
+                 column two words wide. */
+              field.rich ? (
+                <div
+                  key={field.key}
+                  className="border-b border-divider px-0.5 py-[11px]"
+                >
+                  <div className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                    {field.label}
+                  </div>
+                  <Suspense fallback={<div className="mt-2 h-6" />}>
+                    <RichTextView className="mt-2" html={record[field.key]} />
+                  </Suspense>
                 </div>
-                <div className="flex-1 text-[13.5px] tabular-nums">
-                  {record[field.key]}
+              ) : (
+                <div
+                  key={field.key}
+                  className="flex gap-3.5 border-b border-divider px-0.5 py-[11px]"
+                >
+                  <div className="w-[45%] text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                    {field.label}
+                  </div>
+                  <div className="flex-1 text-[13.5px] tabular-nums">
+                    {field.link ? (
+                      <ExternalLink href={record[field.key]} />
+                    ) : (
+                      record[field.key]
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </aside>
       </div>

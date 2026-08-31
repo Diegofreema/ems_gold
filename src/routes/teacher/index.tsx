@@ -8,6 +8,7 @@ import { Rule } from '@/components/page/rule';
 import { Button } from '@/components/ui/button';
 import { DetailRows } from '@/features/auth/components/detail-rows';
 import { useFirstName } from '@/features/auth/session';
+import { greeting } from '@/lib/greeting';
 import { teacherDashboardQuery } from '@/portals/teacher/api/dashboard';
 
 export const Route = createFileRoute('/teacher/')({
@@ -25,7 +26,9 @@ function TeacherDashboard() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-page-title">Good morning, {name}.</h2>
+          <h2 className="text-page-title">
+            {greeting(new Date())}, {name}.
+          </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">{data.note}</p>
         </div>
         <Button asChild>

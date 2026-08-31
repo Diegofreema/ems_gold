@@ -135,6 +135,23 @@ export type TeacherResult = {
   approval_status: string | null
   uploaddate: string | null
   /**
+   * What the office did and when. `uploaddate` is when the mark was filed, so
+   * it is the only stamp a pending mark has; `approved_at` is the only stamp
+   * for the decision itself, and a mark sent back carries the reason rather
+   * than a date. All three are null across the register today.
+   */
+  approved_at?: string | null
+  approved_by?: number | null
+  rejection_reason?: string | null
+  /**
+   * The three exam sittings an uploaded sheet is summed from. `score` is their
+   * total, which is why a stored exam mark can sit above the 60 the entry form
+   * accepts. All three are zero on a mark typed into the score sheet.
+   */
+  first_exam?: string | number | null
+  second_exam?: string | number | null
+  third_exam?: string | number | null
+  /**
    * Expanded beside the ids. The session and the term are the only place a
    * teacher can read either — `/sessions`, `/semesters` and `/settings` all
    * answer "restricted to administrators" for a teaching login.
@@ -144,6 +161,11 @@ export type TeacherResult = {
   subject?: { id: number; name: string; subjectcode: string | null } | null
   department?: { id: number; name: string; deptcode: string | null } | null
   student?: Student | null
+  /**
+   * Who filed the mark, which is not always the teacher reading it: a batch
+   * uploaded by the office carries the office's own account.
+   */
+  user?: { id: number; fname: string | null; lname: string | null } | null
 }
 
 /**

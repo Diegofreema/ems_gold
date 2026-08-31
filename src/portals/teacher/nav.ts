@@ -31,7 +31,10 @@ export const teacherNav: NavGroup[] = [
   {
     heading: 'Assessment',
     items: [
-      { to: '/teacher/scores', label: 'Enter scores', icon: PenLine, badge: '2' },
+      // No badge: nothing in the API counts an outstanding score sheet — a
+      // sheet is a subject and an arm the teacher chooses, not a record that
+      // exists until it is filed — and a number here would be invented.
+      { to: '/teacher/scores', label: 'Enter scores', icon: PenLine },
       { to: '/teacher/uploads', label: 'Upload batches', icon: Upload },
       { to: '/teacher/results', label: 'Browse results', icon: SquareCheckBig },
     ],

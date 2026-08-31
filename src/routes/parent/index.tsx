@@ -5,7 +5,7 @@ import { FigureTiles } from '@/components/common/figure-tiles'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useFirstName } from '@/features/auth/session'
-import { greeting } from '@/portals/admin/features/dashboard/dashboard'
+import { greeting } from '@/lib/greeting'
 import { ActionQueue } from '@/portals/parent/features/action-queue'
 import {
   attendanceBarsFor,

@@ -165,7 +165,7 @@ export const topics: CollectionDef = {
   detail: [
     { key: 'title', label: 'Topic' },
     { key: 'subject', label: 'Subject' },
-    { key: 'contents', label: 'What was covered' },
+    { key: 'contents', label: 'What was covered', rich: true },
   ],
   // Whole, like the subject list beside it: the endpoint takes no page, no
   // limit and no search term.
@@ -200,10 +200,9 @@ export const topics: CollectionDef = {
           key: 'contents',
           label: 'What was covered',
           required: true,
-          multiline: true,
-          wide: true,
+          rich: true,
           placeholder:
-            'A few lines on what the class did, and anything left for next week.',
+            'What the class did, and anything left for next week. Headings, lists and links are all kept.',
         },
       ],
     },
@@ -235,7 +234,7 @@ export const eclasses: CollectionDef = {
   ],
   detail: [
     { key: 'room', label: 'Room' },
-    { key: 'link', label: 'Meeting link' },
+    { key: 'link', label: 'Meeting link', link: true },
     { key: 'created', label: 'Opened' },
   ],
   source: async (params) => pageRows(await eclassRows(), params),

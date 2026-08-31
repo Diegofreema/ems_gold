@@ -10,7 +10,7 @@ export const parentPortal: PortalConfig = {
   roleLabel: 'Parent',
   basePath: '/parent',
   nav: parentNav,
-  notifications: parentNotifications,
+  useNotifications: () => parentNotifications,
   notificationCategory: 'Finance',
   account: {
     name: 'Mr. Emmanuel Udo',

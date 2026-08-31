@@ -9,7 +9,6 @@ import {
   collectionBars,
   compactNaira,
   financeFigures,
-  greeting,
   ledgerTotals,
   peopleFigures,
   schoolTiles,
@@ -223,10 +222,4 @@ test('the feed names the person, falls back to the title, and flags deletions', 
       flagged: true,
     },
   ])
-})
-
-test('the greeting follows the clock', () => {
-  assert.equal(greeting(new Date(2026, 7, 30, 8)), 'Good morning')
-  assert.equal(greeting(new Date(2026, 7, 30, 13)), 'Good afternoon')
-  assert.equal(greeting(new Date(2026, 7, 30, 19)), 'Good evening')
 })

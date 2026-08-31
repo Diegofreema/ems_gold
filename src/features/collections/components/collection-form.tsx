@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -30,6 +31,18 @@ import type {
 
 type Values = Record<string, unknown>
 
+/**
+ * The editor is a large dependency and most forms have no body to write, so
+ * it is fetched by the forms that do rather than by every form there is.
+ */
+const RichTextField = lazy(() =>
+  import('@/components/form/rich-text-field').then((module) => ({
+    // Bound to this form's value shape here: `lazy` cannot carry a generic
+    // through, so the type argument is applied at the import instead.
+    default: module.RichTextField<Values>,
+  })),
+)
+
 function renderField(field: FieldSpec) {
   const shared = {
     name: field.key,
@@ -47,6 +60,19 @@ function renderField(field: FieldSpec) {
     return <FileField<Values> key={field.key} {...shared} accept={field.file} />
   if (field.date)
     return <DateField<Values> key={field.key} {...shared} past={field.past} />
+  if (field.rich)
+    return (
+      <Suspense
+        key={field.key}
+        fallback={<div className="col-[1/-1] h-[15rem] animate-ems-fade rounded-lg border border-input" />}
+      >
+        <RichTextField
+          {...shared}
+          span="full"
+          placeholder={field.placeholder}
+        />
+      </Suspense>
+    )
   if (field.optionsFrom)
     return (
       <RemoteSelectField<Values>

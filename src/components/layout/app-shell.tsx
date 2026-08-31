@@ -54,6 +54,7 @@ function useRouteHeading(): Heading {
 }
 
 export function AppShell({ config }: { config: PortalConfig }) {
+  const notifications = config.useNotifications()
   const narrow = useBreakpoint('narrow')
   const drawerOpen = useShellStore((state) => state.drawerOpen)
   const closeDrawer = useShellStore((state) => state.closeDrawer)
@@ -94,7 +95,7 @@ export function AppShell({ config }: { config: PortalConfig }) {
           narrow={narrow}
         >
           <NotificationBell
-            notifications={config.notifications}
+            notifications={notifications}
             allPath={`${config.basePath}/notifications`}
           />
         </AppHeader>

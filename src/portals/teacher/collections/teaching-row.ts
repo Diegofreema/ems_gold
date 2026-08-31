@@ -141,3 +141,55 @@ export function eclassRow(eclass: EClass): Row {
     created: when(eclass.datecreated, true),
   }
 }
+
+/**
+ * The three exam sittings, where the school recorded them separately.
+ *
+ * A mark uploaded from a spreadsheet is summed from three columns, so this is
+ * what explains a stored exam score above the 60 the score sheet accepts. A
+ * mark typed in by hand has all three at zero and reads blank rather than as
+ * "0 · 0 · 0".
+ */
+function examParts(result: TeacherResult): string {
+  const parts = [result.first_exam, result.second_exam, result.third_exam].map(Number)
+  if (!parts.some((part) => Number.isFinite(part) && part > 0)) return BLANK
+  return parts.map((part) => (Number.isFinite(part) ? String(part) : '0')).join(' · ')
+}
+
+/**
+ * One mark in the register a teacher browses.
+ *
+ * Everything is read off the mark itself: the subject, the class and the pupil
+ * all arrive expanded beside it, so this needs neither the roll nor the
+ * subject list. The arm does not — only its id is sent, and an id is no use to
+ * anybody — so the class the mark was filed under is what the row names.
+ */
+export function markRow(result: TeacherResult): Row {
+  const pupil = result.student
+  return {
+    id: String(result.id),
+    name: text(
+      [pupil?.fname, pupil?.mname, pupil?.lname].filter(Boolean).join(' '),
+    ),
+    subject: result.subject?.name?.trim() || `Subject ${result.subject_id}`,
+    klass: text(result.department?.name),
+    ca: mark(result.ca),
+    // `score` is the exam mark; `total` is it plus the CA, worked out by the
+    // school rather than here.
+    exam: mark(result.score),
+    total: mark(result.total),
+    grade: text(result.grade),
+    // 'pending' until the office approves the batch the mark arrived in.
+    state: text(result.approval_status && capitalised(result.approval_status)),
+
+    // Everything below is read by the record panel rather than the table.
+    adm: text(result.regno ?? pupil?.regno),
+    term: joined(result.semester?.name, result.session?.name),
+    exams: examParts(result),
+    remark: text(result.remark),
+    filed: when(result.uploaddate, true),
+    // A name, so the parts are spaced rather than run through `joined`, which
+    // separates two different facts with a middle dot.
+    by: text([result.user?.fname, result.user?.lname].filter(Boolean).join(' ')),
+  }
+}

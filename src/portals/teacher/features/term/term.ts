@@ -1,4 +1,4 @@
-import type { TeacherResult } from '../../api/teaching/types.ts'
+import type { TeacherResult } from '../../../../api/teaching/types.ts'
 
 /**
  * Which term a teacher's marks are filed into.

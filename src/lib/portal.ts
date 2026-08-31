@@ -39,7 +39,12 @@ export type PortalConfig = {
   headerStatus?: ReactNode
   /** Admin filters its long nav with a search box; the others do not. */
   searchableNav?: boolean
-  notifications: Notification[]
+  /**
+   * Read as a hook, because a portal on live data has to ask for its feed and
+   * a portal still on a fixture can hand one back without asking. The shell
+   * calls it once per render and knows the difference nowhere.
+   */
+  useNotifications: () => Notification[]
   /** The extra filter offered on the notifications page, e.g. "Finance". */
   notificationCategory: string
   /** Where the in-shell 404 points; the design tailors these per role. */

@@ -17,7 +17,7 @@ export function ExternalLink({ href }: { href: string }) {
       target="_blank"
       rel="noreferrer"
       onClick={(event) => event.stopPropagation()}
-      className="text-brand underline-offset-2 hover:underline"
+      className="break-all text-brand underline-offset-2 hover:underline"
     >
       {href}
     </a>

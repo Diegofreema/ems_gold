@@ -9,7 +9,7 @@ import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { useFirstName } from '@/features/auth/session'
 import { adminDashboardQuery } from '@/portals/admin/api/dashboard'
-import { greeting } from '@/portals/admin/features/dashboard/dashboard'
+import { greeting } from '@/lib/greeting'
 import { FigureTiles } from '@/components/common/figure-tiles'
 
 export const Route = createFileRoute('/admin/')({

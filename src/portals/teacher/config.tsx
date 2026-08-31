@@ -1,5 +1,6 @@
 import type { PortalConfig } from '@/lib/portal'
-import { teacherNotifications } from './api/notifications'
+import { useTeacherNotifications } from './features/notifications/use-teacher-notifications'
+import { MarkingTerm } from './features/term/marking-term'
 import { teacherNav } from './nav'
 
 export const teacherPortal: PortalConfig = {
@@ -7,13 +8,15 @@ export const teacherPortal: PortalConfig = {
   roleLabel: 'Teacher',
   basePath: '/teacher',
   nav: teacherNav,
-  notifications: teacherNotifications,
+  useNotifications: useTeacherNotifications,
   notificationCategory: 'Assessment',
   notFoundAudience: 'teachers',
   notFoundLinks: [
-    { to: '/teacher', label: 'Dashboard', hint: 'Today’s periods and open sheets' },
-    { to: '/teacher/scores', label: 'Enter scores', hint: 'Two sheets still open' },
-    { to: '/teacher/students', label: 'My students', hint: '143 pupils across 4 arms' },
+    // Hints describe the page, not its contents: nothing here has counted
+    // anything, and a figure written in would be read as one that had.
+    { to: '/teacher', label: 'Dashboard', hint: 'Your counters and the papers you set' },
+    { to: '/teacher/scores', label: 'Enter scores', hint: 'Mark a class, subject by subject' },
+    { to: '/teacher/students', label: 'My students', hint: 'The pupils on your roll' },
     { to: '/teacher/topics', label: 'Topics taught', hint: 'What the office reads' },
   ],
   account: {
@@ -21,20 +24,9 @@ export const teacherPortal: PortalConfig = {
     line: 'STF-014 · Mathematics',
     initials: 'CN',
   },
-  context: (
-    <div className="border-b-2 border-divider px-4 pt-3.5 pb-2.5">
-      <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-        Marking for
-      </div>
-      <div className="mt-1 font-heading text-sm font-extrabold">
-        First Term · 2025/2026
-      </div>
-    </div>
-  ),
-  headerStatus: (
-    <>
-      <div>Week 9 of 13</div>
-      <div>Results due 05 Dec</div>
-    </>
-  ),
+  context: <MarkingTerm />,
+  // No `headerStatus`. The design's "Week 9 of 13 · Results due 05 Dec" wants
+  // the school calendar, and a teaching login is refused every endpoint that
+  // holds it; the term the teacher is actually marking into is in the sidebar
+  // instead, where it is read off their own marks.
 }

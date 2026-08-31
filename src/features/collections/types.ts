@@ -247,6 +247,18 @@ export type ColumnSpec = {
   cardRole?: CardRole
 }
 
+/**
+ * One row of the record panel. A plain field reads as label and value side by
+ * side; a `rich` one is drawn as the body it is, under its own label; a `link`
+ * one opens somewhere else in a new tab, as the same value does in the table.
+ */
+export type DetailFieldSpec = {
+  key: string
+  label: string
+  rich?: boolean
+  link?: boolean
+}
+
 export type FieldSpec = {
   key: string
   label: string
@@ -269,6 +281,12 @@ export type FieldSpec = {
    */
   multi?: boolean
   multiline?: boolean
+  /**
+   * A body rather than a line: headings, lists, emphasis and links, stored as
+   * HTML. Spans the form whatever `wide` says — a scheme of work written into
+   * half a row is a textarea with a toolbar on it.
+   */
+  rich?: boolean
   numeric?: boolean
   /** A figure in naira: masked as it is typed and spelled out beneath. */
   money?: boolean
@@ -408,7 +426,7 @@ export type CollectionDef = {
    * all a fixture row holds; a collection read from the API usually knows far
    * more about a record than the register has room to show.
    */
-  detail?: { key: string; label: string }[]
+  detail?: DetailFieldSpec[]
   /** The column holding the record's name — used in titles and confirms. */
   nameKey: string
   /** A per-row control, offered on every row of the list. */

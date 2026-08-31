@@ -8,7 +8,7 @@ export const studentPortal: PortalConfig = {
   roleLabel: 'Student',
   basePath: '/student',
   nav: studentNav,
-  notifications: studentNotifications,
+  useNotifications: () => studentNotifications,
   notificationCategory: 'Assessment',
   account: {
     name: 'Amara Okeke',

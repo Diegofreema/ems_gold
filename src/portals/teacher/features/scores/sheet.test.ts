@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { TeacherResult, TeacherStudent } from '../../../../api/teaching/types.ts'
-import type { MarkingTerm } from '../../term.ts'
+import type { MarkingTerm } from '../term/term.ts'
 import { changedMarks, sheetRows } from './sheet.ts'
 
 /** Two pupils off GET /teachers/me/students, both in arm 3. */

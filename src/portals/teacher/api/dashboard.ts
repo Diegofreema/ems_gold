@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { teachingService } from '@/api/teaching/service'
 import { teachingKeys } from '@/api/teaching/keys'
+import type { TeacherDashboard } from '@/api/teaching/types'
 import type { ActivityEntry } from '@/components/common/activity-list'
 import type { DashboardFigure } from '@/components/common/figure-tiles'
 import {
@@ -20,9 +21,15 @@ export type TeacherHome = {
   arms: { label: string; value: string }[]
 }
 
-/** `GET /teachers/me/dashboard` — the counters, the papers and the arms. */
-async function fetchDashboard(): Promise<TeacherHome> {
-  const dashboard = await teachingService.dashboard()
+/**
+ * The dashboard's own view of `GET /teachers/me/dashboard`.
+ *
+ * Shaped in a `select` rather than in the fetch so the cache holds what the
+ * endpoint actually sent: the notification feed reads the same key, and a
+ * cache entry holding this page's tiles would have answered it with figures
+ * where it expected a payload.
+ */
+function toTeacherHome(dashboard: TeacherDashboard): TeacherHome {
   const now = new Date()
 
   return {
@@ -33,7 +40,9 @@ async function fetchDashboard(): Promise<TeacherHome> {
   }
 }
 
+/** `GET /teachers/me/dashboard` — the counters, the papers and the arms. */
 export const teacherDashboardQuery = queryOptions({
   queryKey: teachingKeys.dashboard(),
-  queryFn: fetchDashboard,
+  queryFn: () => teachingService.dashboard(),
+  select: toTeacherHome,
 })

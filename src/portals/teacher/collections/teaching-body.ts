@@ -4,7 +4,7 @@ import type {
   UpdateTopicBody,
   UploadResultsBody,
 } from '../../../api/teaching/types.ts'
-import type { MarkingTerm } from '../term.ts'
+import type { MarkingTerm } from '../features/term/term.ts'
 
 type FormValues = Record<string, unknown>
 

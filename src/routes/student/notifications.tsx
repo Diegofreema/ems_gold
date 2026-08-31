@@ -10,7 +10,7 @@ export const Route = createFileRoute('/student/notifications')({
 function StudentNotifications() {
   return (
     <NotificationsPage
-      notifications={studentPortal.notifications}
+      notifications={studentPortal.useNotifications()}
       category={studentPortal.notificationCategory}
       description="Results, tests and anything your teachers share, newest first. Opening an item takes you to the page it came from."
     />

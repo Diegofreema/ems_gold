@@ -45,3 +45,16 @@ export function when(value: string | null | undefined, withTime = false): string
 export function schoolTime(stamp: string | null | undefined): string | null | undefined {
   return stamp?.replace(/(?:Z|[+-]\d{2}:?\d{2})$/, '') ?? stamp
 }
+
+/**
+ * The same stamp as milliseconds, or null where it will not parse.
+ *
+ * Everything that compares two of these — is the paper still open, was this
+ * filed today — needs a number rather than a string, and needs the school's
+ * clock rather than the reader's guess at it.
+ */
+export function schoolMillis(stamp: string | null | undefined): number | null {
+  if (!stamp) return null
+  const parsed = new Date(schoolTime(stamp) ?? '').getTime()
+  return Number.isNaN(parsed) ? null : parsed
+}

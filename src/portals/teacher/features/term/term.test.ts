@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { TeacherResult } from '../../api/teaching/types.ts'
+import type { TeacherResult } from '../../../../api/teaching/types.ts'
 import { termFromResults } from './term.ts'
 
 /** Two marks from GET /teachers/me/results, a term apart. */

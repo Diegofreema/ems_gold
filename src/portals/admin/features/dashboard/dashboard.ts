@@ -231,11 +231,3 @@ export function activityEntries(logs: ActivityLog[], now: Date) {
     flagged: log.type === 'Delete',
   }))
 }
-
-/** The half of the greeting that depends on the clock. */
-export function greeting(now: Date): string {
-  const hour = now.getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
-}

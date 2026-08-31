@@ -3,7 +3,7 @@ import type {
   TeacherResult,
   TeacherStudent,
 } from '../../../../api/teaching/types.ts'
-import type { MarkingTerm } from '../../term.ts'
+import type { MarkingTerm } from '../term/term.ts'
 import { CA_MAX, EXAM_MAX, markOf, totalOf } from './grade.ts'
 
 /** What a teacher has typed but not yet filed, keyed subject and pupil. */

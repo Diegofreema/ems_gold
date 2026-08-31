@@ -1,12 +1,15 @@
 import { teachingService } from '@/api/teaching/service'
 import { pageRows } from '@/features/collections/api'
 import type { CollectionDef, Row } from '@/features/collections/types'
-import { termFromResults } from '../term'
+import { termFromResults } from '../features/term/term'
 import { batchRow, lineRow, parseBatchKey } from './batch-row'
 import { myBatches, myMarks, myRoll } from './mine'
+import { markRow } from './teaching-row'
 import { uploadBody } from './teaching-body'
 
 const batchRows = async (): Promise<Row[]> => (await myBatches()).map(batchRow)
+
+const markRows = async (): Promise<Row[]> => (await myMarks()).items.map(markRow)
 
 export const uploads: CollectionDef = {
   id: 'uploads',
@@ -110,30 +113,69 @@ export const results: CollectionDef = {
   kicker: 'Assessment',
   title: 'Browse results',
   description:
-    'Scores you have entered, by pupil. Read-only once a batch is approved.',
-  action: 'Export results',
-  searchHint: 'Search pupil',
-  footer: '7 of 143 records',
-  emptyTitle: 'No results yet',
-  emptyBody: 'Enter a score sheet or upload a file and the results appear here.',
+    'Every mark on file in the subjects you teach, whoever recorded it. To change one, open the score sheet under Enter scores.',
+  // A mark is corrected on the score sheet, which is where the CA and exam
+  // caps are applied; nothing here writes, and no endpoint deletes a mark.
+  readonly: true,
+  action: 'Browse results',
+  searchHint: 'Search pupil, subject, class or grade',
+  footer: 'Newest first',
+  emptyTitle: 'No marks on file yet',
+  emptyBody:
+    'Marks appear here once you have entered a score sheet or uploaded a results file, and stay after the office approves them.',
   noun: 'result',
   nameKey: 'name',
+  counts: [
+    { label: 'Marks', count: async () => (await myMarks()).pagination.total },
+    {
+      label: 'Pupils',
+      count: async () =>
+        new Set((await myMarks()).items.map((mark) => mark.student_id)).size,
+    },
+    {
+      label: 'Awaiting approval',
+      count: async () =>
+        (await myMarks()).items.filter(
+          (mark) => mark.approval_status?.trim().toLowerCase() !== 'approved',
+        ).length,
+    },
+  ],
   columns: [
     { key: 'name', label: 'Pupil', cardRole: 'title' },
-    { key: 'arm', label: 'Arm', cardRole: 'subtitle' },
-    { key: 'subject', label: 'Subject' },
+    { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
+    { key: 'klass', label: 'Class' },
     { key: 'ca', label: 'CA', align: 'right' },
     { key: 'exam', label: 'Exam', align: 'right' },
     { key: 'total', label: 'Total', align: 'right' },
-    { key: 'grade', label: 'Grade', tag: true, cardRole: 'tag' },
+    { key: 'grade', label: 'Grade' },
+    { key: 'state', label: 'Approval', tag: true, cardRole: 'tag' },
   ],
-  rows: [
-    { id: 'tr-1', name: 'Ngozi Eze', arm: 'SS1 A', subject: 'Mathematics', ca: '26', exam: '52', total: '78', grade: 'A' },
-    { id: 'tr-2', name: 'Halima Yusuf', arm: 'SS1 A', subject: 'Mathematics', ca: '27', exam: '55', total: '82', grade: 'A' },
-    { id: 'tr-3', name: 'Blessing Okoro', arm: 'SS1 A', subject: 'Mathematics', ca: '24', exam: '50', total: '74', grade: 'B' },
-    { id: 'tr-4', name: 'Chinedu Udo', arm: 'SS2 A', subject: 'Further Maths', ca: '20', exam: '44', total: '64', grade: 'B' },
-    { id: 'tr-5', name: 'Segun Bakare', arm: 'SS2 A', subject: 'Mathematics', ca: '19', exam: '38', total: '57', grade: 'C' },
-    { id: 'tr-6', name: 'David Ogunleye', arm: 'SS3 A', subject: 'Mathematics', ca: '14', exam: '27', total: '41', grade: 'D' },
-    { id: 'tr-7', name: 'Ibrahim Sani', arm: 'JSS2 A', subject: 'Basic Science', ca: '12', exam: '26', total: '38', grade: 'E' },
+  detail: [
+    { key: 'name', label: 'Pupil' },
+    { key: 'adm', label: 'Admission no.' },
+    { key: 'subject', label: 'Subject' },
+    { key: 'klass', label: 'Class' },
+    { key: 'term', label: 'Term' },
+    { key: 'ca', label: 'CA' },
+    { key: 'exam', label: 'Exam' },
+    { key: 'exams', label: 'Exam papers' },
+    { key: 'total', label: 'Total' },
+    { key: 'grade', label: 'Grade' },
+    { key: 'remark', label: 'Remark' },
+    { key: 'state', label: 'Approval' },
+    { key: 'filed', label: 'Filed on' },
+    { key: 'by', label: 'Filed by' },
   ],
+  /*
+   * Read whole and narrowed here.
+   *
+   * The endpoint pages and takes `subject_id`, `session_id` and `semester_id`,
+   * but it ignores a search term — and finding one pupil is what this page is
+   * for. Reading the register whole means the box matches the pupil, the
+   * subject, the class, the term and the grade at once, which is every axis a
+   * dropdown would have offered and one the API cannot narrow by at all.
+   */
+  source: async (params) => pageRows(await markRows(), params),
+  record: async (recordId) =>
+    (await markRows()).find((mark) => mark.id === String(recordId)),
 }

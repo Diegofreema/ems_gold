@@ -10,7 +10,7 @@ export const Route = createFileRoute('/admin/notifications')({
 function AdminNotifications() {
   return (
     <NotificationsPage
-      notifications={adminPortal.notifications}
+      notifications={adminPortal.useNotifications()}
       category={adminPortal.notificationCategory}
       description="Everything the office needs to act on, newest first. Opening an item takes you to the page it came from."
     />

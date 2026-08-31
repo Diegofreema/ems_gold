@@ -9,7 +9,7 @@ export const adminPortal: PortalConfig = {
   basePath: '/admin',
   nav: adminNav,
   searchableNav: true,
-  notifications: adminNotifications,
+  useNotifications: () => adminNotifications,
   notificationCategory: 'Finance',
   notFoundAudience: 'the office',
   notFoundLinks: [

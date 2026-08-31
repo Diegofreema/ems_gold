@@ -5,7 +5,11 @@ import type {
   TeacherDashboardStats,
 } from '../../../../api/teaching/types.ts';
 import { BLANK } from '../../../../features/collections/blank.ts';
-import { schoolTime, when } from '../../../../features/collections/when.ts';
+import {
+  schoolMillis,
+  schoolTime,
+  when,
+} from '../../../../features/collections/when.ts';
 
 /**
  * The teacher's home page, off `GET /teachers/me/dashboard`.
@@ -16,16 +20,9 @@ import { schoolTime, when } from '../../../../features/collections/when.ts';
  * holds instead.
  */
 
-/** A stamp read on the school's own clock, or null where it will not parse. */
-function at(stamp: string | null): number | null {
-  if (!stamp) return null;
-  const parsed = new Date(schoolTime(stamp) ?? '').getTime();
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
 /** Whether a paper is still taking submissions. */
 export function isOpen(paper: SetAssignment, now: Date): boolean {
-  const closes = at(paper.closedate);
+  const closes = schoolMillis(paper.closedate);
   return closes === null || closes > now.getTime();
 }
 
