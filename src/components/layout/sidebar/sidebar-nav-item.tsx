@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Tag } from '@/components/common/tag'
+import { isPortalHome } from '@/lib/nav'
 import type { NavItem } from '@/lib/portal'
 
 /**
@@ -21,6 +22,7 @@ export function SidebarNavItem({
     <Link
       to={item.to}
       onClick={onNavigate}
+      activeOptions={{ exact: isPortalHome(item.to) }}
       style={{ animationDelay: `${index * 30}ms` }}
       className="flex w-full animate-ems-row items-center gap-2.5 border-l-2 border-transparent px-2.5 py-2 text-left text-[13.5px] transition-[background-color,color,padding-left] duration-150 hover:bg-foreground/6 hover:pl-3.5 data-[status=active]:border-l-brand data-[status=active]:bg-brand/10 data-[status=active]:text-brand-700"
     >

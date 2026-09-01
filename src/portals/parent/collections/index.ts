@@ -6,7 +6,7 @@ import type { CollectionDef, Row } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
 import { queryClient } from '@/lib/query-client'
 import { childPapers } from '../features/tests/assignments'
-import { familyOwing, type Child } from '../family'
+import { familyOwing, OWING, type Child } from '../family'
 
 /** "1 invoice", "12 invoices" — a footer is prose, not a column. */
 const counted = (amount: number, one: string, many: string) =>
@@ -62,6 +62,18 @@ export function invoicesFor(child: Child, family: Child[]): CollectionDef {
     description: `Every invoice raised against ${child.name} and what is left to pay.`,
     action: 'Pay an invoice',
     actionTo: '/parent/pay',
+    /*
+     * A way straight from the bill to paying it, on the invoices that still
+     * need it. It lands on the pay page with the invoice already picked rather
+     * than opening the payment here: that page is where the amount is shown
+     * and where a demo gateway is warned about, and neither belongs in a
+     * button that would otherwise send somebody to a card form without them.
+     */
+    rowLink: {
+      label: (row) => (row.state === OWING ? 'Pay' : undefined),
+      to: '/parent/pay',
+      search: (row) => ({ invoice: row.id }),
+    },
     searchHint: 'Search invoice or fee',
     footer: `${counted(child.invoices.length, 'invoice', 'invoices')}, every session`,
     emptyTitle: 'No invoices raised',

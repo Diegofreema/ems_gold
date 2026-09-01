@@ -1,5 +1,5 @@
 import type { PortalConfig } from '@/lib/portal';
-import { useStudentNotifications } from './features/notifications/use-student-notifications';
+import { useMyNotifications } from '@/features/notifications/use-notice-feed'
 import { StudentContext } from './features/identity/student-context';
 import { studentNav } from './nav';
 
@@ -8,8 +8,7 @@ export const studentPortal: PortalConfig = {
   roleLabel: 'Student',
   basePath: '/student',
   nav: studentNav,
-  useNotifications: useStudentNotifications,
-  notificationCategory: 'Assessment',
+  useNotifications: useMyNotifications,
   account: {
     name: 'Amara Okeke',
     line: 'NEB/2022/0871 · SS1 A',

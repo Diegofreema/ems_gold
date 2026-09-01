@@ -1,5 +1,5 @@
 import type { PortalConfig } from '@/lib/portal'
-import { useTeacherNotifications } from './features/notifications/use-teacher-notifications'
+import { useMyNotifications } from '@/features/notifications/use-notice-feed'
 import { MarkingTerm } from './features/term/marking-term'
 import { teacherNav } from './nav'
 
@@ -8,8 +8,7 @@ export const teacherPortal: PortalConfig = {
   roleLabel: 'Teacher',
   basePath: '/teacher',
   nav: teacherNav,
-  useNotifications: useTeacherNotifications,
-  notificationCategory: 'Assessment',
+  useNotifications: useMyNotifications,
   notFoundAudience: 'teachers',
   notFoundLinks: [
     // Hints describe the page, not its contents: nothing here has counted

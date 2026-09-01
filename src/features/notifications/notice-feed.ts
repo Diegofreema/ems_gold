@@ -5,14 +5,11 @@ import type { Notification } from './types.ts'
 /**
  * The school's notice board, read as feed items.
  *
- * Every portal's bell shows two different things at once: events worked out
- * from records the portal already holds — marks approved, papers set, fees
- * raised — and notices somebody in the office actually wrote, off
- * `GET /notifications/mine`. This maps the second kind into the shape the
- * first already uses, so one feed carries both and the bell counts once.
- *
- * A notice leads nowhere: it is the content, not a pointer at a page, so `to`
- * is left off and the row renders as text rather than a link.
+ * Every portal's bell reads this and nothing else. It used to carry a second
+ * half worked out from records the portal already held — marks approved,
+ * papers set, fees raised — and that is gone: those are states with pages of
+ * their own, and reading them as events put things under the bell that nobody
+ * had sent.
  *
  * Pure on purpose — no client, no hooks — so it is testable.
  */
@@ -119,9 +116,4 @@ export function noticeFeed(notices: Notice[], now: Date): Notification[] {
     .filter(live)
     .flatMap((notice) => feedItem(notice, now) ?? [])
     .sort((one, two) => (two.at ?? 0) - (one.at ?? 0))
-}
-
-/** Two feeds worked out separately, in one order. Newest first. */
-export function mergedFeed(...feeds: Notification[][]): Notification[] {
-  return feeds.flat().sort((one, two) => (two.at ?? 0) - (one.at ?? 0))
 }

@@ -57,7 +57,6 @@ import { Route as ParentAttendanceRouteImport } from './routes/parent/attendance
 import { Route as ParentInvoicesRouteImport } from './routes/parent/invoices'
 import { Route as ParentMsgSchoolRouteImport } from './routes/parent/msg-school'
 import { Route as ParentNotificationsRouteImport } from './routes/parent/notifications'
-import { Route as ParentPayRouteImport } from './routes/parent/pay'
 import { Route as ParentProfileRouteImport } from './routes/parent/profile'
 import { Route as ParentResultsRouteImport } from './routes/parent/results'
 import { Route as ParentTestsRouteImport } from './routes/parent/tests'
@@ -89,6 +88,8 @@ import { Route as AdminCollectReportRouteImport } from './routes/admin/collect.r
 import { Route as ParentCollectionRecordIdRouteImport } from './routes/parent/$collection.$recordId'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
 import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.add'
+import { Route as ParentPayIndexRouteImport } from './routes/parent/pay.index'
+import { Route as ParentPayDoneRouteImport } from './routes/parent/pay.done'
 import { Route as StudentCollectionRecordIdRouteImport } from './routes/student/$collection.$recordId'
 import { Route as StudentMaterialsIndexRouteImport } from './routes/student/materials.index'
 import { Route as StudentTestsIndexRouteImport } from './routes/student/tests.index'
@@ -341,11 +342,6 @@ const ParentNotificationsRoute = ParentNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => ParentRouteRoute,
 } as any)
-const ParentPayRoute = ParentPayRouteImport.update({
-  id: '/pay',
-  path: '/pay',
-  getParentRoute: () => ParentRouteRoute,
-} as any)
 const ParentProfileRoute = ParentProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -502,6 +498,16 @@ const ParentChildrenAddRoute = ParentChildrenAddRouteImport.update({
   path: '/children/add',
   getParentRoute: () => ParentRouteRoute,
 } as any)
+const ParentPayIndexRoute = ParentPayIndexRouteImport.update({
+  id: '/pay/',
+  path: '/pay/',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentPayDoneRoute = ParentPayDoneRouteImport.update({
+  id: '/pay/done',
+  path: '/pay/done',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
 const StudentCollectionRecordIdRoute =
   StudentCollectionRecordIdRouteImport.update({
     id: '/$collection/$recordId',
@@ -616,7 +622,6 @@ export interface FileRoutesByFullPath {
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
-  '/parent/pay': typeof ParentPayRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/tests': typeof ParentTestsRoute
@@ -648,10 +653,12 @@ export interface FileRoutesByFullPath {
   '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
+  '/parent/pay/done': typeof ParentPayDoneRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
+  '/parent/pay/': typeof ParentPayIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
   '/student/tests/': typeof StudentTestsIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
@@ -705,7 +712,6 @@ export interface FileRoutesByTo {
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
-  '/parent/pay': typeof ParentPayRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/tests': typeof ParentTestsRoute
@@ -737,10 +743,12 @@ export interface FileRoutesByTo {
   '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
+  '/parent/pay/done': typeof ParentPayDoneRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/admin/collect': typeof AdminCollectIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
+  '/parent/pay': typeof ParentPayIndexRoute
   '/student/materials': typeof StudentMaterialsIndexRoute
   '/student/tests': typeof StudentTestsIndexRoute
   '/teacher/uploads': typeof TeacherUploadsIndexRoute
@@ -800,7 +808,6 @@ export interface FileRoutesById {
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
-  '/parent/pay': typeof ParentPayRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/tests': typeof ParentTestsRoute
@@ -832,10 +839,12 @@ export interface FileRoutesById {
   '/admin/collect/report': typeof AdminCollectReportRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
+  '/parent/pay/done': typeof ParentPayDoneRoute
   '/student/$collection/$recordId': typeof StudentCollectionRecordIdRoute
   '/teacher/$collection/new': typeof TeacherCollectionNewRoute
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
+  '/parent/pay/': typeof ParentPayIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
   '/student/tests/': typeof StudentTestsIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
@@ -895,7 +904,6 @@ export interface FileRouteTypes {
     | '/parent/invoices'
     | '/parent/msg-school'
     | '/parent/notifications'
-    | '/parent/pay'
     | '/parent/profile'
     | '/parent/results'
     | '/parent/tests'
@@ -927,10 +935,12 @@ export interface FileRouteTypes {
     | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
+    | '/parent/pay/done'
     | '/student/$collection/$recordId'
     | '/teacher/$collection/new'
     | '/admin/collect/'
     | '/parent/children/'
+    | '/parent/pay/'
     | '/student/materials/'
     | '/student/tests/'
     | '/teacher/uploads/'
@@ -984,7 +994,6 @@ export interface FileRouteTypes {
     | '/parent/invoices'
     | '/parent/msg-school'
     | '/parent/notifications'
-    | '/parent/pay'
     | '/parent/profile'
     | '/parent/results'
     | '/parent/tests'
@@ -1016,10 +1025,12 @@ export interface FileRouteTypes {
     | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
+    | '/parent/pay/done'
     | '/student/$collection/$recordId'
     | '/teacher/$collection/new'
     | '/admin/collect'
     | '/parent/children'
+    | '/parent/pay'
     | '/student/materials'
     | '/student/tests'
     | '/teacher/uploads'
@@ -1078,7 +1089,6 @@ export interface FileRouteTypes {
     | '/parent/invoices'
     | '/parent/msg-school'
     | '/parent/notifications'
-    | '/parent/pay'
     | '/parent/profile'
     | '/parent/results'
     | '/parent/tests'
@@ -1110,10 +1120,12 @@ export interface FileRouteTypes {
     | '/admin/collect/report'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
+    | '/parent/pay/done'
     | '/student/$collection/$recordId'
     | '/teacher/$collection/new'
     | '/admin/collect/'
     | '/parent/children/'
+    | '/parent/pay/'
     | '/student/materials/'
     | '/student/tests/'
     | '/teacher/uploads/'
@@ -1473,13 +1485,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentNotificationsRouteImport
       parentRoute: typeof ParentRouteRoute
     }
-    '/parent/pay': {
-      id: '/parent/pay'
-      path: '/pay'
-      fullPath: '/parent/pay'
-      preLoaderRoute: typeof ParentPayRouteImport
-      parentRoute: typeof ParentRouteRoute
-    }
     '/parent/profile': {
       id: '/parent/profile'
       path: '/profile'
@@ -1697,6 +1702,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentChildrenAddRouteImport
       parentRoute: typeof ParentRouteRoute
     }
+    '/parent/pay/': {
+      id: '/parent/pay/'
+      path: '/pay'
+      fullPath: '/parent/pay/'
+      preLoaderRoute: typeof ParentPayIndexRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/pay/done': {
+      id: '/parent/pay/done'
+      path: '/pay/done'
+      fullPath: '/parent/pay/done'
+      preLoaderRoute: typeof ParentPayDoneRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
     '/student/$collection/$recordId': {
       id: '/student/$collection/$recordId'
       path: '/$collection/$recordId'
@@ -1873,7 +1892,6 @@ interface ParentRouteRouteChildren {
   ParentInvoicesRoute: typeof ParentInvoicesRoute
   ParentMsgSchoolRoute: typeof ParentMsgSchoolRoute
   ParentNotificationsRoute: typeof ParentNotificationsRoute
-  ParentPayRoute: typeof ParentPayRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentResultsRoute: typeof ParentResultsRoute
   ParentTestsRoute: typeof ParentTestsRoute
@@ -1881,7 +1899,9 @@ interface ParentRouteRouteChildren {
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCollectionRecordIdRoute: typeof ParentCollectionRecordIdRoute
   ParentChildrenAddRoute: typeof ParentChildrenAddRoute
+  ParentPayDoneRoute: typeof ParentPayDoneRoute
   ParentChildrenIndexRoute: typeof ParentChildrenIndexRoute
+  ParentPayIndexRoute: typeof ParentPayIndexRoute
 }
 
 const ParentRouteRouteChildren: ParentRouteRouteChildren = {
@@ -1889,7 +1909,6 @@ const ParentRouteRouteChildren: ParentRouteRouteChildren = {
   ParentInvoicesRoute: ParentInvoicesRoute,
   ParentMsgSchoolRoute: ParentMsgSchoolRoute,
   ParentNotificationsRoute: ParentNotificationsRoute,
-  ParentPayRoute: ParentPayRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentResultsRoute: ParentResultsRoute,
   ParentTestsRoute: ParentTestsRoute,
@@ -1897,7 +1916,9 @@ const ParentRouteRouteChildren: ParentRouteRouteChildren = {
   ParentIndexRoute: ParentIndexRoute,
   ParentCollectionRecordIdRoute: ParentCollectionRecordIdRoute,
   ParentChildrenAddRoute: ParentChildrenAddRoute,
+  ParentPayDoneRoute: ParentPayDoneRoute,
   ParentChildrenIndexRoute: ParentChildrenIndexRoute,
+  ParentPayIndexRoute: ParentPayIndexRoute,
 }
 
 const ParentRouteRouteWithChildren = ParentRouteRoute._addFileChildren(

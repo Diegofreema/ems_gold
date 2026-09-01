@@ -1,6 +1,6 @@
 import type { PortalConfig } from '@/lib/portal'
 import { CurrentTerm } from '@/components/layout/current-term'
-import { useAdminNotifications } from './features/notifications/use-admin-notifications'
+import { useOfficeNotifications } from '@/features/notifications/use-notice-feed'
 import { adminNav } from './nav'
 
 export const adminPortal: PortalConfig = {
@@ -9,8 +9,7 @@ export const adminPortal: PortalConfig = {
   basePath: '/admin',
   nav: adminNav,
   searchableNav: true,
-  useNotifications: useAdminNotifications,
-  notificationCategory: 'Deletion',
+  useNotifications: useOfficeNotifications,
   notFoundAudience: 'the office',
   notFoundLinks: [
     { to: '/admin', label: 'Dashboard', hint: 'Money and people at a glance' },

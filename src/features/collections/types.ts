@@ -217,6 +217,22 @@ export type RowActionSpec = {
 }
 
 /**
+ * A link on every row, beside the way into the record — for a row that leads
+ * somewhere rather than one that changes.
+ *
+ * Unlike `rowAction` nothing is written, so there is no confirm and no toast:
+ * the page it lands on is where the decision is taken. A collection may have
+ * one or the other, not both — they share the row's one control.
+ */
+export type RowLinkSpec = {
+  /** What the button says for this row. Nothing at all leaves the row alone. */
+  label: (row: Row) => string | undefined
+  to: ActionPath
+  /** Preset filters, read straight off the URL by the page it lands on. */
+  search?: (row: Row) => Record<string, string>
+}
+
+/**
  * A summary tile whose figure arrives with the page rather than from its own
  * endpoint, so it moves as the list is narrowed. `source` supplies the number;
  * a page that sends none shows no tile.
@@ -450,6 +466,8 @@ export type CollectionDef = {
   nameKey: string
   /** A per-row control, offered on every row of the list. */
   rowAction?: RowActionSpec
+  /** Where a row leads, where it leads anywhere. See `RowLinkSpec`. */
+  rowLink?: RowLinkSpec
   form?: FormSectionSpec[]
   /** Sub-tables on the detail page. Defaults to the record's activity. */
   tabs?: DetailTab[]

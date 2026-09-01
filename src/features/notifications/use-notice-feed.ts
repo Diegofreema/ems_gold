@@ -89,3 +89,17 @@ export function useOfficeNoticeFeed(): NoticeFeed {
   useBoardWatch()
   return useFeedOf(board.data?.notifications, board.error)
 }
+
+/*
+ * What every portal's bell reads. Two hooks and not four, because the feed is
+ * the notice board and nothing else now: a reader gets their own list, and
+ * the office gets the board it posts to.
+ */
+
+export function useMyNotifications(): Notification[] {
+  return useNoticeFeed().notices
+}
+
+export function useOfficeNotifications(): Notification[] {
+  return useOfficeNoticeFeed().notices
+}

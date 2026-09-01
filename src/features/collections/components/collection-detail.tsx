@@ -108,6 +108,21 @@ export function CollectionDetail({
   // The same control the register offers, where the office is looking at the
   // one record it applies to.
   const actionLabel = rowAction.spec?.label(record)
+  // The same control the register offers on the row, for the one record.
+  const rowLink = definition.rowLink
+  const linkLabel = rowLink?.label(record)
+  const linkButton =
+    rowLink && linkLabel ? (
+      <Button
+        key="row-link"
+        variant={definition.readonly ? 'default' : 'outline'}
+        onClick={() =>
+          void navigate({ to: rowLink.to, search: rowLink.search?.(record) })
+        }
+      >
+        {linkLabel}
+      </Button>
+    ) : null
   const tabs = (definition.tabs ?? (definition.source ? [] : [ACTIVITY])).filter(
     (tab) => tab.when?.(record.id) ?? true,
   )
@@ -171,7 +186,10 @@ export function CollectionDetail({
           {/* A flow is a decision taken about the record, not an edit of it, so
               a collection nobody can change still offers the one it has. */}
           {definition.readonly ? (
-            flowButtons
+            <>
+              {linkButton}
+              {flowButtons}
+            </>
           ) : !editRoute ? (
             <Button
               onClick={() =>
@@ -198,6 +216,7 @@ export function CollectionDetail({
                 Edit
               </Button>
               {flowButtons}
+              {linkButton}
               {actionLabel && (
                 <Button variant="outline" onClick={() => rowAction.ask(record)}>
                   {actionLabel}

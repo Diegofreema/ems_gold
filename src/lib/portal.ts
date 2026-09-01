@@ -45,8 +45,6 @@ export type PortalConfig = {
    * calls it once per render and knows the difference nowhere.
    */
   useNotifications: () => Notification[]
-  /** The extra filter offered on the notifications page, e.g. "Finance". */
-  notificationCategory: string
   /** Where the in-shell 404 points; the design tailors these per role. */
   notFoundLinks: NotFoundLink[]
   /** Who "usually wants" those links, e.g. "teachers". */

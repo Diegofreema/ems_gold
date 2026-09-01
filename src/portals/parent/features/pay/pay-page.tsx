@@ -1,73 +1,76 @@
-import { useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
-import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
-import { useState } from 'react'
-import { NumericFormat } from 'react-number-format'
-import { toast } from 'sonner'
-import { SegmentedControl } from '@/components/common/segmented-control'
+import { parseAsString, useQueryState } from 'nuqs'
+import { useGatewayConfig, useInitialisePayment } from '@/api/payments/hooks'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useConfirm } from '@/hooks/use-confirm'
-import { amountInWords } from '@/lib/amount-words'
-import { formatNaira } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { outstandingFor, PAY_METHODS } from './outstanding'
+import { callbackUrl, gatewayWarning, outstandingFor } from './outstanding'
 import { useFamily } from '../../parent.store'
 
-const methodParser = parseAsStringLiteral(PAY_METHODS).withDefault(
-  PAY_METHODS[0],
-)
-
+/**
+ * Paying one invoice by card or transfer, through Credo.
+ *
+ * There is no amount to type and no method to pick. The server reads the
+ * amount off the invoice and refuses anything that does not cover it, and
+ * Credo's own page is where card and bank are chosen — so what is left here
+ * is choosing which bill to settle.
+ */
 export function PayPage() {
-  const navigate = useNavigate()
   const confirm = useConfirm()
   const outstanding = outstandingFor(useFamily())
-  const [method, setMethod] = useQueryState('method', methodParser)
+  const gateway = useGatewayConfig()
+  const open = useInitialisePayment()
+
   // Empty rather than the first invoice: the default is read once, and the
   // list is fetched, so a default built from it would stick at whatever the
   // first render happened to hold.
   const [invoiceId, setInvoiceId] = useQueryState('invoice', parseAsString.withDefault(''))
+  const chosen = outstanding.find((entry) => entry.id === invoiceId) ?? outstanding[0]
+  const warning = gatewayWarning(gateway.data)
 
-  const chosen =
-    outstanding.find((entry) => entry.id === invoiceId) ?? outstanding[0]
-  // Part payments are allowed, so the amount starts at the balance and is
-  // then the parent's to change. Held unformatted — the field puts the
-  // separators on, and `payable` puts them back for the copy that reads it.
-  const [amount, setAmount] = useState(String(chosen?.balanceValue ?? 0))
-  const words = amountInWords(amount)
-  const payable = formatNaira(Number(amount) || 0)
-
-  const pick = (id: string) => {
-    void setInvoiceId(id)
-    const next = outstanding.find((entry) => entry.id === id)
-    if (next) setAmount(String(next.balanceValue))
-  }
-
-  const pay = () =>
+  const pay = () => {
+    if (!chosen) return
     confirm.ask({
-      title: 'Send this payment?',
-      body: 'The school is charged as soon as this clears. A refund has to go through the bursary, so check the invoice and the amount first.',
-      subject: `${payable} by ${method}${chosen ? ` · ${chosen.invoice}` : ''}`,
+      title: 'Pay this invoice?',
+      body: 'You will be taken to Credo to pay by card or bank transfer. The amount is the invoice’s own and cannot be changed. A refund has to go through the bursary.',
+      subject: `${chosen.balance} · ${chosen.invoice} · ${chosen.child}`,
       cancel: 'Go back',
-      cta: 'Pay now',
-      onConfirm: () => {
-        toast(`Payment of ${payable} initiated — receipt follows`)
-        void navigate({ to: '/parent/invoices' })
+      cta: 'Continue to payment',
+      onConfirm: async () => {
+        const session = await open
+          .mutateAsync({
+            invoice_id: Number(chosen.id),
+            callback_url: callbackUrl(window.location.origin),
+          })
+          .catch(() => null)
+        // A refusal has already been announced by the mutation cache; there is
+        // nowhere to send the payer, so the page simply stays put.
+        if (!session?.authorization_url) return
+        // Leaving the app entirely — Credo hosts the card form, and it is
+        // theirs to host precisely so no card detail ever reaches this origin.
+        window.location.assign(session.authorization_url)
       },
     })
+  }
 
   return (
     <div className="max-w-[680px]">
       <PageHeader
         kicker="Finance"
         title="Pay fees"
-        description="One invoice at a time. Pick the invoice, choose how you are paying, and the receipt is issued as soon as the payment clears."
+        description="One invoice at a time, by card or bank transfer. The amount is the invoice’s own — part payments are not taken online."
       />
       <Rule />
+
+      {warning && (
+        <div className="mb-5 border-2 border-brand px-4 py-3.5 text-[13px]">
+          {warning}
+        </div>
+      )}
 
       <div className="mb-5">
         <Label className="mb-[5px] block text-xs font-normal text-foreground/70">
@@ -84,7 +87,7 @@ export function PayPage() {
               type="button"
               role="radio"
               aria-checked={entry.id === chosen?.id}
-              onClick={() => pick(entry.id)}
+              onClick={() => void setInvoiceId(entry.id)}
               className={cn(
                 'flex cursor-pointer items-center gap-3.5 border-b-2 border-divider px-4 py-3.5 text-left text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
                 entry.id === chosen?.id ? 'bg-brand/10' : 'bg-background',
@@ -109,56 +112,24 @@ export function PayPage() {
               </span>
             </button>
           ))}
-        </div>
-      </div>
 
-      <div className="mb-5">
-        <Label className="mb-[5px] block text-xs font-normal text-foreground/70">
-          How are you paying?
-        </Label>
-        <SegmentedControl
-          name="method"
-          value={method}
-          onChange={(value) => void setMethod(value)}
-          options={PAY_METHODS.map((entry) => ({ value: entry, label: entry }))}
-        />
-      </div>
-
-      <div className="mb-[22px] max-w-[260px]">
-        <Label
-          htmlFor="amount"
-          className="mb-[5px] block text-xs font-normal text-foreground/70"
-        >
-          Amount to pay
-        </Label>
-        <NumericFormat
-          customInput={Input}
-          id="amount"
-          value={amount}
-          onValueChange={(values) => setAmount(values.value)}
-          thousandSeparator=","
-          decimalScale={2}
-          allowNegative={false}
-          inputMode="decimal"
-          className="text-right font-heading text-lg font-extrabold tabular-nums"
-        />
-        {/* The figure spelled out sits above the balance rather than replacing
-            it: paying part of an invoice is a decision that needs both. */}
-        {words && (
-          <div className="mt-1 text-[11px] text-foreground/70">{words}</div>
-        )}
-        <div className="mt-1 text-[11px] text-muted-foreground">
-          {chosen
-            ? `Balance on ${chosen.invoice} is ${chosen.balance}. Part payments are allowed.`
-            : 'Nothing outstanding.'}
+          {outstanding.length === 0 && (
+            <div className="px-6 py-12 text-center">
+              <div className="font-heading text-[17px] font-extrabold">
+                Nothing outstanding
+              </div>
+              <p className="mt-1.5 text-[13px] text-muted-foreground">
+                Every invoice raised against your children has been settled.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <Rule />
 
       <div className="flex flex-wrap items-center gap-2.5">
-        {/* An emptied field used to leave a live "Pay ₦0" button behind it. */}
-        <Button onClick={pay} disabled={!chosen || !Number(amount)}>
-          Pay {payable} by {method}
+        <Button onClick={pay} disabled={!chosen} pending={open.isPending}>
+          {chosen ? `Pay ${chosen.balance}` : 'Pay'}
         </Button>
         <Button asChild variant="outline">
           <Link to="/parent/invoices">See all invoices</Link>

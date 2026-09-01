@@ -1,5 +1,4 @@
 import { parseAsString, useQueryState } from 'nuqs'
-import { useMemo } from 'react'
 import { useMarkAllNoticesRead } from '@/api/notifications/hooks'
 import { SectionHeading } from '@/components/common/section-heading'
 import { SegmentedControl } from '@/components/common/segmented-control'
@@ -16,14 +15,11 @@ const GROUPS = ['Today', 'Earlier'] as const
 export function NotificationsPage({
   notifications,
   description,
-  /** The role-specific category offered alongside All and Unread. */
-  category,
-  /** Why the office's own notices are missing, where they are. */
+  /** Why the board is missing, where it is. */
   boardError,
 }: {
   notifications: Notification[]
   description: string
-  category: string
   boardError?: string | null
 }) {
   const [filter, setFilter] = useQueryState(
@@ -33,37 +29,20 @@ export function NotificationsPage({
   const read = useNotificationsStore((state) => state.read)
   const markAllRead = useNotificationsStore((state) => state.markAllRead)
   const markBoardRead = useMarkAllNoticesRead()
+  const unread = notifications.filter((item) => !item.read && !read[item.id])
 
   /**
-   * Marking everything read is two different acts, because the feed is two
-   * different things. A notice off the board has a read mark at the server,
-   * so it is opened there; everything else is worked out from records the API
-   * holds no opinion about, and is remembered in the browser alone.
+   * One call to `read-all`, and the browser's own marks alongside it so the
+   * wash lifts before the refetch confirms. Nothing is sent where nothing is
+   * unread — an empty call would still raise a toast claiming it did
+   * something.
    */
   const clearAll = () => {
     markAllRead(notifications.map((item) => item.id))
-    const unopened = notifications
-      .filter((item) => item.noticeId !== undefined && !item.read && !read[item.id])
-      .map((item) => item.noticeId!)
-    // No request where there is nothing to mark — an empty run would still
-    // raise a toast claiming something happened.
-    if (unopened.length > 0) markBoardRead.mutate(unopened)
+    if (unread.length > 0) markBoardRead.mutate()
   }
 
-  // The third tab is only offered where the feed has something to put under
-  // it: a portal reading the notice board alone has notices and nothing else,
-  // and a filter that can only ever come back empty is worse than no filter.
-  // A URL still asking for it after the last one went falls back to All.
-  const hasCategory = notifications.some((item) => item.kicker === category)
-  const active = filter === 'category' && !hasCategory ? 'all' : filter
-
-  const visible = useMemo(() => {
-    if (active === 'unread')
-      return notifications.filter((item) => !item.read && !read[item.id])
-    if (active === 'category')
-      return notifications.filter((item) => item.kicker === category)
-    return notifications
-  }, [notifications, active, read, category])
+  const visible = filter === 'unread' ? unread : notifications
 
   return (
     <div className="max-w-[780px]">
@@ -94,12 +73,11 @@ export function NotificationsPage({
       <SegmentedControl
         name="notification-filter"
         className="mb-5"
-        value={active}
+        value={filter}
         onChange={(value) => void setFilter(value === 'all' ? null : value)}
         options={[
           { value: 'all', label: 'All' },
           { value: 'unread', label: 'Unread' },
-          ...(hasCategory ? [{ value: 'category', label: category }] : []),
         ]}
       />
 

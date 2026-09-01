@@ -12,6 +12,14 @@ import { formatNaira } from '../../lib/format.ts'
 export { SETTLED }
 
 /**
+ * What the state column reads, named because the pay button on a row is
+ * chosen by it — a literal repeated in two files is one rename from a button
+ * that appears on every invoice, paid ones included.
+ */
+export const PAID = 'Paid'
+export const OWING = 'Owing'
+
+/**
  * The two fields a mark is read for, whichever register it came off.
  *
  * `sparents/my-children/{id}/attendance` sends `ChildMark` and
@@ -99,7 +107,7 @@ export function invoiceRow(invoice: FamilyInvoice): Row {
     amount: formatNaira(amount),
     paid: formatNaira(settled ? amount : 0),
     balance: formatNaira(settled ? 0 : amount),
-    state: settled ? 'Paid' : 'Owing',
+    state: settled ? PAID : OWING,
 
     // Read by the record panel rather than the table.
     session: text(invoice.session),

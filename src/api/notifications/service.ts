@@ -50,6 +50,12 @@ export const noticesService = {
   open: (id: Id) => request<NoticeDetail>(`notifications/${id}`),
 
   /**
+   * Clears the caller's whole board in one call, without opening anything —
+   * so unlike `open` it costs no view on any notice.
+   */
+  readAll: () => request<unknown>('notifications/read-all', { method: 'POST' }),
+
+  /**
    * The office's list, with the audiences the writer will accept. Not the
    * whole board — see `AllNoticesEnvelope`. Admin only.
    */

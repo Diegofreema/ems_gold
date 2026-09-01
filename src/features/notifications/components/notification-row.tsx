@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useOpenNotice } from '@/api/notifications/hooks'
 import { Tag } from '@/components/common/tag'
@@ -8,11 +7,11 @@ import type { Notification } from '../types'
 
 /**
  * One item. Unread rows carry a 6% accent wash, a filled square and a bolder
- * title; opening one marks it read and routes to the page it came from.
+ * title.
  *
- * A notice off the board has no page behind it — it is the content — so it
- * renders as a plain row rather than a link, and clicking it does the one
- * thing left to do: mark it read, here and at the server.
+ * A notice leads nowhere — it is the content, not a pointer at a page — so
+ * the row is a button rather than a link, and clicking it does the one thing
+ * there is to do: mark it read, here and at the server.
  */
 export function NotificationRow({
   notification,
@@ -33,10 +32,8 @@ export function NotificationRow({
 
   const open = () => {
     markRead(notification.id)
-    // Only the board keeps a read mark of its own; everything else is worked
-    // out from records the API never hears an opinion about. Opening it is
-    // also what counts the view, so it is asked for once and only for a
-    // notice the reader has not already opened.
+    // Opening a notice is also what counts the view, so it is asked for
+    // once and only for one the reader has not already opened.
     if (notification.noticeId !== undefined && !read) {
       openNotice.mutate(notification.noticeId)
     }
@@ -51,18 +48,10 @@ export function NotificationRow({
   const style = { animationDelay: `${index * 34}ms` }
   const body: ReactNode = <RowBody notification={notification} read={!!read} compact={compact} />
 
-  if (!notification.to) {
-    return (
-      <button type="button" onClick={open} style={style} className={className}>
-        {body}
-      </button>
-    )
-  }
-
   return (
-    <Link to={notification.to} onClick={open} style={style} className={className}>
+    <button type="button" onClick={open} style={style} className={className}>
       {body}
-    </Link>
+    </button>
   )
 }
 

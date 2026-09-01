@@ -1,21 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { NotificationsPage } from '@/features/notifications/notifications-page'
-import { studentPortal } from '@/portals/student/config'
-import { useStudentFeed } from '@/portals/student/features/notifications/use-student-notifications'
+import { useNoticeFeed } from '@/features/notifications/use-notice-feed'
 
 export const Route = createFileRoute('/student/notifications')({
   staticData: { title: 'Notifications', crumb: 'Overview' },
+  // No loader: the board is read in the component, so a board that cannot be
+  // reached costs this page and never the shell around it.
   component: StudentNotifications,
 })
 
 function StudentNotifications() {
-  const feed = useStudentFeed()
+  const feed = useNoticeFeed()
   return (
     <NotificationsPage
-      notifications={feed.notifications}
-      boardError={feed.boardError}
-      category={studentPortal.notificationCategory}
-      description="Notices from the school, your tests, your results and what the bursary has recorded. Opening an item takes you to the page it came from."
+      notifications={feed.notices}
+      boardError={feed.error}
+      description="Every notice the school has posted to you, newest first."
     />
   )
 }

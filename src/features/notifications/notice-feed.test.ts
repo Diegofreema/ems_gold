@@ -2,13 +2,11 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Notice } from '../../api/notifications/types.ts'
 import {
-  mergedFeed,
   noticeFeed,
   noticeGroup,
   noticeMeta,
   noticeWhen,
 } from './notice-feed.ts'
-import type { Notification } from './types.ts'
 
 /** `GET /notifications/mine` as teacher1 on bronze, notice 31 in full. */
 const RESUMPTION: Notice = {
@@ -52,8 +50,6 @@ test('a notice becomes a feed item that leads nowhere', () => {
   assert.equal(item.group, 'Today')
   assert.equal(item.when, '11:14')
   assert.equal(item.read, false)
-  // The notice is the content; there is no page behind it.
-  assert.equal(item.to, undefined)
 })
 
 test('the school’s own offset is dropped rather than believed', () => {
@@ -118,23 +114,19 @@ test('an older year is said out loud', () => {
   assert.equal(noticeGroup(NOW.getTime(), NOW), 'Today')
 })
 
-test('two feeds merge into one order, and an undated item sinks', () => {
-  const derived: Notification[] = [
-    {
-      id: 'mark-1',
-      kicker: 'Assessment',
-      title: 'Marks approved',
-      body: '',
-      when: '',
-      group: 'Today',
-      at: new Date(2026, 8, 1, 12, 0).getTime(),
-    },
-    { id: 'fixture', kicker: 'School', title: 'No stamp', body: '', when: '', group: 'Earlier' },
-  ]
+test('the board is newest first, and an undated notice is left off', () => {
+  const older: Notice = {
+    ...RESUMPTION,
+    id: 12,
+    title: 'Midterm break',
+    datecreated: '2026-08-30T09:00:00+01:00',
+  }
+  // A feed is ordered by time; a notice with no readable stamp has no place
+  // in it at all, rather than heading it.
+  const undated: Notice = { ...RESUMPTION, id: 13, datecreated: '' }
+
   assert.deepEqual(
-    mergedFeed(derived, noticeFeed([RESUMPTION], NOW)).map((item) => item.id),
-    // The mark's noon beats the notice's 11:14, and the item with no stamp
-    // sinks to the end rather than heading a feed it has no place in.
-    ['mark-1', 'notice-31', 'fixture'],
+    noticeFeed([older, RESUMPTION, undated], NOW).map((item) => item.id),
+    ['notice-31', 'notice-12'],
   )
 })

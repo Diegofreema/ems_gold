@@ -35,6 +35,26 @@ export function CollectionList({
   const navigate = useNavigate()
   const confirm = useConfirm()
   const rowAction = useRowAction(definition, confirm)
+
+  /*
+   * The row's one control: whichever of the two the collection declared. A
+   * write wins over a link, because a register that somehow had both would
+   * otherwise offer the link and swallow the write.
+   */
+  const rowLink = definition.rowLink
+  const rowControl = rowAction.spec
+    ? {
+        label: rowAction.spec.label,
+        onSelect: rowAction.ask,
+        pending: rowAction.pending,
+      }
+    : rowLink
+      ? {
+          label: rowLink.label,
+          onSelect: (row: Row) =>
+            void navigate({ to: rowLink.to, search: rowLink.search?.(row) }),
+        }
+      : undefined
   const remove = useRemoveRecord(definition)
   const {
     text, query, filters, page, pending, setQuery, setFilter, setPage,
@@ -218,13 +238,7 @@ export function CollectionList({
               // A register may mix records only some of which this account can
               // delete — teaching records beside office ones.
               canDelete={definition.removeWhen}
-              action={
-                rowAction.spec && {
-                  label: rowAction.spec.label,
-                  onSelect: rowAction.ask,
-                  pending: rowAction.pending,
-                }
-              }
+              action={rowControl}
               searchQuery={query}
               onClearSearch={() => setQuery('')}
             />

@@ -1,21 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { NotificationsPage } from '@/features/notifications/notifications-page'
-import { adminPortal } from '@/portals/admin/config'
-import { useAdminFeed } from '@/portals/admin/features/notifications/use-admin-notifications'
+import { useOfficeNoticeFeed } from '@/features/notifications/use-notice-feed'
 
 export const Route = createFileRoute('/admin/notifications')({
   staticData: { title: 'Notifications', crumb: 'Overview' },
+  // No loader: the board is read in the component, so a board that cannot be
+  // reached costs this page and never the shell around it.
   component: AdminNotifications,
 })
 
 function AdminNotifications() {
-  const feed = useAdminFeed()
+  const feed = useOfficeNoticeFeed()
   return (
     <NotificationsPage
-      notifications={feed.notifications}
-      boardError={feed.boardError}
-      category={adminPortal.notificationCategory}
-      description="Every notice on the school's board, newest first. What the office has changed is recorded on the activity log instead."
+      notifications={feed.notices}
+      boardError={feed.error}
+      description="Every notice on the school's board, newest first."
     />
   )
 }
