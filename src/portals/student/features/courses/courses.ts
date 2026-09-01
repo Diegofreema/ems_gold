@@ -5,11 +5,12 @@ import { text } from '../../../../features/profile/record.ts'
 /**
  * The subjects the pupil is registered for, off `GET /students/me/courses`.
  *
- * Three columns where the design has five. "Periods / wk" is the timetable's,
- * and there is no timetable on this API at all — no route, not even a shut
- * one. "CA so far" is a mark, and marks have their own page: the results
- * endpoint is the school's approved record of them, and a second copy here
- * would be a number a pupil could read two ways.
+ * Three columns where the design has five. "Periods / wk" would be counted off
+ * the timetable, which has its own page and its own endpoint; a subject's
+ * periods are not on this answer, and a count copied between two pages is one
+ * more thing to fall out of step. "CA so far" is a mark, and marks have their
+ * own page: the results endpoint is the school's approved record of them, and
+ * a second copy here would be a number a pupil could read two ways.
  *
  * The class, the session and the term are the registration's, not each
  * subject's — they arrive once, beside the list, so they belong on the record

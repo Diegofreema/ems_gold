@@ -1,12 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 import {
   studentPaperQuery,
   studentTestResultQuery,
-} from '@/portals/student/api/queries'
-import { TestResult } from '@/portals/student/features/tests/test-result'
+} from '@/portals/student/api/queries';
+import { TestResult } from '@/portals/student/features/tests/test-result';
 
 export const Route = createFileRoute('/student/tests/$testId/result')({
-  staticData: { title: 'How you did', crumb: 'Assessment · Tests open to me', crumbTo: '/student/tests' },
+  staticData: {
+    title: 'How you did',
+    crumb: 'Assessment · Tests',
+    crumbTo: '/student/tests',
+  },
   /*
    * Both hops, warmed here. The URL names the paper and the result endpoint is
    * keyed on the submission, so the paper has to answer before the result can
@@ -19,16 +23,16 @@ export const Route = createFileRoute('/student/tests/$testId/result')({
   loader: async ({ context, params }) => {
     const paper = await context.queryClient.ensureQueryData(
       studentPaperQuery(params.testId),
-    )
+    );
     if (paper.my_submission) {
       await context.queryClient.ensureQueryData(
         studentTestResultQuery(String(paper.my_submission.id)),
-      )
+      );
     }
   },
   component: Result,
-})
+});
 
 function Result() {
-  return <TestResult testId={Route.useParams().testId} />
+  return <TestResult testId={Route.useParams().testId} />;
 }

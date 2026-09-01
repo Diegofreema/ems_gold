@@ -64,9 +64,6 @@ function StudentDashboard() {
               />
             </div>
           )}
-          {home.unlisted && (
-            <p className="mt-3 text-[12px] text-muted-foreground">{home.unlisted}</p>
-          )}
         </section>
 
         <section>

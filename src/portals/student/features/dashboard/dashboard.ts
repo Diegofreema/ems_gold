@@ -4,7 +4,7 @@ import { money, named, SETTLED } from '../../../../features/collections/invoice.
 import { newestFirst } from '../../../../features/collections/newest.ts'
 import { schoolTime, when } from '../../../../features/collections/when.ts'
 import { formatNaira } from '../../../../lib/format.ts'
-import { paidTotal, reference } from '../fees/fees.ts'
+import { feeCounts, paidTotal, reference } from '../fees/fees.ts'
 
 /**
  * The pupil's home page, off `GET /students/me/dashboard` and
@@ -29,6 +29,12 @@ function counted(amount: number, one: string, many: string): string {
 /**
  * The four counters across the top.
  *
+ * The two fee figures are counted from the pupil's own bills, not from the
+ * stats: `invoices_unpaid` and `invoices_total` there are not scoped to the
+ * caller, and read straight they tell a pupil whose fees are settled that one
+ * is still owing. The other two are the school's own counts of lists a pupil
+ * cannot otherwise reach.
+ *
  * The unpaid one is the only figure here a pupil can act on, so it is the only
  * one ever flagged. Neither a term average nor a position is among them: no
  * result has been published to this pupil, and a figure invented from an empty
@@ -37,23 +43,22 @@ function counted(amount: number, one: string, many: string): string {
 export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
   const count = (label: string, amount: number, delta: string, hot = false) =>
     ({ label, amount, format: 'number' as const, delta, hot })
+  const fees = feeCounts(invoices)
 
   return [
     {
       label: 'Paid this session',
       amount: paidTotal(invoices),
       format: 'naira' as const,
-      delta: counted(stats.fees_settled_this_session, 'invoice', 'invoices') + ' settled',
+      delta: counted(fees.settled, 'invoice', 'invoices') + ' settled',
       // Never flagged: money already taken is not something a pupil can act on.
       hot: false,
     },
     count(
       'Invoices unpaid',
-      stats.invoices_unpaid,
-      stats.invoices_unpaid
-        ? `Of ${counted(stats.invoices_total, 'invoice', 'invoices')} raised for you`
-        : 'Nothing owing',
-      stats.invoices_unpaid > 0,
+      fees.unpaid,
+      fees.unpaid ? `Of ${counted(fees.total, 'invoice', 'invoices')} raised for you` : 'Nothing owing',
+      fees.unpaid > 0,
     ),
     count(
       'Results published',
@@ -72,9 +77,10 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
  * The line under the greeting. Fees lead, because they are the only thing on
  * this page that is a task rather than a figure.
  */
-export function studentNote(stats: StudentStats): string {
-  const fees = stats.invoices_unpaid
-    ? `${counted(stats.invoices_unpaid, 'invoice', 'invoices')} of yours ${stats.invoices_unpaid === 1 ? 'is' : 'are'} still unpaid.`
+export function studentNote(stats: StudentStats, invoices: Invoice[]): string {
+  const unpaid = feeCounts(invoices).unpaid
+  const fees = unpaid
+    ? `${counted(unpaid, 'invoice', 'invoices')} of yours ${unpaid === 1 ? 'is' : 'are'} still unpaid.`
     : 'Every invoice raised for you has been paid.'
   const results = stats.results_available
     ? `${counted(stats.results_available, 'result is', 'results are')} ready to read.`
@@ -89,8 +95,8 @@ export type StudentAction = {
 }
 
 /** The button beside the greeting points at whatever is waiting. */
-export function studentAction(stats: StudentStats): StudentAction {
-  return stats.invoices_unpaid
+export function studentAction(invoices: Invoice[]): StudentAction {
+  return feeCounts(invoices).unpaid
     ? { to: '/student/invoices', label: 'My invoices' }
     : { to: '/student/results', label: 'My results' }
 }
@@ -110,22 +116,6 @@ export function billEntries(invoices: Invoice[]) {
       flagged: !settled,
     }
   })
-}
-
-/**
- * What the list leaves out.
- *
- * `GET /students/me/invoices` returns settled bills only and ignores every
- * filter offered to it, so the counters and the list disagree on purpose. The
- * pupil is told that rather than left to count the rows and wonder.
- */
-export function unlistedNote(stats: StudentStats, listed: number): string | null {
-  const missing = stats.invoices_total - listed
-  if (missing <= 0) return null
-
-  return `${counted(missing, 'invoice', 'invoices')} the school has raised for you ${
-    missing === 1 ? 'is' : 'are'
-  } not listed here. Ask the bursary for ${missing === 1 ? 'it' : 'them'}.`
 }
 
 /** Each settled bill as a bar, so a pupil can see where the money went. */

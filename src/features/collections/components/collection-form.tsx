@@ -95,7 +95,7 @@ function renderField(field: FieldSpec) {
       key={field.key}
       {...shared}
       placeholder={field.placeholder}
-      type={field.email ? 'email' : 'text'}
+      type={field.email ? 'email' : field.time ? 'time' : 'text'}
       multiline={field.multiline}
     />
   )

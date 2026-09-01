@@ -3,6 +3,8 @@ import { assignmentKeys } from '@/api/assignments/keys'
 import { assignmentsService } from '@/api/assignments/service'
 import { mySchoolingKeys } from '@/api/my-schooling/keys'
 import { mySchoolingService } from '@/api/my-schooling/service'
+import { timetableKeys } from '@/api/timetables/keys'
+import { timetablesService } from '@/api/timetables/service'
 
 /**
  * The two answers every pupil page is built out of. Kept together so the
@@ -58,6 +60,19 @@ export const studentMaterialsQuery = queryOptions({
 export const studentCoursesQuery = queryOptions({
   queryKey: mySchoolingKeys.courses(),
   queryFn: () => mySchoolingService.courses(),
+})
+
+/**
+ * `GET /timetables/mine` — the pupil's own class grid for the current term.
+ *
+ * Asked without a term: both `session_id` and `semester_id` are optional and
+ * only matter together, and a pupil has no way to name a past term to ask for
+ * one. The whole answer is kept — the class, the session and the term it was
+ * drawn for are siblings of `days`, not fields on a period.
+ */
+export const studentTimetableQuery = queryOptions({
+  queryKey: timetableKeys.mine({}),
+  queryFn: () => timetablesService.mine(),
 })
 
 /**

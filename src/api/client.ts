@@ -26,7 +26,7 @@ export class ApiError extends Error {
 }
 
 export type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   /** JSON body. Mutually exclusive with `form`. */
   body?: unknown
   /** Multipart body, for the endpoints that take a file. */

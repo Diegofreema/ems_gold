@@ -1,6 +1,7 @@
 import { collect, fees, invoices, spendings } from './finance'
 import { arms, classes, subjects } from './academics'
 import { sessions, terms } from './calendar'
+import { timetable } from './timetable'
 import { parents, parentsDeactivated } from './parents'
 import { library } from './library'
 import { logs } from './school'
@@ -27,6 +28,7 @@ export const adminCollections = {
   subjects,
   calendar: sessions,
   terms,
+  timetable,
   library,
   logs,
 } satisfies Record<string, CollectionDef>

@@ -1,6 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
 import { SectionHeading } from '@/components/common/section-heading'
+import { Button } from '@/components/ui/button'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { TableView } from '@/components/data-table/table-view'
@@ -66,25 +68,36 @@ export function DetailTabPanel({
   // than an empty frame under a heading for a table that does not exist.
   if (!tab) return null
 
+  const action = tab.action?.(recordId)
+
   return (
     // `min-w-0`: a grid item sizes to its content by default, so a wide tab
     // — a payment history is six columns — would push the record beside it
     // off the page instead of scrolling inside its own frame.
     <section className="min-w-0">
-      {tabs.length > 1 ? (
-        <SegmentedControl
-          name="detail-tab"
-          className="mb-[18px]"
-          value={String(active)}
-          onChange={(value) => setActive(Number(value))}
-          options={tabs.map((entry, index) => ({
-            value: String(index),
-            label: entry.label,
-          }))}
-        />
-      ) : (
-        <SectionHeading className="mb-3.5">{tab.label}</SectionHeading>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {tabs.length > 1 ? (
+          <SegmentedControl
+            name="detail-tab"
+            className="mb-[18px]"
+            value={String(active)}
+            onChange={(value) => setActive(Number(value))}
+            options={tabs.map((entry, index) => ({
+              value: String(index),
+              label: entry.label,
+            }))}
+          />
+        ) : (
+          <SectionHeading className="mb-3.5">{tab.label}</SectionHeading>
+        )}
+        {action && (
+          <Button asChild variant="outline" size="sm" className="mb-3.5">
+            <Link to={action.to} search={action.search}>
+              {action.label}
+            </Link>
+          </Button>
+        )}
+      </div>
 
       <div key={active} className="animate-ems-up overflow-x-auto">
         <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>

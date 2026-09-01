@@ -28,7 +28,7 @@ export const studentNav: NavGroup[] = [
   {
     heading: 'Assessment',
     items: [
-      { to: '/student/tests', label: 'Tests open to me', icon: SquareCheckBig },
+      { to: '/student/tests', label: 'Tests', icon: SquareCheckBig },
       { to: '/student/results', label: 'My results', icon: ChartLine },
     ],
   },

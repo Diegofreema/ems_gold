@@ -10,7 +10,6 @@ import {
   type StudentAction,
   studentFigures,
   studentNote,
-  unlistedNote,
 } from '../features/dashboard/dashboard'
 
 export type StudentHome = {
@@ -21,14 +20,14 @@ export type StudentHome = {
   action: StudentAction
   /** The bills the school has raised, newest first. */
   bills: ActivityEntry[]
-  /** What the invoice list left out, where it left anything out. */
-  unlisted: string | null
   fees: { bars: Bar[]; peak: number }
 }
 
 /**
- * The page is two endpoints, not one: the counters know what is unpaid and the
- * invoice list knows what each bill was for, and neither knows both.
+ * The page is two endpoints, not one: the invoice list is the pupil's fee
+ * ledger, and the counters are the only count of the results and materials
+ * lists a pupil is given. The counters' own fee figures are not scoped to the
+ * caller and are not read — see `feeCounts`.
  *
  * Shaped here rather than in the fetch so each cache entry holds what its
  * endpoint actually sent — the sidebar reads the same counters for its fee
@@ -49,10 +48,9 @@ export function studentHome(
 
   return {
     figures: studentFigures(stats, invoices),
-    note: studentNote(stats),
-    action: studentAction(stats),
+    note: studentNote(stats, invoices),
+    action: studentAction(invoices),
     bills: billEntries(invoices),
-    unlisted: unlistedNote(stats, invoices.length),
     fees: feeBars(invoices),
   }
 }

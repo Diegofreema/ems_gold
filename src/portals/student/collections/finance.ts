@@ -2,8 +2,8 @@ import { pageRows } from '@/features/collections/api'
 import type { CollectionDef } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
 import { queryClient } from '@/lib/query-client'
-import { studentInvoicesQuery, studentStatsQuery } from '../api/queries'
-import { invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
+import { studentInvoicesQuery } from '../api/queries'
+import { feeCounts, invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
 
 /**
  * The pupil's fee ledger, from `GET /students/me/invoices` — one answer
@@ -14,7 +14,6 @@ import { invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
  * on the same render, and react-query collapses them into one call.
  */
 const ledger = () => queryClient.ensureQueryData(studentInvoicesQuery)
-const counters = () => queryClient.ensureQueryData(studentStatsQuery)
 
 const rows = () => ledger().then((data) => invoiceRows(data.invoices, data.transactions))
 
@@ -24,7 +23,7 @@ export const invoices: CollectionDef = {
   kicker: 'Finance',
   title: 'My invoices',
   description:
-    'Fees raised against your record and what has been paid. The school lists a bill here once it has been settled — ask the bursary about anything you are still owing.',
+    'Every fee raised against your record and what has been paid on each. This is the same ledger the bursary keeps — the reference on a settled bill is the one to quote if a payment is ever questioned.',
   // No button. The design's was "Download receipt", and a pupil login can
   // reach no receipt endpoint; what a receipt would say — the reference, the
   // method, the bursary's own note — is on the record panel instead.
@@ -33,7 +32,7 @@ export const invoices: CollectionDef = {
   searchHint: 'Search invoice or fee',
   footer: 'Newest first, across every session',
   emptyTitle: 'No invoices raised',
-  emptyBody: 'Fees raised against your record appear here once they are settled.',
+  emptyBody: 'Fees the school raises against your record appear here, settled or not.',
   noun: 'invoice',
   nameKey: 'invoice',
   counts: [
@@ -44,11 +43,11 @@ export const invoices: CollectionDef = {
     },
     {
       label: 'Unpaid',
-      count: () => counters().then((data) => data.stats?.invoices_unpaid ?? 0),
+      count: () => ledger().then((data) => feeCounts(data.invoices).unpaid),
     },
     {
       label: 'Raised for you',
-      count: () => counters().then((data) => data.stats?.invoices_total ?? 0),
+      count: () => ledger().then((data) => feeCounts(data.invoices).total),
     },
   ],
   columns: [

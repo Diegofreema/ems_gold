@@ -9,19 +9,22 @@ import {
   type StudentStats,
   studentFigures,
   studentNote,
-  unlistedNote,
 } from './dashboard.ts'
 
-/** `GET /students/me/dashboard` for pupil 4. */
+/**
+ * `GET /students/me/dashboard` for pupil 4. Its fee counters are the school's
+ * and not this pupil's — four invoices with one unpaid, against a ledger of
+ * three that are settled in full — and the page must not repeat them.
+ */
 const STATS: StudentStats = {
   invoices_total: 4,
   invoices_unpaid: 1,
   results_available: 0,
   materials_available: 0,
-  fees_settled_this_session: 3,
+  fees_settled_this_session: 6,
 }
 
-/** Three of the four bills, which is all `/students/me/invoices` hands back. */
+/** Pupil 4's ledger, which is every bill the office holds against them. */
 const INVOICES = [
   {
     id: 2453,
@@ -55,26 +58,34 @@ const INVOICES = [
   },
 ] as unknown as Invoice[]
 
-test('the tiles count what the school says, and the money it took', () => {
+test('the fee tiles count the pupil’s own bills, not the school’s counters', () => {
   const [paid, unpaid, results, materials] = studentFigures(STATS, INVOICES)
   assert.deepEqual(paid, {
     label: 'Paid this session',
     amount: 80000,
     format: 'naira',
+    // Three settled, not the counters' six.
     delta: '3 invoices settled',
     hot: false,
   })
-  assert.equal(unpaid?.amount, 1)
-  assert.equal(unpaid?.delta, 'Of 4 invoices raised for you')
-  assert.equal(unpaid?.hot, true)
+  // The counters say one is unpaid. Nothing in this pupil's ledger is.
+  assert.equal(unpaid?.amount, 0)
+  assert.equal(unpaid?.delta, 'Nothing owing')
+  assert.equal(unpaid?.hot, false)
   assert.equal(results?.delta, 'None approved yet')
   assert.equal(materials?.delta, 'Nothing shared yet')
 })
 
+test('a bill the pupil really owes is counted and flagged', () => {
+  const owing = [...INVOICES, { id: 9, amount: '50000', paystatus: 'Unpaid' } as Invoice]
+  const [, unpaid] = studentFigures(STATS, owing)
+  assert.equal(unpaid?.amount, 1)
+  assert.equal(unpaid?.delta, 'Of 4 invoices raised for you')
+  assert.equal(unpaid?.hot, true)
+})
+
 test('only what a pupil can act on is flagged', () => {
-  const cleared = studentFigures({ ...STATS, invoices_unpaid: 0 }, INVOICES)
-  assert.equal(cleared[1]?.hot, false)
-  assert.equal(cleared[1]?.delta, 'Nothing owing')
+  const cleared = studentFigures(STATS, INVOICES)
   assert.equal(cleared.filter((figure) => figure.hot).length, 0)
 })
 
@@ -83,28 +94,29 @@ test('an unpaid bill is not counted as money taken', () => {
   assert.equal(paidTotal(owing), 80000)
 })
 
+const OWING = [...INVOICES, { id: 9, amount: '50000', paystatus: 'Unpaid' } as Invoice]
+const OWING_TWO = [...OWING, { id: 10, amount: '1000', paystatus: 'Unpaid' } as Invoice]
+
 test('the greeting says what is waiting, in the right number', () => {
+  // Settled ledger, whatever the counters say.
+  assert.match(studentNote(STATS, INVOICES), /^Every invoice raised for you/)
   assert.equal(
-    studentNote(STATS),
+    studentNote(STATS, OWING),
     '1 invoice of yours is still unpaid. No result has been published to you yet.',
   )
   assert.equal(
-    studentNote({ ...STATS, invoices_unpaid: 2, results_available: 3 }),
+    studentNote({ ...STATS, results_available: 3 }, OWING_TWO),
     '2 invoices of yours are still unpaid. 3 results are ready to read.',
   )
-  assert.match(studentNote({ ...STATS, invoices_unpaid: 0 }), /^Every invoice raised for you/)
   assert.match(
-    studentNote({ ...STATS, results_available: 1 }),
+    studentNote({ ...STATS, results_available: 1 }, INVOICES),
     /1 result is ready to read\.$/,
   )
 })
 
 test('the button points at whatever needs the pupil', () => {
-  assert.deepEqual(studentAction(STATS), { to: '/student/invoices', label: 'My invoices' })
-  assert.deepEqual(studentAction({ ...STATS, invoices_unpaid: 0 }), {
-    to: '/student/results',
-    label: 'My results',
-  })
+  assert.deepEqual(studentAction(OWING), { to: '/student/invoices', label: 'My invoices' })
+  assert.deepEqual(studentAction(INVOICES), { to: '/student/results', label: 'My results' })
 })
 
 test('the bills read newest first, each with what it was for', () => {
@@ -124,15 +136,6 @@ test('a bill still owing is flagged and says so', () => {
   assert.equal(entry?.who, '₦50,000 · #9')
   assert.equal(entry?.when, 'Not paid')
   assert.equal(entry?.flagged, true)
-})
-
-test('the pupil is told what the list left out', () => {
-  assert.equal(
-    unlistedNote(STATS, 3),
-    '1 invoice the school has raised for you is not listed here. Ask the bursary for it.',
-  )
-  assert.match(unlistedNote({ ...STATS, invoices_total: 6 }, 3) ?? '', /^3 invoices .* are not/)
-  assert.equal(unlistedNote(STATS, 4), null)
 })
 
 test('each settled fee is a bar, named without the word "fee"', () => {

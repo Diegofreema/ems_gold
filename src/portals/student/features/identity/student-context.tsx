@@ -1,4 +1,4 @@
-import { useMyStudentDashboard, useMyStudentRecord } from '@/api/my-schooling/hooks'
+import { useMyStudentInvoices, useMyStudentRecord } from '@/api/my-schooling/hooks'
 import { Tag } from '@/components/common/tag'
 import { armOf, feeStanding } from '../../pupil'
 
@@ -12,13 +12,13 @@ import { armOf, feeStanding } from '../../pupil'
  */
 export function StudentContext() {
   const { data: student } = useMyStudentRecord()
-  const { data: dashboard } = useMyStudentDashboard()
+  const { data: ledger } = useMyStudentInvoices()
 
   // Nothing rather than a skeleton: this block sits under the brand mark, and
   // a grey bar pulsing there is louder than the name arriving a moment late.
   if (!student) return null
 
-  const fees = feeStanding(dashboard)
+  const fees = feeStanding(ledger?.invoices)
   const line = [armOf(student), student.regno]
     .map((part) => part?.trim())
     .filter(Boolean)

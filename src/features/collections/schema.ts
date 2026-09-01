@@ -26,6 +26,16 @@ function schemaForField(field: FieldSpec): ZodType {
   let text = z.string().trim()
   if (field.required) text = text.min(1, 'Required')
 
+  if (field.time) {
+    // The control cannot produce anything else, so this catches a value typed
+    // into a browser that fell back to a plain box rather than the reader.
+    const clock = text.refine(
+      (value) => !value || /^([01]\d|2[0-3]):[0-5]\d$/.test(value),
+      'A time of day, as 09:00',
+    )
+    return field.required ? clock : clock.optional()
+  }
+
   let schema: ZodType = text
   if (field.email) {
     schema = text.refine(

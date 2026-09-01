@@ -1,9 +1,9 @@
-import { pageRows } from '@/features/collections/api'
-import type { CollectionDef } from '@/features/collections/types'
-import { queryClient } from '@/lib/query-client'
-import { studentResultsQuery, studentTestsQuery } from '../api/queries'
-import { resultRows } from '../features/results/results'
-import { testRows, testTally } from '../features/tests/tests'
+import { pageRows } from '@/features/collections/api';
+import type { CollectionDef } from '@/features/collections/types';
+import { queryClient } from '@/lib/query-client';
+import { studentResultsQuery, studentTestsQuery } from '../api/queries';
+import { resultRows } from '../features/results/results';
+import { testRows, testTally } from '../features/tests/tests';
 
 /**
  * Every paper set for the pupil's arm, through the cache so the register and
@@ -12,14 +12,15 @@ import { testRows, testTally } from '../features/tests/tests'
  * The rows are not what the paper page reads: opening a test asks
  * `/assignments/{id}` for the questions, which this list does not carry.
  */
-const papers = () => queryClient.ensureQueryData(studentTestsQuery).then(testRows)
-const tally = () => papers().then(testTally)
+const papers = () =>
+  queryClient.ensureQueryData(studentTestsQuery).then(testRows);
+const tally = () => papers().then(testTally);
 
 export const tests: CollectionDef = {
   id: 'tests',
   path: '/student/tests',
   kicker: 'Assessment',
-  title: 'Tests open to me',
+  title: 'Tests',
   description:
     'Computer-based tests set for your arm, the open ones first. Each one can be taken once — open a test to see its questions.',
   // No button, and no `actionTo`: which paper "Start the open test" would open
@@ -30,7 +31,8 @@ export const tests: CollectionDef = {
   searchHint: 'Search test or subject',
   footer: 'Open first, then what is still to come',
   emptyTitle: 'No tests set',
-  emptyBody: 'Tests appear here when a teacher opens one for your arm. Only papers set for your own class are ever listed.',
+  emptyBody:
+    'Tests appear here when a teacher opens one for your arm. Only papers set for your own class are ever listed.',
   noun: 'test',
   nameKey: 'title',
   // No history: the API keeps no record of a pupil opening a paper, only of
@@ -38,8 +40,14 @@ export const tests: CollectionDef = {
   tabs: [],
   counts: [
     { label: 'Open now', count: () => tally().then((counted) => counted.open) },
-    { label: 'Submitted', count: () => tally().then((counted) => counted.submitted) },
-    { label: 'Closed, missed', count: () => tally().then((counted) => counted.missed) },
+    {
+      label: 'Submitted',
+      count: () => tally().then((counted) => counted.submitted),
+    },
+    {
+      label: 'Closed, missed',
+      count: () => tally().then((counted) => counted.missed),
+    },
   ],
   columns: [
     { key: 'title', label: 'Test', cardRole: 'title' },
@@ -58,10 +66,12 @@ export const tests: CollectionDef = {
   source: (params) => papers().then((all) => pageRows(all, params)),
   // No `record`: a row opens the paper at `/student/tests/{id}`, which reads
   // the questions the register never asked for.
-}
+};
 
 const marks = () =>
-  queryClient.ensureQueryData(studentResultsQuery).then((all) => resultRows(all))
+  queryClient
+    .ensureQueryData(studentResultsQuery)
+    .then((all) => resultRows(all));
 
 export const results: CollectionDef = {
   id: 'results',
@@ -111,5 +121,6 @@ export const results: CollectionDef = {
    * matches the subject, the term and the grade at once instead.
    */
   source: (params) => marks().then((all) => pageRows(all, params)),
-  record: (recordId) => marks().then((all) => all.find((row) => row.id === recordId)),
-}
+  record: (recordId) =>
+    marks().then((all) => all.find((row) => row.id === recordId)),
+};

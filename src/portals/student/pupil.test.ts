@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { Student, StudentDashboard } from '../../api/my-schooling/types.ts'
+import type { Invoice } from '../../api/invoices/types.ts'
+import type { Student } from '../../api/my-schooling/types.ts'
 import { armOf, feeStanding } from './pupil.ts'
 
 const STUDENT = {
@@ -8,15 +9,11 @@ const STUDENT = {
   department: { id: 2, name: 'SSS I' },
 } as unknown as Student
 
-const stats = (invoices_unpaid: number): StudentDashboard => ({
-  stats: {
-    invoices_total: 4,
-    invoices_unpaid,
-    results_available: 0,
-    materials_available: 0,
-    fees_settled_this_session: 3,
-  },
-})
+/** `paid` bills first, then `owing` ones — the ledger the pupil's own list returns. */
+const ledger = (paid: number, owing = 0): Invoice[] => [
+  ...Array.from({ length: paid }, (_, i) => ({ id: i + 1, paystatus: 'success' })),
+  ...Array.from({ length: owing }, (_, i) => ({ id: 100 + i, paystatus: 'Unpaid' })),
+] as Invoice[]
 
 test('the arm is what the pupil is shown as, with the class behind it', () => {
   assert.equal(armOf(STUDENT), 'JSS 2 A')
@@ -24,15 +21,22 @@ test('the arm is what the pupil is shown as, with the class behind it', () => {
 })
 
 test('nothing owing reads as cleared', () => {
-  assert.deepEqual(feeStanding(stats(0)), { label: 'Fees cleared', owing: false })
+  assert.deepEqual(feeStanding(ledger(3)), { label: 'Fees cleared', owing: false })
 })
 
 test('what is owed is counted, and one bill is not "1 invoices"', () => {
-  assert.deepEqual(feeStanding(stats(1)), { label: '1 invoice unpaid', owing: true })
-  assert.equal(feeStanding(stats(3))?.label, '3 invoices unpaid')
+  assert.deepEqual(feeStanding(ledger(3, 1)), { label: '1 invoice unpaid', owing: true })
+  assert.equal(feeStanding(ledger(1, 3))?.label, '3 invoices unpaid')
 })
 
 test('no answer yet says nothing, rather than saying cleared', () => {
   assert.equal(feeStanding(undefined), null)
-  assert.equal(feeStanding({} as StudentDashboard), null)
+  assert.equal(feeStanding([]), null)
+})
+
+test('the tag counts the pupil’s own bills, not the dashboard’s counters', () => {
+  // Pupil 4's dashboard says one invoice is unpaid; their ledger — and the
+  // office's, which holds the same three rows — is settled in full. The bill
+  // the counter names is another pupil's, and this tag must not repeat it.
+  assert.equal(feeStanding(ledger(3))?.owing, false)
 })

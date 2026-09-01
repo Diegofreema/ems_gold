@@ -26,6 +26,7 @@ export type ListPath =
   | '/admin/subjects'
   | '/admin/calendar'
   | '/admin/terms'
+  | '/admin/timetable'
   | '/admin/results'
   | '/admin/library'
   | '/admin/logs'
@@ -298,6 +299,13 @@ export type FieldSpec = {
   date?: boolean
   /** With `date`: the answer is already behind us, so the years read backwards. */
   past?: boolean
+  /**
+   * A time of day rather than a date — when a period starts, when it ends.
+   * The browser's own clock control, which is the only one that speaks the
+   * reader's 12- or 24-hour habit without being told. Stored and submitted as
+   * `HH:MM`, which is what the timetable endpoint sends and takes.
+   */
+  time?: boolean
 }
 
 export type FormSectionSpec = {
@@ -332,6 +340,18 @@ export type DetailTab = {
    * front of you is worse than no tab: it reads as data that failed to load.
    */
   when?: (recordId: string) => boolean
+  /**
+   * A way out of the tab, where what it shows is kept somewhere else. A class
+   * carries its timetable but does not own it — periods are their own
+   * register — so the tab reads the week and hands the office over to where it
+   * is changed, narrowed to the record they were already looking at.
+   */
+  action?: (recordId: string) => {
+    label: string
+    to: ListPath
+    /** Preset filters, read straight off the URL by the list it lands on. */
+    search?: Record<string, string>
+  }
 }
 
 /**

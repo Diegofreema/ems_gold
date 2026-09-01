@@ -28,6 +28,23 @@ export function paidTotal(invoices: Invoice[]): number {
     .reduce((sum, invoice) => sum + money(invoice.amount), 0)
 }
 
+export type FeeCounts = { total: number; unpaid: number; settled: number }
+
+/**
+ * How many bills the pupil has, and how many are still owing.
+ *
+ * Counted here rather than read off `GET /students/me/dashboard`, whose fee
+ * counters are not scoped to the caller: pupil 4's dashboard says four
+ * invoices with one unpaid, while both the pupil's own list and the office's
+ * ledger hold the same three, all settled — the unpaid one it is counting
+ * belongs to another pupil. The list is the pupil's ledger and agrees with the
+ * office; the counters do not.
+ */
+export function feeCounts(invoices: Invoice[]): FeeCounts {
+  const settled = invoices.filter((invoice) => invoice.paystatus === SETTLED).length
+  return { total: invoices.length, unpaid: invoices.length - settled, settled }
+}
+
 /**
  * How the money was taken, in the school's own word for it.
  *

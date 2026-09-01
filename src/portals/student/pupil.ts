@@ -1,4 +1,6 @@
-import type { Student, StudentDashboard } from '../../api/my-schooling/types.ts'
+import type { Invoice } from '../../api/invoices/types.ts'
+import type { Student } from '../../api/my-schooling/types.ts'
+import { feeCounts } from './features/fees/fees.ts'
 
 /**
  * The two things the pupil's own pages say about them beside their name: what
@@ -16,17 +18,18 @@ export function armOf(student: Student): string | undefined {
 export type FeeStanding = { label: string; owing: boolean }
 
 /**
- * Where the pupil stands on fees, counted by the school rather than by us.
+ * Where the pupil stands on fees, counted from their own bills.
  *
- * `GET /students/me/invoices` is not the place to count this: it hands back
- * three settled bills for a pupil the dashboard says has four, one of them
- * unpaid, and it ignores every filter offered to it. The dashboard's own
- * count is the only figure a pupil can read that includes what they owe.
+ * `GET /students/me/dashboard` is not the place to count this: its fee
+ * counters are not scoped to the caller. Pupil 4's says four invoices with one
+ * unpaid while their ledger — and the office's, which is the same three rows —
+ * is settled in full; the bill it counts is another pupil's. A tag telling a
+ * pupil they owe money they do not is the one wrong answer that matters here.
  */
-export function feeStanding(dashboard: StudentDashboard | undefined): FeeStanding | null {
-  const unpaid = dashboard?.stats?.invoices_unpaid
-  if (typeof unpaid !== 'number') return null
+export function feeStanding(invoices: Invoice[] | undefined): FeeStanding | null {
+  if (!invoices?.length) return null
 
+  const { unpaid } = feeCounts(invoices)
   if (unpaid === 0) return { label: 'Fees cleared', owing: false }
   return { label: `${unpaid} invoice${unpaid === 1 ? '' : 's'} unpaid`, owing: true }
 }

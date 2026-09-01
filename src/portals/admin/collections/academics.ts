@@ -1,10 +1,13 @@
 import { classArmsService } from '@/api/class-arms/service'
 import { departmentsService } from '@/api/departments/service'
 import { subjectsService } from '@/api/subjects/service'
+import { timetablesService } from '@/api/timetables/service'
+import { weekPeriods } from '@/features/collections/timetable'
 import type { CollectionDef } from '@/features/collections/types'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { queryClient } from '@/lib/query-client'
 import { armBody, subjectBody } from './academics-body'
+import { classPeriodRow } from './period-row'
 import {
   armDeleteBody,
   armPupilRow,
@@ -167,6 +170,26 @@ export const classes: CollectionDef = {
       source: async (recordId) =>
         (await departmentsService.subjects(recordId)).map(classSubjectRow),
       empty: 'No subject is taught to this class yet.',
+    },
+    {
+      // The week the class actually sits, off `GET /timetables/class/{id}` —
+      // the same grid the pupils in it read. The class does not own its
+      // periods, so the tab shows them and hands the office to the register
+      // where they are kept, already narrowed to this class.
+      label: 'Timetable',
+      columns: [
+        { key: 'day', label: 'Day' },
+        { key: 'time', label: 'Time' },
+        { key: 'subject', label: 'Subject' },
+      ],
+      source: async (recordId) =>
+        weekPeriods(await timetablesService.forClass(recordId)).map(classPeriodRow),
+      empty: 'No timetable has been entered for this class yet.',
+      action: (recordId) => ({
+        label: 'Edit timetable',
+        to: '/admin/timetable',
+        search: { department_id: recordId },
+      }),
     },
   ],
   form: [

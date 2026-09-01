@@ -1,9 +1,14 @@
 import { pageRows } from '@/features/collections/api';
 import type { CollectionDef } from '@/features/collections/types';
 import { queryClient } from '@/lib/query-client';
-import { studentCoursesQuery, studentMaterialsQuery } from '../api/queries';
+import {
+  studentCoursesQuery,
+  studentMaterialsQuery,
+  studentTimetableQuery,
+} from '../api/queries';
 import { courseRows } from '../features/courses/courses';
 import { materialRows } from '../features/materials/materials';
+import { periodRows } from '../features/timetable/timetable';
 
 /**
  * The subjects the pupil is registered for, through the cache so the list and
@@ -100,43 +105,61 @@ export const materials: CollectionDef = {
 };
 
 /**
- * The one pupil page with nothing behind it.
+ * The week as the school runs it, off `GET /timetables/mine`.
  *
- * There is no timetable on this API — not a shut endpoint, no endpoint. No
- * route in the whole collection mentions a timetable, a period, a schedule or
- * a slot, and `students/me/timetable` answers "Controller class Error could
- * not be found." rather than a 403, which is what a route that exists but is
- * refused would say.
- *
- * So the page keeps its place in the design and says so. Its fixture — eight
- * periods with rooms in it, "Block B, Rm 4" — was the one invention on this
- * portal that could send a pupil to the wrong room, and no room number exists
- * anywhere on this API to have checked it against.
+ * Two answers, not one: the grid says what is taught when, and the pupil's
+ * course list says who teaches it — a period carries `subject_id` but no
+ * teacher, and the two endpoints number subjects the same way. Both go through
+ * the cache, so the page, the record a row opens and My subjects share them.
  */
+const week = () =>
+  Promise.all([
+    queryClient.ensureQueryData(studentTimetableQuery),
+    queryClient.ensureQueryData(studentCoursesQuery),
+  ]).then(([grid, courses]) => periodRows(grid, courses));
+
 export const timetable: CollectionDef = {
   id: 'timetable',
   path: '/student/timetable',
   kicker: 'Learning',
   title: 'My timetable',
-  description: 'The week as the school runs it.',
-  // No button. The design's was "Download PDF", and there is no timetable to
-  // put in one.
+  description:
+    'Your periods for the week, in the order they are taught. Open one for the class and term it was drawn for.',
+  // No button. The design's was "Download PDF", and this endpoint sends no
+  // file and no address to fetch one from.
   action: 'Download PDF',
   readonly: true,
   searchHint: 'Search subject or day',
-  footer: '',
+  footer: 'Monday to Friday, in order',
   emptyTitle: 'No timetable to show',
+  // The API's own sentence is "No timetable has been entered for this class
+  // yet." Said here in the pupil's terms: a definition takes a static string,
+  // and the reason is the same either way.
   emptyBody:
-    "The school does not publish the week's periods in the portal yet. Ask your class teacher for them — the subjects you take, and who teaches each, are on My subjects.",
+    'The office has not entered the week’s periods for your class yet. The subjects you take, and who teaches each, are on My subjects.',
   noun: 'period',
   nameKey: 'subject',
+  // No history and no tiles: a period is a slot in a week, and the API keeps
+  // no record of when one was changed.
   tabs: [],
-  // No rows and no source: there is nothing to read, so the page is the empty
-  // state and nothing else. Columns stay for the day the endpoint exists.
   columns: [
     { key: 'day', label: 'Day', cardRole: 'title' },
     { key: 'time', label: 'Time', cardRole: 'subtitle' },
     { key: 'subject', label: 'Subject' },
     { key: 'teacher', label: 'Teacher' },
   ],
+  // The design's fifth column is Room, and it is not built: `where`, `venue`
+  // and `lecturehall_id` are null on every period the school holds, and a room
+  // is the one field here that could send a pupil to the wrong door.
+  detail: [
+    { key: 'subject', label: 'Subject' },
+    { key: 'day', label: 'Day' },
+    { key: 'time', label: 'Time' },
+    { key: 'teacher', label: 'Teacher' },
+    { key: 'klass', label: 'Class' },
+    { key: 'session', label: 'Session' },
+    { key: 'term', label: 'Term' },
+  ],
+  source: (params) => week().then((all) => pageRows(all, params)),
+  record: (recordId) => week().then((all) => all.find((row) => row.id === recordId)),
 };
