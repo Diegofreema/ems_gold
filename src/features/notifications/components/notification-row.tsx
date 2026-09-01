@@ -1,4 +1,6 @@
 import { Link } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
+import { useOpenNotice } from '@/api/notifications/hooks'
 import { Tag } from '@/components/common/tag'
 import { cn } from '@/lib/utils'
 import { useNotificationsStore } from '../notifications.store'
@@ -7,6 +9,10 @@ import type { Notification } from '../types'
 /**
  * One item. Unread rows carry a 6% accent wash, a filled square and a bolder
  * title; opening one marks it read and routes to the page it came from.
+ *
+ * A notice off the board has no page behind it — it is the content — so it
+ * renders as a plain row rather than a link, and clicking it does the one
+ * thing left to do: mark it read, here and at the server.
  */
 export function NotificationRow({
   notification,
@@ -20,29 +26,58 @@ export function NotificationRow({
   compact?: boolean
   onOpen?: () => void
 }) {
-  const read = useNotificationsStore((state) => state.read[notification.id])
+  const stored = useNotificationsStore((state) => state.read[notification.id])
   const markRead = useNotificationsStore((state) => state.markRead)
+  const openNotice = useOpenNotice()
+  const read = notification.read || stored
+
+  const open = () => {
+    markRead(notification.id)
+    // Only the board keeps a read mark of its own; everything else is worked
+    // out from records the API never hears an opinion about. Opening it is
+    // also what counts the view, so it is asked for once and only for a
+    // notice the reader has not already opened.
+    if (notification.noticeId !== undefined && !read) {
+      openNotice.mutate(notification.noticeId)
+    }
+    onOpen?.()
+  }
+
+  const className = cn(
+    'flex w-full animate-ems-row gap-3.5 border-b border-divider text-left !text-foreground transition-[background-color,padding-left] duration-150 hover:bg-neutral-100',
+    compact ? 'px-4 py-3.5' : 'px-2 py-4 hover:pl-3.5',
+    !read && 'bg-brand/6',
+  )
+  const style = { animationDelay: `${index * 34}ms` }
+  const body: ReactNode = <RowBody notification={notification} read={!!read} compact={compact} />
+
+  if (!notification.to) {
+    return (
+      <button type="button" onClick={open} style={style} className={className}>
+        {body}
+      </button>
+    )
+  }
 
   return (
-    <Link
-      to={notification.to}
-      onClick={() => {
-        markRead(notification.id)
-        onOpen?.()
-      }}
-      style={{ animationDelay: `${index * 34}ms` }}
-      className={cn(
-        'flex w-full animate-ems-row gap-3.5 border-b border-divider text-left !text-foreground transition-[background-color,padding-left] duration-150 hover:bg-neutral-100',
-        compact ? 'px-4 py-3.5' : 'px-2 py-4 hover:pl-3.5',
-        !read && 'bg-brand/6',
-      )}
-    >
-      <div
-        className={cn(
-          'mt-[7px] size-2 flex-none',
-          read ? 'bg-neutral-300' : 'bg-brand',
-        )}
-      />
+    <Link to={notification.to} onClick={open} style={style} className={className}>
+      {body}
+    </Link>
+  )
+}
+
+function RowBody({
+  notification,
+  read,
+  compact,
+}: {
+  notification: Notification
+  read: boolean
+  compact?: boolean
+}) {
+  return (
+    <>
+      <div className={cn('mt-[7px] size-2 flex-none', read ? 'bg-neutral-300' : 'bg-brand')} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-2.5">
           <div
@@ -62,9 +97,18 @@ export function NotificationRow({
         <div className="mt-1 text-[13px] leading-normal text-muted-foreground">
           {notification.body}
         </div>
-        {compact && (
-          <div className="mt-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-            {notification.when}
+        {/* The panel has no room for a column of times, so the stamp joins the
+            meta line there; the page keeps it out on the right. */}
+        {(compact || notification.meta) && (
+          <div
+            className={cn(
+              'mt-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground',
+              compact && 'truncate',
+            )}
+          >
+            {[notification.meta, compact ? notification.when : null]
+              .filter(Boolean)
+              .join(' \u00b7 ')}
           </div>
         )}
       </div>
@@ -73,6 +117,6 @@ export function NotificationRow({
           {notification.when}
         </div>
       )}
-    </Link>
+    </>
   )
 }

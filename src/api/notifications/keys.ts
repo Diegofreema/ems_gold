@@ -8,7 +8,9 @@ import type { MyNoticeParams, NoticeListParams } from './types'
  */
 export const noticeKeys = {
   all: ['notices'] as const,
-  mine: (params: MyNoticeParams) => [...noticeKeys.all, 'mine', params] as const,
+  /** Every reader's list, whatever it asked for — what a new notice invalidates. */
+  everyMine: () => [...noticeKeys.all, 'mine'] as const,
+  mine: (params: MyNoticeParams) => [...noticeKeys.everyMine(), params] as const,
   unread: () => [...noticeKeys.all, 'unread'] as const,
   list: (params: NoticeListParams) => [...noticeKeys.all, 'list', params] as const,
   detail: (id: string) => [...noticeKeys.all, 'detail', id] as const,

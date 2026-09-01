@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   List,
   Mail,
+  Megaphone,
   Shield,
   SlidersHorizontal,
   UserPlus,
@@ -82,6 +83,7 @@ export const adminNav: NavGroup[] = [
   {
     heading: 'School',
     items: [
+      { to: '/admin/notices', label: 'Notice board', icon: Megaphone },
       { to: '/admin/library', label: 'Library', icon: Book },
       { to: '/admin/privileges', label: 'Roles & privileges', icon: Shield },
       { to: '/admin/logs', label: 'Activity log', icon: List },

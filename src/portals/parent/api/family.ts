@@ -1,7 +1,9 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { Account } from '@/api/auth/types'
+import { myFamilyKeys } from '@/api/parents/keys'
 import { myFamilyService } from '@/api/parents/service'
 import type { Child as EnrolledChild, Parent } from '@/api/parents/types'
+import { queryClient } from '@/lib/query-client'
 import { familyChild, WEEKS_DRAWN, type Child, type Mark } from '../family'
 
 /**
@@ -27,7 +29,21 @@ const MARK_DAYS = (WEEKS_DRAWN + 1) * 7
  * Invoices for the whole household in one page. A family years behind runs to
  * a few dozen, not a few hundred, and the endpoint pages if it ever does.
  */
-const INVOICE_SCAN = 200
+export const INVOICE_SCAN = 200
+
+/**
+ * The household's ledger, asked for through the cache on the key
+ * `useMyChildrenInvoices` uses.
+ *
+ * This page is not its only reader — the notification feed reads the same
+ * bills as the events that raised them — and two readers on two keys would be
+ * two requests for one answer.
+ */
+export const familyLedger = () =>
+  queryClient.ensureQueryData({
+    queryKey: myFamilyKeys.invoices({ limit: INVOICE_SCAN }),
+    queryFn: () => myFamilyService.invoices({ limit: INVOICE_SCAN }),
+  })
 
 function isoDay(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -91,7 +107,7 @@ export function familyQuery(parentId: number | null) {
       if (enrolled.length === 0) return []
 
       const [billed, marks] = await Promise.all([
-        myFamilyService.invoices({ limit: INVOICE_SCAN }).then((page) => page.items),
+        familyLedger().then((page) => page.items),
         marksFor(enrolled, isoDay(from), isoDay(today)),
       ])
 

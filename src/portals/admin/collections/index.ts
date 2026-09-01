@@ -4,6 +4,7 @@ import { sessions, terms } from './calendar'
 import { timetable } from './timetable'
 import { parents, parentsDeactivated } from './parents'
 import { library } from './library'
+import { notices } from './notices'
 import { logs } from './school'
 import { staff, staffAdmin, staffOther, staffTeachers } from './staff'
 import { applicants, students } from './students'
@@ -30,6 +31,7 @@ export const adminCollections = {
   terms,
   timetable,
   library,
+  notices,
   logs,
 } satisfies Record<string, CollectionDef>
 

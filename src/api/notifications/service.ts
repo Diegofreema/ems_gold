@@ -1,57 +1,66 @@
 import { request } from '../client'
 import type { Id } from '../types'
-import { countIn, noticeIn, noticesIn } from './envelope'
 import type {
+  AllNoticesEnvelope,
   MyNoticeParams,
+  MyNoticesEnvelope,
   NoticeBody,
+  NoticeDetail,
   NoticeEditBody,
-  NoticeEnvelope,
   NoticeListParams,
 } from './types'
 
 /**
- * The school notice board. Five endpoints any signed-in caller may use, and
+ * The school notice board. Three endpoints any signed-in caller may use, and
  * four the office alone may.
  *
- * Nothing here has been exercised against a live answer: every read 500s on
- * bronze today with an unmigrated column — see the note on `Notice`. The
- * readers in `envelope.ts` are why that is survivable rather than fatal: they
- * take the list, the record and the count out by shape rather than by a key
- * name this folder is only guessing at.
+ * Every read here is typed off a live answer taken on 2026-09-01, so there is
+ * no shape-guessing left: each one is unwrapped by the key it actually uses.
+ * The three writes are the office's and none has been fired.
  */
 
 export const noticesService = {
-  /** Notices addressed to the caller, newest first, each carrying `is_read`. */
+  /**
+   * Notices addressed to the caller, newest first, each carrying `is_read`.
+   *
+   * The envelope also holds `unread_count` and the audience the caller was
+   * matched under; neither is handed on, because the badge counts the feed it
+   * opens rather than a second number that could disagree with it.
+   */
   mine: (params: MyNoticeParams = {}) =>
-    request<NoticeEnvelope>('notifications/mine', { query: { ...params } }).then(noticesIn),
+    request<MyNoticesEnvelope>('notifications/mine', { query: { ...params } }).then(
+      (page) => page.notifications ?? [],
+    ),
 
-  /** Just the badge number. Cheap enough to poll. */
-  unreadCount: () => request<unknown>('notifications/unread-count').then(countIn),
+  /** Just the badge number. Cheap enough to poll, which is what it is for. */
+  unreadCount: () =>
+    request<{ unread_count?: number }>('notifications/unread-count').then(
+      (answer) => answer.unread_count ?? 0,
+    ),
 
   /**
-   * One notice. Opening it is what marks it read and counts the view, so this
-   * is a GET that writes — never call it to prefetch.
+   * Reads one notice — and writes while it does. It marks the notice read and
+   * counts a view, and the view is a hit rather than a reader: asking twice
+   * from one account counts two. Never prefetch it, never put it in a loader,
+   * and never let anything retry it.
    *
-   * A notice addressed to somebody else answers 403, not 404.
+   * The badge number that is left comes back beside the notice, so a reader
+   * who opens one does not have to ask for the count again.
    */
-  read: (id: Id) => request<NoticeEnvelope>(`notifications/${id}`).then(noticeIn),
+  open: (id: Id) => request<NoticeDetail>(`notifications/${id}`),
 
-  /** Marks one read without fetching it. Idempotent. */
-  markRead: (id: Id) => request<unknown>(`notifications/${id}/read`, { method: 'POST' }),
-
-  /** Clears the badge, and answers with how many were newly marked. */
-  markAllRead: () =>
-    request<unknown>('notifications/read-all', { method: 'POST' }).then(countIn),
-
-  /** Every notice, whoever it was addressed to. The office only. */
+  /**
+   * The office's list, with the audiences the writer will accept. Not the
+   * whole board — see `AllNoticesEnvelope`. Admin only.
+   */
   all: (params: NoticeListParams = {}) =>
-    request<NoticeEnvelope>('notifications', { query: { ...params } }).then(noticesIn),
+    request<AllNoticesEnvelope>('notifications', { query: { ...params } }),
 
-  post: (body: NoticeBody) => request<NoticeEnvelope>('notifications', { method: 'POST', body }),
+  post: (body: NoticeBody) => request<unknown>('notifications', { method: 'POST', body }),
 
   /** Partial: whatever is left out of `body` is left as it stands. */
   edit: (id: Id, body: NoticeEditBody) =>
-    request<NoticeEnvelope>(`notifications/${id}`, { method: 'PUT', body }),
+    request<unknown>(`notifications/${id}`, { method: 'PUT', body }),
 
   /** Takes the read-marks with it. There is no undo. */
   remove: (id: Id) => request<unknown>(`notifications/${id}`, { method: 'DELETE' }),

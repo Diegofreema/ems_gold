@@ -17,10 +17,13 @@ export function NotificationsPage({
   description,
   /** The role-specific category offered alongside All and Unread. */
   category,
+  /** Why the office's own notices are missing, where they are. */
+  boardError,
 }: {
   notifications: Notification[]
   description: string
   category: string
+  boardError?: string | null
 }) {
   const [filter, setFilter] = useQueryState(
     'filter',
@@ -29,12 +32,20 @@ export function NotificationsPage({
   const read = useNotificationsStore((state) => state.read)
   const markAllRead = useNotificationsStore((state) => state.markAllRead)
 
+  // The third tab is only offered where the feed has something to put under
+  // it: a portal reading the notice board alone has notices and nothing else,
+  // and a filter that can only ever come back empty is worse than no filter.
+  // A URL still asking for it after the last one went falls back to All.
+  const hasCategory = notifications.some((item) => item.kicker === category)
+  const active = filter === 'category' && !hasCategory ? 'all' : filter
+
   const visible = useMemo(() => {
-    if (filter === 'unread') return notifications.filter((item) => !read[item.id])
-    if (filter === 'category')
+    if (active === 'unread')
+      return notifications.filter((item) => !item.read && !read[item.id])
+    if (active === 'category')
       return notifications.filter((item) => item.kicker === category)
     return notifications
-  }, [notifications, filter, read, category])
+  }, [notifications, active, read, category])
 
   return (
     <div className="max-w-[780px]">
@@ -53,15 +64,25 @@ export function NotificationsPage({
       />
       <Rule />
 
+      {boardError && (
+        <div className="mb-5 border-2 border-divider bg-brand/6 px-4 py-3 text-[13px]">
+          <span className="font-bold">The notice board could not be read.</span>{' '}
+          <span className="text-muted-foreground">
+            {boardError} Anything the office posted is missing from this page; what is
+            below is worked out from your own records.
+          </span>
+        </div>
+      )}
+
       <SegmentedControl
         name="notification-filter"
         className="mb-5"
-        value={filter}
+        value={active}
         onChange={(value) => void setFilter(value === 'all' ? null : value)}
         options={[
           { value: 'all', label: 'All' },
           { value: 'unread', label: 'Unread' },
-          { value: 'category', label: category },
+          ...(hasCategory ? [{ value: 'category', label: category }] : []),
         ]}
       />
 

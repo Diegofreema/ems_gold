@@ -4,6 +4,7 @@ import { classArmsService } from '@/api/class-arms/service'
 import { paymentMethods } from '@/api/collect-fees/hooks'
 import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
+import { noticesService } from '@/api/notifications/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
 import { subjectsService } from '@/api/subjects/service'
@@ -13,6 +14,7 @@ import { usersService } from '@/api/users/service'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
 import { guardianOption } from './guardian-option'
+import { audienceOptions } from '@/portals/admin/collections/notice-row'
 import { distinct, type Option, type OptionsKey } from './options'
 
 /** Everything on one page — a school has classes and arms in the dozens. */
@@ -39,6 +41,14 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
         meta: department.deptcode === department.name ? '' : department.deptcode,
       })),
     )
+  }
+
+  if (key === 'audiences') {
+    // The board publishes its own catalogue beside its list, so the form
+    // offers exactly what the endpoint will accept rather than a copy of it
+    // that can drift.
+    const { audiences } = await noticesService.all({ limit: 1 })
+    return audienceOptions(audiences ?? [])
   }
 
   if (key === 'arms') {

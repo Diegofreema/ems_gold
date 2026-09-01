@@ -35,6 +35,7 @@ import { Route as AdminFeesRouteImport } from './routes/admin/fees'
 import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
 import { Route as AdminLibraryRouteImport } from './routes/admin/library'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminNoticesRouteImport } from './routes/admin/notices'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminParentsRouteImport } from './routes/admin/parents'
 import { Route as AdminParentsInvitedRouteImport } from './routes/admin/parents-invited'
@@ -228,6 +229,11 @@ const AdminLibraryRoute = AdminLibraryRouteImport.update({
 const AdminLogsRoute = AdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminNoticesRoute = AdminNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -589,6 +595,7 @@ export interface FileRoutesByFullPath {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/library': typeof AdminLibraryRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/notices': typeof AdminNoticesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
@@ -677,6 +684,7 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/library': typeof AdminLibraryRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/notices': typeof AdminNoticesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
@@ -771,6 +779,7 @@ export interface FileRoutesById {
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/library': typeof AdminLibraryRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/notices': typeof AdminNoticesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
@@ -865,6 +874,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/library'
     | '/admin/logs'
+    | '/admin/notices'
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
@@ -953,6 +963,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/library'
     | '/admin/logs'
+    | '/admin/notices'
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
@@ -1046,6 +1057,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/library'
     | '/admin/logs'
+    | '/admin/notices'
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
@@ -1305,6 +1317,13 @@ declare module '@tanstack/react-router' {
       path: '/logs'
       fullPath: '/admin/logs'
       preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/notices': {
+      id: '/admin/notices'
+      path: '/notices'
+      fullPath: '/admin/notices'
+      preLoaderRoute: typeof AdminNoticesRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/notifications': {
@@ -1777,6 +1796,7 @@ interface AdminRouteRouteChildren {
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLibraryRoute: typeof AdminLibraryRoute
   AdminLogsRoute: typeof AdminLogsRoute
+  AdminNoticesRoute: typeof AdminNoticesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParentsRoute: typeof AdminParentsRoute
   AdminParentsInvitedRoute: typeof AdminParentsInvitedRoute
@@ -1816,6 +1836,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLibraryRoute: AdminLibraryRoute,
   AdminLogsRoute: AdminLogsRoute,
+  AdminNoticesRoute: AdminNoticesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParentsRoute: AdminParentsRoute,
   AdminParentsInvitedRoute: AdminParentsInvitedRoute,

@@ -9,68 +9,30 @@ import {
   schoolTime,
   when,
 } from '../../../../features/collections/when.ts';
+import {
+  mergedFeed,
+  noticeGroup,
+  noticeWhen,
+} from '../../../../features/notifications/notice-feed.ts';
 import { isOpen } from '../dashboard/dashboard.ts';
 
 /**
  * The teacher's notifications, worked out from what the school actually holds.
  *
- * There is no notification endpoint on this API — `/teachers/me/notifications`,
- * `/notifications` and `/users/me/notifications` all answer "Controller class
- * Error could not be found" — so nothing here is a message somebody sent. Each
- * item is a record that already exists, read as the event that produced it:
- * marks the office has approved, sent back or not looked at yet, and the papers
- * this teacher has set. Both lists are ones the portal already asks for, so the
- * bell costs no request the pages were not making anyway.
+ * Nothing here is a message somebody sent. Each item is a record that already
+ * exists, read as the event that produced it: marks the office has approved,
+ * sent back or not looked at yet, and the papers this teacher has set. Both
+ * lists are ones the portal already asks for, so these cost no request the
+ * pages were not making anyway.
  *
- * What that rules out is anything nobody wrote down. There is no "the office
- * replied to you" here, because `message-admin` only posts; no "your e-class
- * starts in an hour", because a room carries no schedule; and no read receipt,
- * because read is a browser-side flag and the API never hears about it.
+ * The notices somebody actually wrote are the other half of the feed, off
+ * `/notifications/mine`, and are merged in by `useTeacherNotifications` —
+ * these are read as browser-side flags, those carry the server's own.
+ *
+ * What derived items rule out is anything nobody wrote down: no "the office
+ * replied to you", because `message-admin` only posts, and no "your e-class
+ * starts in an hour", because a room carries no schedule.
  */
-
-const MILLIS_PER_DAY = 86_400_000;
-
-/** Midnight before a moment, on the reader's own clock. */
-function dayStart(millis: number): number {
-  const at = new Date(millis);
-  at.setHours(0, 0, 0, 0);
-  return at.getTime();
-}
-
-/** Whole days between a moment and now — 0 today, 1 yesterday. */
-function daysAgo(millis: number, now: Date): number {
-  return Math.round(
-    (dayStart(now.getTime()) - dayStart(millis)) / MILLIS_PER_DAY,
-  );
-}
-
-/**
- * The stamp as the feed writes it: the clock time for something that happened
- * today, the word for yesterday, and the day itself for anything older — with
- * the year once it is not this one.
- */
-export function noticeWhen(millis: number, now: Date): string {
-  const days = daysAgo(millis, now);
-  const at = new Date(millis);
-  if (days <= 0) {
-    return at.toLocaleTimeString('en-NG', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-  }
-  if (days === 1) return 'Yesterday';
-  return at.toLocaleDateString('en-NG', {
-    day: '2-digit',
-    month: 'short',
-    ...(at.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
-  });
-}
-
-/** The two headings the page groups under. */
-export function noticeGroup(millis: number, now: Date): Notification['group'] {
-  return daysAgo(millis, now) <= 0 ? 'Today' : 'Earlier';
-}
 
 /** What the office has done with a mark, whatever it wrote in the column. */
 type MarkState = 'approved' | 'rejected' | 'pending';
@@ -173,27 +135,22 @@ const SHEET: Record<
   },
 };
 
-/** An item with the moment it is filed under, which the sort needs and the row does not. */
-type Dated = { at: number; notice: Notification };
-
-function markNotice(entry: MarkGroup, now: Date): Dated {
+function markNotice(entry: MarkGroup, now: Date): Notification {
   const copy = SHEET[entry.state];
   const marks = `${entry.count} mark${entry.count === 1 ? '' : 's'}`;
 
   return {
+    // Stable across a refetch, because read is remembered against it.
+    id: `mark-${entry.state}-${entry.subject}-${entry.klass}-${entry.term}`,
+    kicker: 'Assessment',
+    title: copy.title(entry.subject),
+    body: `${[entry.klass, entry.term, marks].filter(Boolean).join(' · ')}. ${
+      entry.reason ?? copy.tail
+    }`,
+    when: noticeWhen(entry.at, now),
+    group: noticeGroup(entry.at, now),
     at: entry.at,
-    notice: {
-      // Stable across a refetch, because read is remembered against it.
-      id: `mark-${entry.state}-${entry.subject}-${entry.klass}-${entry.term}`,
-      kicker: 'Assessment',
-      title: copy.title(entry.subject),
-      body: `${[entry.klass, entry.term, marks].filter(Boolean).join(' · ')}. ${
-        entry.reason ?? copy.tail
-      }`,
-      when: noticeWhen(entry.at, now),
-      group: noticeGroup(entry.at, now),
-      to: copy.to,
-    },
+    to: copy.to,
   };
 }
 
@@ -208,7 +165,7 @@ function paperStamp(paper: SetAssignment, open: boolean): number | null {
     : (schoolMillis(paper.closedate) ?? schoolMillis(paper.opendate));
 }
 
-function paperNotice(paper: SetAssignment, now: Date): Dated | null {
+function paperNotice(paper: SetAssignment, now: Date): Notification | null {
   const open = isOpen(paper, now);
   const at = paperStamp(paper, open);
   if (at === null) return null;
@@ -219,25 +176,23 @@ function paperNotice(paper: SetAssignment, now: Date): Dated | null {
     : 'No closing time was set.';
 
   return {
+    id: `paper-${paper.id}`,
+    kicker: 'Teaching',
+    title: `${paper.title?.trim() || `Paper ${paper.id}`} ${
+      open ? 'is taking submissions' : 'has closed'
+    }`,
+    body: `${[
+      paper.subject?.name,
+      `${questions} question${questions === 1 ? '' : 's'}`,
+    ]
+      .filter(Boolean)
+      .join(' · ')}. ${closes}`,
+    when: noticeWhen(at, now),
+    group: noticeGroup(at, now),
     at,
-    notice: {
-      id: `paper-${paper.id}`,
-      kicker: 'Teaching',
-      title: `${paper.title?.trim() || `Paper ${paper.id}`} ${
-        open ? 'is taking submissions' : 'has closed'
-      }`,
-      body: `${[
-        paper.subject?.name,
-        `${questions} question${questions === 1 ? '' : 's'}`,
-      ]
-        .filter(Boolean)
-        .join(' · ')}. ${closes}`,
-      when: noticeWhen(at, now),
-      group: noticeGroup(at, now),
-      // Papers are read on the dashboard; the portal has no page of its own
-      // for them, so that is where opening one leads.
-      to: '/teacher',
-    },
+    // Papers are read on the dashboard; the portal has no page of its own
+    // for them, so that is where opening one leads.
+    to: '/teacher',
   };
 }
 
@@ -252,7 +207,5 @@ export function teacherNotices(
     (paper) => paperNotice(paper, now) ?? [],
   );
 
-  return [...sheets, ...papers]
-    .sort((one, two) => two.at - one.at)
-    .map((entry) => entry.notice);
+  return mergedFeed(sheets, papers);
 }

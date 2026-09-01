@@ -30,6 +30,8 @@ export type OptionsKey =
   | 'sessions'
   /** First, Second and Third Term. The API's table calls them semesters. */
   | 'terms'
+  /** Who a notice may be addressed to, as the notice board itself lists them. */
+  | 'audiences'
 
 /**
  * A choice as a definition writes it: a bare string where the value and the

@@ -1,6 +1,6 @@
 import type { PortalConfig } from '@/lib/portal'
 import { CurrentTerm } from '@/components/layout/current-term'
-import { adminNotifications } from './api/notifications'
+import { useAdminNotifications } from './features/notifications/use-admin-notifications'
 import { adminNav } from './nav'
 
 export const adminPortal: PortalConfig = {
@@ -9,8 +9,8 @@ export const adminPortal: PortalConfig = {
   basePath: '/admin',
   nav: adminNav,
   searchableNav: true,
-  useNotifications: () => adminNotifications,
-  notificationCategory: 'Finance',
+  useNotifications: useAdminNotifications,
+  notificationCategory: 'Deletion',
   notFoundAudience: 'the office',
   notFoundLinks: [
     { to: '/admin', label: 'Dashboard', hint: 'Money and people at a glance' },

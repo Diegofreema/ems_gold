@@ -6,11 +6,10 @@ import type {
   TeacherResult,
 } from '../../../../api/teaching/types.ts';
 import {
-  markGroups,
   noticeGroup,
   noticeWhen,
-  teacherNotices,
-} from './notices.ts';
+} from '../../../../features/notifications/notice-feed.ts';
+import { markGroups, teacherNotices } from './notices.ts';
 
 /** `GET /teachers/me/results`, id 3, trimmed to the fields the feed reads. */
 const MARK: TeacherResult = {

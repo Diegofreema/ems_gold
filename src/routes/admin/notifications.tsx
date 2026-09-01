@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { NotificationsPage } from '@/features/notifications/notifications-page'
 import { adminPortal } from '@/portals/admin/config'
+import { useAdminFeed } from '@/portals/admin/features/notifications/use-admin-notifications'
 
 export const Route = createFileRoute('/admin/notifications')({
   staticData: { title: 'Notifications', crumb: 'Overview' },
@@ -8,11 +9,13 @@ export const Route = createFileRoute('/admin/notifications')({
 })
 
 function AdminNotifications() {
+  const feed = useAdminFeed()
   return (
     <NotificationsPage
-      notifications={adminPortal.useNotifications()}
+      notifications={feed.notifications}
+      boardError={feed.boardError}
       category={adminPortal.notificationCategory}
-      description="Everything the office needs to act on, newest first. Opening an item takes you to the page it came from."
+      description="The notices the office has posted and what the audit trail has recorded, newest first. Sign-ins are left to the log itself."
     />
   )
 }

@@ -1,8 +1,8 @@
 import type { PortalConfig } from '@/lib/portal'
 import { CurrentTerm } from '@/components/layout/current-term'
-import { parentNotifications } from './api/notifications'
 import { ChildBar } from './features/children/child-bar'
 import { FamilyContext } from './features/family/family-context'
+import { useParentNotifications } from './features/notifications/use-parent-notifications'
 import { parentNav } from './nav'
 
 export const parentPortal: PortalConfig = {
@@ -10,7 +10,7 @@ export const parentPortal: PortalConfig = {
   roleLabel: 'Parent',
   basePath: '/parent',
   nav: parentNav,
-  useNotifications: () => parentNotifications,
+  useNotifications: useParentNotifications,
   notificationCategory: 'Finance',
   account: {
     name: 'Mr. Emmanuel Udo',
