@@ -2,8 +2,9 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { MyCourses } from '../../../../api/my-schooling/types.ts'
 import type { ClassTimetable } from '../../../../api/timetables/types.ts'
-import { weekPeriods } from '../../../../features/collections/timetable.ts'
-import { classOf, labelOf, periodRows, teacherFor, timeRange } from './timetable.ts'
+import { labelOf, timeRange } from '../../../../features/timetable/week-grid.ts'
+import { weekPeriods } from '../../../../features/timetable/week.ts'
+import { classOf, periodRows, teacherFor } from './timetable.ts'
 
 /** Two periods off `GET /timetables/class/1`, which is all the school holds. */
 const JSS1: ClassTimetable = {

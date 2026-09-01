@@ -1,7 +1,8 @@
 import type { MyCourses } from '../../../../api/my-schooling/types.ts'
 import type { ClassTimetable, Period } from '../../../../api/timetables/types.ts'
 import type { Row } from '../../../../features/collections/types.ts'
-import { weekPeriods } from '../../../../features/collections/timetable.ts'
+import { labelOf, timeRange } from '../../../../features/timetable/week-grid.ts'
+import { weekPeriods } from '../../../../features/timetable/week.ts'
 import { text } from '../../../../features/profile/record.ts'
 import { teachersOf } from '../courses/courses.ts'
 
@@ -24,22 +25,6 @@ import { teachersOf } from '../courses/courses.ts'
 export function teacherFor(period: Period, courses: MyCourses): string {
   const course = (courses.courses ?? []).find((entry) => entry.id === period.subject_id)
   return course ? teachersOf(course) : text(null)
-}
-
-/**
- * "08:00 – 08:40". Both times are the school's wall clock, sent without a zone
- * and without seconds, so they are printed as they arrive.
- */
-export function timeRange(period: Period): string {
-  const from = period.start_time?.trim()
-  const to = period.end_time?.trim()
-  if (from && to) return `${from} – ${to}`
-  return text(from || to || null)
-}
-
-/** The subject, or the school's own title where a period has no subject. */
-export function labelOf(period: Period): string {
-  return period.label?.trim() || period.subject_name?.trim() || period.title?.trim() || text(null)
 }
 
 /** The class the timetable is for, arm and all — the same pair as My subjects. */

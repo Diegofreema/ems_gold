@@ -5,9 +5,7 @@ import type {
   Child as EnrolledChild,
   FamilyInvoice,
 } from '../../api/parents/types.ts'
-import type { CollectInvoice } from '../../api/collect-fees/types.ts'
 import {
-  asFamilyInvoice,
   childFull,
   childName,
   familyChild,
@@ -151,51 +149,4 @@ test('the household owes what its children owe between them', () => {
   const two = familyChild(ENROLLED, [billed({ amount: '5500' })], [], TODAY)
   assert.equal(familyOwing([one, two]), 35_500)
   assert.equal(familyOwing([]), 0)
-})
-
-/** Verbatim from GET /collect-fees/students/16/invoices — the discounted one. */
-const COUNTER: CollectInvoice = {
-  id: 2450,
-  student_id: 16,
-  student: { id: 16, regno: 'NETPRO/2026/16', name: 'OKONKWO ARINZE', department: 'JSS 1' },
-  fee: 'TUITION FEE',
-  session: '2024/2025',
-  amount: 30000,
-  // The invoices table still reads Unpaid; the counter has it settled.
-  paystatus: 'Unpaid',
-  is_settled: true,
-  payday: '2026-08-27 12:56:13',
-  createdate: '2026-08-27T11:34:46+01:00',
-  transactions: [],
-}
-
-test('a counter ledger reads as the household list would have sent it', () => {
-  assert.deepEqual(asFamilyInvoice(COUNTER, 16), {
-    id: 2450,
-    student_id: 16,
-    student: 'OKONKWO ARINZE',
-    fee: 'TUITION FEE',
-    session: '2024/2025',
-    amount: '30000',
-    paystatus: 'success',
-    payday: '2026-08-27 12:56:13',
-    createdate: '2026-08-27T11:34:46+01:00',
-  })
-})
-
-test('the counter decides whether a bill is settled, not the invoices table', () => {
-  // A bill closed by a discounted payment reads Unpaid on the table it lives
-  // in; showing it as owing would bill a family twice for the same term.
-  assert.equal(invoiceRow(asFamilyInvoice(COUNTER, 16)).state, 'Paid')
-  assert.equal(
-    invoiceRow(asFamilyInvoice({ ...COUNTER, is_settled: false }, 16)).state,
-    'Owing',
-  )
-})
-
-test('a ledger whose pupil the API left off is still filed under the right child', () => {
-  const orphan = { ...COUNTER, student_id: 0, student: null } as CollectInvoice
-  const mapped = asFamilyInvoice(orphan, 16)
-  assert.equal(mapped.student_id, 16)
-  assert.equal(mapped.student, null)
 })

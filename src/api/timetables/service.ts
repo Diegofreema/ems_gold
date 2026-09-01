@@ -27,11 +27,13 @@ export const timetablesService = {
     request<ClassTimetable>('timetables/mine', { query: { ...params } }),
 
   /**
-   * One entry per child. A child with no class yet answers a null timetable
-   * beside the school's own sentence for why.
+   * One entry per child, each with the child's name, their class and arm, and
+   * the whole class grid. Read off a guardian's answer: `children` is the key,
+   * and a class with nothing entered answers a grid whose `days` are the five
+   * empty school days rather than a null timetable.
    *
-   * Unverified: no guardian login is to hand, so `children` is the contract's
-   * key and not one that has been seen. Check it before wiring this up.
+   * This is the guardian's own endpoint and needs no child id, so the parent
+   * portal reads it instead of asking class by class.
    */
   children: (params: ChildrenParams = {}) =>
     request<{ children: ChildTimetable[] }>('timetables/children', {

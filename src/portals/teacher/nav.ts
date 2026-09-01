@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpen,
+  CalendarClock,
   LayoutGrid,
   List,
   MessageSquare,
@@ -24,6 +25,7 @@ export const teacherNav: NavGroup[] = [
     items: [
       { to: '/teacher/subjects', label: 'My subjects', icon: BookOpen },
       { to: '/teacher/students', label: 'My students', icon: Users },
+      { to: '/teacher/timetable', label: 'Class timetables', icon: CalendarClock },
       { to: '/teacher/topics', label: 'Topics taught', icon: List },
       { to: '/teacher/eclasses', label: 'E-classes', icon: Monitor },
     ],

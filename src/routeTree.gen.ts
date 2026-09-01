@@ -60,6 +60,7 @@ import { Route as ParentPayRouteImport } from './routes/parent/pay'
 import { Route as ParentProfileRouteImport } from './routes/parent/profile'
 import { Route as ParentResultsRouteImport } from './routes/parent/results'
 import { Route as ParentTestsRouteImport } from './routes/parent/tests'
+import { Route as ParentTimetableRouteImport } from './routes/parent/timetable'
 import { Route as StudentIndexRouteImport } from './routes/student/index'
 import { Route as StudentCoursesRouteImport } from './routes/student/courses'
 import { Route as StudentInvoicesRouteImport } from './routes/student/invoices'
@@ -77,6 +78,7 @@ import { Route as TeacherResultsRouteImport } from './routes/teacher/results'
 import { Route as TeacherScoresRouteImport } from './routes/teacher/scores'
 import { Route as TeacherStudentsRouteImport } from './routes/teacher/students'
 import { Route as TeacherSubjectsRouteImport } from './routes/teacher/subjects'
+import { Route as TeacherTimetableRouteImport } from './routes/teacher/timetable'
 import { Route as TeacherTopicsRouteImport } from './routes/teacher/topics'
 import { Route as AdminCollectionActionRouteImport } from './routes/admin/$collection.action'
 import { Route as AdminCollectionNewRouteImport } from './routes/admin/$collection.new'
@@ -353,6 +355,11 @@ const ParentTestsRoute = ParentTestsRouteImport.update({
   path: '/tests',
   getParentRoute: () => ParentRouteRoute,
 } as any)
+const ParentTimetableRoute = ParentTimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
 const StudentIndexRoute = StudentIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -436,6 +443,11 @@ const TeacherStudentsRoute = TeacherStudentsRouteImport.update({
 const TeacherSubjectsRoute = TeacherSubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherTimetableRoute = TeacherTimetableRouteImport.update({
+  id: '/timetable',
+  path: '/timetable',
   getParentRoute: () => TeacherRouteRoute,
 } as any)
 const TeacherTopicsRoute = TeacherTopicsRouteImport.update({
@@ -601,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/tests': typeof ParentTestsRoute
+  '/parent/timetable': typeof ParentTimetableRoute
   '/student/courses': typeof StudentCoursesRoute
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/notifications': typeof StudentNotificationsRoute
@@ -616,6 +629,7 @@ export interface FileRoutesByFullPath {
   '/teacher/scores': typeof TeacherScoresRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/topics': typeof TeacherTopicsRoute
   '/admin/': typeof AdminIndexRoute
   '/parent/': typeof ParentIndexRoute
@@ -687,6 +701,7 @@ export interface FileRoutesByTo {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/tests': typeof ParentTestsRoute
+  '/parent/timetable': typeof ParentTimetableRoute
   '/student/courses': typeof StudentCoursesRoute
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/notifications': typeof StudentNotificationsRoute
@@ -702,6 +717,7 @@ export interface FileRoutesByTo {
   '/teacher/scores': typeof TeacherScoresRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/topics': typeof TeacherTopicsRoute
   '/admin': typeof AdminIndexRoute
   '/parent': typeof ParentIndexRoute
@@ -779,6 +795,7 @@ export interface FileRoutesById {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/tests': typeof ParentTestsRoute
+  '/parent/timetable': typeof ParentTimetableRoute
   '/student/courses': typeof StudentCoursesRoute
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/notifications': typeof StudentNotificationsRoute
@@ -794,6 +811,7 @@ export interface FileRoutesById {
   '/teacher/scores': typeof TeacherScoresRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/topics': typeof TeacherTopicsRoute
   '/admin/': typeof AdminIndexRoute
   '/parent/': typeof ParentIndexRoute
@@ -871,6 +889,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/results'
     | '/parent/tests'
+    | '/parent/timetable'
     | '/student/courses'
     | '/student/invoices'
     | '/student/notifications'
@@ -886,6 +905,7 @@ export interface FileRouteTypes {
     | '/teacher/scores'
     | '/teacher/students'
     | '/teacher/subjects'
+    | '/teacher/timetable'
     | '/teacher/topics'
     | '/admin/'
     | '/parent/'
@@ -957,6 +977,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/results'
     | '/parent/tests'
+    | '/parent/timetable'
     | '/student/courses'
     | '/student/invoices'
     | '/student/notifications'
@@ -972,6 +993,7 @@ export interface FileRouteTypes {
     | '/teacher/scores'
     | '/teacher/students'
     | '/teacher/subjects'
+    | '/teacher/timetable'
     | '/teacher/topics'
     | '/admin'
     | '/parent'
@@ -1048,6 +1070,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/results'
     | '/parent/tests'
+    | '/parent/timetable'
     | '/student/courses'
     | '/student/invoices'
     | '/student/notifications'
@@ -1063,6 +1086,7 @@ export interface FileRouteTypes {
     | '/teacher/scores'
     | '/teacher/students'
     | '/teacher/subjects'
+    | '/teacher/timetable'
     | '/teacher/topics'
     | '/admin/'
     | '/parent/'
@@ -1458,6 +1482,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentTestsRouteImport
       parentRoute: typeof ParentRouteRoute
     }
+    '/parent/timetable': {
+      id: '/parent/timetable'
+      path: '/timetable'
+      fullPath: '/parent/timetable'
+      preLoaderRoute: typeof ParentTimetableRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
     '/student/': {
       id: '/student/'
       path: '/'
@@ -1575,6 +1606,13 @@ declare module '@tanstack/react-router' {
       path: '/subjects'
       fullPath: '/teacher/subjects'
       preLoaderRoute: typeof TeacherSubjectsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/timetable': {
+      id: '/teacher/timetable'
+      path: '/timetable'
+      fullPath: '/teacher/timetable'
+      preLoaderRoute: typeof TeacherTimetableRouteImport
       parentRoute: typeof TeacherRouteRoute
     }
     '/teacher/topics': {
@@ -1818,6 +1856,7 @@ interface ParentRouteRouteChildren {
   ParentProfileRoute: typeof ParentProfileRoute
   ParentResultsRoute: typeof ParentResultsRoute
   ParentTestsRoute: typeof ParentTestsRoute
+  ParentTimetableRoute: typeof ParentTimetableRoute
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCollectionRecordIdRoute: typeof ParentCollectionRecordIdRoute
   ParentChildrenAddRoute: typeof ParentChildrenAddRoute
@@ -1833,6 +1872,7 @@ const ParentRouteRouteChildren: ParentRouteRouteChildren = {
   ParentProfileRoute: ParentProfileRoute,
   ParentResultsRoute: ParentResultsRoute,
   ParentTestsRoute: ParentTestsRoute,
+  ParentTimetableRoute: ParentTimetableRoute,
   ParentIndexRoute: ParentIndexRoute,
   ParentCollectionRecordIdRoute: ParentCollectionRecordIdRoute,
   ParentChildrenAddRoute: ParentChildrenAddRoute,
@@ -1887,6 +1927,7 @@ interface TeacherRouteRouteChildren {
   TeacherScoresRoute: typeof TeacherScoresRoute
   TeacherStudentsRoute: typeof TeacherStudentsRoute
   TeacherSubjectsRoute: typeof TeacherSubjectsRoute
+  TeacherTimetableRoute: typeof TeacherTimetableRoute
   TeacherTopicsRoute: typeof TeacherTopicsRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
   TeacherCollectionNewRoute: typeof TeacherCollectionNewRoute
@@ -1905,6 +1946,7 @@ const TeacherRouteRouteChildren: TeacherRouteRouteChildren = {
   TeacherScoresRoute: TeacherScoresRoute,
   TeacherStudentsRoute: TeacherStudentsRoute,
   TeacherSubjectsRoute: TeacherSubjectsRoute,
+  TeacherTimetableRoute: TeacherTimetableRoute,
   TeacherTopicsRoute: TeacherTopicsRoute,
   TeacherIndexRoute: TeacherIndexRoute,
   TeacherCollectionNewRoute: TeacherCollectionNewRoute,

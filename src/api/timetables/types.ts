@@ -93,19 +93,32 @@ export type ClassTimetable = {
 }
 
 /**
- * One child's timetable, from `/timetables/children`.
+ * One child's timetable, from `/timetables/children` — read off a guardian's
+ * own answer on 2026-09-01.
  *
- * The one endpoint here **not** read off a live answer — no guardian login is
- * to hand, and a pupil token is refused with "This account is not a guardian".
- * So the key the array sits under, and the fields on each entry, are the
- * contract's word rather than the server's. Everything else in this file was
- * read from bronze.
+ * The class arrives three times over: flattened here as `class_id` /
+ * `class_name` / `class_arm`, and again inside `timetable.class`. The flat
+ * ones are the pupil's placement — `class_arm` is the arm they sit in, which
+ * the grid itself does not carry — so the heading is built from these and the
+ * calendar from `timetable`.
+ *
+ * The child is named as one string rather than as a record: no `student`
+ * object, no parts of the name kept apart. Names repeat on real households —
+ * one guardian on bronze has two children both called "Diego Freeman" in the
+ * same class *and* the same arm — so `student_id` is the only thing that tells
+ * two entries apart.
  */
 export type ChildTimetable = {
   student_id?: number | null
-  student?: NamedRef | null
+  /** The whole name in one string, as the school entered it. */
+  name?: string | null
+  class_id?: number | null
+  class_name?: string | null
+  /** The arm, e.g. "JSS III A". The grid this sits beside has no arm on it. */
+  class_arm?: string | null
   /** Null where the child has no class yet; `message` says so. */
   timetable?: ClassTimetable | null
+  /** The entry's own reason, against the grid's. Null on every live entry. */
   message?: string | null
 }
 

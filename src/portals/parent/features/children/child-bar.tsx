@@ -3,7 +3,7 @@ import { useLoadedFamily, useParentStore } from '../../parent.store'
 import { cn } from '@/lib/utils'
 
 /** Pages that already cover the whole family, so the switcher would mislead. */
-const FAMILY_WIDE = ['/parent/children', '/parent/pay']
+const FAMILY_WIDE = ['/parent/children', '/parent/pay', '/parent/timetable']
 
 /** Scopes results, attendance, invoices and tests to one child. */
 export function ChildBar() {

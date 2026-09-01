@@ -110,7 +110,8 @@ export const materials: CollectionDef = {
  * Two answers, not one: the grid says what is taught when, and the pupil's
  * course list says who teaches it — a period carries `subject_id` but no
  * teacher, and the two endpoints number subjects the same way. Both go through
- * the cache, so the page, the record a row opens and My subjects share them.
+ * the cache, so the calendar, the record a block opens and My subjects share
+ * them.
  */
 const week = () =>
   Promise.all([
@@ -118,6 +119,14 @@ const week = () =>
     queryClient.ensureQueryData(studentCoursesQuery),
   ]).then(([grid, courses]) => periodRows(grid, courses));
 
+/**
+ * The record a period opens, and nothing else.
+ *
+ * `/student/timetable` is a calendar rather than a list — `TimetablePage`
+ * draws it — so the list half of this definition is never rendered: no
+ * `source`, and the strings the type asks for are what the record page reads
+ * or what a list would say if one were ever pointed back at it.
+ */
 export const timetable: CollectionDef = {
   id: 'timetable',
   path: '/student/timetable',
@@ -160,6 +169,5 @@ export const timetable: CollectionDef = {
     { key: 'session', label: 'Session' },
     { key: 'term', label: 'Term' },
   ],
-  source: (params) => week().then((all) => pageRows(all, params)),
   record: (recordId) => week().then((all) => all.find((row) => row.id === recordId)),
 };

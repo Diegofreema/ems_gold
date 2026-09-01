@@ -3,14 +3,25 @@ import type { ClassTimetable, Period } from '../../api/timetables/types.ts'
 /**
  * The one thing every timetable page has to agree on: what order the week is
  * in. A grid arrives as `days`, a list of days each holding its periods, and
- * both portals read the same grid — the office looking at a class, the pupil
- * looking at their own.
+ * three portals read the same grid — the office looking at a class, a teacher
+ * looking at the classes they take, a pupil looking at their own.
  */
 
 /** Monday first, and the two the school does not teach on last. */
-const WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+export const WEEK = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+]
 
-function dayIndex(day: string | null | undefined): number {
+/** The five the school actually teaches on, for a payload that sent no days. */
+export const SCHOOL_WEEK = WEEK.slice(0, 5)
+
+export function dayIndex(day: string | null | undefined): number {
   const at = WEEK.indexOf((day ?? '').trim())
   // A day the school invents sorts after the week rather than before it.
   return at === -1 ? WEEK.length : at

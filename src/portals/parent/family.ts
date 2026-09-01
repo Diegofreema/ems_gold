@@ -1,5 +1,4 @@
 import type { AttendanceRecord } from '../../api/attendance/types.ts'
-import type { CollectInvoice } from '../../api/collect-fees/types.ts'
 import type {
   Child as EnrolledChild,
   FamilyInvoice,
@@ -11,6 +10,15 @@ import { schoolTime, when } from '../../features/collections/when.ts'
 import { formatNaira } from '../../lib/format.ts'
 
 export { SETTLED }
+
+/**
+ * The two fields a mark is read for, whichever register it came off.
+ *
+ * `sparents/my-children/{id}/attendance` sends `ChildMark` and
+ * `admin-attendances/report` sends `AttendanceRecord`; both satisfy this, and
+ * nothing below needs the pupil naming that only the second one carries.
+ */
+export type Mark = Pick<AttendanceRecord, 'attendance_date' | 'status'>
 
 /** Marks that count as the child having been in school. */
 const ATTENDED = ['present', 'late']
@@ -100,28 +108,6 @@ export function invoiceRow(invoice: FamilyInvoice): Row {
   }
 }
 
-/**
- * One pupil's ledger from the bursary counter, in the shape the household list
- * would have sent it — the two describe the same invoices differently.
- *
- * `is_settled` is the counter's own answer and is trusted over `paystatus`: an
- * invoice closed by a discounted payment can still read `Unpaid` on the
- * invoices table while the counter has it settled.
- */
-export function asFamilyInvoice(invoice: CollectInvoice, studentId: number): FamilyInvoice {
-  return {
-    id: invoice.id,
-    student_id: invoice.student_id || studentId,
-    student: invoice.student?.name ?? null,
-    fee: invoice.fee,
-    session: invoice.session,
-    amount: String(invoice.amount ?? 0),
-    paystatus: invoice.is_settled ? SETTLED : invoice.paystatus,
-    payday: invoice.payday,
-    createdate: invoice.createdate,
-  }
-}
-
 /** One week of the register: days attended out of days marked at all. */
 export type Week = { label: string; present: number; marked: number }
 
@@ -142,7 +128,7 @@ function weekStart(date: Date): Date {
  * API's own rate counts it.
  */
 export function weeksPresent(
-  records: AttendanceRecord[],
+  records: Mark[],
   today: Date,
   span = WEEKS_DRAWN,
 ): Week[] {
@@ -179,7 +165,7 @@ export function weeksPresent(
 export function familyChild(
   enrolled: EnrolledChild,
   ledger: FamilyInvoice[],
-  marks: AttendanceRecord[],
+  marks: Mark[],
   today: Date,
 ): Child {
   let owing = 0
