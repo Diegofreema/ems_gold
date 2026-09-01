@@ -15,7 +15,7 @@ function AdminNotifications() {
       notifications={feed.notifications}
       boardError={feed.boardError}
       category={adminPortal.notificationCategory}
-      description="The notices the office has posted and what the audit trail has recorded, newest first. Sign-ins are left to the log itself."
+      description="Every notice on the school's board, newest first. What the office has changed is recorded on the activity log instead."
     />
   )
 }

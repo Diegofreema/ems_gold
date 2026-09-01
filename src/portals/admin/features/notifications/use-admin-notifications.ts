@@ -1,20 +1,19 @@
-import { useMemo } from 'react'
-import { useActivityLogs } from '@/api/logs/hooks'
-import { mergedFeed } from '@/features/notifications/notice-feed'
 import type { Notification } from '@/features/notifications/types'
-import { useNoticeFeed } from '@/features/notifications/use-notice-feed'
-import { adminNotices, LOG_SCAN } from './notices'
+import { useOfficeNoticeFeed } from '@/features/notifications/use-notice-feed'
 
 /**
- * The bell and the notification centre both read this.
+ * The office's bell and notification centre.
  *
- * Two halves in one order: the school's notice board, which somebody wrote,
- * and the audit trail read as what the office has been doing. The trail is a
- * page longer than the feed shows, because sign-ins are dropped after the
- * fetch and would otherwise crowd everything else out.
+ * The school's own notice board, off `GET /notifications` — the list an
+ * administrator can actually read. `/notifications/mine` answers an admin
+ * with nothing at all, so the office would otherwise never see the notices it
+ * had just posted.
  *
- * The board failing is not the feed failing: it drops out, the trail still
- * draws, and `boardError` is what the page needs to say so.
+ * This used to carry a second half worked out from the audit trail — every
+ * record the office had changed, read as an event. It was real data and it
+ * read as filler: the trail is already a page of its own at `/admin/logs`,
+ * with filters this feed could not offer, and stacking it under the bell
+ * buried the notices somebody had actually written. It is gone.
  */
 export function useAdminNotifications(): Notification[] {
   return useAdminFeed().notifications
@@ -24,19 +23,6 @@ export function useAdminFeed(): {
   notifications: Notification[]
   boardError: string | null
 } {
-  const logs = useActivityLogs({ limit: LOG_SCAN })
-  const board = useNoticeFeed()
-
-  const derived = useMemo(
-    () => adminNotices(logs.data?.items ?? [], new Date()),
-    [logs.data],
-  )
-
-  return useMemo(
-    () => ({
-      notifications: mergedFeed(derived, board.notices),
-      boardError: board.error,
-    }),
-    [derived, board.notices, board.error],
-  )
+  const board = useOfficeNoticeFeed()
+  return { notifications: board.notices, boardError: board.error }
 }

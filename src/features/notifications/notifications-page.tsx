@@ -1,5 +1,6 @@
 import { parseAsString, useQueryState } from 'nuqs'
 import { useMemo } from 'react'
+import { useMarkAllNoticesRead } from '@/api/notifications/hooks'
 import { SectionHeading } from '@/components/common/section-heading'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { PageHeader } from '@/components/page/page-header'
@@ -31,6 +32,23 @@ export function NotificationsPage({
   )
   const read = useNotificationsStore((state) => state.read)
   const markAllRead = useNotificationsStore((state) => state.markAllRead)
+  const markBoardRead = useMarkAllNoticesRead()
+
+  /**
+   * Marking everything read is two different acts, because the feed is two
+   * different things. A notice off the board has a read mark at the server,
+   * so it is opened there; everything else is worked out from records the API
+   * holds no opinion about, and is remembered in the browser alone.
+   */
+  const clearAll = () => {
+    markAllRead(notifications.map((item) => item.id))
+    const unopened = notifications
+      .filter((item) => item.noticeId !== undefined && !item.read && !read[item.id])
+      .map((item) => item.noticeId!)
+    // No request where there is nothing to mark — an empty run would still
+    // raise a toast claiming something happened.
+    if (unopened.length > 0) markBoardRead.mutate(unopened)
+  }
 
   // The third tab is only offered where the feed has something to put under
   // it: a portal reading the notice board alone has notices and nothing else,
@@ -54,10 +72,7 @@ export function NotificationsPage({
         title="Notifications"
         description={description}
         action={
-          <Button
-            variant="outline"
-            onClick={() => markAllRead(notifications.map((item) => item.id))}
-          >
+          <Button variant="outline" pending={markBoardRead.isPending} onClick={clearAll}>
             Mark all read
           </Button>
         }
@@ -68,8 +83,10 @@ export function NotificationsPage({
         <div className="mb-5 border-2 border-divider bg-brand/6 px-4 py-3 text-[13px]">
           <span className="font-bold">The notice board could not be read.</span>{' '}
           <span className="text-muted-foreground">
-            {boardError} Anything the office posted is missing from this page; what is
-            below is worked out from your own records.
+            {boardError} Anything the office posted is missing from this page
+            {notifications.length > 0
+              ? '; what is below is worked out from your own records.'
+              : '.'}
           </span>
         </div>
       )}

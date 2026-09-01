@@ -8,6 +8,7 @@ import type {
   RetryPaymentBody,
 } from './types'
 
+/** Enrolment counts. Answers for the whole school, so it takes no filter. */
 export function useBusinessIntelligence() {
   return useQuery({
     queryKey: analyticsKeys.businessIntelligence(),
@@ -19,16 +20,18 @@ export function useBusinessIntelligence() {
 export function useResultAnalytics(params: Partial<ResultAnalyticsParams>) {
   const ready = params.subject_id !== undefined && params.session_id !== undefined
   return useQuery({
-    queryKey: analyticsKeys.results(params as ResultAnalyticsParams),
+    queryKey: analyticsKeys.results(params),
     queryFn: () => analyticsService.results(params as ResultAnalyticsParams),
     enabled: ready,
   })
 }
 
-export function useFinancialAnalytics(sessionId?: number) {
+/** Idle until a session is chosen — `session_id` is required. */
+export function useFinancialAnalytics(sessionId: number | undefined) {
   return useQuery({
     queryKey: analyticsKeys.financial(sessionId),
-    queryFn: () => analyticsService.financial(sessionId),
+    queryFn: () => analyticsService.financial(sessionId!),
+    enabled: sessionId !== undefined,
   })
 }
 
@@ -39,21 +42,37 @@ export function usePayments(params: PaymentListParams = {}) {
   })
 }
 
-/** Both of these settle money, so the payment list is refetched after. */
-export function useRetryPayment() {
+/**
+ * Both of these settle money against a live gateway, so both invalidate more
+ * than the analytics: a confirmed payment moves the transaction list here and
+ * the invoice register everywhere else, and `check-rrr` settles the invoice
+ * itself.
+ */
+function useSettle<TBody>(
+  run: (body: TBody) => Promise<unknown>,
+  success: string,
+) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: RetryPaymentBody) => analyticsService.retryPayment(body),
-    meta: { success: 'Payment retried' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: analyticsKeys.all }),
+    mutationFn: run,
+    meta: { success },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: analyticsKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['collection'] })
+    },
   })
 }
 
+export function useRetryPayment() {
+  return useSettle<RetryPaymentBody>(
+    (body) => analyticsService.retryPayment(body),
+    'Interswitch was asked about that reference',
+  )
+}
+
 export function useCheckRrr() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (body: CheckRrrBody) => analyticsService.checkRrr(body),
-    meta: { success: 'Payment reference checked' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: analyticsKeys.all }),
-  })
+  return useSettle<CheckRrrBody>(
+    (body) => analyticsService.checkRrr(body),
+    'Remita was asked about that RRR',
+  )
 }

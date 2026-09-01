@@ -59,6 +59,33 @@ export function useOpenNotice() {
   })
 }
 
+/**
+ * Marking a run of notices read, at the server and not just in the browser.
+ *
+ * There is no bulk endpoint on this API. The published contract has exactly
+ * one way to mark a notice read — opening it — so that is what this does,
+ * once per unread notice.
+ *
+ * The cost is worth knowing: `GET /notifications/{id}` counts a hit as well
+ * as flipping `is_read`, so clearing a board of five notices adds a view to
+ * each of the five. That is the price of the button meaning something. If
+ * `/notifications/read-all` turns out to exist after all, this is the one
+ * place that changes.
+ */
+export function useMarkAllNoticesRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    // Sequential: a button somebody pressed, not a page load. A burst of
+    // parallel reads against a shared board buys nothing worth having.
+    mutationFn: async (ids: Id[]) => {
+      for (const id of ids) await noticesService.open(id)
+      return ids.length
+    },
+    meta: { success: 'Notices marked read' },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: noticeKeys.all }),
+  })
+}
+
 /** Every notice the office holds, whoever it was addressed to. The office only. */
 export function useNotices(params: NoticeListParams = {}) {
   return useQuery({

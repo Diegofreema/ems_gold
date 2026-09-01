@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
-import { useMyNotices, useUnreadNoticeCount } from '@/api/notifications/hooks'
+import { useMyNotices, useNotices, useUnreadNoticeCount } from '@/api/notifications/hooks'
 import { noticeKeys } from '@/api/notifications/keys'
+import type { Notice } from '@/api/notifications/types'
 import { errorMessage } from '@/lib/errors'
 import { noticeFeed } from './notice-feed'
 import type { Notification } from './types'
@@ -30,7 +31,10 @@ function useBoardWatch() {
     const count = unread.data
     if (count === undefined) return
     if (seen.current !== undefined && seen.current !== count) {
-      void queryClient.invalidateQueries({ queryKey: noticeKeys.everyMine() })
+      // The whole root, not just `mine`: a reader's own list and the
+      // office's board are two views of one thing, and a notice posted while
+      // the tab is open changes either.
+      void queryClient.invalidateQueries({ queryKey: noticeKeys.all })
     }
     seen.current = count
   }, [unread.data, queryClient])
@@ -46,22 +50,42 @@ function useBoardWatch() {
  * handed back for the page to say so out loud rather than showing "you are up
  * to date", which would be a claim.
  */
-export function useNoticeFeed(): {
+export type NoticeFeed = {
   notices: Notification[]
   /** Why the board is missing, in words, or null where it is not. */
   error: string | null
-} {
-  const board = useMyNotices({ limit: BOARD })
-  const data = board.data
-  useBoardWatch()
+}
 
+/** One list, whichever endpoint it came off, as feed items. */
+function useFeedOf(notices: Notice[] | undefined, error: unknown): NoticeFeed {
   return useMemo(
     () => ({
-      notices: noticeFeed(data ?? [], new Date()),
-      error: board.error
-        ? errorMessage(board.error, 'The notice board could not be reached.')
+      notices: noticeFeed(notices ?? [], new Date()),
+      error: error
+        ? errorMessage(error, 'The notice board could not be reached.')
         : null,
     }),
-    [data, board.error],
+    [notices, error],
   )
+}
+
+export function useNoticeFeed(): NoticeFeed {
+  const board = useMyNotices({ limit: BOARD })
+  useBoardWatch()
+  return useFeedOf(board.data, board.error)
+}
+
+/**
+ * The same feed for the office, off its own list rather than `mine`.
+ *
+ * An administrator's `/notifications/mine` comes back empty — with
+ * `audience: "all"`, and with notices on the board that are addressed to
+ * `all` — so a bell built on it shows the office nothing it has posted.
+ * `GET /notifications` is the list the office can actually read, and is what
+ * `/admin/notices` manages the board from.
+ */
+export function useOfficeNoticeFeed(): NoticeFeed {
+  const board = useNotices({ limit: BOARD })
+  useBoardWatch()
+  return useFeedOf(board.data?.notifications, board.error)
 }
