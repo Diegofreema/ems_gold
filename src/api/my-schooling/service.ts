@@ -3,8 +3,6 @@ import type {
   MyCourses,
   MyInvoices,
   MyMaterial,
-  MyResult,
-  MyResultParams,
   Student,
   StudentDashboard,
   UpdateMyRecordBody,
@@ -28,12 +26,6 @@ export const mySchoolingService = {
 
   /** The bills and the payments taken against them, in one answer. */
   invoices: () => request<MyInvoices>('students/me/invoices'),
-
-  /** Approved results only — a pending upload is never shown. */
-  results: (params: MyResultParams = {}) =>
-    request<{ results: MyResult[] }>('students/me/results', { query: { ...params } }).then(
-      (data) => data.results ?? [],
-    ),
 
   /** Files shared with the caller's class. Empty school-wide — see `MyMaterial`. */
   materials: () =>

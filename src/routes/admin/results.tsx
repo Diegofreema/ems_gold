@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ResultsPage } from '@/portals/admin/features/results/results-page'
+import { results } from '@/portals/admin/collections/results'
+import { CollectionPage } from '@/portals/admin/components/collection-page'
 
 export const Route = createFileRoute('/admin/results')({
   staticData: { title: 'Results', crumb: 'Academics' },
-  component: ResultsPage,
+  component: () => <CollectionPage definition={results} />,
 })

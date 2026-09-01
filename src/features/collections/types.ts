@@ -28,6 +28,7 @@ export type ListPath =
   | '/admin/terms'
   | '/admin/timetable'
   | '/admin/results'
+  | '/admin/result-queue'
   | '/admin/library'
   | '/admin/notices'
   | '/admin/logs'

@@ -20,6 +20,8 @@ import {
   Megaphone,
   Shield,
   SlidersHorizontal,
+  SquareCheckBig,
+  Table2,
   UserPlus,
   Users,
 } from 'lucide-react'
@@ -78,6 +80,8 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/calendar', label: 'Sessions & terms', icon: CalendarDays },
       { to: '/admin/timetable', label: 'Timetable', icon: CalendarClock },
       { to: '/admin/results', label: 'Results', icon: ClipboardCheck },
+      { to: '/admin/result-queue', label: 'Result approvals', icon: SquareCheckBig },
+      { to: '/admin/class-sheet', label: 'Class broadsheet', icon: Table2 },
     ],
   },
   {

@@ -1,17 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { MyResult } from '../../../../api/my-schooling/types.ts'
-import { resultRows, termOf } from './results.ts'
+import type { Mark } from '../../../../api/results/types.ts'
+import { marksOf, resultRows, termAverage, termOf } from './results.ts'
 
 /**
- * One approved mark. No pupil on this school has one, so this is the shape
- * `/teachers/me/results` sends off the same table — see `MyResult`.
+ * One released mark. The four parts are the shape `POST /results` writes and
+ * the guardian's endpoint already returns; the expansions are what the
+ * sibling routes send off the same table.
  */
-const RESULT = {
+const RESULT: Mark = {
   id: 41,
+  student_id: 483,
   subject_id: 3,
-  ca: '26.00',
-  score: '52.00',
+  first_ca: '15.00',
+  second_ca: '11.00',
+  homework_project: '0.00',
+  first_exam: '52.00',
   total: '78.00',
   grade: 'A',
   remark: 'Excellent',
@@ -21,33 +25,33 @@ const RESULT = {
   semester: { id: 1, name: 'First Term' },
   subject: { id: 3, name: 'Mathematics' },
   department: { id: 2, name: 'SSS I' },
-} as MyResult
+}
 
-test('a mark reads as the sheet has it', () => {
+test('a mark reads as the sheet has it, with the parts on the panel', () => {
   const [row] = resultRows([RESULT])
   assert.equal(row?.subject, 'Mathematics')
   assert.equal(row?.term, 'First Term · 2024/2025')
-  assert.equal(row?.session, '2024/2025')
-  assert.equal(row?.semester, 'First Term')
-  assert.equal(row?.ca, '26')
   assert.equal(row?.exam, '52')
   assert.equal(row?.total, '78')
   assert.equal(row?.grade, 'A')
-  assert.equal(row?.remark, 'Excellent')
+  assert.equal(row?.firstCa, '15')
+  assert.equal(row?.secondCa, '11')
+  assert.equal(row?.homework, '0')
 })
 
-test('the quoted decimals the API sends are read as numbers', () => {
-  const [row] = resultRows([{ ...RESULT, ca: 26.5, score: '52.25', total: null }])
-  assert.equal(row?.ca, '26.5')
-  assert.equal(row?.exam, '52.25')
-  assert.equal(row?.total, '—')
+test('a mark filed the older way still reads', () => {
+  // `teachers/me/scores` files a two-column mark into the same table, so a
+  // pupil's sheet can hold both shapes at once.
+  const [row] = resultRows([
+    { ...RESULT, first_ca: null, first_exam: null, ca: '26.00', score: '52.00' },
+  ])
+  assert.equal(row?.firstCa, '26')
+  assert.equal(row?.exam, '52')
 })
 
 test('a mark whose subject was not expanded is still nameable', () => {
   const [row] = resultRows([{ ...RESULT, subject: null }])
   assert.equal(row?.subject, 'Subject 3')
-  const [bare] = resultRows([{ ...RESULT, subject: null, subject_id: null }])
-  assert.equal(bare?.subject, 'Subject 41')
 })
 
 test('a mark with no term on it says so rather than reading as one', () => {
@@ -62,6 +66,24 @@ test('the newest mark is the one at the top', () => {
     { ...RESULT, id: 30 },
   ])
   assert.deepEqual(rows.map((row) => row.id), ['41', '30', '12'])
+})
+
+test('the marks are found whichever key the envelope carries them under', () => {
+  assert.deepEqual(marksOf({ results: [RESULT] }), [RESULT])
+  assert.deepEqual(marksOf({ marks: [RESULT] }), [RESULT])
+  assert.deepEqual(marksOf({ rows: [RESULT], average: 78 }), [RESULT])
+  assert.deepEqual(marksOf(undefined), [])
+  assert.deepEqual(marksOf({ average: 0 }), [])
+})
+
+test('the term average is read beside the marks, or not at all', () => {
+  assert.equal(termAverage({ average: 78.5 }), 78.5)
+  assert.equal(termAverage({ summary: { average: '78.50' } }), 78.5)
+  assert.equal(termAverage({ term_average: 61 }), 61)
+  // Nothing rather than nought: a pupil shown "0" for a term nobody has
+  // marked them in has been told something false about themselves.
+  assert.equal(termAverage({ results: [] }), undefined)
+  assert.equal(termAverage(undefined), undefined)
 })
 
 test('no marks is no rows', () => {

@@ -2,7 +2,7 @@ import { pageRows } from '@/features/collections/api';
 import type { CollectionDef } from '@/features/collections/types';
 import { queryClient } from '@/lib/query-client';
 import { studentResultsQuery, studentTestsQuery } from '../api/queries';
-import { resultRows } from '../features/results/results';
+import { marksOf, resultRows, termAverage } from '../features/results/results';
 import { testRows, testTally } from '../features/tests/tests';
 
 /**
@@ -68,10 +68,9 @@ export const tests: CollectionDef = {
   // the questions the register never asked for.
 };
 
-const marks = () =>
-  queryClient
-    .ensureQueryData(studentResultsQuery)
-    .then((all) => resultRows(all));
+const sheet = () => queryClient.ensureQueryData(studentResultsQuery);
+
+const marks = () => sheet().then((answer) => resultRows(marksOf(answer)));
 
 export const results: CollectionDef = {
   id: 'results',
@@ -91,13 +90,27 @@ export const results: CollectionDef = {
     'A subject appears here once your teacher has filed the mark and the office has approved the batch it came in. A mark still waiting on either is never sent.',
   noun: 'result',
   nameKey: 'subject',
-  // No history, and no tiles. An average over marks from different terms is
-  // not a term average, and a position needs a ranking this API does not keep.
+  // No history. The one figure worth a tile is the term average, and it is
+  // the API's own — this page never worked one out, because an average over
+  // marks from different terms is not a term average. A position needs the
+  // class broadsheet, which a pupil login cannot reach.
   tabs: [],
+  counts: [
+    {
+      label: 'Subjects released',
+      count: async () => marksOf(await sheet()).length,
+    },
+    {
+      label: 'Term average',
+      // Nought is a real average and "not marked yet" is not, so a term with
+      // nothing in it reads as a dash rather than as a pupil who scored zero.
+      count: async () => termAverage(await sheet()) ?? -1,
+      format: (value) => (value < 0 ? '—' : String(Math.round(value * 10) / 10)),
+    },
+  ],
   columns: [
     { key: 'subject', label: 'Subject', cardRole: 'title' },
     { key: 'term', label: 'Term', cardRole: 'subtitle' },
-    { key: 'ca', label: 'CA', align: 'right' },
     { key: 'exam', label: 'Exam', align: 'right' },
     { key: 'total', label: 'Total', align: 'right' },
     { key: 'grade', label: 'Grade', tag: true, cardRole: 'tag' },
@@ -107,8 +120,10 @@ export const results: CollectionDef = {
     { key: 'klass', label: 'Class' },
     { key: 'session', label: 'Session' },
     { key: 'semester', label: 'Term' },
-    { key: 'ca', label: 'CA' },
-    { key: 'exam', label: 'Exam' },
+    { key: 'firstCa', label: 'First CA' },
+    { key: 'secondCa', label: 'Second CA' },
+    { key: 'homework', label: 'Homework / project' },
+    { key: 'exam', label: 'Examination' },
     { key: 'total', label: 'Total' },
     { key: 'grade', label: 'Grade' },
     { key: 'remark', label: 'Remark' },

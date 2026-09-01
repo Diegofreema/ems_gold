@@ -30,6 +30,7 @@ import { Route as AdminArmsRouteImport } from './routes/admin/arms'
 import { Route as AdminAttReportRouteImport } from './routes/admin/att-report'
 import { Route as AdminAttendanceRouteImport } from './routes/admin/attendance'
 import { Route as AdminCalendarRouteImport } from './routes/admin/calendar'
+import { Route as AdminClassSheetRouteImport } from './routes/admin/class-sheet'
 import { Route as AdminClassesRouteImport } from './routes/admin/classes'
 import { Route as AdminFeesRouteImport } from './routes/admin/fees'
 import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
@@ -41,6 +42,7 @@ import { Route as AdminParentsRouteImport } from './routes/admin/parents'
 import { Route as AdminParentsInvitedRouteImport } from './routes/admin/parents-invited'
 import { Route as AdminPrivilegesRouteImport } from './routes/admin/privileges'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
+import { Route as AdminResultQueueRouteImport } from './routes/admin/result-queue'
 import { Route as AdminResultsRouteImport } from './routes/admin/results'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSpendingsRouteImport } from './routes/admin/spendings'
@@ -207,6 +209,11 @@ const AdminCalendarRoute = AdminCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminClassSheetRoute = AdminClassSheetRouteImport.update({
+  id: '/class-sheet',
+  path: '/class-sheet',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminClassesRoute = AdminClassesRouteImport.update({
   id: '/classes',
   path: '/classes',
@@ -260,6 +267,11 @@ const AdminPrivilegesRoute = AdminPrivilegesRouteImport.update({
 const AdminProfileRoute = AdminProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminResultQueueRoute = AdminResultQueueRouteImport.update({
+  id: '/result-queue',
+  path: '/result-queue',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminResultsRoute = AdminResultsRouteImport.update({
@@ -596,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/admin/att-report': typeof AdminAttReportRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/class-sheet': typeof AdminClassSheetRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/fees': typeof AdminFeesRoute
   '/admin/invoices': typeof AdminInvoicesRoute
@@ -607,6 +620,7 @@ export interface FileRoutesByFullPath {
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
   '/admin/privileges': typeof AdminPrivilegesRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spendings': typeof AdminSpendingsRoute
@@ -686,6 +700,7 @@ export interface FileRoutesByTo {
   '/admin/att-report': typeof AdminAttReportRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/class-sheet': typeof AdminClassSheetRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/fees': typeof AdminFeesRoute
   '/admin/invoices': typeof AdminInvoicesRoute
@@ -697,6 +712,7 @@ export interface FileRoutesByTo {
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
   '/admin/privileges': typeof AdminPrivilegesRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spendings': typeof AdminSpendingsRoute
@@ -782,6 +798,7 @@ export interface FileRoutesById {
   '/admin/att-report': typeof AdminAttReportRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/class-sheet': typeof AdminClassSheetRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/fees': typeof AdminFeesRoute
   '/admin/invoices': typeof AdminInvoicesRoute
@@ -793,6 +810,7 @@ export interface FileRoutesById {
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
   '/admin/privileges': typeof AdminPrivilegesRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spendings': typeof AdminSpendingsRoute
@@ -878,6 +896,7 @@ export interface FileRouteTypes {
     | '/admin/att-report'
     | '/admin/attendance'
     | '/admin/calendar'
+    | '/admin/class-sheet'
     | '/admin/classes'
     | '/admin/fees'
     | '/admin/invoices'
@@ -889,6 +908,7 @@ export interface FileRouteTypes {
     | '/admin/parents-invited'
     | '/admin/privileges'
     | '/admin/profile'
+    | '/admin/result-queue'
     | '/admin/results'
     | '/admin/settings'
     | '/admin/spendings'
@@ -968,6 +988,7 @@ export interface FileRouteTypes {
     | '/admin/att-report'
     | '/admin/attendance'
     | '/admin/calendar'
+    | '/admin/class-sheet'
     | '/admin/classes'
     | '/admin/fees'
     | '/admin/invoices'
@@ -979,6 +1000,7 @@ export interface FileRouteTypes {
     | '/admin/parents-invited'
     | '/admin/privileges'
     | '/admin/profile'
+    | '/admin/result-queue'
     | '/admin/results'
     | '/admin/settings'
     | '/admin/spendings'
@@ -1063,6 +1085,7 @@ export interface FileRouteTypes {
     | '/admin/att-report'
     | '/admin/attendance'
     | '/admin/calendar'
+    | '/admin/class-sheet'
     | '/admin/classes'
     | '/admin/fees'
     | '/admin/invoices'
@@ -1074,6 +1097,7 @@ export interface FileRouteTypes {
     | '/admin/parents-invited'
     | '/admin/privileges'
     | '/admin/profile'
+    | '/admin/result-queue'
     | '/admin/results'
     | '/admin/settings'
     | '/admin/spendings'
@@ -1296,6 +1320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCalendarRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/class-sheet': {
+      id: '/admin/class-sheet'
+      path: '/class-sheet'
+      fullPath: '/admin/class-sheet'
+      preLoaderRoute: typeof AdminClassSheetRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/classes': {
       id: '/admin/classes'
       path: '/classes'
@@ -1371,6 +1402,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/admin/profile'
       preLoaderRoute: typeof AdminProfileRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/result-queue': {
+      id: '/admin/result-queue'
+      path: '/result-queue'
+      fullPath: '/admin/result-queue'
+      preLoaderRoute: typeof AdminResultQueueRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/results': {
@@ -1810,6 +1848,7 @@ interface AdminRouteRouteChildren {
   AdminAttReportRoute: typeof AdminAttReportRoute
   AdminAttendanceRoute: typeof AdminAttendanceRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminClassSheetRoute: typeof AdminClassSheetRoute
   AdminClassesRoute: typeof AdminClassesRoute
   AdminFeesRoute: typeof AdminFeesRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
@@ -1821,6 +1860,7 @@ interface AdminRouteRouteChildren {
   AdminParentsInvitedRoute: typeof AdminParentsInvitedRoute
   AdminPrivilegesRoute: typeof AdminPrivilegesRoute
   AdminProfileRoute: typeof AdminProfileRoute
+  AdminResultQueueRoute: typeof AdminResultQueueRoute
   AdminResultsRoute: typeof AdminResultsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSpendingsRoute: typeof AdminSpendingsRoute
@@ -1850,6 +1890,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAttReportRoute: AdminAttReportRoute,
   AdminAttendanceRoute: AdminAttendanceRoute,
   AdminCalendarRoute: AdminCalendarRoute,
+  AdminClassSheetRoute: AdminClassSheetRoute,
   AdminClassesRoute: AdminClassesRoute,
   AdminFeesRoute: AdminFeesRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
@@ -1861,6 +1902,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminParentsInvitedRoute: AdminParentsInvitedRoute,
   AdminPrivilegesRoute: AdminPrivilegesRoute,
   AdminProfileRoute: AdminProfileRoute,
+  AdminResultQueueRoute: AdminResultQueueRoute,
   AdminResultsRoute: AdminResultsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSpendingsRoute: AdminSpendingsRoute,

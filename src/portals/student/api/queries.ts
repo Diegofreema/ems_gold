@@ -3,6 +3,8 @@ import { assignmentKeys } from '@/api/assignments/keys'
 import { assignmentsService } from '@/api/assignments/service'
 import { mySchoolingKeys } from '@/api/my-schooling/keys'
 import { mySchoolingService } from '@/api/my-schooling/service'
+import { resultKeys } from '@/api/results/keys'
+import { resultsService } from '@/api/results/service'
 import { timetableKeys } from '@/api/timetables/keys'
 import { timetablesService } from '@/api/timetables/service'
 
@@ -25,12 +27,16 @@ export const studentStatsQuery = queryOptions({
 })
 
 /**
- * `GET /students/me/results` — approved marks only, every term at once. No
- * parameters: a pupil cannot name a session or a term to ask for one.
+ * `GET /results/mine` — released marks only, every term at once, with the
+ * term average beside them. No parameters: a pupil cannot name a session or a
+ * term to ask for one, since `/sessions` and `/semesters` are shut to them.
+ *
+ * Not `students/me/results`, which answered `{results: []}` for every pupil
+ * ever probed. This is the results controller's own pupil route.
  */
 export const studentResultsQuery = queryOptions({
-  queryKey: mySchoolingKeys.results({}),
-  queryFn: () => mySchoolingService.results(),
+  queryKey: resultKeys.mine({}),
+  queryFn: () => resultsService.mine(),
 })
 
 /** `GET /students/me/invoices` — settled bills only, whatever it is asked. */

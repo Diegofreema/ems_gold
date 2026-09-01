@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { mySchoolingKeys } from './keys'
 import { mySchoolingService } from './service'
-import type { MyResultParams, UpdateMyRecordBody } from './types'
+import type { UpdateMyRecordBody } from './types'
 
 export function useMyStudentRecord() {
   return useQuery({
@@ -37,13 +37,6 @@ export function useMyStudentInvoices() {
   return useQuery({
     queryKey: mySchoolingKeys.invoices(),
     queryFn: () => mySchoolingService.invoices(),
-  })
-}
-
-export function useMyStudentResults(params: MyResultParams = {}) {
-  return useQuery({
-    queryKey: mySchoolingKeys.results(params),
-    queryFn: () => mySchoolingService.results(params),
   })
 }
 

@@ -5,6 +5,7 @@ import { timetable } from './timetable'
 import { parents, parentsDeactivated } from './parents'
 import { library } from './library'
 import { notices } from './notices'
+import { results, resultQueue } from './results'
 import { logs } from './school'
 import { staff, staffAdmin, staffOther, staffTeachers } from './staff'
 import { applicants, students } from './students'
@@ -32,6 +33,8 @@ export const adminCollections = {
   timetable,
   library,
   notices,
+  results,
+  'result-queue': resultQueue,
   logs,
 } satisfies Record<string, CollectionDef>
 

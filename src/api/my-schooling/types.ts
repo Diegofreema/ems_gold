@@ -63,33 +63,6 @@ export type MyInvoices = {
 }
 
 /**
- * One approved mark, as `GET /students/me/results` sends it.
- *
- * Unverified in one respect only: no pupil on this school has an approved
- * result, so the endpoint has only ever answered `{ results: [] }`. The fields
- * are the ones `/teachers/me/results` sends off the same table, minus the
- * pupil it is already about — and every one of them is read defensively here,
- * because a shape nobody has seen filled in is a shape worth doubting.
- */
-export type MyResult = {
-  id: number
-  subject_id?: number | null
-  /** Continuous assessment; `score` is the exam and `total` is the two summed. */
-  ca?: string | number | null
-  score?: string | number | null
-  total?: string | number | null
-  grade?: string | null
-  remark?: string | null
-  /** Approved by definition here — the endpoint sends nothing still pending. */
-  approval_status?: string | null
-  uploaddate?: string | null
-  session?: { id: number; name: string } | null
-  semester?: { id: number; name: string } | null
-  subject?: { id: number; name: string } | null
-  department?: { id: number; name: string } | null
-}
-
-/**
  * One file a teacher has shared with the pupil's class, as
  * `GET /students/me/materials` would send it.
  *

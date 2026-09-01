@@ -19,6 +19,8 @@ import {
 import { applicantDocuments } from '@/portals/admin/collections/applicant-row'
 import { collecting, figure, payAction, paymentBody } from '@/portals/admin/collections/collect-row'
 import { parseStaffKey } from '@/portals/admin/collections/staff-row'
+import { parseBatchId } from '@/portals/admin/collections/result-row'
+import { resultsService } from '@/api/results/service'
 import {
   moveOutcome,
   type MoveValues,
@@ -730,6 +732,100 @@ const teacherFlows: AdminFlow[] = [
   { name: 'mail', label: 'Send email', when: isTeacher, build: mailStaff },
 ]
 
+/**
+ * What a batch is, for the two flows below: one subject, for one class, in one
+ * term. The four ids that say which are carried in the row's own id, so a
+ * batch that cannot be read back is refused rather than acted on — releasing
+ * on a half-read key would sign off somebody else's marks.
+ */
+function batchOf(row?: Row) {
+  const key = row && parseBatchId(row.id)
+  if (!key) throw new Error('That batch could not be read.')
+  return key
+}
+
+function batchSummary(row?: Row) {
+  return [
+    { label: 'Class', value: row?.klass ?? DASH },
+    { label: 'Term', value: row?.term ?? DASH },
+    { label: 'Marks', value: row?.marks ?? DASH },
+  ]
+}
+
+const batchSubject = (row?: Row) =>
+  [row?.subject, row?.klass, row?.term].filter((part) => part && part !== DASH).join(' · ')
+
+/**
+ * Releasing a batch.
+ *
+ * Confirmed, because this is the moment marks reach families and nothing on
+ * this screen takes it back — a released mark is withdrawn one at a time from
+ * the results register.
+ */
+function releaseBatch(row?: Row): ActionDef {
+  return {
+    kicker: 'Academics · Result approvals',
+    title: `Release ${row?.subject ?? 'this batch'}`,
+    description:
+      'Every mark in this batch goes in front of the pupils and their families. Releasing twice changes nothing, and a mark corrected afterwards comes back into the queue on its own.',
+    summary: batchSummary(row),
+    fields: [],
+    cta: 'Release the batch',
+    footnote:
+      'Only the office may release a batch — the API refuses the teacher who entered it.',
+    done: () => 'Batch released',
+    confirm: () => ({
+      title: 'Release these marks?',
+      body: 'Pupils and their families see every mark in this batch, and the grade beside each one, as soon as this goes through. Taking one back afterwards is done a mark at a time from the results register.',
+      subject: batchSubject(row),
+      cta: 'Release the batch',
+      cancel: 'Go back',
+    }),
+    run: async () => {
+      await resultsService.approve(batchOf(row))
+      return { message: 'Batch released' }
+    },
+  }
+}
+
+/**
+ * Sending a batch back.
+ *
+ * The reason is required and is stored against every mark in the batch, which
+ * is the only thing the teacher has to work from — "sent back" with nothing
+ * written on it is a batch nobody knows how to fix.
+ */
+function sendBatchBack(row?: Row): ActionDef {
+  return {
+    kicker: 'Academics · Result approvals',
+    title: `Send ${row?.subject ?? 'this batch'} back`,
+    description:
+      'The batch returns to the teacher who filed it, with your reason written against every mark in it. Nothing reaches a family in the meantime.',
+    summary: batchSummary(row),
+    fields: [
+      {
+        key: 'reason',
+        label: 'What needs fixing',
+        required: true,
+        multiline: true,
+        wide: true,
+        placeholder: 'The second CA is missing for half the class.',
+        hint: 'Stored against every mark in the batch. This is what the teacher sees.',
+      },
+    ],
+    cta: 'Send it back',
+    footnote: 'The batch reappears here once the teacher has filed the corrections.',
+    done: () => 'Batch sent back',
+    run: async (values) => {
+      await resultsService.reject({
+        ...batchOf(row),
+        reason: String(values.reason ?? '').trim(),
+      })
+      return { message: 'Batch sent back' }
+    },
+  }
+}
+
 export const adminFlows: Record<string, AdminFlow[]> = {
   fees: [{ name: 'allocate', label: 'Allocate to classes', build: allocate }],
   // Granting and taking away privileges is a super administrator's alone; the
@@ -759,6 +855,13 @@ export const adminFlows: Record<string, AdminFlow[]> = {
   subjects: [{ name: 'classes', label: 'Teach to classes', build: teachTo }],
   students: [{ name: 'move', label: 'Promote or transfer', build: promote }],
   applicants: [{ name: 'review', label: 'Review application', build: review }],
+  // Two flows rather than one with a decision box: releasing is the common
+  // answer and wants no form at all, and sending back is meaningless without
+  // the reason. A batch is read on its own page before either is pressed.
+  'result-queue': [
+    { name: 'release', label: 'Release the batch', build: releaseBatch },
+    { name: 'send-back', label: 'Send it back', build: sendBatchBack },
+  ],
   library: [
     {
       name: 'lend',
