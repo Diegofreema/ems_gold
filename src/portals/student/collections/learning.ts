@@ -1,24 +1,26 @@
-import { pageRows } from '@/features/collections/api'
-import type { CollectionDef } from '@/features/collections/types'
-import { queryClient } from '@/lib/query-client'
-import { studentCoursesQuery, studentMaterialsQuery } from '../api/queries'
-import { courseRows } from '../features/courses/courses'
-import { materialRows } from '../features/materials/materials'
+import { pageRows } from '@/features/collections/api';
+import type { CollectionDef } from '@/features/collections/types';
+import { queryClient } from '@/lib/query-client';
+import { studentCoursesQuery, studentMaterialsQuery } from '../api/queries';
+import { courseRows } from '../features/courses/courses';
+import { materialRows } from '../features/materials/materials';
 
 /**
  * The subjects the pupil is registered for, through the cache so the list and
  * the record it opens read one answer between them.
  */
 const registered = () =>
-  queryClient.ensureQueryData(studentCoursesQuery).then((all) => courseRows(all))
+  queryClient
+    .ensureQueryData(studentCoursesQuery)
+    .then((all) => courseRows(all));
 
 export const courses: CollectionDef = {
   id: 'courses',
   path: '/student/courses',
   kicker: 'Learning',
-  title: 'My courses',
+  title: 'My subjects',
   description:
-    'The subjects you are registered for, and who teaches each. Ask the office about anything missing from this list.',
+    'The subjects you are registered for this term, and who teaches each. Open one for the class and term it was registered against.',
   // No button. The design's was "Download timetable", and there is no
   // timetable on this API — not a shut endpoint, no endpoint at all.
   action: 'Download timetable',
@@ -27,7 +29,7 @@ export const courses: CollectionDef = {
   footer: 'Every subject on your registration, in alphabetical order',
   emptyTitle: 'No subjects yet',
   emptyBody:
-    'Your subjects appear here once the office registers you for them. Your marks are on My results whether or not a subject is listed here.',
+    'Your subjects appear here once the office registers you for them, and a registration is made for one class and one term at a time. Your marks are on My results whether or not a subject is listed here.',
   noun: 'course',
   nameKey: 'name',
   // No history and no tiles: this is a list of what a pupil takes, and the
@@ -36,25 +38,29 @@ export const courses: CollectionDef = {
   columns: [
     { key: 'code', label: 'Code', cardRole: 'title' },
     { key: 'name', label: 'Subject', cardRole: 'subtitle' },
-    { key: 'klass', label: 'Class' },
     { key: 'teacher', label: 'Teacher' },
   ],
   detail: [
     { key: 'name', label: 'Subject' },
     { key: 'code', label: 'Code' },
-    { key: 'klass', label: 'Taught to' },
     { key: 'teacher', label: 'Teacher' },
+    { key: 'klass', label: 'Registered in' },
+    { key: 'session', label: 'Session' },
+    { key: 'term', label: 'Term' },
   ],
   source: (params) => registered().then((all) => pageRows(all, params)),
-  record: (recordId) => registered().then((all) => all.find((row) => row.id === recordId)),
-}
+  record: (recordId) =>
+    registered().then((all) => all.find((row) => row.id === recordId)),
+};
 
 /**
  * The notes and papers shared with the pupil's class, through the cache so the
  * list and the record it opens read one answer between them.
  */
 const shared = () =>
-  queryClient.ensureQueryData(studentMaterialsQuery).then((all) => materialRows(all))
+  queryClient
+    .ensureQueryData(studentMaterialsQuery)
+    .then((all) => materialRows(all));
 
 export const materials: CollectionDef = {
   id: 'materials',
@@ -89,8 +95,9 @@ export const materials: CollectionDef = {
     { key: 'sharedOn', label: 'Shared on' },
   ],
   source: (params) => shared().then((all) => pageRows(all, params)),
-  record: (recordId) => shared().then((all) => all.find((row) => row.id === recordId)),
-}
+  record: (recordId) =>
+    shared().then((all) => all.find((row) => row.id === recordId)),
+};
 
 /**
  * The one pupil page with nothing behind it.
@@ -120,7 +127,7 @@ export const timetable: CollectionDef = {
   footer: '',
   emptyTitle: 'No timetable to show',
   emptyBody:
-    "The school does not publish the week's periods in the portal yet. Ask your class teacher for them — the subjects you take, and who teaches each, are on My courses.",
+    "The school does not publish the week's periods in the portal yet. Ask your class teacher for them — the subjects you take, and who teaches each, are on My subjects.",
   noun: 'period',
   nameKey: 'subject',
   tabs: [],
@@ -132,4 +139,4 @@ export const timetable: CollectionDef = {
     { key: 'subject', label: 'Subject' },
     { key: 'teacher', label: 'Teacher' },
   ],
-}
+};

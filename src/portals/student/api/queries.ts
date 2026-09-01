@@ -51,8 +51,9 @@ export const studentMaterialsQuery = queryOptions({
 /**
  * `GET /students/me/courses` — the subjects the pupil is registered for.
  *
- * Answers `{ "courses": [] }` for every pupil: nobody in the school is
- * registered for a subject, and no route on this API registers anyone.
+ * The whole answer, not the list alone: the class, the session and the term
+ * the registration was made against arrive beside it, and the record a row
+ * opens reads them from here.
  */
 export const studentCoursesQuery = queryOptions({
   queryKey: mySchoolingKeys.courses(),

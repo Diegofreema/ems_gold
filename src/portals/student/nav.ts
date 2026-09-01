@@ -7,8 +7,8 @@ import {
   FileText,
   LayoutGrid,
   SquareCheckBig,
-} from 'lucide-react'
-import type { NavGroup } from '@/lib/portal'
+} from 'lucide-react';
+import type { NavGroup } from '@/lib/portal';
 
 export const studentNav: NavGroup[] = [
   {
@@ -20,8 +20,8 @@ export const studentNav: NavGroup[] = [
   {
     heading: 'Learning',
     items: [
-      { to: '/student/courses', label: 'My courses', icon: BookOpen },
-      { to: '/student/materials', label: 'Course materials', icon: FileText },
+      { to: '/student/courses', label: 'My subjects', icon: BookOpen },
+      { to: '/student/materials', label: 'Subject materials', icon: FileText },
       { to: '/student/timetable', label: 'My timetable', icon: CalendarDays },
     ],
   },
@@ -38,4 +38,4 @@ export const studentNav: NavGroup[] = [
       { to: '/student/invoices', label: 'My invoices', icon: CreditCard },
     ],
   },
-]
+];

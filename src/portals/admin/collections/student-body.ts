@@ -1,3 +1,4 @@
+import { schoolCountryId } from '../../../features/collections/country-ids.ts'
 import type { StudentBody } from '../../../api/students/types.ts'
 
 /** The form's values, all strings or a Date from the calendar field. */
@@ -5,6 +6,11 @@ export type FormValues = Record<string, unknown>
 
 function text(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+function asId(value: unknown): number | undefined {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
 /** The API takes `YYYY-MM-DD`, which is what the calendar field's Date becomes. */
@@ -42,6 +48,11 @@ export function studentBody(values: FormValues, sessionId?: number): StudentBody
     department_id: Number.isFinite(department) && department > 0 ? department : undefined,
     class_arm_id: text(values.class_arm_id),
     sparent_id: text(values.sparent_id),
+    // The form holds a country as its ISO code, which is the one thing about a
+    // country that is not the school's own. The number is, and is looked up
+    // here — a country the school has no id for is stored without one.
+    country_id: schoolCountryId(values.country),
+    state_id: asId(values.state),
     session_id: sessionId,
   }
 }

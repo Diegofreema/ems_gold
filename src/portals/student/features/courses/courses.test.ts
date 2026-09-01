@@ -1,36 +1,66 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { MyCourse } from '../../../../api/my-schooling/types.ts'
-import { courseRows, teachersOf } from './courses.ts'
+import type { MyCourses } from '../../../../api/my-schooling/types.ts'
+import { classOf, courseRows, teachersOf } from './courses.ts'
 
-/*
- * No pupil in the school is registered for anything, so no live course row
- * exists to copy. These are the subject rows `/teachers/me/subjects` and
- * `/subjects/{id}` do send, which is the shape `MyCourse` documents.
- */
-const MATHS: MyCourse = {
-  id: 2,
-  name: 'MATHEMATICS',
-  subjectcode: 'MATH',
-  department_id: 2,
-  department: { id: 2, name: 'SSS I' },
-  teachers: [{ id: 2, name: 'Teacher u 1 New Teacher' }],
+/** `GET /students/me/courses` as it answers pupil 4, trimmed to two subjects. */
+const ANSWER: MyCourses = {
+  courses: [
+    {
+      id: 1,
+      name: 'ENGLISH LANGUAGE',
+      subjectcode: 'EL',
+      creditload: 0,
+      teachers: ['Teacher u 1 New Teacher', 'Mark Freeman', 'Diego Freeman'],
+    },
+    { id: 7, name: 'IGBO LANGUAGE', subjectcode: 'IL', creditload: 0, teachers: [] },
+  ],
+  count: 2,
+  class: { id: 2, name: 'SSS I', arm: 'JSS 2 A' },
+  session: { id: 8, name: '2024/2025' },
+  semester: { id: 1, name: 'First Term' },
+  message: null,
 }
 
-test('a course reads as its code, its subject, its class and who teaches it', () => {
-  const [row] = courseRows([MATHS])
-  assert.equal(row.code, 'MATH')
-  assert.equal(row.name, 'MATHEMATICS')
-  assert.equal(row.klass, 'SSS I')
-  assert.equal(row.teacher, 'Teacher u 1 New Teacher')
+test('a course reads as its code, its subject and who teaches it', () => {
+  const [english] = courseRows(ANSWER)
+  assert.equal(english.code, 'EL')
+  assert.equal(english.name, 'ENGLISH LANGUAGE')
+  assert.equal(english.teacher, 'Teacher u 1 New Teacher, Mark Freeman, Diego Freeman')
+})
+
+test('the class, session and term are the registration\'s, so every row carries them', () => {
+  const rows = courseRows(ANSWER)
+  assert.deepEqual(
+    rows.map((row) => [row.klass, row.session, row.term]),
+    [
+      ['SSS I · JSS 2 A', '2024/2025', 'First Term'],
+      ['SSS I · JSS 2 A', '2024/2025', 'First Term'],
+    ],
+  )
+})
+
+test('teachers arrive as plain names, and none reads as blank', () => {
+  assert.equal(teachersOf({ id: 2, teachers: ['C. Nnaji', ' D. Freeman '] }), 'C. Nnaji, D. Freeman')
+  // A subject nobody has been assigned to teach sends an empty array.
+  assert.equal(teachersOf({ id: 7, teachers: [] }), '—')
+  assert.equal(teachersOf({ id: 2 }), '—')
+})
+
+test('a class the school has not named at all is a dash, not a stray separator', () => {
+  assert.equal(classOf({ class: { id: 2, name: 'SSS I' } }), 'SSS I')
+  assert.equal(classOf({ class: { id: 2 } }), '—')
+  assert.equal(classOf({}), '—')
 })
 
 test('alphabetical, because a pupil scans the list for one subject', () => {
-  const rows = courseRows([
-    { ...MATHS, id: 2, name: 'MATHEMATICS' },
-    { ...MATHS, id: 1, name: 'ENGLISH LANGUAGE' },
-    { ...MATHS, id: 11, name: 'Social Studies' },
-  ])
+  const rows = courseRows({
+    courses: [
+      { id: 2, name: 'MATHEMATICS' },
+      { id: 1, name: 'ENGLISH LANGUAGE' },
+      { id: 11, name: 'Social Studies' },
+    ],
+  })
   assert.deepEqual(rows.map((row) => row.name), [
     'ENGLISH LANGUAGE',
     'MATHEMATICS',
@@ -38,22 +68,13 @@ test('alphabetical, because a pupil scans the list for one subject', () => {
   ])
 })
 
-test('two teachers are both named, and none reads as blank', () => {
-  assert.equal(
-    teachersOf({ ...MATHS, teachers: [{ id: 2, name: 'C. Nnaji' }, { id: 15, name: 'D. Freeman' }] }),
-    'C. Nnaji, D. Freeman',
-  )
-  assert.equal(teachersOf({ ...MATHS, teachers: [] }), '—')
-  assert.equal(teachersOf({ id: 2 }), '—')
-})
-
 test('a course sent without its name is still nameable by its id', () => {
-  const [row] = courseRows([{ id: 7 }])
+  const [row] = courseRows({ courses: [{ id: 7 }] })
   assert.equal(row.name, 'Subject 7')
   assert.equal(row.code, '—')
-  assert.equal(row.klass, '—')
 })
 
 test('no registration is no rows, not a row of dashes', () => {
-  assert.deepEqual(courseRows([]), [])
+  assert.deepEqual(courseRows({ courses: [], message: 'No registration found.' }), [])
+  assert.deepEqual(courseRows({}), [])
 })

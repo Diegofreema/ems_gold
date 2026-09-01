@@ -1,6 +1,7 @@
 import type { Invoice } from '../../../api/invoices/types.ts'
 import type { Student, StudentResult } from '../../../api/students/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
+import { countryIso } from '../../../features/collections/country-ids.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { payStatus } from './invoice-row.ts'
 import { formatDate, formatNaira } from '../../../lib/format.ts'
@@ -101,6 +102,12 @@ export function studentRow(
     department_id: id(student.department_id),
     class_arm_id: id(student.class_arm_id),
     sparent_id: id(student.sparent_id),
+    // The form picks a country by ISO code and a state by the school's own id,
+    // so an edit opens on what the record holds. A country the school's table
+    // numbers but no package does resolves to nothing, and the select opens
+    // empty rather than on the wrong country.
+    country: countryIso(student.country_id),
+    state: id(student.state_id),
     studentstatus: student.studentstatus ?? '',
     // `status` above is whichever of the two says something; this is the
     // admission word itself, which is what the endpoint takes.

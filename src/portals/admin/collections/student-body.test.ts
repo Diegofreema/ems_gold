@@ -15,6 +15,10 @@ const filled = {
   class_arm_id: '4',
   sparent_id: '2',
   religion: 'traditionalist',
+  // The form holds the ISO code for a country and the school's own id for a
+  // state, which is what a live pupil's record reads back as: Imo is 2663.
+  country: 'NG',
+  state: '2663',
 }
 
 test('the form goes out exactly as the endpoint asks for it', () => {
@@ -32,7 +36,18 @@ test('the form goes out exactly as the endpoint asks for it', () => {
     class_arm_id: '4',
     sparent_id: '2',
     religion: 'traditionalist',
+    country_id: 160,
+    state_id: 2663,
   })
+})
+
+test('the country is looked up in the school\u2019s own table, not the package\u2019s', () => {
+  // `country-state-city` puts Nigeria 159th and this server holds 160.
+  assert.equal(studentBody(filled, 1).country_id, 160)
+  // A country the school has no number for is stored without one rather than
+  // filed under somebody else's.
+  assert.equal(studentBody({ ...filled, country: 'GH' }, 1).country_id, undefined)
+  assert.equal(studentBody({ ...filled, state: '' }, 1).state_id, undefined)
 })
 
 test('the class goes as a number and the arm as the string the select holds', () => {
@@ -54,6 +69,8 @@ test('a field left empty is left out, so editing one section clears nothing', ()
   assert.equal(body.class_arm_id, undefined)
   assert.equal(body.sparent_id, undefined)
   assert.equal(body.dob, undefined)
+  assert.equal(body.country_id, undefined)
+  assert.equal(body.state_id, undefined)
 })
 
 test('a class nobody picked is not sent as a zero', () => {

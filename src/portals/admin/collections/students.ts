@@ -49,27 +49,55 @@ const IDENTITY: FormSectionSpec = {
   fields: [
     { key: 'fname', label: 'First name', required: true, placeholder: 'Ngozi' },
     { key: 'lname', label: 'Surname', required: true, placeholder: 'Eze' },
-    { key: 'mname', label: 'Middle name', placeholder: 'Chiamaka' },
-    { key: 'dob', label: 'Date of birth', date: true, past: true },
-    { key: 'gender', label: 'Gender', options: ['Female', 'Male'] },
-    { key: 'religion', label: 'Religion', placeholder: 'Christian' },
+    { key: 'mname', label: 'Middle name', required: true, placeholder: 'Chiamaka' },
+    { key: 'dob', label: 'Date of birth', required: true, date: true, past: true },
+    { key: 'gender', label: 'Gender', required: true, options: ['Female', 'Male'] },
+    { key: 'religion', label: 'Religion', required: true, placeholder: 'Christian' },
     // The pupil's own, not the household's — that one is on the guardian
     // record, and this is the address the pupil signs in with.
     {
       key: 'email',
       label: 'Email',
+      required: true,
       email: true,
       placeholder: 'pupil@example.com',
       hint: 'The pupil signs in with this.',
     },
-    { key: 'phone', label: 'Phone', numeric: true, placeholder: '0705 883 1190' },
+    { key: 'phone', label: 'Phone', required: true, numeric: true, placeholder: '0705 883 1190' },
     {
       key: 'address',
       label: 'Home address',
+      required: true,
       multiline: true,
       wide: true,
       placeholder: '14 Ogui Road, Enugu',
-      hint: 'Where the pupil lives, when that is not the household on the guardian record.',
+      hint: 'Where the pupil lives — the household on the guardian record, unless the pupil boards elsewhere.',
+    },
+  ],
+}
+
+/**
+ * Where the pupil is from. The endpoint takes both as the school's own
+ * numbers, and publishes no catalogue for either — `/countries` and `/states`
+ * are undeployed — so only the places it has been read to hold can be saved.
+ */
+const ORIGIN: FormSectionSpec = {
+  title: 'Where they are from',
+  fields: [
+    {
+      key: 'country',
+      label: 'Country',
+      required: true,
+      optionsFrom: 'countries',
+      hint: 'The school numbers countries its own way and publishes no list, so only the ones it has been seen to hold can be saved.',
+    },
+    {
+      key: 'state',
+      label: 'State',
+      required: true,
+      optionsFrom: 'states',
+      dependsOn: 'country',
+      hint: 'Only Nigeria’s states carry numbers this school can store.',
     },
   ],
 }
@@ -85,6 +113,7 @@ const CONTACT: FormSectionSpec = {
     {
       key: 'sparent_id',
       label: 'Guardian on record',
+      required: true,
       wide: true,
       optionsFrom: 'guardians',
       hint: 'Their email, phone and address come with the household. Add it under Parents first if it is not listed.',
@@ -250,6 +279,7 @@ export const students: CollectionDef = {
         },
       ],
     },
+    ORIGIN,
     CONTACT,
   ],
 }

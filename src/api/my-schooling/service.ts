@@ -1,6 +1,6 @@
 import { request } from '../client'
 import type {
-  MyCourse,
+  MyCourses,
   MyInvoices,
   MyMaterial,
   MyResult,
@@ -19,9 +19,12 @@ export const mySchoolingService = {
 
   dashboard: () => request<StudentDashboard>('students/me/dashboard'),
 
-  /** Subjects the caller is registered for. Empty school-wide — see `MyCourse`. */
-  courses: () =>
-    request<{ courses: MyCourse[] }>('students/me/courses').then((data) => data.courses ?? []),
+  /**
+   * Subjects the caller is registered for, with the class, session and term
+   * the registration was made against. The whole answer is kept: the class is
+   * a sibling of the list, not a field on a course.
+   */
+  courses: () => request<MyCourses>('students/me/courses'),
 
   /** The bills and the payments taken against them, in one answer. */
   invoices: () => request<MyInvoices>('students/me/invoices'),

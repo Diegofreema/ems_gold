@@ -117,27 +117,39 @@ export type MyMaterial = {
 
 /**
  * One subject the pupil is registered for, as `GET /students/me/courses`
- * would send it.
+ * sends it. Probed 2026-08-31 as pupil 4, who is registered for five.
  *
- * Unverified in the same way the materials shape is: the registration this
- * endpoint reads is empty for the whole school. Nobody is registered for
- * anything — `GET /teachers/me/registered-students?subject_id=` answers
- * `{ "registered": [] }` for every subject a teacher holds — and no route in
- * the API registers anyone, so the table cannot be filled from outside.
+ * This endpoint flattens: `teachers` is an array of **names**, not the
+ * `{ id, name }` records `/subjects/{id}` sends, and there is no `department`
+ * on the course at all — the class is a sibling of the list, the same one for
+ * every row. A subject nobody has been assigned to teach sends `[]`.
  *
- * The fields are the subject row itself, which two live endpoints do send:
- * `/teachers/me/subjects` expands `department` on it, and `/subjects/{id}`
- * carries `teachers` as `{ id, name }`. Both are read defensively, `teachers`
- * the more so — a pupil login can reach neither endpoint to confirm the join
- * comes through on theirs.
+ * `creditload` is 0 on every subject the school holds; it is a university
+ * field and the school does not use it.
  */
 export type MyCourse = {
   id: number
   name?: string | null
   subjectcode?: string | null
-  department_id?: number | null
-  department?: { id: number; name: string } | null
-  teachers?: { id: number; name: string }[] | null
+  creditload?: number | null
+  teachers?: (string | null)[] | null
+}
+
+/**
+ * The whole answer, not just the list. A registration belongs to a class, a
+ * session and a term, and the endpoint says which — the pupil's own class is
+ * not the one on their record but the one the registration was made against.
+ *
+ * `message` is the API's own sentence for an empty list; it is null whenever
+ * there is a registration to send.
+ */
+export type MyCourses = {
+  courses?: MyCourse[] | null
+  count?: number | null
+  class?: { id: number; name?: string | null; arm?: string | null } | null
+  session?: { id: number; name?: string | null } | null
+  semester?: { id: number; name?: string | null } | null
+  message?: string | null
 }
 
 export type MyResultParams = {

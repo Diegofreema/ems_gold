@@ -103,6 +103,12 @@ export type StudentBody = {
   class_arm_id?: number | string
   sparent_id?: number | string
   religion?: string
+  /**
+   * The school's own numbering, not any package's — see `country-ids.ts`.
+   * Every live pupil is country 160 with a state in the 2646+ range.
+   */
+  country_id?: number
+  state_id?: number
 }
 
 /** The API accepts exactly these two words. */
