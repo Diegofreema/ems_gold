@@ -90,6 +90,14 @@ test('an edit follows the record, never the form or the page', () => {
   assert.equal(staffTarget('teacher', 'Teacher', 'a-3'), 'admin')
 })
 
+test('both rows answer the form’s “Kind of record” in its own words', () => {
+  // The office row's `role` is the job — "Bursar", "Super Admin" — and the
+  // select has no such option, so an edit opened on no kind at all and the
+  // form showed the teaching half to an administrator.
+  assert.equal(teacherRow(teacher).kind, 'Teacher')
+  assert.equal(adminRow(OFFICER).kind, 'Administrators')
+})
+
 /** Francis Okorie as `GET /admins` answers on bronze, trimmed to the point. */
 const OFFICER: Admin = {
   id: 4,

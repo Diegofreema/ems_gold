@@ -15,6 +15,14 @@ import { formatDate } from '../../../lib/format.ts'
  */
 export type StaffKind = 'teacher' | 'admin'
 
+/**
+ * What the form's "Kind of record" select calls an office record.
+ *
+ * Held here rather than beside the form, because the rows have to answer in
+ * exactly this word for an edit to open on the right kind.
+ */
+export const ADMINISTRATORS = 'Administrators'
+
 const PREFIX: Record<StaffKind, string> = { teacher: 't', admin: 'a' }
 
 /** e.g. "t-14". The register mixes both, so a bare id would be ambiguous. */
@@ -38,12 +46,12 @@ export function parseStaffKey(key: string): { kind: StaffKind; id: string } {
  */
 export function staffTarget(
   pinned: StaffKind | undefined,
-  role: unknown,
+  chosen: unknown,
   recordId?: string,
 ): StaffKind {
   if (recordId) return parseStaffKey(recordId).kind
   if (pinned) return pinned
-  return role === 'Administrators' ? 'admin' : 'teacher'
+  return chosen === ADMINISTRATORS ? 'admin' : 'teacher'
 }
 
 function text(value: string | null | undefined): string {
@@ -109,6 +117,9 @@ export function teacherRow(teacher: Teacher): Row {
     subjectIds: subjects.map((one) => String(one.id)).join(','),
 
     // The edit form is keyed as the endpoint is, and prefills from here.
+    // `kind` is the form's own word, kept apart from `role` above: that one is
+    // the job for reading, and the two coincide only for a teacher.
+    kind: 'Teacher',
     firstname: teacher.firstname ?? '',
     lastname: teacher.lastname ?? '',
     middlename: teacher.middlename ?? '',
@@ -200,6 +211,11 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     address: text(admin.address),
     joined: asDate(admin.date_created),
 
+    // The form's "Kind of record", which is not the job. `role` above reads
+    // "Bursar" or "Super Admin", and the select has no such option — so an
+    // office record used to open on no kind at all, which took the teaching
+    // half of the form with it.
+    kind: ADMINISTRATORS,
     // The API calls the first half of the name `surname`; the form calls it
     // `firstname`, as it does for a teacher. Prefilling the wrong key left the
     // field blank on an edit, and saving that would have cleared the name.

@@ -15,6 +15,7 @@ import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { adminBody, adminUpdate, teacherBody, teacherUpdate } from './staff-body'
 import {
   activityRow,
+  ADMINISTRATORS,
   adminRow,
   parseStaffKey,
   privilegeRow,
@@ -31,7 +32,6 @@ import {
  * pagings — this register switches between them on the role filter instead,
  * which keeps every page a real page of a real endpoint.
  */
-const ADMINISTRATORS = 'Administrators'
 
 async function listTeachers(page: number, q: string): Promise<Paginated<Row>> {
   const { items, pagination } = await teachersService.list({ page, limit: PAGE_SIZE, q })
@@ -89,7 +89,7 @@ async function staffRecord(recordId: string): Promise<Row | undefined> {
  */
 function saveStaff(kind?: 'teacher' | 'admin') {
   return async (values: Record<string, unknown>, recordId?: string) => {
-    const target = staffTarget(kind, values.role, recordId)
+    const target = staffTarget(kind, values.kind, recordId)
 
     if (recordId) {
       const { id } = parseStaffKey(recordId)
@@ -160,7 +160,7 @@ const ACCOUNT: FormSectionSpec = {
  * too — the register's larger half, and the one the office reaches for.
  */
 function isTeaching(values: Record<string, unknown>): boolean {
-  return values.role !== ADMINISTRATORS
+  return values.kind !== ADMINISTRATORS
 }
 
 /**
@@ -328,7 +328,7 @@ export const staff: CollectionDef = {
       title: 'Kind of record',
       fields: [
         {
-          key: 'role',
+          key: 'kind',
           label: 'Kind of record',
           required: true,
           options: ['Teacher', ADMINISTRATORS],
