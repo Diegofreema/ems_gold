@@ -112,10 +112,10 @@ test('the class line shows the arm, and says neither twice', () => {
   assert.equal(classLine(entry({ class_name: null, class_arm: null })), 'No class yet')
 })
 
-test('an undrawn class keeps the school’s own sentence', () => {
+test('an undrawn class carries no message, so the page writes its own', () => {
   const [week] = childWeeks([UNDRAWN], WEDNESDAY)
   assert.equal(week.total, 0)
-  assert.equal(week.message, 'No timetable has been entered for this class yet.')
+  assert.equal(week.message, null)
 })
 
 test('a child with no timetable at all is still on the page, saying why', () => {
@@ -128,12 +128,14 @@ test('a child with no timetable at all is still on the page, saying why', () => 
   assert.match(week.message ?? '', /has not placed this child in a class/)
 })
 
-test('the entry’s own message is preferred to the grid’s', () => {
+test('the API’s own sentence is dropped, whichever field carries it', () => {
+  // It explains the school's session and term settings, which no guardian can
+  // change — the page says "no timetable yet" rather than passing it on.
   const [week] = childWeeks(
-    [entry({ student_id: 31, message: 'This child has left the school.' })],
+    [entry({ student_id: 31, message: 'This class has 2 period(s) on file, but under First Term 2024/2025.' })],
     WEDNESDAY,
   )
-  assert.equal(week.message, 'This child has left the school.')
+  assert.equal(week.message, null)
 })
 
 test('a tab says only as much as the household forces it to', () => {

@@ -1,6 +1,7 @@
 import type { Invoice } from '../../../api/invoices/types.ts'
 import type { Student, StudentResult } from '../../../api/students/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
+import { birthday, isoBirthday } from '../../../features/collections/birthday.ts'
 import { countryIso } from '../../../features/collections/country-ids.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { payStatus } from './invoice-row.ts'
@@ -25,20 +26,6 @@ function asDate(value: string | null | undefined): string {
   if (!value) return BLANK
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : formatDate(date)
-}
-
-/**
- * A birthday as the design writes dates, whichever way it was stored.
- *
- * Built off the calendar's own year, month and day rather than through
- * `new Date(value)`, which reads a bare YYYY-MM-DD as UTC and would print the
- * day before for anyone reading west of Greenwich.
- */
-function birthday(stored: string | null | undefined): string {
-  const iso = isoBirthday(stored)
-  if (!iso) return text(stored)
-  const [year, month, day] = iso.split('-').map(Number)
-  return formatDate(new Date(year, month - 1, day))
 }
 
 /**
@@ -188,34 +175,3 @@ export function resultRow(result: StudentResult, index: number): Row {
   }
 }
 
-/**
- * A stored birthday as the date picker reads it.
- *
- * **Two spellings reach this, and both have to be read.** The school's older
- * records hold DD/MM/YYYY; a pupil enrolled through this form is stored as
- * YYYY-MM-DD, because that is what `studentBody` sends. Reading only the first
- * left the edit form's picker empty for every pupil the office had created
- * itself — the birthday was on the record and on the panel beside it, and the
- * field that was meant to hold it opened blank.
- *
- * Neither is handed to `new Date`: DD/MM/YYYY is read as the wrong month for
- * any day of twelve or under, and a bare YYYY-MM-DD is read as UTC, which
- * moves the day west of Greenwich. Both are taken apart instead.
- *
- * Anything else is left for the picker to ignore, which opens it empty rather
- * than on a date nobody chose.
- */
-export function isoBirthday(stored: string | null | undefined): string {
-  const value = stored?.trim()
-  if (!value) return ''
-
-  // What this form writes, with or without a time hung off the end.
-  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
-  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
-
-  const parts = value.split('/')
-  if (parts.length !== 3) return ''
-  const [day, month, year] = parts
-  if (!day || !month || !year || year.length !== 4) return ''
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-}

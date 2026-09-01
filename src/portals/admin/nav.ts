@@ -77,7 +77,6 @@ export const adminNav: NavGroup[] = [
     items: [
       { to: '/admin/notices', label: 'Notice board', icon: Megaphone },
       { to: '/admin/library', label: 'Library', icon: Book },
-      { to: '/admin/privileges', label: 'Roles & privileges', icon: Shield },
       { to: '/admin/logs', label: 'Activity log', icon: List },
       { to: '/admin/settings', label: 'Settings', icon: SlidersHorizontal },
     ],

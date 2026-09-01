@@ -108,12 +108,10 @@ export function childWeeks(children: ChildTimetable[], today: Date): ChildWeek[]
       klass: classLine(entry),
       columns,
       total: periodTally(columns),
-      // The entry's own reason first — it is the one that explains a child
-      // with no class at all, where there is no grid to carry a message.
-      message:
-        entry.message?.trim() ||
-        grid?.message?.trim() ||
-        (grid ? null : 'The school has not placed this child in a class yet.'),
+      // Only the reason this app can state itself. The API's own sentence for
+      // an empty week explains the school's session settings, which a parent
+      // can do nothing about — the page says "no timetable yet" instead.
+      message: grid ? null : 'The school has not placed this child in a class yet.',
     }
   })
 }

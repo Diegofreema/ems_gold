@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { NotFoundLink } from '@/components/feedback/not-found-state'
 import type { Notification } from '@/features/notifications/types'
-import type { AccountSummary } from './account'
 
 export type PortalRole = 'admin' | 'teacher' | 'student' | 'parent'
 
@@ -30,7 +29,6 @@ export type PortalConfig = {
   roleLabel: string
   basePath: string
   nav: NavGroup[]
-  account: AccountSummary
   /** Sidebar block between the brand and the nav. */
   context?: ReactNode
   /** Strip under the header — the parent portal's child switcher. */

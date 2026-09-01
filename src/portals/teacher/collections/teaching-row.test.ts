@@ -88,8 +88,15 @@ test('a pupil reads their admission number, arm and class', () => {
   assert.equal(row.name, 'Aniegbokas Chukwudi')
   assert.equal(row.arm, 'JSS1 A')
   assert.equal(row.klass, 'JSS 1')
-  assert.equal(row.born, '10/11/1986')
+  assert.equal(row.born, '10 Nov 1986')
   assert.equal(row.username, 'chukd5@outlook.com')
+})
+
+test('a birthday stored the other way round is still written as a date', () => {
+  // A pupil the office enrolled through this app is stored YYYY-MM-DD, and
+  // used to reach the panel raw — "2023-04-07" beside every other date in the
+  // design's own wording.
+  assert.equal(pupilRow({ ...PUPIL, dob: '2023-04-07' }).born, '07 Apr 2023')
 })
 
 test('the standing shown is the one the school filled in', () => {

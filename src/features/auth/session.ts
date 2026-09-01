@@ -85,9 +85,13 @@ export async function refreshAccount(queryClient: QueryClient) {
  * own definition — which is only reached in the moment between signing out and
  * the redirect landing, since the guard will not render a shell without one.
  */
-export function useAccountSummary(fallback: AccountSummary): AccountSummary {
+export function useAccountSummary(roleLabel: string): AccountSummary {
   const account = useSessionStore((state) => state.account)
-  return account ? accountSummary(account) : fallback
+  if (account) return accountSummary(account)
+  // Nobody, deliberately. This shows in the blink before `/users/me` answers
+  // and in the moment between signing out and the redirect landing — a name
+  // written here would be read off the screen as a real record.
+  return { name: 'Signed in', line: roleLabel, initials: '' }
 }
 
 /**

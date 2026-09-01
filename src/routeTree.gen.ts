@@ -40,7 +40,6 @@ import { Route as AdminNoticesRouteImport } from './routes/admin/notices'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminParentsRouteImport } from './routes/admin/parents'
 import { Route as AdminParentsInvitedRouteImport } from './routes/admin/parents-invited'
-import { Route as AdminPrivilegesRouteImport } from './routes/admin/privileges'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminResultQueueRouteImport } from './routes/admin/result-queue'
 import { Route as AdminResultsRouteImport } from './routes/admin/results'
@@ -260,11 +259,6 @@ const AdminParentsRoute = AdminParentsRouteImport.update({
 const AdminParentsInvitedRoute = AdminParentsInvitedRouteImport.update({
   id: '/parents-invited',
   path: '/parents-invited',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminPrivilegesRoute = AdminPrivilegesRouteImport.update({
-  id: '/privileges',
-  path: '/privileges',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminProfileRoute = AdminProfileRouteImport.update({
@@ -636,7 +630,6 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
-  '/admin/privileges': typeof AdminPrivilegesRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
@@ -731,7 +724,6 @@ export interface FileRoutesByTo {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
-  '/admin/privileges': typeof AdminPrivilegesRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
@@ -832,7 +824,6 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
-  '/admin/privileges': typeof AdminPrivilegesRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
@@ -933,7 +924,6 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
-    | '/admin/privileges'
     | '/admin/profile'
     | '/admin/result-queue'
     | '/admin/results'
@@ -1028,7 +1018,6 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
-    | '/admin/privileges'
     | '/admin/profile'
     | '/admin/result-queue'
     | '/admin/results'
@@ -1128,7 +1117,6 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
-    | '/admin/privileges'
     | '/admin/profile'
     | '/admin/result-queue'
     | '/admin/results'
@@ -1424,13 +1412,6 @@ declare module '@tanstack/react-router' {
       path: '/parents-invited'
       fullPath: '/admin/parents-invited'
       preLoaderRoute: typeof AdminParentsInvitedRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/privileges': {
-      id: '/admin/privileges'
-      path: '/privileges'
-      fullPath: '/admin/privileges'
-      preLoaderRoute: typeof AdminPrivilegesRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/profile': {
@@ -1915,7 +1896,6 @@ interface AdminRouteRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParentsRoute: typeof AdminParentsRoute
   AdminParentsInvitedRoute: typeof AdminParentsInvitedRoute
-  AdminPrivilegesRoute: typeof AdminPrivilegesRoute
   AdminProfileRoute: typeof AdminProfileRoute
   AdminResultQueueRoute: typeof AdminResultQueueRoute
   AdminResultsRoute: typeof AdminResultsRoute
@@ -1957,7 +1937,6 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParentsRoute: AdminParentsRoute,
   AdminParentsInvitedRoute: AdminParentsInvitedRoute,
-  AdminPrivilegesRoute: AdminPrivilegesRoute,
   AdminProfileRoute: AdminProfileRoute,
   AdminResultQueueRoute: AdminResultQueueRoute,
   AdminResultsRoute: AdminResultsRoute,

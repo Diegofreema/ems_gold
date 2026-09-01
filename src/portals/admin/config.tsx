@@ -17,10 +17,5 @@ export const adminPortal: PortalConfig = {
     { to: '/admin/students', label: 'Student register', hint: 'Every pupil on file' },
     { to: '/admin/logs', label: 'Activity log', hint: 'Who did what' },
   ],
-  account: {
-    name: 'Amaka Okonkwo',
-    line: 'Bursar · Full access',
-    initials: 'AO',
-  },
   headerStatus: <CurrentTerm />,
 }

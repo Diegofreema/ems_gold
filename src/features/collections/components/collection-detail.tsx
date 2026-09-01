@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { Pencil } from 'lucide-react'
-import { toast } from 'sonner'
+// `toast` goes back in with the buttons commented out below.
 import { BackLink } from '@/components/page/back-link'
 import { ExternalLink } from '@/components/common/external-link'
 import { MissingState } from '@/components/feedback/missing-state'
@@ -22,7 +22,7 @@ import type {
   FlowSpec,
   Row,
 } from '../types'
-import { fileActionToast, isFileAction } from '../primary-action'
+// `fileActionToast` and `isFileAction` go back in with them.
 import { useRowAction } from '../use-row-action'
 import { cn } from '@/lib/utils'
 import { DetailTabPanel } from './detail-tab-panel'
@@ -191,17 +191,22 @@ export function CollectionDetail({
               {flowButtons}
             </>
           ) : !editRoute ? (
-            <Button
-              onClick={() =>
-                toast(
-                  isFileAction(definition.action)
-                    ? fileActionToast(definition.action)
-                    : `${definition.action} — requested`,
-                )
-              }
-            >
-              {definition.action}
-            </Button>
+            // Commented out until the school decides what it should do — it
+            // only raised a toast, and announcing a download that never
+            // arrives is worse than offering nothing.
+            //
+            // <Button
+            //   onClick={() =>
+            //     toast(
+            //       isFileAction(definition.action)
+            //         ? fileActionToast(definition.action)
+            //         : `${definition.action} — requested`,
+            //     )
+            //   }
+            // >
+            //   {definition.action}
+            // </Button>
+            null
           ) : (
             <>
               <Button
@@ -222,9 +227,14 @@ export function CollectionDetail({
                   {actionLabel}
                 </Button>
               )}
+              {/* Commented out with the one above: it said "Not wired up
+                  yet" out loud, which is not something a record panel should
+                  offer.
+
               <Button variant="outline" onClick={() => toast('Not wired up yet')}>
                 {definition.kicker === 'Finance' ? 'Print' : 'Export'}
               </Button>
+              */}
             </>
           )}
         </div>

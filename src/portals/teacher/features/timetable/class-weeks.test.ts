@@ -127,10 +127,10 @@ test('classes the teacher takes come first, then drawn weeks, then empty ones', 
   )
 })
 
-test('an empty class keeps the school’s own sentence', () => {
+test('an empty class is empty, and carries no sentence of the school’s own', () => {
   const [, , empty] = build([JSS1, SSS1_TWO, NOTHING])
   assert.equal(empty.total, 0)
-  assert.equal(empty.message, 'No timetable has been entered for this class yet.')
+  assert.equal('message' in empty, false)
 })
 
 test('the summary counts periods and the classes they are spread over', () => {

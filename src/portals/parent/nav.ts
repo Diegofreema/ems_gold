@@ -5,12 +5,12 @@ import {
   CreditCard,
   FileText,
   LayoutGrid,
-  MessageSquare,
+  // MessageSquare goes back in with the Messages group below.
   PenLine,
   SquareCheckBig,
   Users,
-} from 'lucide-react'
-import type { NavGroup } from '@/lib/portal'
+} from 'lucide-react';
+import type { NavGroup } from '@/lib/portal';
 
 export const parentNav: NavGroup[] = [
   {
@@ -28,12 +28,12 @@ export const parentNav: NavGroup[] = [
       { to: '/parent/timetable', label: 'Timetables', icon: CalendarClock },
     ],
   },
-  {
-    heading: 'Messages',
-    items: [
-      { to: '/parent/msg-school', label: 'Message the school', icon: MessageSquare },
-    ],
-  },
+  // {
+  //   heading: 'Messages',
+  //   items: [
+  //     { to: '/parent/msg-school', label: 'Message the school', icon: MessageSquare },
+  //   ],
+  // },
   {
     heading: 'Tests',
     items: [
@@ -49,4 +49,4 @@ export const parentNav: NavGroup[] = [
       { to: '/parent/invoices', label: 'Invoices', icon: FileText },
     ],
   },
-]
+];

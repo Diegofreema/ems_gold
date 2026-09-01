@@ -6,6 +6,7 @@ import type {
   Topic,
 } from '../../../api/teaching/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
+import { birthday } from '../../../features/collections/birthday.ts'
 import { mark } from '../../../features/collections/mark.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { when } from '../../../features/collections/when.ts'
@@ -57,8 +58,10 @@ export function pupilRow(student: TeacherStudent): Row {
 
     // Everything below is read by the record panel rather than the table.
     gender: text(student.gender),
-    // Birthdays arrive DD/MM/YYYY on this API, which is already readable.
-    born: text(student.dob),
+    // Both spellings reach here — DD/MM/YYYY off the school's older records
+    // and YYYY-MM-DD off the ones this app enrolled — so it is read through
+    // the same function the office's register uses.
+    born: birthday(student.dob),
     email: text(student.email),
     phone: text(student.phone),
     address: text(student.address),

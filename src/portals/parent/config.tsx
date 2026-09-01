@@ -11,11 +11,6 @@ export const parentPortal: PortalConfig = {
   basePath: '/parent',
   nav: parentNav,
   useNotifications: useMyNotifications,
-  account: {
-    name: 'Mr. Emmanuel Udo',
-    line: '0803 441 2280 · 2 children',
-    initials: 'EU',
-  },
   notFoundAudience: 'parents',
   notFoundLinks: [
     { to: '/parent', label: 'Dashboard', hint: 'What needs you today' },

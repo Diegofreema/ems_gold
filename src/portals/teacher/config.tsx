@@ -18,11 +18,6 @@ export const teacherPortal: PortalConfig = {
     { to: '/teacher/students', label: 'My students', hint: 'The pupils on your roll' },
     { to: '/teacher/topics', label: 'Topics taught', hint: 'What the office reads' },
   ],
-  account: {
-    name: 'Chukwuma Nnaji',
-    line: 'STF-014 · Mathematics',
-    initials: 'CN',
-  },
   context: <MarkingTerm />,
   // No `headerStatus`. The design's "Week 9 of 13 · Results due 05 Dec" wants
   // the school calendar, and a teaching login is refused every endpoint that

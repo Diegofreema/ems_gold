@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Download, Plus, X } from 'lucide-react'
-import { toast } from 'sonner'
+// `Download` and `toast` go back in with the buttons commented out below.
+import { Plus, X } from 'lucide-react'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { ListSkeleton } from '@/components/feedback/list-skeleton'
@@ -14,7 +14,7 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
-import { fileActionToast, primaryActionKind } from '../primary-action'
+import { primaryActionKind } from '../primary-action'
 import { useCollectionRows } from '../use-collection-rows'
 import { useRemoveRecord } from '../use-remove-record'
 import { useRowAction } from '../use-row-action'
@@ -109,15 +109,26 @@ export function CollectionList({
   // At most one flow opens without a record, and it is the one the button on
   // this page is for.
   const listFlow = flows?.find((one) => one.fromList)
+  // One decision, taken in `primaryActionKind`. A second `readonly` gate here
+  // used to overrule the destination such a collection had named.
+  //
+  // 'file' and 'placeholder' draw nothing for now. Both only raised a toast,
+  // and a button that announces a download and then hands over no file is
+  // worse than no button at all. `primaryActionKind` still returns them, so
+  // restoring one is uncommenting its branch:
+  //
+  //   primary === 'file' ? (
+  //     <Button onClick={() => toast(fileActionToast(definition.action))}>
+  //       <Download className="size-[15px]" strokeWidth={2} />
+  //       {definition.action}
+  //     </Button>
+  //   ) : ...
+  //
+  //   <Button onClick={() => toast(`${definition.action} — requested`)}>
+  //     {definition.action}
+  //   </Button>
   const primaryAction =
-    // One decision, taken in `primaryActionKind`. A second `readonly` gate
-    // here used to overrule the destination such a collection had named.
-    primary === 'none' ? null : primary === 'file' ? (
-      <Button onClick={() => toast(fileActionToast(definition.action))}>
-        <Download className="size-[15px]" strokeWidth={2} />
-        {definition.action}
-      </Button>
-    ) : primary === 'flow' && routes.flow && listFlow ? (
+    primary === 'flow' && routes.flow && listFlow ? (
       <Button asChild>
         <Link
           to={routes.flow}
@@ -138,11 +149,7 @@ export function CollectionList({
       <Button asChild>
         <Link to={definition.actionTo}>{definition.action}</Link>
       </Button>
-    ) : (
-      <Button onClick={() => toast(`${definition.action} — requested`)}>
-        {definition.action}
-      </Button>
-    )
+    ) : null
 
   // A readonly collection has no edit route of its own, so its rows offer
   // neither pencil nor bin.

@@ -37,7 +37,7 @@ export function Sidebar({
   const collapsedGroups = useShellStore((state) => state.collapsedGroups)
   const toggleGroup = useShellStore((state) => state.toggleGroup)
   const closeDrawer = useShellStore((state) => state.closeDrawer)
-  const account = useAccountSummary(config.account)
+  const account = useAccountSummary(config.roleLabel)
 
   const nav = useMemo(
     () => (config.searchableNav ? filterNav(config.nav, navQuery) : config.nav),

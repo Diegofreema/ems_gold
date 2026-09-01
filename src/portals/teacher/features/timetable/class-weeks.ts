@@ -32,8 +32,6 @@ export type ClassWeek = {
   /** Periods in the class's week, and how many of them are the reader's. */
   total: number
   mine: number
-  /** The school's own sentence for an empty week, where it sent one. */
-  message: string | null
 }
 
 /** The subject ids in this teacher's hands. */
@@ -95,7 +93,6 @@ export function classWeeks(
       columns,
       total: periodTally(columns),
       mine: mineTally(columns),
-      message: grid.message?.trim() || null,
     }
   })
 

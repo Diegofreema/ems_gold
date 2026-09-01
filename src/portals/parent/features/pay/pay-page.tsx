@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useGatewayConfig, useInitialisePayment } from '@/api/payments/hooks'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
+import { BackLink } from '@/components/page/back-link'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
@@ -59,6 +60,7 @@ export function PayPage() {
 
   return (
     <div className="max-w-[680px]">
+      <BackLink to="/parent" label="Back to dashboard" />
       <PageHeader
         kicker="Finance"
         title="Pay fees"
@@ -128,9 +130,11 @@ export function PayPage() {
       <Rule />
 
       <div className="flex flex-wrap items-center gap-2.5">
-        <Button onClick={pay} disabled={!chosen} pending={open.isPending}>
-          {chosen ? `Pay ${chosen.balance}` : 'Pay'}
-        </Button>
+        {chosen && (
+          <Button onClick={pay} pending={open.isPending}>
+            Pay {chosen.balance}
+          </Button>
+        )}
         <Button asChild variant="outline">
           <Link to="/parent/invoices">See all invoices</Link>
         </Button>

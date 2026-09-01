@@ -9,11 +9,6 @@ export const studentPortal: PortalConfig = {
   basePath: '/student',
   nav: studentNav,
   useNotifications: useMyNotifications,
-  account: {
-    name: 'Amara Okeke',
-    line: 'NEB/2022/0871 · SS1 A',
-    initials: 'AO',
-  },
   notFoundAudience: 'pupils',
   notFoundLinks: [
     // Hints describe the page, not its contents: nothing here has counted

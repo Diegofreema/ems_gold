@@ -98,7 +98,7 @@ function ChildWeekPanel({ week }: { week: ChildWeek }) {
         {week.total === 0 ? (
           <p className="border-2 border-divider px-4 py-5 text-[13px] text-muted-foreground">
             {/* The school's own sentence where it sent one. */}
-            {week.message ?? 'No timetable has been entered for this class yet.'}
+            {week.message ?? 'No timetable yet for this class.'}
           </p>
         ) : (
           // No `onOpen`: the parent portal publishes no page for one period,

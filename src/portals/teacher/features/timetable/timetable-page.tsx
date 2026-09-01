@@ -71,8 +71,11 @@ function ClassSection({ week }: { week: ClassWeek }) {
       <div className="mt-3">
         {week.total === 0 ? (
           <p className="border-2 border-divider px-4 py-5 text-[13px] text-muted-foreground">
-            {/* The school's own sentence where it sent one. */}
-            {week.message ?? 'No timetable has been entered for this class yet.'}
+            {/* Not the API's own sentence. Where the periods on file sit under
+                a term the school is no longer in, it explains the school's
+                session settings to whoever is reading — which is the office's
+                business, not something to hand a teacher mid-lesson. */}
+            No timetable yet for this class.
           </p>
         ) : (
           // No `onOpen`: the teacher portal publishes no page for one period,
