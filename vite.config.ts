@@ -23,10 +23,10 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
-  // The API sends no Access-Control-Allow-Origin, so a browser on localhost
-  // cannot call it directly. Proxying keeps dev requests same-origin. In
-  // production the app has to be served from the API's own origin, or the API
-  // has to start sending the header.
+  // The API sends no Access-Control-Allow-Origin, so no browser may call it
+  // directly. Proxying keeps dev requests same-origin; production does the
+  // same thing through the `/api` rewrite in vercel.json. Both must point at
+  // the same host, or dev and production talk to different schools.
   server: {
     proxy: {
       '/api': {

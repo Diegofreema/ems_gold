@@ -5,12 +5,16 @@ import type { ApiEnvelope, ApiFieldErrors } from './types'
 export { paginated } from './url.ts'
 export type { QueryValue }
 
+/**
+ * Always same-origin. The API sends no `Access-Control-Allow-Origin`, so the
+ * browser may not call it directly from anywhere — dev goes through Vite's
+ * proxy and production through the rewrite in `vercel.json`, both of which
+ * hand `/api` to the school's server from the server side.
+ *
+ * Absolute rather than the bare path, because `buildUrl` resolves against it.
+ */
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ??
-  // Dev goes through Vite's proxy — see the CORS note in vite.config.ts.
-  (import.meta.env.DEV
-    ? `${window.location.origin}/api`
-    : 'https://bronze.uaes.education/api')
+  import.meta.env.VITE_API_URL ?? `${window.location.origin}/api`
 
 /** Anything the API refused, with the field errors a form needs to show. */
 export class ApiError extends Error {
