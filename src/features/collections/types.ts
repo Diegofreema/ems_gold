@@ -43,6 +43,7 @@ export type ListPath =
   | '/student/timetable'
   | '/student/tests'
   | '/student/results'
+  | '/student/attendance'
   | '/student/invoices'
   | '/parent/children'
   | '/parent/results'

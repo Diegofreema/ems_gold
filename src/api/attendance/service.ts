@@ -1,4 +1,5 @@
 import { request, requestBlob } from '../client'
+import type { Id } from '../types'
 import type {
   AttendanceClassArm,
   AttendanceDashboard,
@@ -6,6 +7,16 @@ import type {
   AttendanceExportParams,
   AttendanceReport,
   AttendanceReportParams,
+  Coverage,
+  CoverageParams,
+  MyAttendance,
+  MyAttendanceParams,
+  MyClass,
+  Register,
+  RegisterParams,
+  StatusCatalogue,
+  SavedRegister,
+  TakeRegisterBody,
 } from './types'
 
 export const attendanceService = {
@@ -35,4 +46,53 @@ export const attendanceService = {
     request<{ class_arms: AttendanceClassArm[] }>('admin-attendances/class-arms', {
       query: { department_id: departmentId },
     }).then((data) => data.class_arms),
+}
+
+/**
+ * The daily register: what a class teacher takes, and what a pupil or a
+ * guardian reads off it.
+ *
+ * The class teacher of an arm takes its register, not every teacher who
+ * teaches the class — a subject teacher gets a 403.
+ */
+export const registerService = {
+  /** 404 for a teacher who is nobody's class teacher. */
+  myClasses: () =>
+    request<{ classes: MyClass[] }>('attendances/my-classes').then((data) => data.classes),
+
+  /** The school's own words for a mark, and which of them count as in school. */
+  statuses: () => request<StatusCatalogue>('attendances/statuses'),
+
+  /** One arm, one day; today where no date is given. */
+  register: (params: RegisterParams) =>
+    request<Register>('attendances/register', { query: { ...params } }),
+
+  /**
+   * The saved register comes back on the response, so nothing needs re-reading
+   * to show what was written.
+   */
+  take: (body: TakeRegisterBody) =>
+    request<SavedRegister>('attendances/register', { method: 'POST', body }),
+
+  coverage: (params: CoverageParams) =>
+    request<Coverage>('attendances/coverage', { query: { ...params } }),
+
+  /** The signed-in pupil's own record. */
+  mine: (params: MyAttendanceParams = {}) =>
+    request<MyAttendance>('attendances/mine', { query: { ...params } }),
+
+  /**
+   * A guardian's children with their figures. Unused: the parent portal reads
+   * `sparents/my-children/{id}/attendance`, whose shape is verified and whose
+   * stats are the server's. Here because the service mirrors the controller.
+   */
+  children: () => request<MyAttendance>('attendances/children'),
+
+  /**
+   * Whose pupil this is decides the answer, not the id in the URL — a class
+   * teacher may read their own arm's pupils, a guardian only their children,
+   * a pupil only themselves. Unused for the same reason as `children`.
+   */
+  forStudent: (studentId: Id, params: MyAttendanceParams = {}) =>
+    request<MyAttendance>(`attendances/student/${studentId}`, { query: { ...params } }),
 }

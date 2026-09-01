@@ -1,6 +1,8 @@
 import { queryOptions } from '@tanstack/react-query'
 import { assignmentKeys } from '@/api/assignments/keys'
 import { assignmentsService } from '@/api/assignments/service'
+import { registerKeys } from '@/api/attendance/keys'
+import { registerService } from '@/api/attendance/service'
 import { mySchoolingKeys } from '@/api/my-schooling/keys'
 import { mySchoolingService } from '@/api/my-schooling/service'
 import { resultKeys } from '@/api/results/keys'
@@ -37,6 +39,18 @@ export const studentStatsQuery = queryOptions({
 export const studentResultsQuery = queryOptions({
   queryKey: resultKeys.mine({}),
   queryFn: () => resultsService.mine(),
+})
+
+/**
+ * `GET /attendances/mine` — every day somebody took a register on this pupil.
+ *
+ * No parameters: the range is the whole record, because a pupil has no term to
+ * narrow it by. The percentage on it is the school's own, counted over days
+ * marked rather than over the length of term.
+ */
+export const studentAttendanceQuery = queryOptions({
+  queryKey: registerKeys.mine({}),
+  queryFn: () => registerService.mine(),
 })
 
 /** `GET /students/me/invoices` — settled bills only, whatever it is asked. */

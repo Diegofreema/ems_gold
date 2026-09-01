@@ -1,5 +1,6 @@
 import type { CollectionDef } from '@/features/collections/types'
 import { results, tests } from './assessment'
+import { attendance } from './attendance'
 import { invoices } from './finance'
 import { courses, materials, timetable } from './learning'
 
@@ -10,5 +11,6 @@ export const studentCollections = {
   timetable,
   tests,
   results,
+  attendance,
   invoices,
 } satisfies Record<string, CollectionDef>

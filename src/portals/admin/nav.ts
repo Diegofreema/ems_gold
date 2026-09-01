@@ -35,18 +35,6 @@ export const adminNav: NavGroup[] = [
     ],
   },
   {
-    heading: 'Finance',
-    items: [
-      { to: '/admin/fees', label: 'Fee catalogue', icon: BadgeDollarSign },
-      // No badge: the queue counts itself on the page, and a number here that
-      // disagreed with the one on screen would be the one people believed.
-      { to: '/admin/collect', label: 'Fee collection', icon: CreditCard },
-      { to: '/admin/invoices', label: 'Invoices', icon: FileText },
-      { to: '/admin/spendings', label: 'Spendings', icon: ChartLine },
-      { to: '/admin/analytics', label: 'Analytics', icon: ChartColumn },
-    ],
-  },
-  {
     heading: 'Students',
     items: [
       { to: '/admin/students', label: 'Enrolled', icon: Users },
@@ -92,6 +80,18 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/privileges', label: 'Roles & privileges', icon: Shield },
       { to: '/admin/logs', label: 'Activity log', icon: List },
       { to: '/admin/settings', label: 'Settings', icon: SlidersHorizontal },
+    ],
+  },
+  {
+    heading: 'Finance',
+    items: [
+      { to: '/admin/fees', label: 'Fee catalogue', icon: BadgeDollarSign },
+      // No badge: the queue counts itself on the page, and a number here that
+      // disagreed with the one on screen would be the one people believed.
+      { to: '/admin/collect', label: 'Fee collection', icon: CreditCard },
+      { to: '/admin/invoices', label: 'Invoices', icon: FileText },
+      { to: '/admin/spendings', label: 'Spendings', icon: ChartLine },
+      { to: '/admin/analytics', label: 'Analytics', icon: ChartColumn },
     ],
   },
 ]

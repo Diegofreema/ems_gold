@@ -72,11 +72,9 @@ test('a guardian is shown with the number to reach them on', () => {
   assert.equal(studentRow(withFather).parent, 'Mr O. Udoye')
 })
 
-test('the join timestamp is written as a date, and a plain date is left alone', () => {
+test('the join timestamp is written as a date, and so is the birthday', () => {
   assert.equal(studentRow(pupil).enrolled, '27 Aug 2026')
-  // `born` is the birthday as the school typed it; reformatting it would
-  // guess an order. `dob` is the same day for the picker — see below.
-  assert.equal(studentRow(pupil).born, '10/11/1986')
+  assert.equal(studentRow(pupil).born, '10 Nov 1986')
 })
 
 test('once enrolled it is the enrolment status that shows, not the admission one', () => {
@@ -171,19 +169,32 @@ test('a pupil with no enrolment word on them can still be suspended', () => {
   assert.equal(suspendAction('—').next, 'Suspended')
 })
 
-test('a birthday is carried twice — as the school writes it, and as the picker reads it', () => {
-  // The API stores DD/MM/YYYY. Handing that to the date field left every edit
-  // form opening on an empty picker, so the row also writes it YYYY-MM-DD.
+test('a birthday is carried twice — to read, and for the picker', () => {
   const row = studentRow(pupil)
-  assert.equal(row.born, '10/11/1986')
+  assert.equal(row.born, '10 Nov 1986')
   assert.equal(row.dob, '1986-11-10')
+})
+
+test('a pupil enrolled through this form fills the picker too', () => {
+  // This is the bug: `studentBody` sends YYYY-MM-DD, so every pupil the office
+  // created here came back spelled that way and the edit form opened on an
+  // empty picker — with the birthday sitting on the panel beside it.
+  const own = { ...(pupil as object), dob: '2012-01-09' } as never
+  assert.equal(studentRow(own).dob, '2012-01-09')
+  assert.equal(studentRow(own).born, '09 Jan 2012')
+})
+
+test('a birthday stamped with a time is still just the day', () => {
+  const stamped = { ...(pupil as object), dob: '2012-01-09T00:00:00+01:00' } as never
+  assert.equal(studentRow(stamped).dob, '2012-01-09')
 })
 
 test('a pupil with no birthday on file leaves the picker empty, not on today', () => {
   assert.equal(studentRow({ ...(pupil as object), dob: null } as never).dob, '')
   assert.equal(studentRow({ ...(pupil as object), dob: null } as never).born, '—')
-  // Anything that is not three parts is left alone rather than guessed at.
+  // Anything that is neither spelling is left alone rather than guessed at.
   assert.equal(studentRow({ ...(pupil as object), dob: '1986' } as never).dob, '')
+  assert.equal(studentRow({ ...(pupil as object), dob: '1986' } as never).born, '1986')
 })
 
 test('a single-digit day and month are padded, so the picker can read them', () => {

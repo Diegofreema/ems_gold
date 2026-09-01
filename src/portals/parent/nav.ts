@@ -35,18 +35,18 @@ export const parentNav: NavGroup[] = [
     ],
   },
   {
+    heading: 'Tests',
+    items: [
+      { to: '/parent/tests', label: 'Tests for my children', icon: PenLine },
+    ],
+  },
+  {
     heading: 'Finance',
     items: [
       // No badge: the dashboard counts what is owing from the ledger, and a
       // number written in here would be the one believed when they disagreed.
       { to: '/parent/pay', label: 'Pay fees', icon: CreditCard },
       { to: '/parent/invoices', label: 'Invoices', icon: FileText },
-    ],
-  },
-  {
-    heading: 'Tests',
-    items: [
-      { to: '/parent/tests', label: 'Tests for my children', icon: PenLine },
     ],
   },
 ]

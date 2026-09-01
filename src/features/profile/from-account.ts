@@ -22,14 +22,20 @@ function ownedValues(account: Account): Record<string, string> {
   }
 }
 
-/** The office and the role name, for the line under the person's name. */
-function metaFor(account: Account, line: string): string {
+/**
+ * The office and the role name, for the line under the person's name.
+ *
+ * The role name here rather than the profile type the sidebar shows: this is
+ * the page where an administrator's own record is read, and `role_name` is the
+ * only thing that tells a Super Admin from an ordinary one.
+ */
+function metaFor(account: Account): string {
   const department =
     account.profile_type === 'admin'
       ? (account.profile as Admin | undefined)?.department?.name
       : undefined
 
-  return [line, department].filter(Boolean).join(' · ')
+  return [account.role?.role_name, department].filter(Boolean).join(' · ')
 }
 
 /**
@@ -56,7 +62,7 @@ export function profileFromAccount(config: ProfileConfig, account: Account): Pro
   return {
     ...config,
     initials: summary.initials,
-    meta: metaFor(account, summary.line),
+    meta: metaFor(account),
     // Nothing to type into where nothing can be saved: the whole record is
     // shown the way the office-held fields already are.
     fields: ownsProfile(account)

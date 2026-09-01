@@ -28,6 +28,20 @@ function asDate(value: string | null | undefined): string {
 }
 
 /**
+ * A birthday as the design writes dates, whichever way it was stored.
+ *
+ * Built off the calendar's own year, month and day rather than through
+ * `new Date(value)`, which reads a bare YYYY-MM-DD as UTC and would print the
+ * day before for anyone reading west of Greenwich.
+ */
+function birthday(stored: string | null | undefined): string {
+  const iso = isoBirthday(stored)
+  if (!iso) return text(stored)
+  const [year, month, day] = iso.split('-').map(Number)
+  return formatDate(new Date(year, month - 1, day))
+}
+
+/**
  * Suspending is a switch, not an edit: the button offers whichever of the two
  * states the pupil is not currently in, and says so in the past tense once the
  * API has taken it.
@@ -79,7 +93,10 @@ export function studentRow(
     // Everything below is read by the record panel rather than the table.
     class: text(student.department?.name),
     gender: text(student.gender),
-    born: text(student.dob),
+    // Read through the same function the picker uses, so a pupil the office
+    // enrolled here is shown "10 Nov 1986" like every other record rather than
+    // the raw YYYY-MM-DD this form stored them as.
+    born: birthday(student.dob),
     religion: text(student.religion),
     email: text(student.email),
     phone: text(student.phone),
@@ -172,15 +189,33 @@ export function resultRow(result: StudentResult, index: number): Row {
 }
 
 /**
- * A stored birthday as the date picker reads it. The API writes DD/MM/YYYY,
- * which `new Date` would read as the wrong month half the year, so it is
- * taken apart rather than parsed. Anything else is left for the picker to
- * ignore, which opens it empty rather than on a date nobody chose.
+ * A stored birthday as the date picker reads it.
+ *
+ * **Two spellings reach this, and both have to be read.** The school's older
+ * records hold DD/MM/YYYY; a pupil enrolled through this form is stored as
+ * YYYY-MM-DD, because that is what `studentBody` sends. Reading only the first
+ * left the edit form's picker empty for every pupil the office had created
+ * itself — the birthday was on the record and on the panel beside it, and the
+ * field that was meant to hold it opened blank.
+ *
+ * Neither is handed to `new Date`: DD/MM/YYYY is read as the wrong month for
+ * any day of twelve or under, and a bare YYYY-MM-DD is read as UTC, which
+ * moves the day west of Greenwich. Both are taken apart instead.
+ *
+ * Anything else is left for the picker to ignore, which opens it empty rather
+ * than on a date nobody chose.
  */
-function isoBirthday(stored: string | null | undefined): string {
-  const parts = stored?.trim().split('/')
-  if (parts?.length !== 3) return ''
+export function isoBirthday(stored: string | null | undefined): string {
+  const value = stored?.trim()
+  if (!value) return ''
+
+  // What this form writes, with or without a time hung off the end.
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+
+  const parts = value.split('/')
+  if (parts.length !== 3) return ''
   const [day, month, year] = parts
-  if (!day || !month || !year) return ''
+  if (!day || !month || !year || year.length !== 4) return ''
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 }

@@ -3,6 +3,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Account } from '@/api/auth/types'
 import { setToken } from '@/api/token'
+import { useAuthStore } from '@/features/auth/auth.store'
+import { useNotificationsStore } from '@/features/notifications/notifications.store'
 
 type SessionState = {
   /** Exactly what `/users/me` last answered, or null while signed out. */
@@ -31,11 +33,25 @@ export const useSessionStore = create<SessionState>()(
 )
 
 /**
- * Ends the session on this device — token, cached queries and stored account
- * together, so no half-signed-out state can be left behind.
+ * Ends the session on this device — token, cached queries and every store that
+ * holds something about the person, so no half-signed-out state is left for
+ * whoever signs in next.
+ *
+ * `clear()` rather than an invalidation: an invalidated query keeps its data
+ * and refetches, which would leave the previous account's answers on screen
+ * until the next request came back — and with the token gone, it never would.
+ *
+ * Deliberately left alone: the theme and motion settings, and the sidebar's
+ * drawer and collapsed groups. Those belong to the device, not the account,
+ * and resetting them would punish the person for signing out. So is the
+ * parent portal's chosen child — it is looked up in the household that is
+ * fetched, so an id from somebody else's family simply is not found and the
+ * switcher falls back to the first child on the record.
  */
 export function endSession(queryClient: QueryClient) {
   setToken(null)
   queryClient.clear()
   useSessionStore.getState().clear()
+  useNotificationsStore.getState().clear()
+  useAuthStore.getState().reset()
 }

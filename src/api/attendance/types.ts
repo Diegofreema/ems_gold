@@ -104,3 +104,144 @@ export type AttendanceReport = {
   records: AttendanceRecord[]
   pagination: { page: number; limit: number; total: number; pages: number }
 }
+
+/* ------------------------------------------------------------------ *
+ * The daily register — `/attendances`, the controller a class teacher
+ * takes the roll with. The office's own reporting lives above, on
+ * `admin-attendances`; these two are one feature seen from two desks.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The words a mark can be, and which of them mean the child was in school.
+ *
+ * Read from `GET /attendances/statuses` rather than written down: **the flag
+ * is a separate list, not a property of each word** — late is present because
+ * the child is in the building, and excused is an authorised absence that is
+ * neither held against the pupil nor counted as attendance.
+ */
+export type StatusCatalogue = {
+  statuses: string[]
+  counted_as_present: string[]
+  /** The school's own sentence explaining late and excused. */
+  note?: string
+}
+
+/**
+ * An arm this teacher is class teacher of, with its roll count. A teacher who
+ * is nobody's class teacher gets a 404 rather than an empty list.
+ */
+export type MyClass = {
+  class_arm_id: number
+  arm_name: string
+  department_id: number
+  /** The class the arm belongs to — "JSS III" beside an `arm_name` of "C". */
+  class: string
+  /** Why this arm is theirs, in the API's own words. */
+  mine_because: string
+  /** How many pupils are on the roll. */
+  pupils: number
+}
+
+/** One pupil on one day. `status` is null where nobody has marked them yet. */
+export type RegisterPupil = {
+  student_id: number
+  name: string
+  regno: string | null
+  status: string | null
+  notes: string | null
+  /** The row the mark was saved as; absent on a pupil nobody has marked. */
+  attendance_id?: number | null
+}
+
+/** How the day breaks down, the school's own count of what it holds. */
+export type RegisterSummary = {
+  present: number
+  absent: number
+  late: number
+  excused: number
+  unmarked: number
+  pupils: number
+}
+
+/** The arm as the register spells it — the class already joined on. */
+export type RegisterArm = {
+  class_arm_id: number
+  arm_name: string
+  department_id: number
+  class: string
+}
+
+/** One arm, one day. */
+export type Register = {
+  /** YYYY-MM-DD. */
+  date: string
+  arm: RegisterArm
+  pupils: RegisterPupil[]
+  /** Whether anybody has marked this day at all. */
+  taken: boolean
+  summary: RegisterSummary
+}
+
+export type RegisterParams = {
+  class_arm_id: number
+  /** YYYY-MM-DD. Absent means today. */
+  date?: string
+}
+
+/** A bare status, or one carrying the note the teacher wrote beside it. */
+export type MarkInput = string | { status: string; notes: string }
+
+export type TakeRegisterBody = {
+  class_arm_id: number
+  /** YYYY-MM-DD. A date in the future is a 422. */
+  date: string
+  /**
+   * Keyed by student id. **A pupil left out is left alone**, not marked
+   * absent — a partial save is a partial save, and guessing would turn a
+   * dropped connection into a child's absence record.
+   */
+  marks: Record<string, MarkInput>
+}
+
+export type SavedRegister = {
+  saved: number
+  /** Ids that were not in this class and were filed against nothing. */
+  ignored: number[]
+  register: Register
+}
+
+export type CoverageParams = {
+  class_arm_id: number
+  from?: string
+  to?: string
+}
+
+/**
+ * Not who was absent — which registers were never taken. Weekends are not
+ * counted as missing.
+ */
+export type Coverage = {
+  from: string
+  to: string
+  school_days: number
+  taken: number
+  /** YYYY-MM-DD, the days nobody marked. */
+  missing: string[]
+  missing_count: number
+}
+
+export type MyAttendanceParams = {
+  from?: string
+  to?: string
+  status?: string
+}
+
+/**
+ * A pupil's own record, or a guardian's children.
+ *
+ * Unverified shape — `marksOf` and `attendanceTally` in the student portal
+ * name the keys they try. The percentage on it is in-school over **days
+ * marked**, not over the length of term: only the days somebody actually took
+ * a register are evidence.
+ */
+export type MyAttendance = Record<string, unknown> | unknown[]
