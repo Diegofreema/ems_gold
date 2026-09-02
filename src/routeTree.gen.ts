@@ -54,13 +54,13 @@ import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
 import { Route as AdminTermsRouteImport } from './routes/admin/terms'
 import { Route as AdminTimetableRouteImport } from './routes/admin/timetable'
 import { Route as ParentIndexRouteImport } from './routes/parent/index'
+import { Route as ParentAssignmentsRouteImport } from './routes/parent/assignments'
 import { Route as ParentAttendanceRouteImport } from './routes/parent/attendance'
 import { Route as ParentInvoicesRouteImport } from './routes/parent/invoices'
 import { Route as ParentMsgSchoolRouteImport } from './routes/parent/msg-school'
 import { Route as ParentNotificationsRouteImport } from './routes/parent/notifications'
 import { Route as ParentProfileRouteImport } from './routes/parent/profile'
 import { Route as ParentResultsRouteImport } from './routes/parent/results'
-import { Route as ParentTestsRouteImport } from './routes/parent/tests'
 import { Route as ParentTimetableRouteImport } from './routes/parent/timetable'
 import { Route as StudentIndexRouteImport } from './routes/student/index'
 import { Route as StudentAttendanceRouteImport } from './routes/student/attendance'
@@ -71,17 +71,20 @@ import { Route as StudentProfileRouteImport } from './routes/student/profile'
 import { Route as StudentResultsRouteImport } from './routes/student/results'
 import { Route as StudentTimetableRouteImport } from './routes/student/timetable'
 import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
+import { Route as TeacherAssignmentsRouteImport } from './routes/teacher/assignments'
 import { Route as TeacherAttendanceRouteImport } from './routes/teacher/attendance'
 import { Route as TeacherEclassesRouteImport } from './routes/teacher/eclasses'
 import { Route as TeacherMsgAdminRouteImport } from './routes/teacher/msg-admin'
 import { Route as TeacherMsgStudentsRouteImport } from './routes/teacher/msg-students'
 import { Route as TeacherNotificationsRouteImport } from './routes/teacher/notifications'
 import { Route as TeacherProfileRouteImport } from './routes/teacher/profile'
+import { Route as TeacherQuestionsRouteImport } from './routes/teacher/questions'
 import { Route as TeacherRegistersRouteImport } from './routes/teacher/registers'
 import { Route as TeacherResultsRouteImport } from './routes/teacher/results'
 import { Route as TeacherScoresRouteImport } from './routes/teacher/scores'
 import { Route as TeacherStudentsRouteImport } from './routes/teacher/students'
 import { Route as TeacherSubjectsRouteImport } from './routes/teacher/subjects'
+import { Route as TeacherSubmissionsRouteImport } from './routes/teacher/submissions'
 import { Route as TeacherTimetableRouteImport } from './routes/teacher/timetable'
 import { Route as TeacherTopicsRouteImport } from './routes/teacher/topics'
 import { Route as AdminCollectionActionRouteImport } from './routes/admin/$collection.action'
@@ -95,15 +98,15 @@ import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.
 import { Route as ParentPayIndexRouteImport } from './routes/parent/pay.index'
 import { Route as ParentPayDoneRouteImport } from './routes/parent/pay.done'
 import { Route as StudentCollectionRecordIdRouteImport } from './routes/student/$collection.$recordId'
+import { Route as StudentAssignmentsIndexRouteImport } from './routes/student/assignments.index'
 import { Route as StudentMaterialsIndexRouteImport } from './routes/student/materials.index'
-import { Route as StudentTestsIndexRouteImport } from './routes/student/tests.index'
 import { Route as TeacherCollectionNewRouteImport } from './routes/teacher/$collection.new'
 import { Route as TeacherUploadsIndexRouteImport } from './routes/teacher/uploads.index'
 import { Route as AdminCollectionRecordIdIndexRouteImport } from './routes/admin/$collection.$recordId.index'
 import { Route as AdminCollectionRecordIdEditRouteImport } from './routes/admin/$collection.$recordId.edit'
 import { Route as AdminCollectReceiptInvoiceIdRouteImport } from './routes/admin/collect.receipt.$invoiceId'
-import { Route as StudentTestsTestIdIndexRouteImport } from './routes/student/tests.$testId.index'
-import { Route as StudentTestsTestIdResultRouteImport } from './routes/student/tests.$testId.result'
+import { Route as StudentAssignmentsAssignmentIdIndexRouteImport } from './routes/student/assignments.$assignmentId.index'
+import { Route as StudentAssignmentsAssignmentIdResultRouteImport } from './routes/student/assignments.$assignmentId.result'
 import { Route as TeacherCollectionRecordIdIndexRouteImport } from './routes/teacher/$collection.$recordId.index'
 import { Route as TeacherCollectionRecordIdEditRouteImport } from './routes/teacher/$collection.$recordId.edit'
 
@@ -331,6 +334,11 @@ const ParentIndexRoute = ParentIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ParentRouteRoute,
 } as any)
+const ParentAssignmentsRoute = ParentAssignmentsRouteImport.update({
+  id: '/assignments',
+  path: '/assignments',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
 const ParentAttendanceRoute = ParentAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -359,11 +367,6 @@ const ParentProfileRoute = ParentProfileRouteImport.update({
 const ParentResultsRoute = ParentResultsRouteImport.update({
   id: '/results',
   path: '/results',
-  getParentRoute: () => ParentRouteRoute,
-} as any)
-const ParentTestsRoute = ParentTestsRouteImport.update({
-  id: '/tests',
-  path: '/tests',
   getParentRoute: () => ParentRouteRoute,
 } as any)
 const ParentTimetableRoute = ParentTimetableRouteImport.update({
@@ -416,6 +419,11 @@ const TeacherIndexRoute = TeacherIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TeacherRouteRoute,
 } as any)
+const TeacherAssignmentsRoute = TeacherAssignmentsRouteImport.update({
+  id: '/assignments',
+  path: '/assignments',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
 const TeacherAttendanceRoute = TeacherAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
@@ -446,6 +454,11 @@ const TeacherProfileRoute = TeacherProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => TeacherRouteRoute,
 } as any)
+const TeacherQuestionsRoute = TeacherQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
 const TeacherRegistersRoute = TeacherRegistersRouteImport.update({
   id: '/registers',
   path: '/registers',
@@ -469,6 +482,11 @@ const TeacherStudentsRoute = TeacherStudentsRouteImport.update({
 const TeacherSubjectsRoute = TeacherSubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherSubmissionsRoute = TeacherSubmissionsRouteImport.update({
+  id: '/submissions',
+  path: '/submissions',
   getParentRoute: () => TeacherRouteRoute,
 } as any)
 const TeacherTimetableRoute = TeacherTimetableRouteImport.update({
@@ -538,14 +556,14 @@ const StudentCollectionRecordIdRoute =
     path: '/$collection/$recordId',
     getParentRoute: () => StudentRouteRoute,
   } as any)
+const StudentAssignmentsIndexRoute = StudentAssignmentsIndexRouteImport.update({
+  id: '/assignments/',
+  path: '/assignments/',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
 const StudentMaterialsIndexRoute = StudentMaterialsIndexRouteImport.update({
   id: '/materials/',
   path: '/materials/',
-  getParentRoute: () => StudentRouteRoute,
-} as any)
-const StudentTestsIndexRoute = StudentTestsIndexRouteImport.update({
-  id: '/tests/',
-  path: '/tests/',
   getParentRoute: () => StudentRouteRoute,
 } as any)
 const TeacherCollectionNewRoute = TeacherCollectionNewRouteImport.update({
@@ -576,15 +594,16 @@ const AdminCollectReceiptInvoiceIdRoute =
     path: '/collect/receipt/$invoiceId',
     getParentRoute: () => AdminRouteRoute,
   } as any)
-const StudentTestsTestIdIndexRoute = StudentTestsTestIdIndexRouteImport.update({
-  id: '/tests/$testId/',
-  path: '/tests/$testId/',
-  getParentRoute: () => StudentRouteRoute,
-} as any)
-const StudentTestsTestIdResultRoute =
-  StudentTestsTestIdResultRouteImport.update({
-    id: '/tests/$testId/result',
-    path: '/tests/$testId/result',
+const StudentAssignmentsAssignmentIdIndexRoute =
+  StudentAssignmentsAssignmentIdIndexRouteImport.update({
+    id: '/assignments/$assignmentId/',
+    path: '/assignments/$assignmentId/',
+    getParentRoute: () => StudentRouteRoute,
+  } as any)
+const StudentAssignmentsAssignmentIdResultRoute =
+  StudentAssignmentsAssignmentIdResultRouteImport.update({
+    id: '/assignments/$assignmentId/result',
+    path: '/assignments/$assignmentId/result',
     getParentRoute: () => StudentRouteRoute,
   } as any)
 const TeacherCollectionRecordIdIndexRoute =
@@ -643,13 +662,13 @@ export interface FileRoutesByFullPath {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/terms': typeof AdminTermsRoute
   '/admin/timetable': typeof AdminTimetableRoute
+  '/parent/assignments': typeof ParentAssignmentsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
-  '/parent/tests': typeof ParentTestsRoute
   '/parent/timetable': typeof ParentTimetableRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/courses': typeof StudentCoursesRoute
@@ -658,17 +677,20 @@ export interface FileRoutesByFullPath {
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/student/timetable': typeof StudentTimetableRoute
+  '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
   '/teacher/msg-students': typeof TeacherMsgStudentsRoute
   '/teacher/notifications': typeof TeacherNotificationsRoute
   '/teacher/profile': typeof TeacherProfileRoute
+  '/teacher/questions': typeof TeacherQuestionsRoute
   '/teacher/registers': typeof TeacherRegistersRoute
   '/teacher/results': typeof TeacherResultsRoute
   '/teacher/scores': typeof TeacherScoresRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/submissions': typeof TeacherSubmissionsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/topics': typeof TeacherTopicsRoute
   '/admin/': typeof AdminIndexRoute
@@ -687,15 +709,15 @@ export interface FileRoutesByFullPath {
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
   '/parent/pay/': typeof ParentPayIndexRoute
+  '/student/assignments/': typeof StudentAssignmentsIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
-  '/student/tests/': typeof StudentTestsIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
   '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
-  '/student/tests/$testId/result': typeof StudentTestsTestIdResultRoute
+  '/student/assignments/$assignmentId/result': typeof StudentAssignmentsAssignmentIdResultRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
-  '/student/tests/$testId/': typeof StudentTestsTestIdIndexRoute
+  '/student/assignments/$assignmentId/': typeof StudentAssignmentsAssignmentIdIndexRoute
   '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -737,13 +759,13 @@ export interface FileRoutesByTo {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/terms': typeof AdminTermsRoute
   '/admin/timetable': typeof AdminTimetableRoute
+  '/parent/assignments': typeof ParentAssignmentsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
-  '/parent/tests': typeof ParentTestsRoute
   '/parent/timetable': typeof ParentTimetableRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/courses': typeof StudentCoursesRoute
@@ -752,17 +774,20 @@ export interface FileRoutesByTo {
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/student/timetable': typeof StudentTimetableRoute
+  '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
   '/teacher/msg-students': typeof TeacherMsgStudentsRoute
   '/teacher/notifications': typeof TeacherNotificationsRoute
   '/teacher/profile': typeof TeacherProfileRoute
+  '/teacher/questions': typeof TeacherQuestionsRoute
   '/teacher/registers': typeof TeacherRegistersRoute
   '/teacher/results': typeof TeacherResultsRoute
   '/teacher/scores': typeof TeacherScoresRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/submissions': typeof TeacherSubmissionsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/topics': typeof TeacherTopicsRoute
   '/admin': typeof AdminIndexRoute
@@ -781,15 +806,15 @@ export interface FileRoutesByTo {
   '/admin/collect': typeof AdminCollectIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
   '/parent/pay': typeof ParentPayIndexRoute
+  '/student/assignments': typeof StudentAssignmentsIndexRoute
   '/student/materials': typeof StudentMaterialsIndexRoute
-  '/student/tests': typeof StudentTestsIndexRoute
   '/teacher/uploads': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
   '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
-  '/student/tests/$testId/result': typeof StudentTestsTestIdResultRoute
+  '/student/assignments/$assignmentId/result': typeof StudentAssignmentsAssignmentIdResultRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId': typeof AdminCollectionRecordIdIndexRoute
-  '/student/tests/$testId': typeof StudentTestsTestIdIndexRoute
+  '/student/assignments/$assignmentId': typeof StudentAssignmentsAssignmentIdIndexRoute
   '/teacher/$collection/$recordId': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRoutesById {
@@ -837,13 +862,13 @@ export interface FileRoutesById {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/terms': typeof AdminTermsRoute
   '/admin/timetable': typeof AdminTimetableRoute
+  '/parent/assignments': typeof ParentAssignmentsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
-  '/parent/tests': typeof ParentTestsRoute
   '/parent/timetable': typeof ParentTimetableRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/courses': typeof StudentCoursesRoute
@@ -852,17 +877,20 @@ export interface FileRoutesById {
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/student/timetable': typeof StudentTimetableRoute
+  '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
   '/teacher/msg-students': typeof TeacherMsgStudentsRoute
   '/teacher/notifications': typeof TeacherNotificationsRoute
   '/teacher/profile': typeof TeacherProfileRoute
+  '/teacher/questions': typeof TeacherQuestionsRoute
   '/teacher/registers': typeof TeacherRegistersRoute
   '/teacher/results': typeof TeacherResultsRoute
   '/teacher/scores': typeof TeacherScoresRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/teacher/subjects': typeof TeacherSubjectsRoute
+  '/teacher/submissions': typeof TeacherSubmissionsRoute
   '/teacher/timetable': typeof TeacherTimetableRoute
   '/teacher/topics': typeof TeacherTopicsRoute
   '/admin/': typeof AdminIndexRoute
@@ -881,15 +909,15 @@ export interface FileRoutesById {
   '/admin/collect/': typeof AdminCollectIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
   '/parent/pay/': typeof ParentPayIndexRoute
+  '/student/assignments/': typeof StudentAssignmentsIndexRoute
   '/student/materials/': typeof StudentMaterialsIndexRoute
-  '/student/tests/': typeof StudentTestsIndexRoute
   '/teacher/uploads/': typeof TeacherUploadsIndexRoute
   '/admin/$collection/$recordId/edit': typeof AdminCollectionRecordIdEditRoute
   '/admin/collect/receipt/$invoiceId': typeof AdminCollectReceiptInvoiceIdRoute
-  '/student/tests/$testId/result': typeof StudentTestsTestIdResultRoute
+  '/student/assignments/$assignmentId/result': typeof StudentAssignmentsAssignmentIdResultRoute
   '/teacher/$collection/$recordId/edit': typeof TeacherCollectionRecordIdEditRoute
   '/admin/$collection/$recordId/': typeof AdminCollectionRecordIdIndexRoute
-  '/student/tests/$testId/': typeof StudentTestsTestIdIndexRoute
+  '/student/assignments/$assignmentId/': typeof StudentAssignmentsAssignmentIdIndexRoute
   '/teacher/$collection/$recordId/': typeof TeacherCollectionRecordIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -937,13 +965,13 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/terms'
     | '/admin/timetable'
+    | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/invoices'
     | '/parent/msg-school'
     | '/parent/notifications'
     | '/parent/profile'
     | '/parent/results'
-    | '/parent/tests'
     | '/parent/timetable'
     | '/student/attendance'
     | '/student/courses'
@@ -952,17 +980,20 @@ export interface FileRouteTypes {
     | '/student/profile'
     | '/student/results'
     | '/student/timetable'
+    | '/teacher/assignments'
     | '/teacher/attendance'
     | '/teacher/eclasses'
     | '/teacher/msg-admin'
     | '/teacher/msg-students'
     | '/teacher/notifications'
     | '/teacher/profile'
+    | '/teacher/questions'
     | '/teacher/registers'
     | '/teacher/results'
     | '/teacher/scores'
     | '/teacher/students'
     | '/teacher/subjects'
+    | '/teacher/submissions'
     | '/teacher/timetable'
     | '/teacher/topics'
     | '/admin/'
@@ -981,15 +1012,15 @@ export interface FileRouteTypes {
     | '/admin/collect/'
     | '/parent/children/'
     | '/parent/pay/'
+    | '/student/assignments/'
     | '/student/materials/'
-    | '/student/tests/'
     | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
     | '/admin/collect/receipt/$invoiceId'
-    | '/student/tests/$testId/result'
+    | '/student/assignments/$assignmentId/result'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
-    | '/student/tests/$testId/'
+    | '/student/assignments/$assignmentId/'
     | '/teacher/$collection/$recordId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1031,13 +1062,13 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/terms'
     | '/admin/timetable'
+    | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/invoices'
     | '/parent/msg-school'
     | '/parent/notifications'
     | '/parent/profile'
     | '/parent/results'
-    | '/parent/tests'
     | '/parent/timetable'
     | '/student/attendance'
     | '/student/courses'
@@ -1046,17 +1077,20 @@ export interface FileRouteTypes {
     | '/student/profile'
     | '/student/results'
     | '/student/timetable'
+    | '/teacher/assignments'
     | '/teacher/attendance'
     | '/teacher/eclasses'
     | '/teacher/msg-admin'
     | '/teacher/msg-students'
     | '/teacher/notifications'
     | '/teacher/profile'
+    | '/teacher/questions'
     | '/teacher/registers'
     | '/teacher/results'
     | '/teacher/scores'
     | '/teacher/students'
     | '/teacher/subjects'
+    | '/teacher/submissions'
     | '/teacher/timetable'
     | '/teacher/topics'
     | '/admin'
@@ -1075,15 +1109,15 @@ export interface FileRouteTypes {
     | '/admin/collect'
     | '/parent/children'
     | '/parent/pay'
+    | '/student/assignments'
     | '/student/materials'
-    | '/student/tests'
     | '/teacher/uploads'
     | '/admin/$collection/$recordId/edit'
     | '/admin/collect/receipt/$invoiceId'
-    | '/student/tests/$testId/result'
+    | '/student/assignments/$assignmentId/result'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId'
-    | '/student/tests/$testId'
+    | '/student/assignments/$assignmentId'
     | '/teacher/$collection/$recordId'
   id:
     | '__root__'
@@ -1130,13 +1164,13 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/terms'
     | '/admin/timetable'
+    | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/invoices'
     | '/parent/msg-school'
     | '/parent/notifications'
     | '/parent/profile'
     | '/parent/results'
-    | '/parent/tests'
     | '/parent/timetable'
     | '/student/attendance'
     | '/student/courses'
@@ -1145,17 +1179,20 @@ export interface FileRouteTypes {
     | '/student/profile'
     | '/student/results'
     | '/student/timetable'
+    | '/teacher/assignments'
     | '/teacher/attendance'
     | '/teacher/eclasses'
     | '/teacher/msg-admin'
     | '/teacher/msg-students'
     | '/teacher/notifications'
     | '/teacher/profile'
+    | '/teacher/questions'
     | '/teacher/registers'
     | '/teacher/results'
     | '/teacher/scores'
     | '/teacher/students'
     | '/teacher/subjects'
+    | '/teacher/submissions'
     | '/teacher/timetable'
     | '/teacher/topics'
     | '/admin/'
@@ -1174,15 +1211,15 @@ export interface FileRouteTypes {
     | '/admin/collect/'
     | '/parent/children/'
     | '/parent/pay/'
+    | '/student/assignments/'
     | '/student/materials/'
-    | '/student/tests/'
     | '/teacher/uploads/'
     | '/admin/$collection/$recordId/edit'
     | '/admin/collect/receipt/$invoiceId'
-    | '/student/tests/$testId/result'
+    | '/student/assignments/$assignmentId/result'
     | '/teacher/$collection/$recordId/edit'
     | '/admin/$collection/$recordId/'
-    | '/student/tests/$testId/'
+    | '/student/assignments/$assignmentId/'
     | '/teacher/$collection/$recordId/'
   fileRoutesById: FileRoutesById
 }
@@ -1512,6 +1549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentIndexRouteImport
       parentRoute: typeof ParentRouteRoute
     }
+    '/parent/assignments': {
+      id: '/parent/assignments'
+      path: '/assignments'
+      fullPath: '/parent/assignments'
+      preLoaderRoute: typeof ParentAssignmentsRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
     '/parent/attendance': {
       id: '/parent/attendance'
       path: '/attendance'
@@ -1552,13 +1596,6 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/parent/results'
       preLoaderRoute: typeof ParentResultsRouteImport
-      parentRoute: typeof ParentRouteRoute
-    }
-    '/parent/tests': {
-      id: '/parent/tests'
-      path: '/tests'
-      fullPath: '/parent/tests'
-      preLoaderRoute: typeof ParentTestsRouteImport
       parentRoute: typeof ParentRouteRoute
     }
     '/parent/timetable': {
@@ -1631,6 +1668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherIndexRouteImport
       parentRoute: typeof TeacherRouteRoute
     }
+    '/teacher/assignments': {
+      id: '/teacher/assignments'
+      path: '/assignments'
+      fullPath: '/teacher/assignments'
+      preLoaderRoute: typeof TeacherAssignmentsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
     '/teacher/attendance': {
       id: '/teacher/attendance'
       path: '/attendance'
@@ -1673,6 +1717,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherProfileRouteImport
       parentRoute: typeof TeacherRouteRoute
     }
+    '/teacher/questions': {
+      id: '/teacher/questions'
+      path: '/questions'
+      fullPath: '/teacher/questions'
+      preLoaderRoute: typeof TeacherQuestionsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
     '/teacher/registers': {
       id: '/teacher/registers'
       path: '/registers'
@@ -1706,6 +1757,13 @@ declare module '@tanstack/react-router' {
       path: '/subjects'
       fullPath: '/teacher/subjects'
       preLoaderRoute: typeof TeacherSubjectsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/submissions': {
+      id: '/teacher/submissions'
+      path: '/submissions'
+      fullPath: '/teacher/submissions'
+      preLoaderRoute: typeof TeacherSubmissionsRouteImport
       parentRoute: typeof TeacherRouteRoute
     }
     '/teacher/timetable': {
@@ -1799,18 +1857,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentCollectionRecordIdRouteImport
       parentRoute: typeof StudentRouteRoute
     }
+    '/student/assignments/': {
+      id: '/student/assignments/'
+      path: '/assignments'
+      fullPath: '/student/assignments/'
+      preLoaderRoute: typeof StudentAssignmentsIndexRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
     '/student/materials/': {
       id: '/student/materials/'
       path: '/materials'
       fullPath: '/student/materials/'
       preLoaderRoute: typeof StudentMaterialsIndexRouteImport
-      parentRoute: typeof StudentRouteRoute
-    }
-    '/student/tests/': {
-      id: '/student/tests/'
-      path: '/tests'
-      fullPath: '/student/tests/'
-      preLoaderRoute: typeof StudentTestsIndexRouteImport
       parentRoute: typeof StudentRouteRoute
     }
     '/teacher/$collection/new': {
@@ -1848,18 +1906,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectReceiptInvoiceIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/student/tests/$testId/': {
-      id: '/student/tests/$testId/'
-      path: '/tests/$testId'
-      fullPath: '/student/tests/$testId/'
-      preLoaderRoute: typeof StudentTestsTestIdIndexRouteImport
+    '/student/assignments/$assignmentId/': {
+      id: '/student/assignments/$assignmentId/'
+      path: '/assignments/$assignmentId'
+      fullPath: '/student/assignments/$assignmentId/'
+      preLoaderRoute: typeof StudentAssignmentsAssignmentIdIndexRouteImport
       parentRoute: typeof StudentRouteRoute
     }
-    '/student/tests/$testId/result': {
-      id: '/student/tests/$testId/result'
-      path: '/tests/$testId/result'
-      fullPath: '/student/tests/$testId/result'
-      preLoaderRoute: typeof StudentTestsTestIdResultRouteImport
+    '/student/assignments/$assignmentId/result': {
+      id: '/student/assignments/$assignmentId/result'
+      path: '/assignments/$assignmentId/result'
+      fullPath: '/student/assignments/$assignmentId/result'
+      preLoaderRoute: typeof StudentAssignmentsAssignmentIdResultRouteImport
       parentRoute: typeof StudentRouteRoute
     }
     '/teacher/$collection/$recordId/': {
@@ -1966,13 +2024,13 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 )
 
 interface ParentRouteRouteChildren {
+  ParentAssignmentsRoute: typeof ParentAssignmentsRoute
   ParentAttendanceRoute: typeof ParentAttendanceRoute
   ParentInvoicesRoute: typeof ParentInvoicesRoute
   ParentMsgSchoolRoute: typeof ParentMsgSchoolRoute
   ParentNotificationsRoute: typeof ParentNotificationsRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentResultsRoute: typeof ParentResultsRoute
-  ParentTestsRoute: typeof ParentTestsRoute
   ParentTimetableRoute: typeof ParentTimetableRoute
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCollectionRecordIdRoute: typeof ParentCollectionRecordIdRoute
@@ -1983,13 +2041,13 @@ interface ParentRouteRouteChildren {
 }
 
 const ParentRouteRouteChildren: ParentRouteRouteChildren = {
+  ParentAssignmentsRoute: ParentAssignmentsRoute,
   ParentAttendanceRoute: ParentAttendanceRoute,
   ParentInvoicesRoute: ParentInvoicesRoute,
   ParentMsgSchoolRoute: ParentMsgSchoolRoute,
   ParentNotificationsRoute: ParentNotificationsRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentResultsRoute: ParentResultsRoute,
-  ParentTestsRoute: ParentTestsRoute,
   ParentTimetableRoute: ParentTimetableRoute,
   ParentIndexRoute: ParentIndexRoute,
   ParentCollectionRecordIdRoute: ParentCollectionRecordIdRoute,
@@ -2013,10 +2071,10 @@ interface StudentRouteRouteChildren {
   StudentTimetableRoute: typeof StudentTimetableRoute
   StudentIndexRoute: typeof StudentIndexRoute
   StudentCollectionRecordIdRoute: typeof StudentCollectionRecordIdRoute
+  StudentAssignmentsIndexRoute: typeof StudentAssignmentsIndexRoute
   StudentMaterialsIndexRoute: typeof StudentMaterialsIndexRoute
-  StudentTestsIndexRoute: typeof StudentTestsIndexRoute
-  StudentTestsTestIdResultRoute: typeof StudentTestsTestIdResultRoute
-  StudentTestsTestIdIndexRoute: typeof StudentTestsTestIdIndexRoute
+  StudentAssignmentsAssignmentIdResultRoute: typeof StudentAssignmentsAssignmentIdResultRoute
+  StudentAssignmentsAssignmentIdIndexRoute: typeof StudentAssignmentsAssignmentIdIndexRoute
 }
 
 const StudentRouteRouteChildren: StudentRouteRouteChildren = {
@@ -2029,10 +2087,12 @@ const StudentRouteRouteChildren: StudentRouteRouteChildren = {
   StudentTimetableRoute: StudentTimetableRoute,
   StudentIndexRoute: StudentIndexRoute,
   StudentCollectionRecordIdRoute: StudentCollectionRecordIdRoute,
+  StudentAssignmentsIndexRoute: StudentAssignmentsIndexRoute,
   StudentMaterialsIndexRoute: StudentMaterialsIndexRoute,
-  StudentTestsIndexRoute: StudentTestsIndexRoute,
-  StudentTestsTestIdResultRoute: StudentTestsTestIdResultRoute,
-  StudentTestsTestIdIndexRoute: StudentTestsTestIdIndexRoute,
+  StudentAssignmentsAssignmentIdResultRoute:
+    StudentAssignmentsAssignmentIdResultRoute,
+  StudentAssignmentsAssignmentIdIndexRoute:
+    StudentAssignmentsAssignmentIdIndexRoute,
 }
 
 const StudentRouteRouteWithChildren = StudentRouteRoute._addFileChildren(
@@ -2040,17 +2100,20 @@ const StudentRouteRouteWithChildren = StudentRouteRoute._addFileChildren(
 )
 
 interface TeacherRouteRouteChildren {
+  TeacherAssignmentsRoute: typeof TeacherAssignmentsRoute
   TeacherAttendanceRoute: typeof TeacherAttendanceRoute
   TeacherEclassesRoute: typeof TeacherEclassesRoute
   TeacherMsgAdminRoute: typeof TeacherMsgAdminRoute
   TeacherMsgStudentsRoute: typeof TeacherMsgStudentsRoute
   TeacherNotificationsRoute: typeof TeacherNotificationsRoute
   TeacherProfileRoute: typeof TeacherProfileRoute
+  TeacherQuestionsRoute: typeof TeacherQuestionsRoute
   TeacherRegistersRoute: typeof TeacherRegistersRoute
   TeacherResultsRoute: typeof TeacherResultsRoute
   TeacherScoresRoute: typeof TeacherScoresRoute
   TeacherStudentsRoute: typeof TeacherStudentsRoute
   TeacherSubjectsRoute: typeof TeacherSubjectsRoute
+  TeacherSubmissionsRoute: typeof TeacherSubmissionsRoute
   TeacherTimetableRoute: typeof TeacherTimetableRoute
   TeacherTopicsRoute: typeof TeacherTopicsRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -2061,17 +2124,20 @@ interface TeacherRouteRouteChildren {
 }
 
 const TeacherRouteRouteChildren: TeacherRouteRouteChildren = {
+  TeacherAssignmentsRoute: TeacherAssignmentsRoute,
   TeacherAttendanceRoute: TeacherAttendanceRoute,
   TeacherEclassesRoute: TeacherEclassesRoute,
   TeacherMsgAdminRoute: TeacherMsgAdminRoute,
   TeacherMsgStudentsRoute: TeacherMsgStudentsRoute,
   TeacherNotificationsRoute: TeacherNotificationsRoute,
   TeacherProfileRoute: TeacherProfileRoute,
+  TeacherQuestionsRoute: TeacherQuestionsRoute,
   TeacherRegistersRoute: TeacherRegistersRoute,
   TeacherResultsRoute: TeacherResultsRoute,
   TeacherScoresRoute: TeacherScoresRoute,
   TeacherStudentsRoute: TeacherStudentsRoute,
   TeacherSubjectsRoute: TeacherSubjectsRoute,
+  TeacherSubmissionsRoute: TeacherSubmissionsRoute,
   TeacherTimetableRoute: TeacherTimetableRoute,
   TeacherTopicsRoute: TeacherTopicsRoute,
   TeacherIndexRoute: TeacherIndexRoute,

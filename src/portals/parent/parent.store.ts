@@ -11,8 +11,8 @@ type ParentStore = {
 }
 
 /**
- * The child switcher scopes results, attendance, invoices and tests, so it
- * outlives any one page — app-wide state rather than a per-page filter.
+ * The child switcher scopes results, attendance, invoices and assignments,
+ * so it outlives any one page — app-wide state rather than a per-page filter.
  *
  * It holds the child's id rather than their place in the list: the list is
  * fetched, and a household that gains or loses a child would otherwise leave

@@ -6,33 +6,33 @@ import { EmptyState } from '@/components/feedback/empty-state'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { toneForStatus } from '@/lib/status-tone'
-import { studentPaperQuery, studentTestResultQuery } from '../../api/queries'
-import { PaperBrief } from './paper-brief'
-import { questionsOf } from './paper'
+import { studentAssignmentQuery, studentAssignmentResultQuery } from '../../api/queries'
+import { AssignmentBrief } from './assignment-brief'
+import { questionsOf } from './assignment'
 import { answerRows, resultFields, scoreHeadline, scoreNote } from './result'
 
 /**
- * How a submitted paper came out.
+ * How a submitted assignment came out.
  *
  * Reached in two hops on purpose: the result endpoint is keyed on the
- * submission and the URL is keyed on the paper, because the paper is what a
- * pupil has a name for. The paper is read first for the submission's id — and
+ * submission and the URL is keyed on the assignment, because the assignment is what a
+ * pupil has a name for. The assignment is read first for the submission's id — and
  * for the wording of the options, which the result itself sends only as ids.
  */
-export function TestResult({ testId }: { testId: string }) {
-  const { data: paper } = useSuspenseQuery(studentPaperQuery(testId))
-  const submission = paper.my_submission
+export function AssignmentResultPage({ assignmentId }: { assignmentId: string }) {
+  const { data: assignment } = useSuspenseQuery(studentAssignmentQuery(assignmentId))
+  const submission = assignment.my_submission
 
   if (!submission) {
     return (
-      <PaperBrief
-        paper={paper}
+      <AssignmentBrief
+        assignment={assignment}
         state="Not sat"
-        note="You have not submitted this paper, so there is nothing to mark. Open the test to sit it while it is still open."
+        note="You have not submitted this assignment, so there is nothing to mark. Open the assignment to answer it while it is still open."
         action={
           <Button asChild>
-            <Link to="/student/tests/$testId" params={{ testId }}>
-              Open the test
+            <Link to="/student/assignments/$assignmentId" params={{ assignmentId }}>
+              Open the assignment
             </Link>
           </Button>
         }
@@ -40,27 +40,27 @@ export function TestResult({ testId }: { testId: string }) {
     )
   }
 
-  return <Marked testId={testId} submissionId={String(submission.id)} paperQuestions={questionsOf(paper)} />
+  return <Marked assignmentId={assignmentId} submissionId={String(submission.id)} assignmentQuestions={questionsOf(assignment)} />
 }
 
 function Marked({
-  testId,
+  assignmentId,
   submissionId,
-  paperQuestions,
+  assignmentQuestions,
 }: {
-  testId: string
+  assignmentId: string
   submissionId: string
-  paperQuestions: ReturnType<typeof questionsOf>
+  assignmentQuestions: ReturnType<typeof questionsOf>
 }) {
-  const { data: result } = useSuspenseQuery(studentTestResultQuery(submissionId))
-  const answers = answerRows(result, paperQuestions)
+  const { data: result } = useSuspenseQuery(studentAssignmentResultQuery(submissionId))
+  const answers = answerRows(result, assignmentQuestions)
 
   return (
     <div className="max-w-[720px]">
       <div className="grid size-10 place-items-center bg-brand text-white">
         <Check className="size-[22px]" strokeWidth={2.4} />
       </div>
-      <h2 className="mt-5 text-detail-title">Your paper reached the school</h2>
+      <h2 className="mt-5 text-detail-title">Your assignment reached the school</h2>
       <p className="mt-2.5 text-sm text-muted-foreground">
         This is the school's own record of what you sent and how it was marked.
       </p>
@@ -122,7 +122,7 @@ function Marked({
         <div className="mt-3.5">
           <EmptyState
             title="No answers were recorded"
-            body="The school holds no answers against this submission. If you did answer, take this up with your teacher — the paper was received, but nothing came with it."
+            body="The school holds no answers against this submission. If you did answer, take this up with your teacher — the assignment was received, but nothing came with it."
           />
         </div>
       )}
@@ -130,11 +130,11 @@ function Marked({
 
       <div className="flex flex-wrap gap-2.5">
         <Button asChild>
-          <Link to="/student/tests">Back to my tests</Link>
+          <Link to="/student/assignments">Back to my assignments</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link to="/student/tests/$testId" params={{ testId }}>
-            The paper itself
+          <Link to="/student/assignments/$assignmentId" params={{ assignmentId }}>
+            The assignment itself
           </Link>
         </Button>
       </div>

@@ -14,7 +14,11 @@ export const studentPortal: PortalConfig = {
     // Hints describe the page, not its contents: nothing here has counted
     // anything, and a figure written in would be read as one that had.
     { to: '/student', label: 'Dashboard', hint: 'Where your term stands' },
-    { to: '/student/tests', label: 'Tests', hint: 'Papers you can still sit' },
+    {
+      to: '/student/assignments',
+      label: 'Assignments',
+      hint: 'Assignments you can still sit',
+    },
     {
       to: '/student/results',
       label: 'My results',

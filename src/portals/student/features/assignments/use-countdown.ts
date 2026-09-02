@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 /**
- * Ticks a paper's clock down once a second. Stopping it leaves the reading
+ * Ticks an assignment's clock down once a second. Stopping it leaves the reading
  * where it was, which is what the design shows after a submit.
  */
 export function useCountdown(from: number) {

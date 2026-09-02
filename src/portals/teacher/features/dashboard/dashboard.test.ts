@@ -31,7 +31,7 @@ const DASHBOARD = {
     },
     {
       id: 5,
-      title: 'new paper reading',
+      title: 'new assignment reading',
       total_questions: 10,
       closedate: '2026-08-29T09:52',
       opendate: '2026-08-27T09:52:00+01:00',
@@ -52,14 +52,14 @@ const AFTER = new Date('2026-08-31T08:00:00+01:00')
 const BEFORE = new Date('2026-08-28T08:00:00+01:00')
 
 test('the counters read the school off the record', () => {
-  const [pupils, subjects, arms, papers] = teacherFigures(DASHBOARD)
+  const [pupils, subjects, arms, assignments] = teacherFigures(DASHBOARD)
   assert.equal(pupils.amount, 2)
   assert.equal(pupils.delta, 'Of 5 in the school')
   assert.equal(subjects.amount, 3)
   assert.equal(arms.amount, 1)
   assert.equal(arms.delta, 'JSS1 A')
-  assert.equal(papers.amount, 0)
-  assert.equal(papers.hot, false)
+  assert.equal(assignments.amount, 0)
+  assert.equal(assignments.hot, false)
 })
 
 test('a teacher with nothing assigned is told so rather than shown a blank', () => {
@@ -80,18 +80,18 @@ test('the line under the greeting leads on attendance', () => {
   )
 })
 
-test('one open paper is counted in the singular', () => {
+test('one open assignment is counted in the singular', () => {
   assert.match(
     teacherNote({ ...DASHBOARD.stats, pending_assignments: 1 }),
-    /1 of your papers is still open/,
+    /1 of your assignments is still open/,
   )
   assert.match(
     teacherNote({ ...DASHBOARD.stats, pending_assignments: 3 }),
-    /3 of your papers are still open/,
+    /3 of your assignments are still open/,
   )
 })
 
-test('a paper is open or shut by its closing time, not by its status', () => {
+test('an assignment is open or shut by its closing time, not by its status', () => {
   const [maths] = DASHBOARD.recent_assignments
   // The row still says 'active' three days after it shut.
   assert.equal(maths.status, 'active')
@@ -99,11 +99,11 @@ test('a paper is open or shut by its closing time, not by its status', () => {
   assert.equal(isOpen(maths, BEFORE), true)
 })
 
-test('a paper with no closing time is left open rather than shut', () => {
+test('an assignment with no closing time is left open rather than shut', () => {
   assert.equal(isOpen({ ...DASHBOARD.recent_assignments[0], closedate: null }, AFTER), true)
 })
 
-test('each paper carries its subject, its size and when it shuts', () => {
+test('each assignment carries its subject, its size and when it shuts', () => {
   const [maths] = assignmentEntries(DASHBOARD.recent_assignments, AFTER)
   assert.equal(maths.text, 'Simple additions')
   assert.equal(maths.who, 'MATHEMATICS · 4 questions')

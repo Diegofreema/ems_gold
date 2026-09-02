@@ -44,17 +44,22 @@ function TeacherDashboard() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         <section>
-          <h4 className="mb-0.5 text-xl">Papers you have set</h4>
+          <h4 className="mb-0.5 text-xl">Assignments you have set</h4>
           <p className="text-[12.5px] text-muted-foreground">
             The most recent first, with the ones still open flagged.
           </p>
-          {data.papers.length ? (
-            <ActivityList entries={data.papers} />
+          {data.assignments.length ? (
+            <ActivityList entries={data.assignments} />
           ) : (
             <div className="mt-3.5">
               <EmptyState
-                title="No papers yet"
-                body="Tests you set for your classes are listed here, with when they close."
+                title="No assignments yet"
+                body="Assignments you set for your classes are listed here, with when they close."
+                action={
+                  <Button asChild>
+                    <Link to="/teacher/assignments">Set an assignment</Link>
+                  </Button>
+                }
               />
             </div>
           )}

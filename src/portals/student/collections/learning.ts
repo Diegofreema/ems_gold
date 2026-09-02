@@ -59,7 +59,7 @@ export const courses: CollectionDef = {
 };
 
 /**
- * The notes and papers shared with the pupil's class, through the cache so the
+ * The notes and assignments shared with the pupil's class, through the cache so the
  * list and the record it opens read one answer between them.
  */
 const shared = () =>

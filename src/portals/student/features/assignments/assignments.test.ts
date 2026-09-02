@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Assignment } from '../../../../api/assignments/types.ts'
-import { questionCount, stateOf, testRows, testTally } from './tests.ts'
+import { questionCount, stateOf, assignmentRows, assignmentTally } from './assignments.ts'
 
-/** Paper 6 as `GET /assignments` actually sends it, once it had been sat. */
-const PAPER: Assignment = {
+/** Assignment 6 as `GET /assignments` actually sends it, once it had been sat. */
+const ASSIGNMENT: Assignment = {
   id: 6,
   title: 'Simple additions',
   details: 'Please attempt all questions',
@@ -27,19 +27,19 @@ const PAPER: Assignment = {
 
 const NOW = new Date('2026-08-31T09:00:00').getTime()
 
-test('a paper that was sat reads as submitted, closed or not', () => {
-  assert.equal(stateOf(PAPER, NOW), 'Submitted')
+test('an assignment that was sat reads as submitted, closed or not', () => {
+  assert.equal(stateOf(ASSIGNMENT, NOW), 'Submitted')
 })
 
 test('open while the school sends no reason it cannot be sat', () => {
   assert.equal(
-    stateOf({ ...PAPER, submitted: false, window_problem: null }, NOW),
+    stateOf({ ...ASSIGNMENT, submitted: false, window_problem: null }, NOW),
     'Open',
   )
 })
 
 test('shut and past its opening is missed; shut and still to come is not', () => {
-  const shut = { ...PAPER, submitted: false }
+  const shut = { ...ASSIGNMENT, submitted: false }
   assert.equal(stateOf(shut, NOW), 'Missed')
   assert.equal(
     stateOf({ ...shut, opendate: '2026-09-04T08:00:00+01:00' }, NOW),
@@ -47,21 +47,21 @@ test('shut and past its opening is missed; shut and still to come is not', () =>
   )
 })
 
-test('a shut paper with no opening date at all is over, not pending', () => {
+test('a shut assignment with no opening date at all is over, not pending', () => {
   assert.equal(
-    stateOf({ ...PAPER, submitted: false, opendate: null }, NOW),
+    stateOf({ ...ASSIGNMENT, submitted: false, opendate: null }, NOW),
     'Missed',
   )
 })
 
 test('the questions column is what the teacher wrote, not what they promised', () => {
-  // The paper declares four and holds one.
-  assert.equal(questionCount(PAPER), 1)
-  assert.equal(testRows([PAPER], NOW)[0].questions, '1')
+  // The assignment declares four and holds one.
+  assert.equal(questionCount(ASSIGNMENT), 1)
+  assert.equal(assignmentRows([ASSIGNMENT], NOW)[0].questions, '1')
 })
 
-test('a row carries the paper as the register and the paper page show it', () => {
-  const [row] = testRows([PAPER], NOW)
+test('a row carries the assignment as the list and the assignment page show it', () => {
+  const [row] = assignmentRows([ASSIGNMENT], NOW)
   assert.equal(row.id, '6')
   assert.equal(row.title, 'Simple additions')
   assert.equal(row.subject, 'MATHEMATICS')
@@ -75,16 +75,16 @@ test('a row carries the paper as the register and the paper page show it', () =>
 
 test('the closing time is read on the school clock, not the reader\'s', () => {
   // `closedate` carries no zone; taken as UTC it would shut an hour early.
-  assert.equal(testRows([PAPER], NOW)[0].closes, '28 Aug 2026, 10:08')
+  assert.equal(assignmentRows([ASSIGNMENT], NOW)[0].closes, '28 Aug 2026, 10:08')
 })
 
-test('open papers come first, then what is to come, then what is over', () => {
-  const rows = testRows(
+test('open assignments come first, then what is to come, then what is over', () => {
+  const rows = assignmentRows(
     [
-      { ...PAPER, id: 1, submitted: true },
-      { ...PAPER, id: 2, submitted: false, window_problem: null },
-      { ...PAPER, id: 3, submitted: false, opendate: '2026-09-04T08:00:00+01:00' },
-      { ...PAPER, id: 4, submitted: false },
+      { ...ASSIGNMENT, id: 1, submitted: true },
+      { ...ASSIGNMENT, id: 2, submitted: false, window_problem: null },
+      { ...ASSIGNMENT, id: 3, submitted: false, opendate: '2026-09-04T08:00:00+01:00' },
+      { ...ASSIGNMENT, id: 4, submitted: false },
     ],
     NOW,
   )
@@ -96,21 +96,21 @@ test('open papers come first, then what is to come, then what is over', () => {
   assert.deepEqual(rows.map((row) => row.id), ['2', '3', '4', '1'])
 })
 
-test('the tiles count the rows the register is showing', () => {
-  const rows = testRows(
+test('the tiles count the rows the list is showing', () => {
+  const rows = assignmentRows(
     [
-      { ...PAPER, id: 1, submitted: false, window_problem: null },
-      { ...PAPER, id: 2 },
-      { ...PAPER, id: 3, submitted: false },
+      { ...ASSIGNMENT, id: 1, submitted: false, window_problem: null },
+      { ...ASSIGNMENT, id: 2 },
+      { ...ASSIGNMENT, id: 3, submitted: false },
     ],
     NOW,
   )
-  assert.deepEqual(testTally(rows), { open: 1, submitted: 1, missed: 1 })
+  assert.deepEqual(assignmentTally(rows), { open: 1, submitted: 1, missed: 1 })
 })
 
-test('a paper with nothing filled in is still nameable', () => {
-  const [row] = testRows([{ id: 9 }], NOW)
-  assert.equal(row.title, 'Test 9')
+test('an assignment with nothing filled in is still nameable', () => {
+  const [row] = assignmentRows([{ id: 9 }], NOW)
+  assert.equal(row.title, 'Assignment 9')
   assert.equal(row.questions, '—')
   assert.equal(row.subject, '—')
   assert.equal(row.pass, '—')

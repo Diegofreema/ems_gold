@@ -63,7 +63,7 @@ export function noticeRow(notice: Notice): Row {
     // Read by the record panel and the edit form rather than the table.
     message: plainText(notice.message ?? ''),
     postedBy: text(notice.posted_by),
-    raised: notice.is_automatic ? 'Automatically, by a paper being set' : 'By hand',
+    raised: notice.is_automatic ? 'Automatically, by an assignment being set' : 'By hand',
     // What the form submits, kept beside the words the table shows.
     recipients: (notice.recipients ?? '') as NoticeAudience,
   }

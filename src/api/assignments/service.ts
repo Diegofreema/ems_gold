@@ -2,7 +2,7 @@ import { request } from '../client'
 import type { Id } from '../types'
 import type {
   Assignment,
-  AssignmentPaper,
+  AssignmentDetail,
   AssignmentResult,
   SubmitAssignmentBody,
   Submission,
@@ -10,10 +10,10 @@ import type {
 
 export const assignmentsService = {
   /**
-   * Every paper set for the caller's own class, newest last.
+   * Every assignment set for the caller's own class, newest last.
    *
    * `subject_id` narrows it and is optional — without one the whole list comes
-   * back, which is what the pupil's register wants. A paper set for another
+   * back, which is what the pupil's own list wants. An assignment set for another
    * class never appears whatever is asked for.
    *
    * Pupils only: an office or teaching login is refused with "No student
@@ -24,12 +24,12 @@ export const assignmentsService = {
       query: { subject_id: subjectId },
     }).then((data) => data.assignments ?? []),
 
-  /** A paper set for another class is refused; one that never existed 404s. */
+  /** An assignment set for another class is refused; one that never existed 404s. */
   get: (setassignmentId: Id) =>
-    request<AssignmentPaper>(`assignments/${setassignmentId}`),
+    request<AssignmentDetail>(`assignments/${setassignmentId}`),
 
   /**
-   * Re-submitting a finished paper is a 409, and a paper outside its window
+   * Re-submitting a finished assignment is a 409, and an assignment outside its window
    * is refused with the reason.
    */
   submit: (setassignmentId: Id, body: SubmitAssignmentBody) =>
@@ -38,13 +38,13 @@ export const assignmentsService = {
   /**
    * The caller's own marked attempt.
    *
-   * Keyed on the **submission** id — `my_submission.id` off the paper — not on
-   * the paper's. The paper's own id answers "That result could not be found."
+   * Keyed on the **submission** id — `my_submission.id` off the assignment — not on
+   * the assignment's. The assignment's own id answers "That result could not be found."
    */
   result: (submissionId: Id) =>
     request<AssignmentResult>(`assignments/results/${submissionId}`),
 
-  /** For the teacher who set the paper, or an admin. 403 for anyone else. */
+  /** For the teacher who set the assignment, or an admin. 403 for anyone else. */
   submissions: (setassignmentId: Id) =>
     request<{ submissions: Submission[] }>(
       `assignments/${setassignmentId}/submissions`,

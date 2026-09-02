@@ -1,41 +1,41 @@
 import { pageRows } from '@/features/collections/api';
 import type { CollectionDef } from '@/features/collections/types';
 import { queryClient } from '@/lib/query-client';
-import { studentResultsQuery, studentTestsQuery } from '../api/queries';
+import { studentAssignmentsQuery, studentResultsQuery } from '../api/queries';
+import { assignmentRows, assignmentTally } from '../features/assignments/assignments';
 import { marksOf, resultRows, termAverage } from '../features/results/results';
-import { testRows, testTally } from '../features/tests/tests';
 
 /**
- * Every paper set for the pupil's arm, through the cache so the register and
+ * Every assignment set for the pupil's arm, through the cache so the list and
  * the three tiles above it read one answer between them.
  *
- * The rows are not what the paper page reads: opening a test asks
+ * The rows are not what the assignment page reads: opening an assignment asks
  * `/assignments/{id}` for the questions, which this list does not carry.
  */
-const papers = () =>
-  queryClient.ensureQueryData(studentTestsQuery).then(testRows);
-const tally = () => papers().then(testTally);
+const mine = () =>
+  queryClient.ensureQueryData(studentAssignmentsQuery).then(assignmentRows);
+const tally = () => mine().then(assignmentTally);
 
-export const tests: CollectionDef = {
-  id: 'tests',
-  path: '/student/tests',
+export const assignments: CollectionDef = {
+  id: 'assignments',
+  path: '/student/assignments',
   kicker: 'Assessment',
-  title: 'Tests',
+  title: 'Assignments',
   description:
-    'Computer-based tests set for your arm, the open ones first. Each one can be taken once — open a test to see its questions.',
-  // No button, and no `actionTo`: which paper "Start the open test" would open
-  // depends on which of them is open, and a fixed link cannot know. The rows
-  // are the way in.
-  action: 'Start the open test',
+    'Assignments set for your arm, the open ones first. Each one can be answered once — open an assignment to see its questions.',
+  // No button, and no `actionTo`: which assignment "Start the open assignment" would
+  // open depends on which of them is open, and a fixed link cannot know. The
+  // rows are the way in.
+  action: 'Start the open assignment',
   readonly: true,
-  searchHint: 'Search test or subject',
+  searchHint: 'Search assignment or subject',
   footer: 'Open first, then what is still to come',
-  emptyTitle: 'No tests set',
+  emptyTitle: 'No assignments set',
   emptyBody:
-    'Tests appear here when a teacher opens one for your arm. Only papers set for your own class are ever listed.',
-  noun: 'test',
+    'Assignments appear here when a teacher opens one for your arm. Only assignments set for your own class are ever listed.',
+  noun: 'assignment',
   nameKey: 'title',
-  // No history: the API keeps no record of a pupil opening a paper, only of
+  // No history: the API keeps no record of a pupil opening an assignment, only of
   // submitting one, and that is the state column.
   tabs: [],
   counts: [
@@ -50,7 +50,7 @@ export const tests: CollectionDef = {
     },
   ],
   columns: [
-    { key: 'title', label: 'Test', cardRole: 'title' },
+    { key: 'title', label: 'Assignment', cardRole: 'title' },
     { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
     { key: 'questions', label: 'Questions', align: 'right' },
     { key: 'minutes', label: 'Minutes', align: 'right' },
@@ -63,9 +63,9 @@ export const tests: CollectionDef = {
    * subjects to fill a dropdown with, so the box matches the title, the
    * subject and the state at once instead.
    */
-  source: (params) => papers().then((all) => pageRows(all, params)),
-  // No `record`: a row opens the paper at `/student/tests/{id}`, which reads
-  // the questions the register never asked for.
+  source: (params) => mine().then((all) => pageRows(all, params)),
+  // No `record`: a row opens the assignment at `/student/assignments/{id}`, which reads
+  // the questions the list never asked for.
 };
 
 const sheet = () => queryClient.ensureQueryData(studentResultsQuery);

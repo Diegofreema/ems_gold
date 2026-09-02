@@ -35,9 +35,13 @@ export const parentNav: NavGroup[] = [
   //   ],
   // },
   {
-    heading: 'Tests',
+    heading: 'Assignments',
     items: [
-      { to: '/parent/tests', label: 'Tests for my children', icon: PenLine },
+      {
+        to: '/parent/assignments',
+        label: 'Assignments for my children',
+        icon: PenLine,
+      },
     ],
   },
   {

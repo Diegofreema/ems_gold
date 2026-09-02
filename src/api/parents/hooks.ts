@@ -156,7 +156,7 @@ export function useChildAssignment(childId: Id | undefined, setassignmentId: Id 
   })
 }
 
-/** Submitting closes the test, so the child's list of tests goes stale. */
+/** Submitting closes it, so the child's list of assignments goes stale. */
 export function useSubmitChildAssignment(childId: Id, setassignmentId: Id) {
   const queryClient = useQueryClient()
   return useMutation({

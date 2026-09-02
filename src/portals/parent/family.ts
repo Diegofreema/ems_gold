@@ -47,7 +47,7 @@ export function text(value: string | null | undefined): string {
  *
  * Who they are, what they have been billed and which days they were marked —
  * the three things read for the whole family at once. The pages that ask about
- * one child at a time, for results, attendance or papers, read their own
+ * one child at a time, for results, attendance or assignments, read their own
  * endpoints rather than being carried on here.
  */
 export type Child = {

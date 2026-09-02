@@ -30,7 +30,7 @@ export const studentNav: NavGroup[] = [
   {
     heading: 'Assessment',
     items: [
-      { to: '/student/tests', label: 'Tests', icon: SquareCheckBig },
+      { to: '/student/assignments', label: 'Assignments', icon: SquareCheckBig },
       { to: '/student/results', label: 'My results', icon: ChartLine },
     ],
   },

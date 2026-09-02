@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarClock,
   CalendarSearch,
+  FileQuestion,
   LayoutGrid,
   List,
   MessageSquare,
@@ -55,6 +56,13 @@ export const teacherNav: NavGroup[] = [
       // sheet is a subject and an arm the teacher chooses, not a record that
       // exists until it is filed — and a number here would be invented.
       { to: '/teacher/scores', label: 'Enter scores', icon: PenLine },
+      // No badge either: what would be worth counting here is the assignments still
+      // holding no questions, and the register counts those on its own tiles.
+      {
+        to: '/teacher/assignments',
+        label: 'Assignments',
+        icon: FileQuestion,
+      },
       { to: '/teacher/uploads', label: 'Upload batches', icon: Upload },
       { to: '/teacher/results', label: 'Browse results', icon: SquareCheckBig },
     ],

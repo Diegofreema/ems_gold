@@ -13,9 +13,9 @@ import { text } from '../../../../features/profile/record.ts'
  * A marked attempt, off `GET /assignments/results/{submissionId}`.
  *
  * Two things are marked here and they are not the same thing. The multiple
- * choice is scored by the server the moment the paper is submitted, which is
+ * choice is scored by the server the moment the assignment is submitted, which is
  * where `percentage` comes from; the theory is scored by a teacher, and
- * `is_graded` is about that. A paper can therefore carry a real percentage and
+ * `is_graded` is about that. An assignment can therefore carry a real percentage and
  * still be waiting on somebody, and one with no percentage at all is not a
  * pupil who scored nothing.
  */
@@ -35,7 +35,7 @@ export function scoreHeadline(result: AssignmentResult | undefined): string {
 export function scoreNote(result: AssignmentResult | undefined): string {
   const score = result?.score
   if (!isScored(result)) {
-    return 'Your teacher has not marked this paper. Nothing has been scored against you — a mark appears here once it has been.'
+    return 'Your teacher has not marked this assignment. Nothing has been scored against you — a mark appears here once it has been.'
   }
   const graded = result?.assignment?.is_graded
   const counted = `${mark(score?.total_score)} of ${mark(score?.max_points)} marks, from ${mark(score?.correct_answers)} of ${mark(score?.total_questions)} questions.`
@@ -48,22 +48,22 @@ export function scoreNote(result: AssignmentResult | undefined): string {
 export function resultFields(
   result: AssignmentResult | undefined,
 ): { label: string; value: string }[] {
-  const paper = result?.assignment
+  const assignment = result?.assignment
   return [
-    { label: 'Paper', value: text(paper?.title) },
-    { label: 'Subject', value: text(paper?.subject) },
-    { label: 'Started', value: when(schoolTime(paper?.start_time), true) },
-    { label: 'Submitted', value: when(schoolTime(paper?.end_time), true) },
-    { label: 'Took', value: text(paper?.duration) },
-    { label: 'Marked by a teacher', value: paper?.is_graded ? 'Yes' : 'Not yet' },
-    { label: "Teacher's note", value: text(paper?.teacher_comments) },
+    { label: 'Assignment', value: text(assignment?.title) },
+    { label: 'Subject', value: text(assignment?.subject) },
+    { label: 'Started', value: when(schoolTime(assignment?.start_time), true) },
+    { label: 'Submitted', value: when(schoolTime(assignment?.end_time), true) },
+    { label: 'Took', value: text(assignment?.duration) },
+    { label: 'Marked by a teacher', value: assignment?.is_graded ? 'Yes' : 'Not yet' },
+    { label: "Teacher's note", value: text(assignment?.teacher_comments) },
   ]
 }
 
 /**
  * What the pupil chose, in words.
  *
- * The result carries the option's id and not its text, so the paper is read
+ * The result carries the option's id and not its text, so the assignment is read
  * for the wording — the same call the page already makes to find the
  * submission. An id on its own tells a pupil nothing about what they picked.
  */

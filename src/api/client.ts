@@ -1,6 +1,6 @@
-import { getToken } from './token'
+import { getToken } from './token.ts'
 import { buildUrl, type QueryValue } from './url.ts'
-import type { ApiEnvelope, ApiFieldErrors } from './types'
+import type { ApiEnvelope, ApiFieldErrors } from './types.ts'
 
 export { paginated } from './url.ts'
 export type { QueryValue }
@@ -14,7 +14,12 @@ export type { QueryValue }
  * Absolute rather than the bare path, because `buildUrl` resolves against it.
  */
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? `${window.location.origin}/api`
+  import.meta.env?.VITE_API_URL ??
+  // Off `globalThis` rather than `window`, and with a stand-in origin where
+  // there is none: this module is imported by tests as well as by the browser,
+  // and it used to throw on the way in wherever `window` was not defined,
+  // which is what kept the whole client untested.
+  `${globalThis.location?.origin ?? 'http://localhost'}/api`
 
 /** Anything the API refused, with the field errors a form needs to show. */
 export class ApiError extends Error {

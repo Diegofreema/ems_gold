@@ -1,5 +1,5 @@
 import type {
-  AssignmentPaper,
+  AssignmentDetail,
   Question,
   SubmitAssignmentBody,
 } from '../../../../api/assignments/types.ts'
@@ -8,19 +8,19 @@ import { schoolTime, when } from '../../../../features/collections/when.ts'
 import { text } from '../../../../features/profile/record.ts'
 
 /**
- * A paper being sat: what the pupil has answered so far, and what is sent back
+ * An assignment being sat: what the pupil has answered so far, and what is sent back
  * when they finish.
  *
  * Answers are held by question id rather than by position, because that is
- * what the endpoint takes and because a paper renumbered between two renders
+ * what the endpoint takes and because an assignment renumbered between two renders
  * would otherwise move every answer one question along.
  */
 
 /** Question id to answer: an option id, or the text of a theory answer. */
 export type Draft = Record<number, number | string>
 
-export function questionsOf(paper: AssignmentPaper | undefined): Question[] {
-  return paper?.questions ?? []
+export function questionsOf(assignment: AssignmentDetail | undefined): Question[] {
+  return assignment?.questions ?? []
 }
 
 export function isTheory(question: Question): boolean {
@@ -42,7 +42,7 @@ export function answeredCount(draft: Draft, questions: Question[]): number {
 }
 
 /**
- * When the paper was opened, in the school's own clock and with no zone on it.
+ * When the assignment was opened, in the school's own clock and with no zone on it.
  *
  * The API ignores the offset it is sent and keeps the wall clock: a submit
  * carrying `10:00:00Z` is stored as `10:00:00+01:00`. Sending a zone would
@@ -79,26 +79,26 @@ export function submitBody(
   return { answers, actual_start_time: startedAt(openedAt) }
 }
 
-/** How long the pupil has, in seconds, where the paper sets a limit at all. */
-export function limitSeconds(paper: AssignmentPaper | undefined): number | null {
-  const minutes = paper?.assignment?.time_limit
+/** How long the pupil has, in seconds, where the assignment sets a limit at all. */
+export function limitSeconds(assignment: AssignmentDetail | undefined): number | null {
+  const minutes = assignment?.assignment?.time_limit
   return minutes ? minutes * 60 : null
 }
 
 /**
- * Why the paper cannot be sat, if it cannot.
+ * Why the assignment cannot be sat, if it cannot.
  *
  * The detail route sends `window_problem` as a sibling of `assignment` and
  * nulls the copy inside it, so the sibling is the one to believe.
  */
-export function windowProblem(paper: AssignmentPaper | undefined): string | undefined {
-  return paper?.window_problem?.trim() || undefined
+export function windowProblem(assignment: AssignmentDetail | undefined): string | undefined {
+  return assignment?.window_problem?.trim() || undefined
 }
 
-/** The line under a paper's title: subject, class, and how much of it there is. */
-export function paperMeta(paper: AssignmentPaper | undefined): string {
-  const assignment = paper?.assignment
-  const questions = questionsOf(paper).length
+/** The line under an assignment's title: subject, class, and how much of it there is. */
+export function assignmentMeta(detail: AssignmentDetail | undefined): string {
+  const assignment = detail?.assignment
+  const questions = questionsOf(detail).length
   return [
     assignment?.subject?.trim(),
     assignment?.class?.trim(),
@@ -111,19 +111,19 @@ export function paperMeta(paper: AssignmentPaper | undefined): string {
 }
 
 /**
- * The paper's terms, as the pupil is shown them before starting.
+ * The assignment's terms, as the pupil is shown them before starting.
  *
- * `question_count` is null on this route whatever the register said, so the
+ * `question_count` is null on this route whatever the list said, so the
  * count is the questions actually sent.
  */
-export function paperFields(
-  paper: AssignmentPaper | undefined,
+export function assignmentFields(
+  detail: AssignmentDetail | undefined,
 ): { label: string; value: string }[] {
-  const assignment = paper?.assignment
+  const assignment = detail?.assignment
   return [
     { label: 'Subject', value: text(assignment?.subject) },
     { label: 'Set for', value: text(assignment?.class) },
-    { label: 'Questions', value: String(questionsOf(paper).length) },
+    { label: 'Questions', value: String(questionsOf(detail).length) },
     {
       label: 'Time allowed',
       value: assignment?.time_limit ? `${assignment.time_limit} minutes` : 'No limit',

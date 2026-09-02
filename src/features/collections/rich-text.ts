@@ -32,6 +32,18 @@ export function plainText(html: string): string {
     .trim()
 }
 
+/**
+ * Whether a stored value carries markup at all.
+ *
+ * The same field holds both: an assignment set before the editor existed is
+ * the teacher's plain sentence, and one set since is HTML. A reader that
+ * assumes the second shows tags to a pupil, and one that assumes the first
+ * throws the formatting away, so which it is has to be asked.
+ */
+export function isRichText(value: string): boolean {
+  return /<[a-z][^>]*>/i.test(value)
+}
+
 /** Whether anything was written, rather than whether anything was stored. */
 export function hasText(html: string): boolean {
   return plainText(html).length > 0

@@ -36,6 +36,19 @@ function schemaForField(field: FieldSpec): ZodType {
     return field.required ? clock : clock.optional()
   }
 
+  if (field.number) {
+    const bounded = text.refine((value) => {
+      if (!value) return true
+      if (!/^\d+$/.test(value)) return false
+      const figure = Number(value)
+      return (
+        (field.min === undefined || figure >= field.min) &&
+        (field.max === undefined || figure <= field.max)
+      )
+    }, numberMessage(field))
+    return field.required ? bounded : bounded.optional()
+  }
+
   let schema: ZodType = text
   if (field.email) {
     schema = text.refine(
@@ -50,6 +63,15 @@ function schemaForField(field: FieldSpec): ZodType {
   }
 
   return field.required ? schema : schema.optional()
+}
+
+/** What a figure outside its bounds is told, in the words of the bound itself. */
+function numberMessage(field: FieldSpec): string {
+  if (field.min !== undefined && field.max !== undefined)
+    return `A whole number between ${field.min} and ${field.max}`
+  if (field.max !== undefined) return `A whole number, at most ${field.max}`
+  if (field.min !== undefined) return `A whole number, at least ${field.min}`
+  return 'A whole number'
 }
 
 /** Builds one validator for a whole form definition. */

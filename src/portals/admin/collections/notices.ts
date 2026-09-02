@@ -59,7 +59,7 @@ export const notices: CollectionDef = {
     { label: 'Notices', count: countBy() },
     { label: 'Live', count: countBy((notice) => notice.status === 'active') },
     {
-      label: 'Raised by a paper',
+      label: 'Raised by an assignment',
       count: countBy((notice) => notice.is_automatic === true),
     },
   ],

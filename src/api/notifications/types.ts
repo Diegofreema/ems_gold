@@ -56,7 +56,7 @@ export type Notice = {
   viewcount: number | null
   /** Per-caller, so it is on `/notifications/mine` and not on the office list. */
   is_read: boolean
-  /** True where a teacher setting a paper raised it, rather than the office. */
+  /** True where a teacher setting an assignment raised it, rather than the office. */
   is_automatic: boolean
   scope: NoticeScope | null
   /** The class a `class` notice is limited to, expanded. Null school-wide. */

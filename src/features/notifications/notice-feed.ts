@@ -7,7 +7,7 @@ import type { Notification } from './types.ts'
  *
  * Every portal's bell reads this and nothing else. It used to carry a second
  * half worked out from records the portal already held — marks approved,
- * papers set, fees raised — and that is gone: those are states with pages of
+ * assignments set, fees raised — and that is gone: those are states with pages of
  * their own, and reading them as events put things under the bell that nobody
  * had sent.
  *
@@ -95,7 +95,7 @@ function feedItem(notice: Notice, now: Date): Notification | null {
 
   return {
     // Prefixed, because the derived items are keyed on their own records and
-    // a bare id would collide with a paper's.
+    // a bare id would collide with an assignment's.
     id: `notice-${notice.id}`,
     noticeId: notice.id,
     // Its own tag, so the board is told apart from the events around it.

@@ -15,8 +15,8 @@ export type TeacherHome = {
   figures: DashboardFigure[]
   /** The line under the greeting, which says whether anything is waiting. */
   note: string
-  /** The papers this teacher has set, newest first. */
-  papers: ActivityEntry[]
+  /** The assignments this teacher has set, newest first. */
+  assignments: ActivityEntry[]
   /** The arms taken, each against its class. */
   arms: { label: string; value: string }[]
 }
@@ -35,12 +35,12 @@ function toTeacherHome(dashboard: TeacherDashboard): TeacherHome {
   return {
     figures: teacherFigures(dashboard),
     note: teacherNote(dashboard.stats),
-    papers: assignmentEntries(dashboard.recent_assignments, now),
+    assignments: assignmentEntries(dashboard.recent_assignments, now),
     arms: armRows(dashboard.class_arms),
   }
 }
 
-/** `GET /teachers/me/dashboard` — the counters, the papers and the arms. */
+/** `GET /teachers/me/dashboard` — the counters, the assignments and the arms. */
 export const teacherDashboardQuery = queryOptions({
   queryKey: teachingKeys.dashboard(),
   queryFn: () => teachingService.dashboard(),

@@ -49,8 +49,8 @@ test('a notice limited to a class says which, and one that names none says so', 
   assert.equal(reachOf(NOTICE), 'Whole school')
 })
 
-test('a paper raising its own notice is told apart from the office writing one', () => {
-  assert.equal(noticeRow({ ...NOTICE, is_automatic: true }).raised, 'Automatically, by a paper being set')
+test('an assignment raising its own notice is told apart from the office writing one', () => {
+  assert.equal(noticeRow({ ...NOTICE, is_automatic: true }).raised, 'Automatically, by an assignment being set')
 })
 
 test('audiences read as an office says them, and an unknown one reads as itself', () => {

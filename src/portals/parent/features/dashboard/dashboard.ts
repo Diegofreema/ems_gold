@@ -88,8 +88,8 @@ export const QUEUE_SHOWN = 6
  * page rather than a summary — so the rest are counted into a last line that
  * says how many were left out and opens the register that holds them all.
  *
- * Everything else the design listed — an open test, an unexplained absence, a
- * result newly published — needs an endpoint that answers for this parent's
+ * Everything else the design listed — an open assignment, an unexplained
+ * absence, a result newly published — needs an endpoint that answers for this parent's
  * own children, and none of them can be reached yet.
  */
 export function queueFor(family: Child[], shown = QUEUE_SHOWN) {

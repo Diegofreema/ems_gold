@@ -177,12 +177,12 @@ export type ChildAttendanceParams = {
  * as 09:52. Both are the school's own clock, so the offset is dropped rather
  * than believed; see `schoolTime`.
  */
-export type ChildAssignmentPaper = {
-  /** The paper. This is what identifies a test the child has not yet sat. */
+export type ChildAssignment = {
+  /** The assignment. This is what identifies one the child has not yet sat. */
   setassignment_id: number
   title: string | null
   subject: string | null
-  /** Minutes allowed once opened. Null on a paper with no limit set. */
+  /** Minutes allowed once opened. Null on an assignment with no limit set. */
   time_limit: number | null
   opendate: string | null
   closedate: string | null
@@ -192,10 +192,10 @@ export type ChildAssignmentPaper = {
   assignment_id: number | null
 }
 
-/** Each child on the record, with the papers set for their class. */
-export type ChildAssignment = {
+/** Each child on the record, with the assignments set for their class. */
+export type ChildAssignments = {
   student: Child
-  assignments: ChildAssignmentPaper[]
+  assignments: ChildAssignment[]
 }
 
 /**
@@ -204,9 +204,9 @@ export type ChildAssignment = {
  *
  * **What the key is has not been settled.** It was described as "the number of
  * the question", which reads either as the question's id or as its position in
- * the paper, and the sample cannot tell them apart: it answers 2 and 3 and
+ * the assignment, and the sample cannot tell them apart: it answers 2 and 3 and
  * leaves whatever 1 is unanswered. Getting it wrong files every answer against
- * the wrong question, so the paper's own response body has to be seen before
+ * the wrong question, so the assignment's own response body has to be seen before
  * this is built against — `GET sparents/my-children/{id}/assignments/{id}`,
  * which is refused on this deployment.
  *

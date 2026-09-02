@@ -50,7 +50,7 @@ const EMPTY: ProfileConfig = {
   account: [{ label: 'Signs in with', value: BLANK }],
   prefs: [
     { label: 'Email me when a result is published', hint: 'As it happens', on: true },
-    { label: 'Remind me before a test closes', hint: 'The evening before', on: true },
+    { label: 'Remind me before an assignment closes', hint: 'The evening before', on: true },
     { label: 'Email me when a teacher shares material', hint: 'A daily digest', on: false },
   ],
 }

@@ -10,7 +10,7 @@ export type QueueItem = {
   to:
     | '/parent/pay'
     | '/parent/invoices'
-    | '/parent/tests'
+    | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/results'
   /** Accent mark for anything that needs the parent now. */

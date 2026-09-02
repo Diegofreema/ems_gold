@@ -1,18 +1,18 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { AssignmentPaper, Question } from '../../../../api/assignments/types.ts'
+import type { AssignmentDetail, Question } from '../../../../api/assignments/types.ts'
 import {
   answeredCount,
   isAnswered,
   isTheory,
   limitSeconds,
-  paperFields,
-  paperMeta,
+  assignmentFields,
+  assignmentMeta,
   questionsOf,
   startedAt,
   submitBody,
   windowProblem,
-} from './paper.ts'
+} from './assignment.ts'
 
 const THEORY: Question = {
   id: 9,
@@ -33,8 +33,8 @@ const CHOICE: Question = {
   ],
 }
 
-/** Paper 6 as `GET /assignments/6` actually sends it. */
-const PAPER: AssignmentPaper = {
+/** Assignment 6 as `GET /assignments/6` actually sends it. */
+const ASSIGNMENT: AssignmentDetail = {
   assignment: {
     id: 6,
     title: 'Simple additions',
@@ -45,7 +45,7 @@ const PAPER: AssignmentPaper = {
     time_limit: null,
     total_questions: 4,
     passing_score: 30,
-    // All four nulled on this route, whatever the register said.
+    // All four nulled on this route, whatever the list said.
     question_count: null,
     my_status: null,
     submitted: null,
@@ -57,9 +57,9 @@ const PAPER: AssignmentPaper = {
   questions: [THEORY],
 }
 
-test('the reason a paper cannot be sat is the sibling, not the nulled copy', () => {
-  assert.equal(windowProblem(PAPER), 'This test has closed.')
-  assert.equal(windowProblem({ ...PAPER, window_problem: null }), undefined)
+test('the reason an assignment cannot be sat is the sibling, not the nulled copy', () => {
+  assert.equal(windowProblem(ASSIGNMENT), 'This test has closed.')
+  assert.equal(windowProblem({ ...ASSIGNMENT, window_problem: null }), undefined)
 })
 
 test('a question with no options is theory whatever it calls itself', () => {
@@ -75,8 +75,8 @@ test('whitespace typed into a theory box is not an answer', () => {
   assert.equal(isAnswered({ 5: 11 }, CHOICE), true)
 })
 
-test('answered counts the questions on this paper, not the keys in the draft', () => {
-  // 99 is not on the paper — a stale key must not inflate the count.
+test('answered counts the questions on this assignment, not the keys in the draft', () => {
+  // 99 is not on the assignment — a stale key must not inflate the count.
   assert.equal(answeredCount({ 9: 'yes', 99: 3 }, [THEORY, CHOICE]), 1)
 })
 
@@ -102,16 +102,16 @@ test('the start time carries the wall clock and no zone', () => {
   assert.match(startedAt(new Date('2026-01-02T03:04:05')), /^2026-01-02T03:04:05$/)
 })
 
-test('a paper with no time limit runs no clock', () => {
-  assert.equal(limitSeconds(PAPER), null)
-  assert.equal(limitSeconds({ ...PAPER, assignment: { id: 6, time_limit: 25 } }), 1500)
+test('an assignment with no time limit runs no clock', () => {
+  assert.equal(limitSeconds(ASSIGNMENT), null)
+  assert.equal(limitSeconds({ ...ASSIGNMENT, assignment: { id: 6, time_limit: 25 } }), 1500)
 })
 
 test('the brief counts the questions sent, since the count field is null here', () => {
-  assert.equal(questionsOf(PAPER).length, 1)
-  assert.equal(paperMeta(PAPER), 'MATHEMATICS · SSS I · 1 question · no time limit · one attempt')
+  assert.equal(questionsOf(ASSIGNMENT).length, 1)
+  assert.equal(assignmentMeta(ASSIGNMENT), 'MATHEMATICS · SSS I · 1 question · no time limit · one attempt')
 
-  const fields = Object.fromEntries(paperFields(PAPER).map((one) => [one.label, one.value]))
+  const fields = Object.fromEntries(assignmentFields(ASSIGNMENT).map((one) => [one.label, one.value]))
   assert.equal(fields.Questions, '1')
   assert.equal(fields['Time allowed'], 'No limit')
   assert.equal(fields['Pass mark'], '30%')

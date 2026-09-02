@@ -158,7 +158,7 @@ export const results: CollectionDef = {
     { key: 'term', label: 'Term' },
     { key: 'ca', label: 'CA' },
     { key: 'exam', label: 'Exam' },
-    { key: 'exams', label: 'Exam papers' },
+    { key: 'exams', label: 'Exam scores' },
     { key: 'total', label: 'Total' },
     { key: 'grade', label: 'Grade' },
     { key: 'remark', label: 'Remark' },

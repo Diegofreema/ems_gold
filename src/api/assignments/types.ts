@@ -1,22 +1,22 @@
 /**
- * A paper set for a class, as `GET /assignments` lists it.
+ * An assignment set for a class, as `GET /assignments` lists it.
  *
  * `subject` and `class` are names rather than nested records — this endpoint
  * flattens them, unlike every other list on the API. Read them as the strings
  * they are.
  *
  * Two fields count the same thing and disagree: `total_questions` is what the
- * teacher said the paper would hold when they set it, and `question_count` is
- * how many questions they have actually written. Paper 6 says 4 and 1. The
- * pupil is shown the second — a paper says "1 question" and holds one.
+ * teacher said the assignment would hold when they set it, and `question_count` is
+ * how many questions they have actually written. Assignment 6 says 4 and 1. The
+ * pupil is shown the second — an assignment says "1 question" and holds one.
  */
 export type Assignment = {
   id: number
   title?: string | null
   details?: string | null
-  /** `cbt_test` on every paper so far; the school's own word for the kind. */
+  /** `cbt_test` on every assignment so far; the school's own word for the kind. */
   test_type?: string | null
-  /** The teacher's own state for the paper, e.g. `active`. Not the pupil's. */
+  /** The teacher's own state for the assignment, e.g. `active`. Not the pupil's. */
   status?: string | null
   subject_id?: number | null
   subject?: string | null
@@ -37,7 +37,7 @@ export type Assignment = {
   my_status?: AssignmentStatus | null
   submitted?: boolean | null
   /**
-   * Null while the paper can be sat; otherwise the school's own sentence for
+   * Null while the assignment can be sat; otherwise the school's own sentence for
    * why it cannot — "This test has closed." Sent on the list row, and on the
    * detail as a sibling of `assignment` rather than a field on it.
    */
@@ -57,7 +57,7 @@ export type QuestionOption = {
 }
 
 /**
- * One question of a paper. The answer key is never sent to a pupil: options
+ * One question of an assignment. The answer key is never sent to a pupil: options
  * carry their text and nothing marking one of them right.
  */
 export type Question = {
@@ -70,7 +70,7 @@ export type Question = {
   options?: QuestionOption[] | null
 }
 
-/** The pupil's own attempt at a paper, where they have made one. */
+/** The pupil's own attempt at an assignment, where they have made one. */
 export type MySubmission = {
   id: number
   status?: string | null
@@ -82,14 +82,14 @@ export type MySubmission = {
 }
 
 /**
- * `GET /assignments/{setassignmentId}` — the paper and its questions.
+ * `GET /assignments/{setassignmentId}` — the assignment and its questions.
  *
  * The nested `assignment` sends `question_count`, `my_status`, `submitted` and
  * `window_problem` as null on this route whatever the list said, so read those
  * four from here: `questions.length`, `my_submission` and the sibling
  * `window_problem`.
  */
-export type AssignmentPaper = {
+export type AssignmentDetail = {
   assignment: Assignment
   window_problem?: string | null
   my_submission?: MySubmission | null
@@ -101,11 +101,11 @@ export type AssignmentPaper = {
  * What is sent back on submit: question id to answer — an option id for
  * multiple choice, the written text for theory. An option belonging to another
  * question is discarded rather than scored, and so is a key naming a question
- * that is not on the paper.
+ * that is not on the assignment.
  */
 export type SubmitAssignmentBody = {
   answers: Record<string, number | string>
-  /** When the pupil actually opened the paper. See `startedAt` in `paper.ts`. */
+  /** When the pupil actually opened the assignment. See `startedAt` in `assignment.ts`. */
   actual_start_time?: string
 }
 
@@ -136,10 +136,10 @@ export type ResultScore = {
 
 /**
  * `GET /assignments/results/{id}` — where the id is the **submission's**, off
- * `my_submission.id`, not the paper's. The paper's id is refused with "That
+ * `my_submission.id`, not the assignment's. The assignment's id is refused with "That
  * result could not be found."
  *
- * Its own `assignment.id` is the submission id too, so the paper cannot be
+ * Its own `assignment.id` is the submission id too, so the assignment cannot be
  * reached back from here; it is the title and the subject only.
  */
 export type AssignmentResult = {

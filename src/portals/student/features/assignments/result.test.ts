@@ -25,7 +25,7 @@ const UNMARKED: AssignmentResult = {
 const MARKED: AssignmentResult = {
   assignment: {
     id: 11,
-    title: 'new paper reading',
+    title: 'new assignment reading',
     subject: 'ENGLISH LANGUAGE',
     duration: '00:00:49',
     is_graded: false,
@@ -67,11 +67,11 @@ const QUESTIONS: Question[] = [
 test('nothing scored is said in words — never as a mark of zero', () => {
   assert.equal(isScored(UNMARKED), false)
   assert.equal(scoreHeadline(UNMARKED), 'Not marked yet')
-  assert.match(scoreNote(UNMARKED), /has not marked this paper/)
+  assert.match(scoreNote(UNMARKED), /has not marked this assignment/)
   assert.doesNotMatch(scoreNote(UNMARKED), /0 of 0/)
 })
 
-test('a scored paper reports its percentage and what it is out of', () => {
+test('a scored assignment reports its percentage and what it is out of', () => {
   assert.equal(scoreHeadline(MARKED), '75%')
   assert.match(scoreNote(MARKED), /^15 of 20 marks, from 3 of 4 questions\./)
 })
@@ -86,7 +86,7 @@ test('ungraded means the written answers are still out, so the mark can rise', (
 
 test('the slip reads the school clock and says who has still to look', () => {
   const fields = Object.fromEntries(resultFields(UNMARKED).map((one) => [one.label, one.value]))
-  assert.equal(fields.Paper, 'Simple additions')
+  assert.equal(fields.Assignment, 'Simple additions')
   assert.equal(fields.Started, '27 Aug 2026, 10:00')
   assert.equal(fields.Submitted, '27 Aug 2026, 13:59')
   assert.equal(fields.Took, '03:59:07')
@@ -94,12 +94,12 @@ test('the slip reads the school clock and says who has still to look', () => {
   assert.equal(fields["Teacher's note"], '—')
 })
 
-test('an option id is shown as the option, read off the paper', () => {
+test('an option id is shown as the option, read off the assignment', () => {
   const [right, wrong] = answerRows(MARKED, QUESTIONS)
   assert.equal(right.answer, 'Hope Uzodinma')
   assert.equal(right.verdict, 'Correct')
   assert.equal(right.worth, '5')
-  // Question 8's options were not on the paper handed in, so the id stands.
+  // Question 8's options were not on the assignment handed in, so the id stands.
   assert.equal(wrong.answer, 'Option 25')
   assert.equal(wrong.verdict, 'Wrong')
 })

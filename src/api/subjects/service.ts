@@ -41,7 +41,7 @@ export const subjectsService = {
     request<unknown>(`subjects/${id}/classes`, { method: 'POST', body }),
 
   /**
-   * Refused with 409 while results, materials, topics or CBT papers reference
+   * Refused with 409 while results, materials, topics or CBT assignments reference
    * it, with the counts in `errors.dependencies`.
    */
   remove: (id: Id, force = false) =>

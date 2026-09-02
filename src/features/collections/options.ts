@@ -18,6 +18,8 @@ export type OptionsKey =
   | 'my-subjects'
   /** The arms the signed-in teacher takes, from their own roll. */
   | 'my-arms'
+  /** The classes the signed-in teacher reaches — `/departments` is the office's. */
+  | 'my-classes'
   /** The four ways the school takes money at the counter. */
   | 'payment-methods'
   /** Super Admin, Bursar, Secretary — what kind of login an account is. */

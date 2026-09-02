@@ -109,6 +109,38 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     )
   }
 
+  if (key === 'my-classes') {
+    /*
+     * A teaching login can read no register of classes — `/departments`,
+     * `/class-arms` and `/subjects` all answer "restricted to administrators" —
+     * so the classes offered are the ones the teacher's own record names: the
+     * class behind every subject they were given, and behind every arm they
+     * are class teacher of. A teacher given neither is offered nothing, which
+     * is the truth: the office has not put them in front of a class yet.
+     */
+    const [subjects, profile] = await Promise.all([
+      teachingService.subjects(),
+      teachingService.profile(),
+    ])
+    const classes = new Map<number, { name: string; code: string }>()
+    for (const one of [
+      ...subjects.map((subject) => subject.department),
+      ...profile.class_arms.map((arm) => arm.department),
+    ]) {
+      if (one) classes.set(one.id, { name: one.name, code: one.deptcode ?? '' })
+    }
+
+    return distinct(
+      [...classes].map(([id, { name, code }]) => ({
+        value: String(id),
+        label: name,
+        // This school has two classes both named SSS I; the code tells them
+        // apart where it differs, and the id where even that is the same.
+        meta: code === name ? '' : code,
+      })),
+    )
+  }
+
   if (key === 'my-arms') {
     // The arms come back beside the roll rather than on it, and one pupil is
     // enough of the roll to read them off.

@@ -39,7 +39,7 @@ export function when(value: string | null | undefined, withTime = false): string
  * endpoints, `+00:00` on the household's invoices, and with no zone at all on
  * an assignment's closing time. It is the school's time in every case, so the
  * offset is dropped rather than believed: taken at face value it would move an
- * invoice raised in the last hour of a day onto the next one, and shut a paper
+ * invoice raised in the last hour of a day onto the next one, and shut an assignment
  * an hour early.
  */
 export function schoolTime(stamp: string | null | undefined): string | null | undefined {
@@ -49,7 +49,7 @@ export function schoolTime(stamp: string | null | undefined): string | null | un
 /**
  * The same stamp as milliseconds, or null where it will not parse.
  *
- * Everything that compares two of these — is the paper still open, was this
+ * Everything that compares two of these — is the assignment still open, was this
  * filed today — needs a number rather than a string, and needs the school's
  * clock rather than the reader's guess at it.
  */

@@ -16,14 +16,14 @@ export function useAssignment(setassignmentId: Id | undefined) {
     queryKey: assignmentKeys.detail(setassignmentId ?? ''),
     queryFn: () => assignmentsService.get(setassignmentId!),
     enabled: setassignmentId !== undefined,
-    // A sat paper must not be served from cache on a re-entry.
+    // A sat assignment must not be served from cache on a re-entry.
     staleTime: 0,
   })
 }
 
 /**
- * Submitting closes the paper, so both the register's `my_status` and the
- * paper's own `my_submission` are stale the moment it answers.
+ * Submitting closes the assignment, so both the list's `my_status` and the
+ * assignment's own `my_submission` are stale the moment it answers.
  */
 export function useSubmitAssignment(setassignmentId: Id) {
   const queryClient = useQueryClient()

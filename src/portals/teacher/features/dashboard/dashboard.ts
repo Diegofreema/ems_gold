@@ -14,15 +14,15 @@ import {
 /**
  * The teacher's home page, off `GET /teachers/me/dashboard`.
  *
- * The endpoint answers five counters, the papers this teacher has set and the
+ * The endpoint answers five counters, the assignments this teacher has set and the
  * arms they take. It has no timetable and no class averages — the two panels
  * the prototype drew from neither — so the page shows what the school actually
  * holds instead.
  */
 
-/** Whether a paper is still taking submissions. */
-export function isOpen(paper: SetAssignment, now: Date): boolean {
-  const closes = schoolMillis(paper.closedate);
+/** Whether an assignment is still taking submissions. */
+export function isOpen(assignment: SetAssignment, now: Date): boolean {
+  const closes = schoolMillis(assignment.closedate);
   return closes === null || closes > now.getTime();
 }
 
@@ -57,7 +57,7 @@ export function teacherFigures(dashboard: TeacherDashboard) {
       armNames(arms) || 'Not a class teacher this session',
     ),
     countTile(
-      'Papers open',
+      'Assignments open',
       stats.pending_assignments,
       stats.pending_assignments
         ? 'Still taking submissions'
@@ -76,36 +76,36 @@ export function teacherNote(stats: TeacherDashboardStats): string {
   const attendance = stats.attendance_taken_today
     ? 'Today’s attendance is in.'
     : 'Today’s attendance has not been taken yet.';
-  const papers = stats.pending_assignments
-    ? `${stats.pending_assignments} of your papers ${stats.pending_assignments === 1 ? 'is' : 'are'} still open.`
-    : 'No paper of yours is open.';
+  const assignments = stats.pending_assignments
+    ? `${stats.pending_assignments} of your assignments ${stats.pending_assignments === 1 ? 'is' : 'are'} still open.`
+    : 'No assignment of yours is open.';
 
-  return `${attendance} ${papers}`;
+  return `${attendance} ${assignments}`;
 }
 
 /**
- * The papers this teacher has set, newest first.
+ * The assignments this teacher has set, newest first.
  *
- * The API's own `status` is left out: it reads 'active' on a paper that shut
+ * The API's own `status` is left out: it reads 'active' on an assignment that shut
  * days ago, because nothing re-checks the clock when the row is written. The
  * closing time is what the list says instead, and an open one is flagged.
  */
-export function assignmentEntries(papers: SetAssignment[], now: Date) {
-  return papers.map((paper) => {
-    const open = isOpen(paper, now);
-    const questions = paper.total_questions ?? 0;
+export function assignmentEntries(assignments: SetAssignment[], now: Date) {
+  return assignments.map((assignment) => {
+    const open = isOpen(assignment, now);
+    const questions = assignment.total_questions ?? 0;
 
     return {
-      id: String(paper.id),
-      text: paper.title?.trim() || `Paper ${paper.id}`,
+      id: String(assignment.id),
+      text: assignment.title?.trim() || `Assignment ${assignment.id}`,
       who: [
-        paper.subject?.name,
+        assignment.subject?.name,
         `${questions} question${questions === 1 ? '' : 's'}`,
       ]
         .filter(Boolean)
         .join(' · '),
-      when: paper.closedate
-        ? `${open ? 'Closes' : 'Closed'} ${when(schoolTime(paper.closedate), true)}`
+      when: assignment.closedate
+        ? `${open ? 'Closes' : 'Closed'} ${when(schoolTime(assignment.closedate), true)}`
         : 'No closing time',
       flagged: open,
     };

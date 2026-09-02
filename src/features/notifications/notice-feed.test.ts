@@ -71,7 +71,7 @@ test('the meta line says who posted it and how far it reached', () => {
     noticeMeta({ ...RESUMPTION, scope: 'class', class_name: null }),
     'Chukwudi Aniegboka · One class',
   )
-  // A paper being set raises one of these; nobody wrote it.
+  // An assignment being set raises one of these; nobody wrote it.
   assert.equal(
     noticeMeta({ ...RESUMPTION, is_automatic: true }),
     'Posted automatically · Whole school',

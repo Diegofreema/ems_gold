@@ -5,7 +5,7 @@ import { when } from '../../../../features/collections/when.ts'
 import { text } from '../../../../features/profile/record.ts'
 
 /**
- * The notes and papers shared with the pupil's class, off
+ * The notes and assignments shared with the pupil's class, off
  * `GET /students/me/materials`.
  *
  * Three columns where the design has five. Type and Size are the file's own,

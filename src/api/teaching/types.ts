@@ -39,8 +39,8 @@ export type UpdateMyTeachingProfileBody = {
 /**
  * The home page's counters. `my_students` counts the pupils in the arms this
  * teacher takes, against `total_students` for the whole school;
- * `pending_assignments` counts the papers they have set that are still open —
- * it reads 0 for a teacher whose two papers both closed before today.
+ * `pending_assignments` counts the assignments they have set that are still open —
+ * it reads 0 for a teacher whose two assignments both closed before today.
  */
 export type TeacherDashboardStats = {
   my_students: number
@@ -51,7 +51,7 @@ export type TeacherDashboardStats = {
 }
 
 /**
- * A paper the teacher has set, as the dashboard lists it.
+ * An assignment the teacher has set, as the dashboard lists it.
  *
  * The two stamps are the same wall clock written two ways — `opendate` carries
  * the school's `+01:00` and `closedate` carries no zone at all — so the offset
@@ -63,16 +63,16 @@ export type SetAssignment = {
   details: string | null
   subject_id: number
   department_id: number
-  /** 'cbt_test' on every paper set so far. */
+  /** 'cbt_test' on every assignment set so far. */
   test_type: string | null
   status: string | null
   total_questions: number | null
-  /** Minutes allowed once opened. Null on a paper with no limit set. */
+  /** Minutes allowed once opened. Null on an assignment with no limit set. */
   time_limit: number | null
   passing_score: number | null
   opendate: string | null
   closedate: string | null
-  /** Expanded beside the paper, so the subject needs no second call. */
+  /** Expanded beside the assignment, so the subject needs no second call. */
   subject?: { id: number; name: string; subjectcode: string | null } | null
 }
 

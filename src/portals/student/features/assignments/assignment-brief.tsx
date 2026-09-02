@@ -1,14 +1,26 @@
 import { Link } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
-import type { AssignmentPaper } from '@/api/assignments/types'
+import { lazy, type ReactNode, Suspense } from 'react'
+import type { AssignmentDetail } from '@/api/assignments/types'
 import { Tag } from '@/components/common/tag'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { isRichText } from '@/features/collections/rich-text'
 import { toneForStatus } from '@/lib/status-tone'
-import { paperFields, paperMeta } from './paper'
+import { assignmentFields, assignmentMeta } from './assignment'
 
 /**
- * A paper before it is sat, or once it can no longer be: its terms, its state,
+ * The reader is the editor with typing turned off, and the editor is a large
+ * dependency — so it is fetched only by an assignment whose instructions were
+ * actually written with it, and never by the plain ones.
+ */
+const RichTextView = lazy(() =>
+  import('@/components/editor/rich-text-view').then((module) => ({
+    default: module.RichTextView,
+  })),
+)
+
+/**
+ * An assignment before it is sat, or once it can no longer be: its terms, its state,
  * and the one thing the pupil can do about it.
  *
  * The same panel serves all three ways in — start it, you already did, you
@@ -16,40 +28,46 @@ import { paperFields, paperMeta } from './paper'
  * the bottom, and splitting them would be three copies of the same list of
  * terms.
  */
-export function PaperBrief({
-  paper,
+export function AssignmentBrief({
+  assignment,
   state,
   note,
   action,
 }: {
-  paper: AssignmentPaper
+  assignment: AssignmentDetail
   state: string
   note: string
   action?: ReactNode
 }) {
-  const title = paper.assignment?.title?.trim() || 'This test'
-  const details = paper.assignment?.details?.trim()
+  const title = assignment.assignment?.title?.trim() || 'This assignment'
+  const details = assignment.assignment?.details?.trim()
 
   return (
     <div className="max-w-[720px]">
       <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
-        Computer-based test
+        Assignment
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h2 className="text-page-title">{title}</h2>
         <Tag variant={toneForStatus(state)}>{state}</Tag>
       </div>
-      <p className="mt-1.5 text-sm text-muted-foreground">{paperMeta(paper)}</p>
+      <p className="mt-1.5 text-sm text-muted-foreground">{assignmentMeta(assignment)}</p>
       <Rule />
 
       {details && (
-        <p className="mb-6 border-l-2 border-brand pl-4 text-[15px] leading-relaxed">
-          {details}
-        </p>
+        <div className="mb-6 border-l-2 border-brand pl-4 text-[15px] leading-relaxed">
+          {isRichText(details) ? (
+            <Suspense fallback={<div className="h-6 animate-ems-fade" />}>
+              <RichTextView html={details} />
+            </Suspense>
+          ) : (
+            <p>{details}</p>
+          )}
+        </div>
       )}
 
       <div className="border-2 border-foreground">
-        {paperFields(paper).map((field, index) => (
+        {assignmentFields(assignment).map((field, index) => (
           <div
             key={field.label}
             style={{ animationDelay: `${index * 30}ms` }}
@@ -69,7 +87,7 @@ export function PaperBrief({
       <div className="flex flex-wrap gap-2.5">
         {action}
         <Button asChild variant="outline">
-          <Link to="/student/tests">Back to my tests</Link>
+          <Link to="/student/assignments">Back to my assignments</Link>
         </Button>
       </div>
     </div>

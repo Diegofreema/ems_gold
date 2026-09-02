@@ -38,10 +38,12 @@ export type ListPath =
   | '/teacher/eclasses'
   | '/teacher/uploads'
   | '/teacher/results'
+  | '/teacher/assignments'
+  | '/teacher/submissions'
   | '/student/courses'
   | '/student/materials'
   | '/student/timetable'
-  | '/student/tests'
+  | '/student/assignments'
   | '/student/results'
   | '/student/attendance'
   | '/student/invoices'
@@ -49,7 +51,7 @@ export type ListPath =
   | '/parent/results'
   | '/parent/attendance'
   | '/parent/invoices'
-  | '/parent/tests'
+  | '/parent/assignments'
 
 /**
  * Where a portal keeps its generic record routes. Every portal mounts the same
@@ -88,6 +90,7 @@ export type CrumbLink =
 
 /** Where a list's primary action goes when it is not a create form. */
 export type ActionPath =
+  | '/teacher/questions'
   | '/admin/arms'
   | '/admin/classes'
   | '/admin/calendar'
@@ -306,6 +309,17 @@ export type FieldSpec = {
    */
   rich?: boolean
   numeric?: boolean
+  /**
+   * A figure rather than text: the browser's own number control, which will
+   * not take a word at all. `numeric` beside it is the looser rule — it
+   * accepts the separators a phone number is written with — so a field that
+   * counts something wants this one and a field that is merely digits wants
+   * that one.
+   */
+  number?: boolean
+  /** Bounds for a `number` field, enforced by the form as well as the control. */
+  min?: number
+  max?: number
   /** A figure in naira: masked as it is typed and spelled out beneath. */
   money?: boolean
   email?: boolean

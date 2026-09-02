@@ -96,38 +96,38 @@ export const studentTimetableQuery = queryOptions({
 })
 
 /**
- * `GET /assignments` — every paper set for the pupil's own class.
+ * `GET /assignments` — every assignment set for the pupil's own class.
  *
  * Asked without a `subject_id`, which the endpoint treats as "all of them".
  * Sharing the key with `useAssignments()` so the register and anything else
  * reading the list collapse into one request.
  *
  * Not cached for long: `my_status` and `window_problem` are worked out by the
- * server against its own clock, so a paper that opened a minute ago is only
+ * server against its own clock, so an assignment that opened a minute ago is only
  * open once this has been asked again.
  */
-export const studentTestsQuery = queryOptions({
+export const studentAssignmentsQuery = queryOptions({
   queryKey: assignmentKeys.list(undefined),
   queryFn: () => assignmentsService.list(),
   staleTime: 30_000,
 })
 
 /**
- * `GET /assignments/{id}` — one paper and its questions.
+ * `GET /assignments/{id}` — one assignment and its questions.
  *
- * Never cached: this is the answer that says whether the paper has been
+ * Never cached: this is the answer that says whether the assignment has been
  * submitted and whether its window is still open, and a stale copy of either
- * would put a pupil into a paper they cannot send back.
+ * would put a pupil into an assignment they cannot send back.
  */
-export const studentPaperQuery = (setassignmentId: string) =>
+export const studentAssignmentQuery = (setassignmentId: string) =>
   queryOptions({
     queryKey: assignmentKeys.detail(setassignmentId),
     queryFn: () => assignmentsService.get(setassignmentId),
     staleTime: 0,
   })
 
-/** `GET /assignments/results/{id}` — keyed on the submission, not the paper. */
-export const studentTestResultQuery = (submissionId: string) =>
+/** `GET /assignments/results/{id}` — keyed on the submission, not the assignment. */
+export const studentAssignmentResultQuery = (submissionId: string) =>
   queryOptions({
     queryKey: assignmentKeys.result(submissionId),
     queryFn: () => assignmentsService.result(submissionId),

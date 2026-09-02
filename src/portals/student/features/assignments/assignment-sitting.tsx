@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { parseAsInteger, useQueryState } from 'nuqs'
 import { useEffect, useRef, useState } from 'react'
-import type { AssignmentPaper } from '@/api/assignments/types'
+import type { AssignmentDetail } from '@/api/assignments/types'
 import { useSubmitAssignment } from '@/api/assignments/hooks'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { Rule } from '@/components/page/rule'
@@ -14,35 +14,36 @@ import { OptionList } from './option-list'
 import {
   answeredCount,
   type Draft,
+  isAnswered,
   isTheory,
   limitSeconds,
-  paperMeta,
+  assignmentMeta,
   questionsOf,
   submitBody,
-} from './paper'
+} from './assignment'
 import { QuestionPips } from './question-pips'
 import { useCountdown } from './use-countdown'
 
 /**
- * The paper itself, one question at a time.
+ * The assignment itself, one question at a time.
  *
  * `openedAt` is passed in rather than taken here: the endpoint wants when the
  * pupil actually started, and that is the moment they pressed the button on
  * the brief, not the moment this component happened to mount.
  */
-export function PaperSitting({
-  paper,
-  testId,
+export function AssignmentSitting({
+  assignment,
+  assignmentId,
   openedAt,
 }: {
-  paper: AssignmentPaper
-  testId: string
+  assignment: AssignmentDetail
+  assignmentId: string
   openedAt: Date
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
-  const submit = useSubmitAssignment(testId)
-  const questions = questionsOf(paper)
+  const submit = useSubmitAssignment(assignmentId)
+  const questions = questionsOf(assignment)
   const total = questions.length
 
   const [draft, setDraft] = useState<Draft>({})
@@ -55,8 +56,8 @@ export function PaperSitting({
   const send = () =>
     submit
       .mutateAsync(submitBody(draft, questions, openedAt))
-      .then(() => navigate({ to: '/student/tests/$testId/result', params: { testId } }))
-      // The toast has already said what went wrong; the paper stays put so the
+      .then(() => navigate({ to: '/student/assignments/$assignmentId/result', params: { assignmentId } }))
+      // The toast has already said what went wrong; the assignment stays put so the
       // answers are not lost with it.
       .catch(() => undefined)
 
@@ -65,14 +66,14 @@ export function PaperSitting({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
-            Computer-based test
+            Assignment
           </div>
           <h2 className="mt-2 text-page-title">
-            {paper.assignment?.title?.trim() || 'This test'}
+            {assignment.assignment?.title?.trim() || 'This assignment'}
           </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">{paperMeta(paper)}</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">{assignmentMeta(assignment)}</p>
         </div>
-        <PaperClock paper={paper} onExpired={send} />
+        <AssignmentClock assignment={assignment} onExpired={send} />
       </div>
       <Rule />
 
@@ -81,7 +82,10 @@ export function PaperSitting({
         current={index}
         answered={(at) => {
           const one = questions[at]
-          return one ? draft[one.id] !== undefined : false
+          // The same test the counter below uses. A theory box holding only
+          // spaces is not an answer, and a filled pip over "3 of 4 answered"
+          // is the assignment telling the pupil two different things at once.
+          return one ? isAnswered(draft, one) : false
         }}
         onJump={(next) => void setQuestion(next + 1)}
       />
@@ -145,17 +149,17 @@ export function PaperSitting({
           onClick={() =>
             confirm.ask({
               title: 'Submit and finish?',
-              body: 'Once you submit you cannot come back to this paper or change an answer. Any question you left blank is marked zero.',
+              body: 'Once you submit you cannot come back to this assignment or change an answer. Any question you left blank is marked zero.',
               subject: `${answered} of ${total} questions answered`,
               cancel: 'Keep working',
-              cta: 'Submit test',
+              cta: 'Submit assignment',
               // Handed back rather than fired, so the dialog holds with its
               // button spinning until the school has actually taken it.
               onConfirm: send,
             })
           }
         >
-          {submit.isPending ? 'Submitting…' : 'Submit test'}
+          {submit.isPending ? 'Submitting…' : 'Submit assignment'}
         </Button>
       </div>
 
@@ -165,21 +169,21 @@ export function PaperSitting({
 }
 
 /**
- * The clock, on a paper that sets a limit.
+ * The clock, on an assignment that sets a limit.
  *
- * A paper without one shows its closing time instead of a countdown: a timer
+ * An assignment without one shows its closing time instead of a countdown: a timer
  * running down to a deadline the school never set would be inventing one.
  */
-function PaperClock({
-  paper,
+function AssignmentClock({
+  assignment,
   onExpired,
 }: {
-  paper: AssignmentPaper
+  assignment: AssignmentDetail
   onExpired: () => void
 }) {
-  const allowed = limitSeconds(paper)
+  const allowed = limitSeconds(assignment)
   const { seconds } = useCountdown(allowed ?? 0)
-  // Once, on the tick that reaches zero. The paper goes in as it stands, which
+  // Once, on the tick that reaches zero. The assignment goes in as it stands, which
   // is what "time allowed" means — the alternative is a pupil holding answers
   // the school will not accept.
   const sent = useRef(false)

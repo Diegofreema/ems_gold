@@ -1,11 +1,11 @@
 import { myFamilyKeys } from '@/api/parents/keys'
 import { myFamilyService } from '@/api/parents/service'
-import type { ChildAssignment } from '@/api/parents/types'
+import type { ChildAssignments } from '@/api/parents/types'
 import { pageRows } from '@/features/collections/api'
 import type { CollectionDef, Row } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
 import { queryClient } from '@/lib/query-client'
-import { childPapers } from '../features/tests/assignments'
+import { childAssignments } from '../features/assignments/assignments'
 import { familyOwing, OWING, type Child } from '../family'
 
 /** "1 invoice", "12 invoices" — a footer is prose, not a column. */
@@ -115,53 +115,53 @@ export function invoicesFor(child: Child, family: Child[]): CollectionDef {
 }
 
 /**
- * Every child's papers in one answer.
+ * Every child's assignments in one answer.
  *
  * The endpoint takes no pupil, so asking it per child would be the same
- * request four times over. It goes through the cache instead: the register and
+ * request four times over. It goes through the cache instead: the list and
  * the record page want the same answer on the same render, and react-query
  * collapses them into one call. Nothing is held between visits.
  */
-const allPapers = (): Promise<ChildAssignment[]> =>
+const allAssignments = (): Promise<ChildAssignments[]> =>
   queryClient.ensureQueryData({
     queryKey: myFamilyKeys.assignments(),
     queryFn: () => myFamilyService.assignments(),
   })
 
-export function testsFor(child: Child): CollectionDef {
+export function assignmentsFor(child: Child): CollectionDef {
   // `new Date()` per call rather than per definition: the definition is rebuilt
-  // on every render, and a paper closing while the page is open should read as
+  // on every render, and an assignment closing while the page is open should read as
   // closed on the next fetch, not on the next navigation.
-  const papers = (): Promise<Row[]> =>
-    allPapers().then((children) => childPapers(children, child.id, new Date()))
+  const assignments = (): Promise<Row[]> =>
+    allAssignments().then((children) => childAssignments(children, child.id, new Date()))
 
   return {
-    id: 'tests',
-    path: '/parent/tests',
+    id: 'assignments',
+    path: '/parent/assignments',
     scope: child.adm,
-    kicker: 'Tests',
-    title: `Tests for ${child.name}`,
-    description: `Papers set for ${child.name}'s class, and where they stand on each. A test is sat in the pupil's own portal — this is the register of them.`,
-    // A parent cannot open a paper on their child's behalf, so the list offers
+    kicker: 'Assignments',
+    title: `Assignments for ${child.name}`,
+    description: `Assignments set for ${child.name}'s class, and where they stand on each. An assignment is answered by the pupil in their own portal and marked by their teacher; this is where each one stands.`,
+    // A parent cannot open an assignment on their child's behalf, so the list offers
     // no button rather than one that opens nothing.
-    action: 'Open the test',
+    action: 'Open the assignment',
     readonly: true,
-    searchHint: 'Search test or subject',
+    searchHint: 'Search assignment or subject',
     footer: `Set for ${child.arm}`,
-    emptyTitle: 'No tests set',
+    emptyTitle: 'No assignments set',
     emptyBody:
-      'A paper set for this class appears here as soon as a teacher publishes it, with the day it closes.',
-    noun: 'test',
+      'An assignment set for this class appears here as soon as a teacher publishes it, with the day it closes.',
+    noun: 'assignment',
     nameKey: 'title',
     tabs: [],
     columns: [
-      { key: 'title', label: 'Test', cardRole: 'title' },
+      { key: 'title', label: 'Assignment', cardRole: 'title' },
       { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
       { key: 'closes', label: 'Closes' },
       { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
     ],
     detail: [
-      { key: 'title', label: 'Test' },
+      { key: 'title', label: 'Assignment' },
       { key: 'subject', label: 'Subject' },
       { key: 'state', label: 'State' },
       { key: 'opens', label: 'Opens' },
@@ -170,9 +170,9 @@ export function testsFor(child: Child): CollectionDef {
     ],
     // Searched and paged here: the endpoint answers with the household whole
     // and takes neither a page nor a query.
-    source: (params) => papers().then((rows) => pageRows(rows, params)),
+    source: (params) => assignments().then((rows) => pageRows(rows, params)),
     record: (recordId) =>
-      papers().then((rows) => rows.find((row) => row.id === recordId)),
+      assignments().then((rows) => rows.find((row) => row.id === recordId)),
   }
 }
 
@@ -181,6 +181,6 @@ export function parentCollections(child: Child, family: Child[]) {
   return {
     children: childrenFor(family),
     invoices: invoicesFor(child, family),
-    tests: testsFor(child),
+    assignments: assignmentsFor(child),
   }
 }

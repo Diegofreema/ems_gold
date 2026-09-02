@@ -2,7 +2,7 @@ import { paginated, request } from '../client'
 import type { Id } from '../types'
 import type {
   Child,
-  ChildAssignment,
+  ChildAssignments,
   ChildAttendance,
   ChildAttendanceParams,
   ChildResultParams,
@@ -114,12 +114,12 @@ export const myFamilyService = {
     }),
 
   assignments: () =>
-    request<{ children: ChildAssignment[] }>('sparents/my-assignments').then(
+    request<{ children: ChildAssignments[] }>('sparents/my-assignments').then(
       (data) => data.children,
     ),
 
   /**
-   * The paper itself, with its questions. Its response body has not been seen
+   * The assignment itself, with its questions. Its response body has not been seen
    * — the route is refused here — so nothing is typed onto it yet and no
    * screen reads it.
    */

@@ -1,32 +1,32 @@
 import { createFileRoute } from '@tanstack/react-router';
 import {
-  studentPaperQuery,
-  studentTestResultQuery,
+  studentAssignmentResultQuery,
+  studentAssignmentQuery,
 } from '@/portals/student/api/queries';
-import { TestResult } from '@/portals/student/features/tests/test-result';
+import { AssignmentResultPage } from '@/portals/student/features/assignments/assignment-result';
 
-export const Route = createFileRoute('/student/tests/$testId/result')({
+export const Route = createFileRoute('/student/assignments/$assignmentId/result')({
   staticData: {
     title: 'How you did',
-    crumb: 'Assessment · Tests',
-    crumbTo: '/student/tests',
+    crumb: 'Assessment · Assignments',
+    crumbTo: '/student/assignments',
   },
   /*
-   * Both hops, warmed here. The URL names the paper and the result endpoint is
-   * keyed on the submission, so the paper has to answer before the result can
+   * Both hops, warmed here. The URL names the assignment and the result endpoint is
+   * keyed on the submission, so the assignment has to answer before the result can
    * be asked for at all — doing that in the loader keeps the page from
    * rendering twice on its way in.
    *
-   * A paper that was never sat has no submission, and that is not an error:
+   * An assignment that was never sat has no submission, and that is not an error:
    * the page says so itself.
    */
   loader: async ({ context, params }) => {
-    const paper = await context.queryClient.ensureQueryData(
-      studentPaperQuery(params.testId),
+    const assignment = await context.queryClient.ensureQueryData(
+      studentAssignmentQuery(params.assignmentId),
     );
-    if (paper.my_submission) {
+    if (assignment.my_submission) {
       await context.queryClient.ensureQueryData(
-        studentTestResultQuery(String(paper.my_submission.id)),
+        studentAssignmentResultQuery(String(assignment.my_submission.id)),
       );
     }
   },
@@ -34,5 +34,5 @@ export const Route = createFileRoute('/student/tests/$testId/result')({
 });
 
 function Result() {
-  return <TestResult testId={Route.useParams().testId} />;
+  return <AssignmentResultPage assignmentId={Route.useParams().assignmentId} />;
 }

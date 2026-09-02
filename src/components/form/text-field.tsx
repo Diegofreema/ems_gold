@@ -11,6 +11,9 @@ type TextFieldProps<TValues extends FieldValues> = {
   span?: FieldSpan
   placeholder?: string
   type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'time'
+  /** Bounds for a number control, so the stepper stops where the rule does. */
+  min?: number
+  max?: number
   multiline?: boolean
 }
 
@@ -22,6 +25,8 @@ export function TextField<TValues extends FieldValues>({
   span,
   placeholder,
   type = 'text',
+  min,
+  max,
   multiline,
 }: TextFieldProps<TValues>) {
   const { control } = useFormContext<TValues>()
@@ -43,6 +48,8 @@ export function TextField<TValues extends FieldValues>({
         id={name}
         value={field.value ?? ''}
         type={multiline ? undefined : type}
+        min={min}
+        max={max}
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
       />
