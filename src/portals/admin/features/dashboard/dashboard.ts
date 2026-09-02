@@ -47,13 +47,28 @@ export type Ledger = {
   billed: number
   collected: number
   outstanding: number
-  /** Invoices raised, and how many of those are still owing. */
+  /** Invoices totalled above, and how many of those are still owing. */
   raised: number
   owing: number
+  /**
+   * What the register holds in all, which is `raised` unless the scan stopped
+   * short of it. The invoices page reads this same figure off its own
+   * pagination, so the two screens must not disagree about it.
+   */
+  total: number
 }
 
-export function ledgerTotals(invoices: Invoice[]): Ledger {
-  const ledger: Ledger = { billed: 0, collected: 0, outstanding: 0, raised: 0, owing: 0 }
+export function ledgerTotals(invoices: Invoice[], total = invoices.length): Ledger {
+  const ledger: Ledger = {
+    billed: 0,
+    collected: 0,
+    outstanding: 0,
+    raised: 0,
+    owing: 0,
+    // A register that claims fewer invoices than were just counted off it
+    // would read "the newest 500 of 400". Its own rows are the floor.
+    total: Math.max(total, invoices.length),
+  }
   for (const invoice of invoices) {
     const amount = money(invoice.amount)
     const settled = invoice.paystatus === SETTLED
@@ -71,22 +86,39 @@ export function ledgerTotals(invoices: Invoice[]): Ledger {
 /**
  * The four money figures, all off ledgers that reconcile with one another —
  * three from the invoice register and the fourth from the spending summary.
+ *
+ * The first three say which invoices they cover, because they may not cover
+ * all of them: the register is totalled a page at a time and a school with
+ * years of billing behind it can outrun the scan. Where it does, the tiles are
+ * a window on the newest invoices and read as one. The alternative — quietly
+ * totalling what happened to arrive — puts a figure here that is lower than
+ * the register's own and gives no sign of it, which is the fault this page was
+ * already carrying against `/users/dashboard`.
  */
 export function financeFigures(ledger: Ledger, months: SpendingMonth[], today: Date) {
   const rate = ledger.billed ? Math.round((ledger.collected / ledger.billed) * 100) : 0
   const month = spentIn(months, monthKey(today))
+  const whole = ledger.raised >= ledger.total
 
   return [
     moneyTile(
       'Billed to date',
       ledger.billed,
-      `${counted(ledger.raised, 'invoice', 'invoices')} raised`,
+      whole
+        ? `${counted(ledger.total, 'invoice', 'invoices')} raised`
+        : `The newest ${formatCount(ledger.raised)} of ${formatCount(ledger.total)} invoices`,
     ),
-    moneyTile('Collected', ledger.collected, `${rate}% of everything billed`),
+    moneyTile(
+      'Collected',
+      ledger.collected,
+      whole ? `${rate}% of everything billed` : `${rate}% of those`,
+    ),
     moneyTile(
       'Outstanding',
       ledger.outstanding,
-      `${counted(ledger.owing, 'invoice', 'invoices')} still owing`,
+      whole
+        ? `${counted(ledger.owing, 'invoice', 'invoices')} still owing`
+        : `${counted(ledger.owing, 'invoice', 'invoices')} of those still owing`,
       // Money owed is only worth flagging while some is owed.
       ledger.owing > 0,
     ),
@@ -161,6 +193,10 @@ export function compactNaira(amount: number): string {
  * Every month in the window gets a bar, including the ones nothing came in on:
  * a quiet month is a fact about the term, and dropping it would leave the axis
  * lying about which months these are. The biggest is drawn in accent.
+ *
+ * Reads the same scan as the tiles, and is right even where that scan stopped
+ * short: the register answers newest first, so what a partial one holds is the
+ * most recent invoices — which is the half of it this window is drawn from.
  */
 export function collectionBars(invoices: Invoice[], today: Date, span = 6) {
   const totals = new Map<string, number>()

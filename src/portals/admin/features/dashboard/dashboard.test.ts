@@ -66,7 +66,43 @@ test('the three money figures add up, because there is no part payment', () => {
     outstanding: 400_000,
     raised: 3,
     owing: 1,
+    total: 3,
   })
+})
+
+test('the register’s own count is kept, not the count of what was scanned', () => {
+  // `total` is the figure the invoices page puts under "Invoices raised",
+  // read off the pagination. The two screens must agree about it.
+  const ledger = ledgerTotals([invoice({ id: 1, amount: '400000' })], 12_400)
+  assert.equal(ledger.raised, 1)
+  assert.equal(ledger.total, 12_400)
+})
+
+test('a register claiming fewer invoices than were counted off it is floored', () => {
+  // Otherwise the tile reads "the newest 2 of 1 invoices".
+  assert.equal(ledgerTotals([invoice({ id: 1 }), invoice({ id: 2 })], 1).total, 2)
+})
+
+test('a scan that stopped short says so rather than reading low', () => {
+  const ledger = ledgerTotals(
+    [
+      invoice({ id: 1, amount: '400000' }),
+      invoice({ id: 2, amount: '100000', paystatus: 'success', payday: '2026-08-27 12:56:13' }),
+    ],
+    12_400,
+  )
+  assert.deepEqual(
+    financeFigures(ledger, [], TODAY)
+      .slice(0, 3)
+      .map((figure) => [figure.label, figure.amount, figure.delta]),
+    [
+      // The money is still the money that was counted — what changes is that
+      // the tiles stop calling it the whole register.
+      ['Billed to date', 500_000, 'The newest 2 of 12,400 invoices'],
+      ['Collected', 100_000, '20% of those'],
+      ['Outstanding', 400_000, '1 invoice of those still owing'],
+    ],
+  )
 })
 
 test('an unreadable amount is nothing owed rather than NaN', () => {
