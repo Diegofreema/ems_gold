@@ -49,7 +49,7 @@ const IDENTITY: FormSectionSpec = {
   fields: [
     { key: 'fname', label: 'First name', required: true, placeholder: 'Ngozi' },
     { key: 'lname', label: 'Surname', required: true, placeholder: 'Eze' },
-    { key: 'mname', label: 'Middle name', required: true, placeholder: 'Chiamaka' },
+    { key: 'mname', label: 'Middle name', placeholder: 'Chiamaka' },
     { key: 'dob', label: 'Date of birth', required: true, date: true, past: true },
     { key: 'gender', label: 'Gender', required: true, options: ['Female', 'Male'] },
     { key: 'religion', label: 'Religion', required: true, placeholder: 'Christian' },

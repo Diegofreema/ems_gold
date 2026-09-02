@@ -7,13 +7,17 @@ import { loadAccount } from './session'
 
 /**
  * Resolves the signed-in account or sends the visitor somewhere they can act:
- * no token at all means sign in, a refused token means the session ended.
+ * no token at all means sign in, a refused token means the session ended, and
+ * a sign-in the office has switched off goes back to the form — being turned
+ * away is not an expiry, and the form is where the reason is shown.
  */
 async function requireAccount(queryClient: QueryClient) {
   if (getToken() === null) throw redirect({ to: '/sign-in' })
 
   const account = await loadAccount(queryClient)
-  if (!account) throw redirect({ to: '/session-expired' })
+  if (!account) {
+    throw redirect({ to: useAuthStore.getState().disabled ? '/sign-in' : '/session-expired' })
+  }
   return account
 }
 

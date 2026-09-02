@@ -1,7 +1,7 @@
-import type { Admin } from '../../api/users/types.ts'
-import { BLANK } from '../../features/collections/blank.ts'
-import { asDate, initialsOf, text } from '../../features/profile/record.ts'
-import type { ProfileConfig } from '../../features/profile/types.ts'
+import type { Admin } from '../../api/users/types.ts';
+import { BLANK } from '../../features/collections/blank.ts';
+import { asDate, initialsOf, text } from '../../features/profile/record.ts';
+import type { ProfileConfig } from '../../features/profile/types.ts';
 
 /**
  * The office record, as its owner reads it.
@@ -14,10 +14,10 @@ import type { ProfileConfig } from '../../features/profile/types.ts'
  */
 
 const NOTE =
-  'Your office record, which is what the school holds about you. Your sign-in name and what you can open are set elsewhere and are shown here to read.'
+  'Your office record, which is what the school holds about you. Your sign-in name and what you can open are set elsewhere and are shown here to read.';
 
 const SESSION_NOTE =
-  'Signs you out everywhere except this browser. Useful if you have used a shared computer in the office.'
+  'Signs you out everywhere except this browser. Useful if you have used a shared computer in the office.';
 
 const FIELDS: ProfileConfig['fields'] = [
   { key: 'fullname', label: 'Full name', required: true },
@@ -28,7 +28,7 @@ const FIELDS: ProfileConfig['fields'] = [
   { key: 'role', label: 'Account', locked: true },
   { key: 'klass', label: 'Class', locked: true },
   { key: 'privileges', label: 'What you can open', locked: true, wide: true },
-]
+];
 
 /** The prototype's page, for the moment before the record answers. */
 const EMPTY: ProfileConfig = {
@@ -51,21 +51,33 @@ const EMPTY: ProfileConfig = {
   // record did not answer, and the login is the one thing still known.
   account: [{ label: 'Signs in with', value: BLANK }],
   prefs: [
-    { label: 'Email me about overdue fees', hint: 'A daily digest at 16:00', on: true },
-    { label: 'Email me when a result batch needs approval', hint: 'As it happens', on: true },
-    { label: 'SMS for anything marked urgent', hint: 'Charged to the school line', on: false },
+    {
+      label: 'Email me about overdue fees',
+      hint: 'A daily digest at 16:00',
+      on: true,
+    },
+    {
+      label: 'Email me when a result batch needs approval',
+      hint: 'As it happens',
+      on: true,
+    },
+    {
+      label: 'SMS for anything marked urgent',
+      hint: 'Charged to the school line',
+      on: false,
+    },
   ],
-}
+};
 
 export function adminProfile(admin?: Admin): ProfileConfig {
-  if (!admin) return EMPTY
+  if (!admin) return EMPTY;
 
-  const names = [admin.surname, admin.lastname].filter(Boolean)
-  const held = admin.privileges ?? []
+  const names = [admin.surname, admin.lastname].filter(Boolean);
+  const held = admin.privileges ?? [];
   // The job the office writes on the record — "Registrar", "ICT Director" —
   // not the account's role, which is what the portal lets them open.
-  const job = admin.profile?.trim() ?? ''
-  const role = admin.user?.role?.role_name
+  const job = admin.profile?.trim() ?? '';
+  const role = admin.user?.role?.role_name;
 
   return {
     ...EMPTY,
@@ -95,5 +107,5 @@ export function adminProfile(admin?: Admin): ProfileConfig {
     ],
     // Already the person's own record: the session has nothing to add to it.
     fromRecord: true,
-  }
+  };
 }

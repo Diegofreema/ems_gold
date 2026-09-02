@@ -10,7 +10,7 @@ type Cell = { x: number; z: number; base: number; phase: number; accent: boolean
 
 /**
  * The same lattice on every visit: heights, breathing offsets and which blocks
- * are red all come from a hash of the cell's own coordinates, so nothing is
+ * are brand-coloured all come from a hash of the cell's own coordinates, so nothing is
  * random and nothing has to be stored.
  */
 function buildCells(): Cell[] {
@@ -38,10 +38,10 @@ function palette(el: Element) {
   const token = (name: string, fallback: string) =>
     style.getPropertyValue(name).trim() || fallback
   return {
-    ink: token('--ems-ink', '#201e1d'),
-    ground: token('--ems-ground', '#f3f2f2'),
-    accent: token('--ems-brand', '#ec3013'),
-    accentEdge: token('--ems-brand-700', '#ae1800'),
+    ink: token('--ems-ink', '#1c1d20'),
+    ground: token('--ems-ground', '#f2f2f4'),
+    accent: token('--ems-brand', '#1349ec'),
+    accentEdge: token('--ems-brand-700', '#0034ae'),
   }
 }
 

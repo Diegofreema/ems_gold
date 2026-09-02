@@ -58,7 +58,7 @@ export function enrolmentTiles(intelligence: BusinessIntelligence | undefined) {
       label: 'Local governments',
       // Named nowhere on this API — see the note on `BusinessIntelligence`.
       value: formatCount(lgas.length),
-      delta: 'The API publishes no LGA catalogue to name them',
+      delta: 'The school holds no list of names for these',
     },
   ]
 }

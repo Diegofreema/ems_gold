@@ -58,7 +58,7 @@ export function ForgotPasswordScreen() {
       {failure && (
         <AuthAlert
           title={failure}
-          body="Check the address and try again, or ask the school office which address is registered."
+          body="Check the email address and try again."
         />
       )}
 

@@ -71,6 +71,19 @@ export function roleForAccount(account: Account): Role | null {
  *
  * With nothing signed in there is nothing to check against, so `me` stands.
  */
+/**
+ * Whether the office has switched this sign-in off. The record, the trail and
+ * the privileges all stay; only the access stops, which is what the staff
+ * register's "Disable sign-in" does.
+ */
+export function isDisabled(account: Account | null): boolean {
+  return account?.user.userstatus === 'Disabled'
+}
+
+/** What a person turned away for it is told, on the form they land on. */
+export const DISABLED_TITLE = 'This account has been disabled'
+export const DISABLED_BODY = 'Ask the school office to turn it back on.'
+
 export function accountOfRecord(signedInAs: Account | null, fresh: Account): Account {
   if (!signedInAs) return fresh
   return signedInAs.user?.id === fresh.user?.id ? fresh : signedInAs

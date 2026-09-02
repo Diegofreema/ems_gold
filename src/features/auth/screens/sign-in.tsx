@@ -9,20 +9,40 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
+import { endSession } from '@/stores/session.store'
 import { useAuthStore } from '../auth.store'
 import { AuthAlert } from '../components/auth-alert'
 import { AuthHeading } from '../components/auth-heading'
 import { PasswordInput } from '../components/password-input'
-import { portalFor, roleForAccount } from '../role'
+import {
+  DISABLED_BODY,
+  DISABLED_TITLE,
+  isDisabled,
+  portalFor,
+  roleForAccount,
+} from '../role'
 import { loadAccount } from '../session'
 import { signInSchema, type SignInValues } from '../schemas'
+
+/** What the alert says. Only a disabled account replaces the body. */
+type Failure = { title: string; body: string }
+
+const WRONG_DETAILS_BODY =
+  'Check the email and password, then try again. Five wrong tries locks the account for fifteen minutes.'
+
+const DISABLED_FAILURE: Failure = { title: DISABLED_TITLE, body: DISABLED_BODY }
 
 export function SignInScreen() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const login = useLogin()
   const identify = useAuthStore((state) => state.identify)
-  const [failure, setFailure] = useState<string | null>(null)
+  // Set when a guard turned a switched-off sign-in away, so landing here from
+  // a live token says why rather than showing a blank form.
+  const turnedAway = useAuthStore((state) => state.disabled)
+  const clearDisabled = useAuthStore((state) => state.clearDisabled)
+  const [failure, setFailure] = useState<Failure | null>(null)
+  const alert = failure ?? (turnedAway ? DISABLED_FAILURE : null)
 
   const form = useRecordForm<SignInValues>(signInSchema, {
     username: '',
@@ -32,11 +52,21 @@ export function SignInScreen() {
 
   const onSubmit = async (values: SignInValues) => {
     setFailure(null)
+    clearDisabled()
     try {
-      await login.mutateAsync({
+      const signedIn = await login.mutateAsync({
         username: values.username,
         password: values.password,
       })
+
+      // The password was right, but the office has switched this sign-in off.
+      // Read off the login answer rather than waiting for `me`, and the
+      // session it just stored — token included — is dropped again here.
+      if (isDisabled(signedIn)) {
+        endSession(queryClient)
+        setFailure(DISABLED_FAILURE)
+        return
+      }
 
       // The token and the account from the login answer are both stored by
       // now, so this carries the token and is checked against the account.
@@ -45,7 +75,10 @@ export function SignInScreen() {
       // — a role renamed since, a profile edited — is fresher here.
       const account = await loadAccount(queryClient)
       if (!account) {
-        setFailure('Your password was accepted but the account would not load. Try again.')
+        setFailure({
+          title: 'Your password was accepted but the account would not load. Try again.',
+          body: WRONG_DETAILS_BODY,
+        })
         return
       }
 
@@ -54,7 +87,7 @@ export function SignInScreen() {
 
       await navigate({ to: role ? portalFor(role).to : '/wrong-portal' })
     } catch (error) {
-      setFailure(errorMessage(error, OFFLINE_MESSAGE))
+      setFailure({ title: errorMessage(error, OFFLINE_MESSAGE), body: WRONG_DETAILS_BODY })
     }
   }
 
@@ -69,12 +102,7 @@ export function SignInScreen() {
       />
       <Rule />
 
-      {failure && (
-        <AuthAlert
-          title={failure}
-          body="Check the address and try again. After five wrong attempts the account locks for fifteen minutes and the office is notified."
-        />
-      )}
+      {alert && <AuthAlert title={alert.title} body={alert.body} />}
 
       <FormProvider {...form}>
         <form

@@ -772,7 +772,7 @@ function releaseBatch(row?: Row): ActionDef {
     fields: [],
     cta: 'Release the batch',
     footnote:
-      'Only the office may release a batch — the API refuses the teacher who entered it.',
+      'Only the office may release a batch, not the teacher who entered it.',
     done: () => 'Batch released',
     confirm: () => ({
       title: 'Release these marks?',

@@ -65,6 +65,7 @@ test('a date is written the way the API reads it, whatever the clock says', () =
 test('a field left empty is left out, so editing one section clears nothing', () => {
   const sparse = { fname: 'New', lname: 'Student', department_id: '1' }
   const body = studentBody(sparse, 1)
+  assert.equal(body.mname, undefined)
   assert.equal(body.address, undefined)
   assert.equal(body.class_arm_id, undefined)
   assert.equal(body.sparent_id, undefined)

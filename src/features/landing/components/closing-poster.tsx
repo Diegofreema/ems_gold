@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Reveal } from './reveal'
 
-/** 09 — the one full-field red section, and the last word on the page. */
+/** 09 — the one full-field brand section, and the last word on the page. */
 export function ClosingPoster() {
   return (
     <section className="bg-brand text-white">

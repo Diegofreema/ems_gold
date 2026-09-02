@@ -69,7 +69,7 @@ export function PayDonePage() {
         {header}
         <EmptyState
           title="There is no payment to confirm"
-          body="This page is where Credo returns you after paying, and it was opened without a payment reference."
+          body="This page only opens after a payment. Nothing was charged."
           action={
             <Button asChild>
               <Link to="/parent/pay">Pay an invoice</Link>

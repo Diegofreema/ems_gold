@@ -7,7 +7,7 @@ export type FieldSpan = 2 | 'full'
 /**
  * Label, control and the single line beneath it. That line is the hint until
  * the field fails validation, at which point it becomes the error message and
- * the control's border turns accent-red.
+ * the control's border turns the brand colour.
  */
 export function FieldShell({
   name,

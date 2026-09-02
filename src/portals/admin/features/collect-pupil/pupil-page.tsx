@@ -130,7 +130,7 @@ function PupilSearch({
       {!term ? (
         <EmptyState
           title="Search for a pupil"
-          body="Type a name or a registration number. A pupil who owes nothing is found here too, which the counter queue cannot do."
+          body="Type a name or a registration number. Pupils who owe nothing are found here too."
         />
       ) : error ? (
         <EmptyState

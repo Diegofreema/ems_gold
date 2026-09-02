@@ -295,10 +295,8 @@ export const staff: CollectionDef = {
   footer: 'Teaching and office records',
   emptyTitle: 'No staff records',
   emptyBody: 'Add your teaching and office staff to assign subjects and arms.',
-  // This register opens both kinds, and they fail for different reasons.
-  missingTitle: 'This record could not be opened',
-  missingBody:
-    'Either nothing on the register carries this reference, or it is an office record the server will not return — it answers "Admin not found." for any administrator whose login has no country or state set on it. Send the reference below to your ICT desk.',
+  missingTitle: 'Record not found',
+  missingBody: 'This staff record could not be opened. Ask your ICT desk to look at it.',
   noun: 'staff member',
   nameKey: 'name',
   counts: [
@@ -390,9 +388,9 @@ export const staffAdmin = staffSlice(
     // can see them there. `GET /users/admins/{id}` refuses any record whose
     // login carries country 0 — seven of the nine on bronze — so the page
     // names the fault rather than blaming the link.
-    missingTitle: 'This record could not be opened',
+    missingTitle: 'Record not found',
     missingBody:
-      'The administrator is on the register, but the server will not return their record — it answers "Admin not found." for any account whose login has no country or state set on it. Until that is set on the login, this page cannot open and their privileges cannot be changed; their sign-in can still be enabled or disabled from the register. Send the reference below to your ICT desk.',
+      'This account could not be opened, so its privileges cannot be changed. Its sign-in can still be turned on or off from the register. Ask your ICT desk to look at it.',
     footer: 'Office records',
     emptyTitle: 'No office records',
     emptyBody: 'Add an administrator to give someone access to this portal.',
@@ -412,14 +410,12 @@ export const staffAdmin = staffSlice(
     ],
     detail: [
       { key: 'name', label: 'Name' },
-      { key: 'title', label: 'Job' },
       { key: 'role', label: 'Account' },
       { key: 'account', label: 'Sign-in' },
       { key: 'username', label: 'Signs in with' },
       { key: 'privilegeCount', label: 'Privileges' },
       { key: 'phone', label: 'Phone' },
       { key: 'gender', label: 'Gender' },
-      { key: 'dob', label: 'Date of birth' },
       { key: 'place', label: 'Address' },
       { key: 'department', label: 'Class' },
       { key: 'joined', label: 'On record since' },
@@ -455,7 +451,7 @@ export const staffAdmin = staffSlice(
           { key: 'name', label: 'Privilege' },
           { key: 'state', label: 'State', tag: true },
         ],
-        empty: 'The API offered no privileges to grant.',
+        empty: 'There are no privileges to grant.',
         // Privileges belong to the office record; a teaching record has none.
         when: (recordId) => parseStaffKey(recordId).kind === 'admin',
         source: privilegeTab,
@@ -494,9 +490,8 @@ export const staffTeachers = staffSlice(
   {
     action: 'Add teacher',
     noun: 'teacher',
-    missingTitle: 'This teaching record could not be opened',
-    missingBody:
-      'No teaching record carries this reference. It may have been deleted since the link was made.',
+    missingTitle: 'Record not found',
+    missingBody: 'This teaching record is not on the register.',
     footer: 'Teaching records',
     emptyTitle: 'No teaching records',
     emptyBody: 'Add a teacher to assign them subjects and an arm.',

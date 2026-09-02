@@ -86,7 +86,7 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
       {failure && (
         <AuthAlert
           title={failure}
-          body="The code you used is single-use and lasts fifteen minutes. If it has expired, start the reset again."
+          body="The code lasts fifteen minutes and works once. Start again if it has expired."
         />
       )}
 

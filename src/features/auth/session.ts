@@ -7,8 +7,10 @@ import type { Admin, User } from '@/api/users/types'
 import type { AccountSummary } from '@/lib/account'
 import { endSession, useSessionStore } from '@/stores/session.store'
 import { accountSummary } from './account-summary'
+import { useAuthStore } from './auth.store'
 import {
   accountOfRecord,
+  isDisabled,
   isSuperAdmin,
   type Portal,
   portalFor,
@@ -43,9 +45,10 @@ export function useSession(): Session {
 /**
  * Asks the API who the token belongs to and stores the answer.
  *
- * `null` means the token was refused, and the session has been ended by the
- * time it returns. Anything else — a network failure, a 500 — is left to
- * throw: not being able to check is not the same as being signed out.
+ * `null` means the token was refused or the sign-in has been switched off, and
+ * the session has been ended by the time it returns. Anything else — a network
+ * failure, a 500 — is left to throw: not being able to check is not the same
+ * as being signed out.
  *
  * The answer is checked against the account that signed in before it is
  * believed, because this API's `me` can name somebody else entirely —
@@ -65,6 +68,18 @@ export async function loadAccount(queryClient: QueryClient): Promise<Account | n
   }
 
   const believed = accountOfRecord(useSessionStore.getState().account, account)
+
+  // The office can switch a sign-in off at any moment, including while the
+  // person is holding a live token. Treated exactly like a refused one, so
+  // every caller — both portal guards and the sign-in form — already handles
+  // it. The flag is set after the session ends, because ending it resets the
+  // store the flag lives in.
+  if (isDisabled(believed)) {
+    endSession(queryClient)
+    useAuthStore.getState().markDisabled()
+    return null
+  }
+
   useSessionStore.getState().setAccount(believed)
   return believed
 }

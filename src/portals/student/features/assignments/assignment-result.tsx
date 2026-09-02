@@ -122,7 +122,7 @@ function Marked({
         <div className="mt-3.5">
           <EmptyState
             title="No answers were recorded"
-            body="The school holds no answers against this submission. If you did answer, take this up with your teacher — the assignment was received, but nothing came with it."
+            body="Your assignment was received, but no answers came with it. Speak to your teacher."
           />
         </div>
       )}

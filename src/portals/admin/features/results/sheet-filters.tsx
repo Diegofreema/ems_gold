@@ -55,7 +55,7 @@ export function SheetFilters({
           label="Class"
           required
           from="classes"
-          hint="A broadsheet is a class; the endpoint asks for one."
+          hint="A broadsheet covers one class."
         />
         <RemoteSelectField<Filters>
           name="arm"

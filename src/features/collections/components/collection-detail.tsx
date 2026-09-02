@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Pencil } from 'lucide-react'
 // `toast` goes back in with the buttons commented out below.
 import { BackLink } from '@/components/page/back-link'
@@ -68,10 +68,6 @@ export function CollectionDetail({
   flows?: readonly FlowSpec[]
 }) {
   const navigate = useNavigate()
-  // Read off the route rather than threaded through four portals: every
-  // record page is mounted under `$recordId`, and it is only wanted where
-  // there is no record to take it from.
-  const { recordId } = useParams({ strict: false })
   const confirm = useConfirm()
   const rowAction = useRowAction(definition, confirm)
   const back = (
@@ -88,12 +84,8 @@ export function CollectionDetail({
       <div>
         {back}
         <MissingState
-          title={definition.missingTitle ?? `This ${definition.noun} could not be opened`}
-          body={
-            definition.missingBody ??
-            `The register has no ${definition.noun} under this reference. It may have been deleted since the link was made.`
-          }
-          rows={[{ label: 'Reference', value: recordId ?? BLANK }]}
+          title={definition.missingTitle ?? 'Record not found'}
+          body={definition.missingBody ?? `This ${definition.noun} is not on the register.`}
           action={
             <Button asChild>
               <Link to={definition.path}>Back to {definition.title.toLowerCase()}</Link>

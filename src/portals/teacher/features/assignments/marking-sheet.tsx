@@ -1,17 +1,20 @@
-import { Check, X } from 'lucide-react'
-import { useMemo } from 'react'
-import { FormProvider, useFormContext } from 'react-hook-form'
-import { z } from 'zod'
-import type { MarkedSubmission, MarkingAnswer } from '@/api/set-assignments/types'
-import { Tag } from '@/components/common/tag'
-import { FormErrorBanner } from '@/components/form/form-error-banner'
-import { TextField } from '@/components/form/text-field'
-import { TileStrip } from '@/components/page/tile-strip'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useRecordForm } from '@/hooks/use-record-form'
-import { cn } from '@/lib/utils'
+import { Check, X } from 'lucide-react';
+import { useMemo } from 'react';
+import { FormProvider, useFormContext } from 'react-hook-form';
+import { z } from 'zod';
+import type {
+  MarkedSubmission,
+  MarkingAnswer,
+} from '@/api/set-assignments/types';
+import { Tag } from '@/components/common/tag';
+import { FormErrorBanner } from '@/components/form/form-error-banner';
+import { TextField } from '@/components/form/text-field';
+import { TileStrip } from '@/components/page/tile-strip';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useRecordForm } from '@/hooks/use-record-form';
+import { cn } from '@/lib/utils';
 import {
   answerKey,
   choiceCount,
@@ -24,7 +27,7 @@ import {
   rightCount,
   runningTotal,
   wasRight,
-} from './marking'
+} from './marking';
 
 /**
  * Marking one submission.
@@ -35,13 +38,13 @@ import {
  * answers carry a box.
  */
 
-export type MarkingValues = { scores: Record<string, string>; comment: string }
+export type MarkingValues = { scores: Record<string, string>; comment: string };
 
 /** What each answer may be given, so a mark over the question's own worth is refused. */
 function schemaFor(answers: MarkingAnswer[]) {
   const caps = new Map(
     needsHand(answers).map((answer) => [answerKey(answer), answer.points ?? 0]),
-  )
+  );
 
   return z
     .object({
@@ -50,24 +53,24 @@ function schemaFor(answers: MarkingAnswer[]) {
     })
     .superRefine((values, context) => {
       for (const [key, cap] of caps) {
-        const typed = (values.scores[key] ?? '').trim()
+        const typed = (values.scores[key] ?? '').trim();
         // A box left empty is a mark not given yet; save decides it is nought.
-        if (!typed) continue
+        if (!typed) continue;
         if (!/^\d+$/.test(typed)) {
           context.addIssue({
             code: 'custom',
             path: ['scores', key],
             message: 'A whole number',
-          })
+          });
         } else if (Number(typed) > cap) {
           context.addIssue({
             code: 'custom',
             path: ['scores', key],
             message: `This question is worth ${cap}`,
-          })
+          });
         }
       }
-    })
+    });
 }
 
 export function MarkingSheet({
@@ -76,21 +79,24 @@ export function MarkingSheet({
   pending,
   onSave,
 }: {
-  submission: MarkedSubmission
-  marked: boolean
-  pending: boolean
-  onSave: (values: MarkingValues) => void | Promise<void>
+  submission: MarkedSubmission;
+  marked: boolean;
+  pending: boolean;
+  onSave: (values: MarkingValues) => void | Promise<void>;
 }) {
-  const answers = submission.answers ?? []
+  const answers = submission.answers ?? [];
   // Off the payload's own array rather than the fallback above it, which is a
   // new empty array on every render and would rebuild the validator each time.
-  const schema = useMemo(() => schemaFor(submission.answers ?? []), [submission.answers])
+  const schema = useMemo(
+    () => schemaFor(submission.answers ?? []),
+    [submission.answers],
+  );
   const form = useRecordForm<MarkingValues>(schema, {
     scores: openingScores(answers),
     comment: submission.submission?.teacher_comments ?? '',
-  })
-  const scores = form.watch('scores')
-  const hand = needsHand(answers)
+  });
+  const scores = form.watch('scores');
+  const hand = needsHand(answers);
 
   return (
     <FormProvider {...form}>
@@ -114,7 +120,11 @@ export function MarkingSheet({
 
         <ol className="grid gap-2.5">
           {answers.map((answer, index) => (
-            <AnswerCard key={answerKey(answer)} answer={answer} position={index + 1} />
+            <AnswerCard
+              key={answerKey(answer)}
+              answer={answer}
+              position={index + 1}
+            />
           ))}
         </ol>
 
@@ -124,7 +134,7 @@ export function MarkingSheet({
           </p>
         )}
 
-        <div className="mt-6 max-w-[560px]">
+        <div className="mt-6 max-w-140">
           <TextField<MarkingValues>
             name="comment"
             label="A note for the pupil"
@@ -146,16 +156,22 @@ export function MarkingSheet({
         </div>
       </form>
     </FormProvider>
-  )
+  );
 }
 
 /** One answer: what was given, what was right, and what it is worth. */
-function AnswerCard({ answer, position }: { answer: MarkingAnswer; position: number }) {
-  const points = answer.points ?? 0
-  const theory = isTheory(answer)
-  const chose = chosenOption(answer)
-  const right = correctOption(answer)
-  const correct = wasRight(answer)
+function AnswerCard({
+  answer,
+  position,
+}: {
+  answer: MarkingAnswer;
+  position: number;
+}) {
+  const points = answer.points ?? 0;
+  const theory = isTheory(answer);
+  const chose = chosenOption(answer);
+  const right = correctOption(answer);
+  const correct = wasRight(answer);
 
   return (
     <li className="border-2 border-divider p-4">
@@ -180,9 +196,15 @@ function AnswerCard({ answer, position }: { answer: MarkingAnswer; position: num
         <div className="flex items-center gap-3">
           {correct !== null &&
             (correct ? (
-              <Check className="size-4 text-brand" aria-label="Matches the answer key" />
+              <Check
+                className="size-4 text-brand"
+                aria-label="Matches the answer key"
+              />
             ) : (
-              <X className="size-4 text-muted-foreground" aria-label="Does not match the answer key" />
+              <X
+                className="size-4 text-muted-foreground"
+                aria-label="Does not match the answer key"
+              />
             ))}
           <AnswerScore answer={answer} cap={points} />
         </div>
@@ -193,7 +215,9 @@ function AnswerCard({ answer, position }: { answer: MarkingAnswer; position: num
           <p
             className={cn(
               'whitespace-pre-wrap',
-              answer.theory_answer?.trim() ? 'text-foreground' : 'text-muted-foreground',
+              answer.theory_answer?.trim()
+                ? 'text-foreground'
+                : 'text-muted-foreground',
             )}
           >
             {answer.theory_answer?.trim() || 'Nothing was written.'}
@@ -201,7 +225,8 @@ function AnswerCard({ answer, position }: { answer: MarkingAnswer; position: num
         ) : (
           <div className="grid gap-1 text-muted-foreground">
             <div>
-              Chose: <span className="text-foreground">{chose || 'Nothing'}</span>
+              Chose:{' '}
+              <span className="text-foreground">{chose || 'Nothing'}</span>
             </div>
             {/* Only where it adds something: on a right answer the two lines
                 would say the same word twice. */}
@@ -210,19 +235,22 @@ function AnswerCard({ answer, position }: { answer: MarkingAnswer; position: num
         )}
       </div>
     </li>
-  )
+  );
 }
 
 /** What this answer was worth to the pupil. Every answer carries one. */
 function AnswerScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
-  const key = answerKey(answer)
-  const name = `scores.${key}` as const
-  const form = useFormContext<MarkingValues>()
-  const error = form.formState.errors.scores?.[key]?.message
+  const key = answerKey(answer);
+  const name = `scores.${key}` as const;
+  const form = useFormContext<MarkingValues>();
+  const error = form.formState.errors.scores?.[key]?.message;
 
   return (
     <div className="w-[132px]">
-      <Label htmlFor={name} className="mb-[5px] block text-xs font-normal text-foreground/70">
+      <Label
+        htmlFor={name}
+        className="mb-[5px] block text-xs font-normal text-foreground/70"
+      >
         Mark out of {cap}
       </Label>
       <Input
@@ -232,7 +260,9 @@ function AnswerScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
         aria-invalid={Boolean(error)}
         {...form.register(name)}
       />
-      {error && <div className="mt-1 text-[11px] text-brand-700">{String(error)}</div>}
+      {error && (
+        <div className="mt-1 text-[11px] text-brand-700">{String(error)}</div>
+      )}
     </div>
-  )
+  );
 }

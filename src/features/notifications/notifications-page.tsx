@@ -62,10 +62,9 @@ export function NotificationsPage({
         <div className="mb-5 border-2 border-divider bg-brand/6 px-4 py-3 text-[13px]">
           <span className="font-bold">The notice board could not be read.</span>{' '}
           <span className="text-muted-foreground">
-            {boardError} Anything the office posted is missing from this page
             {notifications.length > 0
-              ? '; what is below is worked out from your own records.'
-              : '.'}
+              ? 'Notices from the office are missing; what is below comes from your own records.'
+              : 'Notices from the office are missing. Try again shortly.'}
           </span>
         </div>
       )}

@@ -12,8 +12,16 @@ type AuthState = {
   ticket: string | null
   /** Drives the wording on the final screen. */
   passwordChanged: boolean
+  /**
+   * Set when a sign-in the office has switched off is turned away, so the form
+   * they land on can say why. Carried here rather than in the URL for the same
+   * reason `email` is: it names an account.
+   */
+  disabled: boolean
 
   identify: (email: string, role: Role | null) => void
+  markDisabled: () => void
+  clearDisabled: () => void
   startRecovery: (email: string, userId: number) => void
   setTicket: (ticket: string) => void
   completeReset: () => void
@@ -26,12 +34,15 @@ const SIGNED_OUT = {
   userId: null,
   ticket: null,
   passwordChanged: false,
+  disabled: false,
 } as const
 
 export const useAuthStore = create<AuthState>()((set) => ({
   ...SIGNED_OUT,
 
   identify: (email, role) => set({ email, role }),
+  markDisabled: () => set({ disabled: true }),
+  clearDisabled: () => set({ disabled: false }),
   startRecovery: (email, userId) => set({ email, userId, ticket: null }),
   setTicket: (ticket) => set({ ticket }),
   // The ticket is single-use, so it goes the moment it has been spent.

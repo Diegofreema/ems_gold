@@ -72,7 +72,7 @@ export function CheckEmailScreen() {
       {failure && (
         <AuthAlert
           title={failure}
-          body="The code expires after fifteen minutes and after five wrong tries. Send yourself a new one if you have run out."
+          body="The code lasts fifteen minutes. Send a new one if it has expired."
         />
       )}
 

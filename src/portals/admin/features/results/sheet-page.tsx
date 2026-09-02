@@ -67,7 +67,7 @@ export function ClassSheetPage() {
         {header}
         <EmptyState
           title="Pick a class"
-          body="A broadsheet is a class, so the endpoint asks for one before it will draw anything. Narrow it further by arm, term or session once you have."
+          body="Pick a class to draw its broadsheet. You can narrow it by arm, term or session after that."
         />
       </div>
     )

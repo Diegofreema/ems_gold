@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/archivo";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/archivo';
 
 /* Dark mode is driven by the design system's own attribute, set on <html>. */
 @custom-variant dark (&:where([data-ems-theme="dark"], [data-ems-theme="dark"] *));
@@ -12,229 +12,349 @@
    names below are aliases onto them, so every shadcn primitive inherits
    the design system without being restyled component by component.
 
-   Naming note: the design system calls its red "accent", but shadcn already
-   uses --accent for subtle hover fills. The red is `brand` here.
+   Naming note: the design system calls its brand colour "accent", but shadcn
+   already uses --accent for subtle hover fills. The blue is `brand` here.
    ───────────────────────────────────────────────────────────────────── */
 :root {
-    --ems-ground: #f3f2f2;
-    --ems-surface: #eae9e9;
-    --ems-ink: #201e1d;
-    --ems-brand: #ec3013;
-    --ems-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --ems-ground: #f2f2f4;
+  --ems-surface: #e9e9ec;
+  --ems-ink: #1c1d20;
+  --ems-brand: #156fb4;
+  --ems-divider: color-mix(in srgb, #1c1d20 40%, transparent);
 
-    --ems-neutral-100: #f8f4f4;
-    --ems-neutral-200: #eae7e7;
-    --ems-neutral-300: #d7d3d3;
-    --ems-neutral-400: #bab6b6;
-    --ems-neutral-500: #9b9797;
-    --ems-neutral-600: #7d7979;
-    --ems-neutral-700: #605d5d;
-    --ems-neutral-800: #444141;
-    --ems-neutral-900: #2d2b2b;
+  --ems-neutral-100: #f4f5f8;
+  --ems-neutral-200: #e6e8ec;
+  --ems-neutral-300: #d2d4da;
+  --ems-neutral-400: #b5b8bf;
+  --ems-neutral-500: #96999f;
+  --ems-neutral-600: #787b81;
+  --ems-neutral-700: #5c5e63;
+  --ems-neutral-800: #404246;
+  --ems-neutral-900: #2a2c2f;
 
-    --ems-brand-100: #fff2ef;
-    --ems-brand-200: #ffe0d9;
-    --ems-brand-300: #ffc4b8;
-    --ems-brand-400: #ff9783;
-    --ems-brand-500: #ff563c;
-    --ems-brand-600: #dd2b0f;
-    --ems-brand-700: #ae1800;
-    --ems-brand-800: #7c1405;
-    --ems-brand-900: #4d170e;
+  --ems-brand-100: #eff4ff;
+  --ems-brand-200: #d9e4ff;
+  --ems-brand-300: #b8ccff;
+  --ems-brand-400: #83a8ff;
+  --ems-brand-500: #3c78ff;
+  --ems-brand-600: #0f4add;
+  --ems-brand-700: #0034ae;
+  --ems-brand-800: #05287c;
+  --ems-brand-900: #0e214d;
 
-    /* Multiplier for every duration below — the design's `motion` prop / 6.
+  /* Multiplier for every duration below — the design's `motion` prop / 6.
        Set to 0 to disable animation entirely. */
-    --ems-motion: 1;
+  --ems-motion: 1;
 }
 
-[data-ems-theme="dark"] {
-    --ems-ground: #171615;
-    --ems-surface: #23211f;
-    --ems-ink: #f3f2f2;
-    --ems-divider: color-mix(in srgb, #f3f2f2 34%, transparent);
+[data-ems-theme='dark'] {
+  --ems-ground: #15161a;
+  --ems-surface: #1f2126;
+  --ems-ink: #f2f2f4;
+  --ems-divider: color-mix(in srgb, #f2f2f4 34%, transparent);
 
-    --ems-neutral-100: #262423;
-    --ems-neutral-200: #322f2e;
-    --ems-neutral-300: #423f3e;
-    --ems-neutral-400: #575453;
-    --ems-neutral-500: #7d7979;
-    --ems-neutral-600: #a29e9e;
-    --ems-neutral-700: #c6c2c2;
-    --ems-neutral-800: #e8e4e4;
-    --ems-neutral-900: #0e0d0c;
+  --ems-neutral-100: #232529;
+  --ems-neutral-200: #2e3036;
+  --ems-neutral-300: #3e4046;
+  --ems-neutral-400: #53565c;
+  --ems-neutral-500: #797b81;
+  --ems-neutral-600: #9ea0a6;
+  --ems-neutral-700: #c2c4c8;
+  --ems-neutral-800: #e4e5e8;
+  --ems-neutral-900: #0c0d10;
 
-    --ems-brand-100: #3b1108;
-    --ems-brand-200: #55190b;
-    --ems-brand-600: #ff7a5e;
-    --ems-brand-700: #ff9783;
-    --ems-brand-800: #ffd0c6;
+  --ems-brand-100: #08183b;
+  --ems-brand-200: #0b2355;
+  --ems-brand-600: #5e91ff;
+  --ems-brand-700: #83a8ff;
+  --ems-brand-800: #c6d9ff;
 }
 
 /* shadcn semantic names, aliased onto the tokens above. */
 :root,
-[data-ems-theme="dark"] {
-    --background: var(--ems-ground);
-    --foreground: var(--ems-ink);
-    --card: var(--ems-surface);
-    --card-foreground: var(--ems-ink);
-    --popover: var(--ems-ground);
-    --popover-foreground: var(--ems-ink);
-    --primary: var(--ems-brand);
-    --primary-foreground: var(--ems-ground);
-    --secondary: var(--ems-neutral-200);
-    --secondary-foreground: var(--ems-ink);
-    --muted: var(--ems-neutral-100);
-    --muted-foreground: color-mix(in srgb, var(--ems-ink) 55%, transparent);
-    --accent: var(--ems-neutral-200);
-    --accent-foreground: var(--ems-ink);
-    --destructive: var(--ems-brand);
-    --border: var(--ems-divider);
-    --input: var(--ems-divider);
-    --ring: var(--ems-brand);
-    --radius: 0px;
+[data-ems-theme='dark'] {
+  --background: var(--ems-ground);
+  --foreground: var(--ems-ink);
+  --card: var(--ems-surface);
+  --card-foreground: var(--ems-ink);
+  --popover: var(--ems-ground);
+  --popover-foreground: var(--ems-ink);
+  --primary: var(--ems-brand);
+  --primary-foreground: var(--ems-ground);
+  --secondary: var(--ems-neutral-200);
+  --secondary-foreground: var(--ems-ink);
+  --muted: var(--ems-neutral-100);
+  --muted-foreground: color-mix(in srgb, var(--ems-ink) 55%, transparent);
+  --accent: var(--ems-neutral-200);
+  --accent-foreground: var(--ems-ink);
+  --destructive: var(--ems-brand);
+  --border: var(--ems-divider);
+  --input: var(--ems-divider);
+  --ring: var(--ems-brand);
+  --radius: 0px;
 }
 
 @theme inline {
-    --font-sans: 'Archivo Variable', system-ui, sans-serif;
-    --font-heading: 'Archivo Variable', system-ui, sans-serif;
+  --font-sans: 'Archivo Variable', system-ui, sans-serif;
+  --font-heading: 'Archivo Variable', system-ui, sans-serif;
 
-    --color-ground: var(--ems-ground);
-    --color-surface: var(--ems-surface);
-    --color-ink: var(--ems-ink);
-    --color-divider: var(--ems-divider);
+  --color-ground: var(--ems-ground);
+  --color-surface: var(--ems-surface);
+  --color-ink: var(--ems-ink);
+  --color-divider: var(--ems-divider);
 
-    --color-brand: var(--ems-brand);
-    --color-brand-100: var(--ems-brand-100);
-    --color-brand-200: var(--ems-brand-200);
-    --color-brand-300: var(--ems-brand-300);
-    --color-brand-400: var(--ems-brand-400);
-    --color-brand-500: var(--ems-brand-500);
-    --color-brand-600: var(--ems-brand-600);
-    --color-brand-700: var(--ems-brand-700);
-    --color-brand-800: var(--ems-brand-800);
-    --color-brand-900: var(--ems-brand-900);
+  --color-brand: var(--ems-brand);
+  --color-brand-100: var(--ems-brand-100);
+  --color-brand-200: var(--ems-brand-200);
+  --color-brand-300: var(--ems-brand-300);
+  --color-brand-400: var(--ems-brand-400);
+  --color-brand-500: var(--ems-brand-500);
+  --color-brand-600: var(--ems-brand-600);
+  --color-brand-700: var(--ems-brand-700);
+  --color-brand-800: var(--ems-brand-800);
+  --color-brand-900: var(--ems-brand-900);
 
-    /* Replaces Tailwind's stock neutral ramp with the design system's. */
-    --color-neutral-100: var(--ems-neutral-100);
-    --color-neutral-200: var(--ems-neutral-200);
-    --color-neutral-300: var(--ems-neutral-300);
-    --color-neutral-400: var(--ems-neutral-400);
-    --color-neutral-500: var(--ems-neutral-500);
-    --color-neutral-600: var(--ems-neutral-600);
-    --color-neutral-700: var(--ems-neutral-700);
-    --color-neutral-800: var(--ems-neutral-800);
-    --color-neutral-900: var(--ems-neutral-900);
+  /* Replaces Tailwind's stock neutral ramp with the design system's. */
+  --color-neutral-100: var(--ems-neutral-100);
+  --color-neutral-200: var(--ems-neutral-200);
+  --color-neutral-300: var(--ems-neutral-300);
+  --color-neutral-400: var(--ems-neutral-400);
+  --color-neutral-500: var(--ems-neutral-500);
+  --color-neutral-600: var(--ems-neutral-600);
+  --color-neutral-700: var(--ems-neutral-700);
+  --color-neutral-800: var(--ems-neutral-800);
+  --color-neutral-900: var(--ems-neutral-900);
 
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-secondary: var(--secondary);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-muted: var(--muted);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-destructive: var(--destructive);
-    --color-border: var(--border);
-    --color-input: var(--input);
-    --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-    --radius-sm: 0px;
-    --radius-md: 0px;
-    --radius-lg: 0px;
-    --radius-xl: 0px;
-    --radius-2xl: 0px;
-    --radius-3xl: 0px;
-    --radius-4xl: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 
-    /* Fluid type — the design scales these rather than switching at a breakpoint. */
-    --text-page-title: clamp(23px, 6.2vw, 30px);
-    --text-detail-title: clamp(25px, 7vw, 34px);
-    --text-receipt: clamp(30px, 9vw, 40px);
-    --text-numeral: clamp(64px, 18vw, 96px);
-    --text-stat: clamp(24px, 6vw, 30px);
-    --spacing-content: clamp(14px, 4vw, 24px);
+  /* Fluid type — the design scales these rather than switching at a breakpoint. */
+  --text-page-title: clamp(23px, 6.2vw, 30px);
+  --text-detail-title: clamp(25px, 7vw, 34px);
+  --text-receipt: clamp(30px, 9vw, 40px);
+  --text-numeral: clamp(64px, 18vw, 96px);
+  --text-stat: clamp(24px, 6vw, 30px);
+  --spacing-content: clamp(14px, 4vw, 24px);
 
-    --animate-ems-up: emsUp calc(340ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-in: emsIn calc(340ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-row: emsRow calc(260ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-grow: emsGrow calc(520ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-bar: emsBar calc(600ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-pop: emsPop calc(220ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-fade: emsFade calc(180ms * var(--ems-motion)) ease both;
-    --animate-ems-toast: emsToast calc(260ms * var(--ems-motion)) cubic-bezier(.2, .7, .3, 1) both;
-    --animate-ems-shimmer: emsShimmer calc(1200ms * var(--ems-motion)) linear infinite;
-    --animate-ems-shake: emsShake calc(420ms * var(--ems-motion)) both;
-    --animate-ems-spin: emsSpin 800ms linear infinite;
+  --animate-ems-up: emsUp calc(340ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-in: emsIn calc(340ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-row: emsRow calc(260ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-grow: emsGrow calc(520ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-bar: emsBar calc(600ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-pop: emsPop calc(220ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-fade: emsFade calc(180ms * var(--ems-motion)) ease both;
+  --animate-ems-toast: emsToast calc(260ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-ems-shimmer: emsShimmer calc(1200ms * var(--ems-motion)) linear
+    infinite;
+  --animate-ems-shake: emsShake calc(420ms * var(--ems-motion)) both;
+  --animate-ems-spin: emsSpin 800ms linear infinite;
 
-    /* Landing page only: a strip that never stops, and a cursor-square blink. */
-    --animate-ems-marquee: emsMarquee calc(38s * var(--ems-motion)) linear infinite;
-    --animate-ems-blink: emsBlink calc(2.4s * var(--ems-motion)) steps(1, end) infinite;
+  /* Landing page only: a strip that never stops, and a cursor-square blink. */
+  --animate-ems-marquee: emsMarquee calc(38s * var(--ems-motion)) linear
+    infinite;
+  --animate-ems-blink: emsBlink calc(2.4s * var(--ems-motion)) steps(1, end)
+    infinite;
 }
 
-@keyframes emsUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes emsIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
-@keyframes emsRow { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@keyframes emsGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-@keyframes emsBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes emsPop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
-@keyframes emsFade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes emsToast { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-@keyframes emsShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-@keyframes emsShake { 10%, 90% { transform: translateX(-2px); } 30%, 70% { transform: translateX(3px); } 50% { transform: translateX(-3px); } }
-@keyframes emsSpin { to { transform: rotate(360deg); } }
-@keyframes emsMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@keyframes emsBlink { 0%, 60% { opacity: 1; } 61%, 100% { opacity: .15; } }
+@keyframes emsUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes emsIn {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes emsRow {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes emsGrow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes emsBar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes emsPop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes emsFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes emsToast {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes emsShimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@keyframes emsShake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  30%,
+  70% {
+    transform: translateX(3px);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
+}
+@keyframes emsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes emsMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes emsBlink {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  61%,
+  100% {
+    opacity: 0.15;
+  }
+}
 
 @layer base {
-    * {
-        @apply border-border outline-ring/50;
-    }
+  * {
+    @apply border-border outline-ring/50;
+  }
 
-    html {
-        @apply font-sans;
-    }
+  html {
+    @apply font-sans;
+  }
 
-    body {
-        @apply bg-background text-foreground;
-        margin: 0;
-        /* `clip` rather than `hidden`: hiding an overflow makes the body a
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    /* `clip` rather than `hidden`: hiding an overflow makes the body a
            scroll container, and the landing page's sticky header would then
            have nothing to stick to. */
-        overflow-x: clip;
-        font-size: 15px;
-        line-height: 1.55;
-    }
+    overflow-x: clip;
+    font-size: 15px;
+    line-height: 1.55;
+  }
 
-    h1, h2, h3, h4, h5, h6 {
-        font-family: var(--font-heading);
-        font-weight: 800;
-        line-height: 1.12;
-        letter-spacing: -0.015em;
-    }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
 
-    /* Anchors styled as buttons keep the button's own colour. */
-    a:not([class*="btn"]) {
-        color: var(--ems-brand);
-    }
+  /* Anchors styled as buttons keep the button's own colour. */
+  a:not([class*='btn']) {
+    color: var(--ems-brand);
+  }
 
-    [data-ems-theme="dark"] a:not([class*="btn"]) {
-        color: var(--ems-brand-700);
-    }
+  [data-ems-theme='dark'] a:not([class*='btn']) {
+    color: var(--ems-brand-700);
+  }
 
-    :focus-visible {
-        outline: 2px solid var(--ems-brand);
-        outline-offset: 2px;
-    }
+  :focus-visible {
+    outline: 2px solid var(--ems-brand);
+    outline-offset: 2px;
+  }
 
-    ::selection {
-        background: color-mix(in srgb, var(--ems-brand) 30%, transparent);
-    }
+  ::selection {
+    background: color-mix(in srgb, var(--ems-brand) 30%, transparent);
+  }
 }
 
 /* Rich text — what the topic editor writes and what the record page reads
@@ -242,115 +362,118 @@
    was in the form. Tailwind's reset strips lists and quotes of everything, so
    these are put back by hand rather than pulled from a typography plugin. */
 .rich-text {
-    line-height: 1.6;
+  line-height: 1.6;
 }
 
 .rich-text > * + * {
-    margin-top: 0.7em;
+  margin-top: 0.7em;
 }
 
 .rich-text h2 {
-    font-size: 1.35em;
+  font-size: 1.35em;
 }
 
 .rich-text h3 {
-    font-size: 1.15em;
+  font-size: 1.15em;
 }
 
 .rich-text h4 {
-    font-size: 1em;
-    letter-spacing: 0.01em;
+  font-size: 1em;
+  letter-spacing: 0.01em;
 }
 
-.rich-text h2, .rich-text h3, .rich-text h4 {
-    margin-top: 1.2em;
+.rich-text h2,
+.rich-text h3,
+.rich-text h4 {
+  margin-top: 1.2em;
 }
 
 .rich-text > :first-child {
-    margin-top: 0;
+  margin-top: 0;
 }
 
-.rich-text ul, .rich-text ol {
-    padding-left: 1.35em;
+.rich-text ul,
+.rich-text ol {
+  padding-left: 1.35em;
 }
 
 .rich-text ul {
-    list-style: disc;
+  list-style: disc;
 }
 
 .rich-text ol {
-    list-style: decimal;
+  list-style: decimal;
 }
 
 .rich-text li + li {
-    margin-top: 0.25em;
+  margin-top: 0.25em;
 }
 
 .rich-text li > p {
-    margin: 0;
+  margin: 0;
 }
 
 .rich-text blockquote {
-    border-left: 2px solid var(--ems-brand);
-    padding-left: 0.85em;
-    color: var(--muted-foreground);
+  border-left: 2px solid var(--ems-brand);
+  padding-left: 0.85em;
+  color: var(--muted-foreground);
 }
 
 .rich-text code {
-    background: var(--muted);
-    border-radius: 4px;
-    padding: 0.1em 0.32em;
-    font-size: 0.9em;
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 0.1em 0.32em;
+  font-size: 0.9em;
 }
 
 .rich-text pre {
-    background: var(--muted);
-    border-radius: 8px;
-    padding: 0.7em 0.85em;
-    overflow-x: auto;
+  background: var(--muted);
+  border-radius: 8px;
+  padding: 0.7em 0.85em;
+  overflow-x: auto;
 }
 
 .rich-text pre code {
-    background: none;
-    padding: 0;
+  background: none;
+  padding: 0;
 }
 
 .rich-text hr {
-    border: 0;
-    border-top: 2px solid var(--ems-divider);
-    margin: 1.2em 0;
+  border: 0;
+  border-top: 2px solid var(--ems-divider);
+  margin: 1.2em 0;
 }
 
 .rich-text a {
-    text-decoration: underline;
-    text-underline-offset: 2px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* The prompt inside an empty editor. Drawn rather than typed, so it never
    becomes content the school has to delete. */
 .rich-text p.is-editor-empty:first-child::before {
-    content: attr(data-placeholder);
-    color: var(--muted-foreground);
-    float: left;
-    height: 0;
-    pointer-events: none;
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
 /* Touch targets — the one media query the design carries. Controls grow to
    44px and inputs to 16px, which also stops iOS zooming on focus. */
 @media (max-width: 640px) {
-    [data-slot="button"],
-    [data-slot="select-trigger"],
-    [data-slot="seg-option"] {
-        min-height: 44px;
-    }
+  [data-slot='button'],
+  [data-slot='select-trigger'],
+  [data-slot='seg-option'] {
+    min-height: 44px;
+  }
 
-    [data-slot="input"],
-    [data-slot="textarea"],
-    [data-slot="select-trigger"] {
-        min-height: 44px;
-        font-size: 16px;
-    }
+  [data-slot='input'],
+  [data-slot='textarea'],
+  [data-slot='select-trigger'] {
+    min-height: 44px;
+    font-size: 16px;
+  }
 }
 
 /* Printing. Only the fee-collection receipt is meant to reach paper: a parent
@@ -358,23 +481,23 @@
    is hidden rather than the slip being lifted out of the layout, so it keeps
    the dividers and type it was designed with. */
 @media print {
-    body * {
-        visibility: hidden;
-    }
+  body * {
+    visibility: hidden;
+  }
 
-    [data-slot="receipt"],
-    [data-slot="receipt"] * {
-        visibility: visible;
-    }
+  [data-slot='receipt'],
+  [data-slot='receipt'] * {
+    visibility: visible;
+  }
 
-    [data-slot="receipt"] {
-        position: absolute;
-        inset: 0 auto auto 0;
-        width: 100%;
-        border: 0;
-    }
+  [data-slot='receipt'] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0;
+  }
 
-    [data-print-hide] {
-        display: none !important;
-    }
+  [data-print-hide] {
+    display: none !important;
+  }
 }

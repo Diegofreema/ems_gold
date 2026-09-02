@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { MINIMUM_SCORE, passwordScore, strengthLabel } from './password.ts'
-import { roleForAccount } from './role.ts'
+import { isDisabled, roleForAccount } from './role.ts'
 
 /** Only the parts of a sign-in the portal decision reads. */
 const account = (record: Record<string, unknown>) =>
@@ -45,4 +45,15 @@ test('strength wording tracks the score', () => {
   assert.equal(strengthLabel(''), 'Nothing typed yet')
   assert.equal(strengthLabel('short'), 'Too short to accept')
   assert.equal(strengthLabel('Abcdefghij1!'), 'Strong')
+})
+
+test('a sign-in the office has switched off is refused', () => {
+  const status = (userstatus: string | null) =>
+    isDisabled({ user: { username: 'x', userstatus } } as never)
+
+  // The API spells these two exactly; anything else is not a disabling.
+  assert.equal(status('Disabled'), true)
+  assert.equal(status('Enabled'), false)
+  assert.equal(status(null), false)
+  assert.equal(isDisabled(null), false)
 })
