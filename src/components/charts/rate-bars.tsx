@@ -32,19 +32,21 @@ export function RateBars({
             <div className="text-xs tabular-nums text-muted-foreground">
               {rate.amount}
             </div>
-            <div className="w-[46px] text-right font-heading text-sm font-extrabold tabular-nums">
+            <div className="w-11.5 text-right font-heading text-sm font-extrabold tabular-nums">
               {rate.percent}%
             </div>
           </div>
-          <div className="mt-2 h-2 bg-neutral-200">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-200">
             <div
               style={{
                 width: `${rate.percent}%`,
                 animationDelay: `${index * 70}ms`,
               }}
               className={cn(
-                'h-full origin-left animate-ems-bar',
-                rate.percent < weakBelow ? 'bg-brand' : 'bg-neutral-800',
+                'h-full origin-left animate-ems-bar rounded-full',
+                rate.percent < weakBelow
+                  ? 'bg-gradient-to-r from-danger to-danger/75'
+                  : 'bg-gradient-to-r from-brand-600 to-brand-400',
               )}
             />
           </div>
