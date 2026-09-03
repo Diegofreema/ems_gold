@@ -32,15 +32,32 @@
   --ems-neutral-800: #404246;
   --ems-neutral-900: #2a2c2f;
 
-  --ems-brand-100: #eff4ff;
-  --ems-brand-200: #d9e4ff;
-  --ems-brand-300: #b8ccff;
-  --ems-brand-400: #83a8ff;
-  --ems-brand-500: #3c78ff;
-  --ems-brand-600: #0f4add;
-  --ems-brand-700: #0034ae;
-  --ems-brand-800: #05287c;
-  --ems-brand-900: #0e214d;
+  /* Ramp anchored on --ems-brand itself at the 600 step, so buttons and
+     headings draw from one hue instead of the two blues the old ramp mixed. */
+  --ems-brand-100: #eaf3fa;
+  --ems-brand-200: #d3e6f4;
+  --ems-brand-300: #a9cfe9;
+  --ems-brand-400: #6faed7;
+  --ems-brand-500: #3389c4;
+  --ems-brand-600: #156fb4;
+  --ems-brand-700: #10578d;
+  --ems-brand-800: #0d4269;
+  --ems-brand-900: #0b2e47;
+
+  /* Danger is the one colour added to the palette: destructive actions and
+     error states must not wear the brand blue. Split roles — `danger` is a
+     fill that carries white text, `danger-ink` is text/borders on the ground,
+     because no single red passes contrast in both jobs across both themes. */
+  --ems-danger: #b23b31;
+  --ems-danger-ink: #a63429;
+  --ems-danger-subtle: color-mix(in srgb, #b23b31 9%, transparent);
+
+  /* Shadows are reserved for card surfaces and floating layers; structure
+     still uses borders. Dark theme swaps these for deeper black shadows. */
+  --ems-shadow-card:
+    0 1px 2px rgb(16 24 40 / 0.05), 0 2px 6px rgb(16 24 40 / 0.04);
+  --ems-shadow-float:
+    0 4px 10px rgb(16 24 40 / 0.08), 0 14px 34px rgb(16 24 40 / 0.12);
 
   /* Multiplier for every duration below — the design's `motion` prop / 6.
        Set to 0 to disable animation entirely. */
@@ -63,11 +80,19 @@
   --ems-neutral-800: #e4e5e8;
   --ems-neutral-900: #0c0d10;
 
-  --ems-brand-100: #08183b;
-  --ems-brand-200: #0b2355;
-  --ems-brand-600: #5e91ff;
-  --ems-brand-700: #83a8ff;
-  --ems-brand-800: #c6d9ff;
+  --ems-brand-100: #10283c;
+  --ems-brand-200: #143855;
+  --ems-brand-600: #4f9fd9;
+  --ems-brand-700: #7db8e4;
+  --ems-brand-800: #b9d8ef;
+
+  --ems-danger: #c0473b;
+  --ems-danger-ink: #f08a7d;
+  --ems-danger-subtle: color-mix(in srgb, #f08a7d 12%, transparent);
+
+  --ems-shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 8px rgb(0 0 0 / 0.3);
+  --ems-shadow-float:
+    0 6px 16px rgb(0 0 0 / 0.45), 0 18px 44px rgb(0 0 0 / 0.5);
 }
 
 /* shadcn semantic names, aliased onto the tokens above. */
@@ -90,11 +115,11 @@
   --muted-foreground: color-mix(in srgb, var(--ems-ink) 55%, transparent);
   --accent: var(--ems-neutral-200);
   --accent-foreground: var(--ems-ink);
-  --destructive: var(--ems-brand);
+  --destructive: var(--ems-danger);
   --border: var(--ems-divider);
   --input: var(--ems-divider);
   --ring: var(--ems-brand);
-  --radius: 0px;
+  --radius: 6px;
 }
 
 @theme inline {
@@ -147,13 +172,37 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-4xl: 0px;
+  /* Hybrid surface rule: radii soften what you touch (controls, cards,
+     floating layers); tables, tile strips and page rules stay sharp by
+     simply not using rounded-* classes. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 14px;
+  --radius-3xl: 18px;
+  --radius-4xl: 22px;
+
+  --color-danger: var(--ems-danger);
+  --color-danger-ink: var(--ems-danger-ink);
+  --color-danger-subtle: var(--ems-danger-subtle);
+
+  --shadow-card: var(--ems-shadow-card);
+  --shadow-float: var(--ems-shadow-float);
+
+  /* The house easing curve, as a utility (ease-ems). Same curve the
+     --animate-ems-* entries below already use. */
+  --ease-ems: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  /* Type scale. The stock Tailwind steps are re-tuned to this app's 15px
+     body so the ~240 hand-tuned text-[Npx] values can collapse onto them:
+     2xs absorbs 10.5–11.5, xs absorbs 12–12.5, sm absorbs 13–14. */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 1.4;
+  --text-sm: 13.5px;
+  --text-sm--line-height: 1.5;
+  --text-base: 15px;
+  --text-base--line-height: 1.55;
 
   /* Fluid type — the design scales these rather than switching at a breakpoint. */
   --text-page-title: clamp(23px, 6.2vw, 30px);
