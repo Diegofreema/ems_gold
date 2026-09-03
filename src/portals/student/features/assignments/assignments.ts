@@ -5,12 +5,12 @@ import { schoolMillis, schoolTime, when } from '../../../../features/collections
 import { text } from '../../../../features/profile/record.ts'
 
 /**
- * The pupil's own list of assignments, off `GET /assignments`.
+ * The student's own list of assignments, off `GET /assignments`.
  *
  * The endpoint has already worked out whether an assignment can be sat — that is
  * what `window_problem` is — so nothing here second-guesses it. The dates are
  * only read to tell the two shut states apart: an assignment that has closed and an
- * assignment that has not opened both come back refused, and a pupil who reads
+ * assignment that has not opened both come back refused, and a student who reads
  * "Missed" against an assignment that starts on Monday has been told the opposite of
  * the truth.
  */
@@ -18,7 +18,7 @@ import { text } from '../../../../features/profile/record.ts'
 export type AssignmentState = 'Open' | 'Submitted' | 'Missed' | 'Not open yet'
 
 /**
- * Which of the four states an assignment is in for this pupil.
+ * Which of the four states an assignment is in for this student.
  *
  * `now` is passed in rather than read, so the boundary between "not open yet"
  * and "missed" can be tested rather than waited for.
@@ -45,7 +45,7 @@ const ORDER: Record<AssignmentState, number> = {
  * How many questions the assignment actually holds.
  *
  * `total_questions` is what the teacher meant to write and `question_count` is
- * what they wrote — assignment 6 says 4 and 1. A pupil is told the second: an assignment
+ * what they wrote — assignment 6 says 4 and 1. A student is told the second: an assignment
  * promising four questions and holding one reads as three that failed to load.
  */
 export function questionCount(assignment: Assignment): number | null {
@@ -80,7 +80,7 @@ export function assignmentRows(assignments: Assignment[], now = Date.now()): Row
       opens: when(schoolTime(assignment.opendate), true),
       pass: assignment.passing_score == null ? BLANK : `${assignment.passing_score}%`,
       // The school's own sentence for why it cannot be sat, kept word for word
-      // so a pupil quoting it to the office is quoting the office back.
+      // so a student quoting it to the office is quoting the office back.
       why: text(assignment.window_problem),
     }))
 }

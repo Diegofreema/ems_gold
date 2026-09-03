@@ -41,7 +41,7 @@ export const timetablesService = {
     }).then((data) => data.children ?? []),
 
   /**
-   * Exactly the classes this account may open: its own for a pupil, one per
+   * Exactly the classes this account may open: its own for a student, one per
    * child for a guardian, all of them for staff.
    *
    * Two classes on this school share the name "SSS I" (ids 2 and 6), so a

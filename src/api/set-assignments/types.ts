@@ -3,7 +3,7 @@ import type { PageParams } from '../types.ts'
 /**
  * An assignment the teacher has set, as `GET /setassignments` lists it.
  *
- * The pupil's own list of the same assignments is `Assignment` in `../assignments`,
+ * The student's own list of the same assignments is `Assignment` in `../assignments`,
  * and the two are not the same record read twice: this one carries the class,
  * the term and the teacher who set it, and nothing about whether anybody has
  * sat it. Where they share a field name they mean the same thing, with one
@@ -26,21 +26,21 @@ export type Assignment = {
   semester_id?: number | null
   semester?: string | null
   teacher_id?: number | null
-  /** `active` on an assignment pupils may reach. The teacher's state, not a pupil's. */
+  /** `active` on an assignment students may reach. The teacher's state, not a student's. */
   status?: string | null
   opendate?: string | null
   /**
    * When it shuts. Written `2026-09-09 14:57:53` here — no zone and a space
-   * rather than a `T`, where the pupil's list of the same assignment sends
+   * rather than a `T`, where the student's list of the same assignment sends
    * `2026-08-28T10:08`. Both are the school's own clock; see `schoolTime`.
    */
   closedate?: string | null
-  /** Minutes allowed once a pupil starts. Null means the window is the limit. */
+  /** Minutes allowed once a student starts. Null means the window is the limit. */
   time_limit?: number | null
   passing_score?: number | null
   /**
    * How many questions the assignment actually holds — 0 on an assignment just created,
-   * 1 once one question is written. Not the pupil's `total_questions`, which
+   * 1 once one question is written. Not the student's `total_questions`, which
    * is what the assignment claims to hold and can disagree with what it does.
    */
   total_questions?: number | null
@@ -75,12 +75,12 @@ export type AssignmentBody = {
 export type QuestionOption = {
   id?: number
   option_text?: string | null
-  /** Which one is right. Never sent to the pupil sitting the assignment. */
+  /** Which one is right. Never sent to the student sitting the assignment. */
   is_correct?: boolean | null
 }
 
 /**
- * One question of an assignment as its teacher reads it — the pupil's `Question` is
+ * One question of an assignment as its teacher reads it — the student's `Question` is
  * this with the answer key taken off.
  */
 export type AssignmentQuestion = {
@@ -119,9 +119,9 @@ export type AssignmentQuestions = {
 }
 
 /**
- * One pupil's submission, as the assignment's submission list rows it.
+ * One student's submission, as the assignment's submission list rows it.
  *
- * Read off bronze rather than guessed: the pupil is a name and an admission
+ * Read off bronze rather than guessed: the student is a name and an admission
  * number flat on the row, the submitted stamp arrives already formatted, and
  * the row's own id is called `assignment_id` — assignment 35's submission is
  * 36, so it is the submission's id and not the assignment's.
@@ -130,7 +130,7 @@ export type AssignmentSubmission = {
   /** The submission's own id. The name is the school's; the meaning is ours. */
   assignment_id: number
   student_id?: number | null
-  /** The pupil's whole name, not a record. */
+  /** The student's whole name, not a record. */
   student?: string | null
   regno?: string | null
   status?: string | null
@@ -152,7 +152,7 @@ export type AssignmentSubmissions = {
   /** The server's own key for the assignment these were sent against. */
   paper: Assignment
   submissions: AssignmentSubmission[]
-  /** How many pupils have submitted. */
+  /** How many students have submitted. */
   sat?: number | null
   marked?: number | null
   /** Submitted and still waiting on a teacher. */
@@ -160,14 +160,14 @@ export type AssignmentSubmissions = {
 }
 
 /**
- * One choice, as the marking view sends it: the answer key and what the pupil
+ * One choice, as the marking view sends it: the answer key and what the student
  * picked, on the option itself.
  */
 export type MarkingOption = {
   id: number
   option_text?: string | null
   is_correct?: boolean | null
-  /** True on the one the pupil chose. */
+  /** True on the one the student chose. */
   chosen?: boolean | null
 }
 

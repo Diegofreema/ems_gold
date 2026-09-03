@@ -1,13 +1,13 @@
 import { useMyStudentInvoices, useMyStudentRecord } from '@/api/my-schooling/hooks'
 import { Tag } from '@/components/common/tag'
-import { armOf, feeStanding } from '../../pupil'
+import { armOf, feeStanding } from '../../student'
 
 /**
- * The pupil block above the student sidebar's nav: who this is, the class and
+ * The student block above the student sidebar's nav: who this is, the class and
  * admission number the school knows them by, and where they stand on fees.
  *
  * Read live rather than written down — the admission number is the one thing a
- * pupil is asked for at every desk in the school, and a written-in one would
+ * student is asked for at every desk in the school, and a written-in one would
  * be the one believed.
  */
 export function StudentContext() {

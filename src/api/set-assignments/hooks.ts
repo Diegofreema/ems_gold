@@ -66,7 +66,7 @@ export function useRemoveQuestion(assignmentId: Id) {
   })
 }
 
-/** Who sat one assignment. Never cached long: a pupil may be sitting it right now. */
+/** Who sat one assignment. Never cached long: a student may be sitting it right now. */
 export function useSetAssignmentSubmissions(assignmentId: Id | undefined) {
   return useQuery({
     queryKey: setAssignmentKeys.submissions(assignmentId ?? ''),

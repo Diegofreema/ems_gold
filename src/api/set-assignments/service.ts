@@ -14,7 +14,7 @@ import type {
 
 /**
  * `/setassignments` — the teaching side of the CBT, where an assignment is written.
- * `/assignments` beside it is the pupil's, where the same assignment is sat.
+ * `/assignments` beside it is the student's, where the same assignment is sat.
  *
  * Every write is a POST, which is this API's habit for an update as much as
  * for a create — `/subjects/{id}` and `/teachers/me/topics/{id}` both take one.

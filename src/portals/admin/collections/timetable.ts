@@ -10,7 +10,7 @@ import { periodBody, periodDeleteBody, periodEditBody, periodRow } from './perio
  *
  * A register rather than a grid: the office builds a timetable one slot at a
  * time, and a slot is what it edits, moves and takes away. The grid is what a
- * pupil reads — `/student/timetable` draws it from the same periods.
+ * student reads — `/student/timetable` draws it from the same periods.
  *
  * A period is a subject. The endpoint also takes a bare `title` for a slot
  * that is not one — Break, Assembly — and the office does not set those here;
@@ -69,7 +69,7 @@ export const timetable: CollectionDef = {
   footer: 'Every period on record, across all classes',
   emptyTitle: 'No periods yet',
   emptyBody:
-    'Nothing appears on a pupil’s timetable until the office adds periods here. Add the first one and it shows on that class’s week straight away.',
+    'Nothing appears on a student’s timetable until the office adds periods here. Add the first one and it shows on that class’s week straight away.',
   noun: 'period',
   nameKey: 'subject',
   counts: [

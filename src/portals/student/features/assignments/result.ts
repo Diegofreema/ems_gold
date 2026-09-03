@@ -17,7 +17,7 @@ import { text } from '../../../../features/profile/record.ts'
  * where `percentage` comes from; the theory is scored by a teacher, and
  * `is_graded` is about that. An assignment can therefore carry a real percentage and
  * still be waiting on somebody, and one with no percentage at all is not a
- * pupil who scored nothing.
+ * student who scored nothing.
  */
 
 /** Whether the server has anything to report yet — see `max_points`. */
@@ -61,11 +61,11 @@ export function resultFields(
 }
 
 /**
- * What the pupil chose, in words.
+ * What the student chose, in words.
  *
  * The result carries the option's id and not its text, so the assignment is read
  * for the wording — the same call the page already makes to find the
- * submission. An id on its own tells a pupil nothing about what they picked.
+ * submission. An id on its own tells a student nothing about what they picked.
  */
 function chosen(answer: ResultAnswer, questions: Question[]): string {
   if (answer.theory_answer?.trim()) return answer.theory_answer.trim()

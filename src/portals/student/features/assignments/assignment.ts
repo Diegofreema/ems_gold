@@ -8,7 +8,7 @@ import { schoolTime, when } from '../../../../features/collections/when.ts'
 import { text } from '../../../../features/profile/record.ts'
 
 /**
- * An assignment being sat: what the pupil has answered so far, and what is sent back
+ * An assignment being sat: what the student has answered so far, and what is sent back
  * when they finish.
  *
  * Answers are held by question id rather than by position, because that is
@@ -48,7 +48,7 @@ export function answeredCount(draft: Draft, questions: Question[]): number {
  * carrying `10:00:00Z` is stored as `10:00:00+01:00`. Sending a zone would
  * therefore be sending something that is quietly discarded, and sending the
  * reader's UTC would put the attempt an hour out for anyone abroad. The wall
- * clock, unqualified, is the one thing the school and the pupil agree on.
+ * clock, unqualified, is the one thing the school and the student agree on.
  */
 export function startedAt(at: Date): string {
   const pad = (part: number) => String(part).padStart(2, '0')
@@ -79,7 +79,7 @@ export function submitBody(
   return { answers, actual_start_time: startedAt(openedAt) }
 }
 
-/** How long the pupil has, in seconds, where the assignment sets a limit at all. */
+/** How long the student has, in seconds, where the assignment sets a limit at all. */
 export function limitSeconds(assignment: AssignmentDetail | undefined): number | null {
   const minutes = assignment?.assignment?.time_limit
   return minutes ? minutes * 60 : null
@@ -111,7 +111,7 @@ export function assignmentMeta(detail: AssignmentDetail | undefined): string {
 }
 
 /**
- * The assignment's terms, as the pupil is shown them before starting.
+ * The assignment's terms, as the student is shown them before starting.
  *
  * `question_count` is null on this route whatever the list said, so the
  * count is the questions actually sent.

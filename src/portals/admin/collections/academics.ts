@@ -10,7 +10,7 @@ import { armBody, subjectBody } from './academics-body'
 import { classPeriodRow } from './period-row'
 import {
   armDeleteBody,
-  armPupilRow,
+  armStudentRow,
   armRow,
   subjectClassRow,
   subjectDeleteBody,
@@ -91,30 +91,30 @@ export const classes: CollectionDef = {
   footer: 'Class register',
   emptyTitle: 'No classes yet',
   emptyBody:
-    'Nothing else can be set up until the school has classes — pupils, subjects, arms and fees all belong to one.',
+    'Nothing else can be set up until the school has classes — students, subjects, arms and fees all belong to one.',
   noun: 'class',
   nameKey: 'name',
   // Arms have a register of their own — they are created, given a form
-  // teacher and filled with pupils, which is more than a tab on a class can
+  // teacher and filled with students, which is more than a tab on a class can
   // carry. The class page still lists them; this is the way in to changing one.
   secondaryTo: { to: '/admin/arms', label: 'Class arms' },
   counts: [
     { label: 'Classes', count: async () => (await classCensus()).totals.classes },
     { label: 'Arms', count: async () => (await classCensus()).totals.arms },
-    { label: 'Pupils', count: async () => (await classCensus()).totals.pupils },
+    { label: 'Students', count: async () => (await classCensus()).totals.students },
   ],
   columns: [
     { key: 'name', label: 'Class', cardRole: 'title' },
     { key: 'code', label: 'Code', cardRole: 'subtitle' },
     { key: 'arms', label: 'Arms' },
-    { key: 'pupils', label: 'Pupils', align: 'right' },
+    { key: 'students', label: 'Students', align: 'right' },
     { key: 'subjectCount', label: 'Subjects', align: 'right' },
   ],
   detail: [
     { key: 'name', label: 'Class' },
     { key: 'code', label: 'Code' },
     { key: 'arms', label: 'Arms' },
-    { key: 'pupils', label: 'Pupils' },
+    { key: 'students', label: 'Students' },
     { key: 'subjectCount', label: 'Subjects' },
     { key: 'fees', label: 'Fees charged' },
     { key: 'terms', label: 'Terms' },
@@ -142,7 +142,7 @@ export const classes: CollectionDef = {
       ? departmentsService.update(recordId, classBody(values))
       : departmentsService.create(classBody(values)),
   // Never forced. `students.department_id` cannot be null, so a class deleted
-  // out from under its pupils leaves them unable to load anywhere that joins
+  // out from under its students leaves them unable to load anywhere that joins
   // their class — the API's refusal is the right answer, not an obstacle.
   remove: (recordId) => departmentsService.remove(recordId),
   removeBody: classDeleteBody,
@@ -153,7 +153,7 @@ export const classes: CollectionDef = {
         { key: 'arm', label: 'Arm' },
         { key: 'description', label: 'Description' },
         { key: 'teacher', label: 'Form teacher' },
-        { key: 'roll', label: 'Pupils', align: 'right' },
+        { key: 'roll', label: 'Students', align: 'right' },
         { key: 'status', label: 'Status', tag: true },
       ],
       source: async (recordId) =>
@@ -173,7 +173,7 @@ export const classes: CollectionDef = {
     },
     {
       // The week the class actually sits, off `GET /timetables/class/{id}` —
-      // the same grid the pupils in it read. The class does not own its
+      // the same grid the students in it read. The class does not own its
       // periods, so the tab shows them and hands the office to the register
       // where they are kept, already narrowed to this class.
       label: 'Timetable',
@@ -202,7 +202,7 @@ export const classes: CollectionDef = {
           required: true,
           wide: true,
           placeholder: 'JSS 1',
-          hint: 'How the class reads everywhere in the school — on a pupil, an invoice, a result. The class code is generated from it.',
+          hint: 'How the class reads everywhere in the school — on a student, an invoice, a result. The class code is generated from it.',
         },
       ],
     },
@@ -214,7 +214,7 @@ export const classes: CollectionDef = {
           label: 'Fees charged',
           optionsFrom: 'fees',
           multi: true,
-          hint: 'Every pupil in the class is billed these. Unticking one stops it being charged; invoices already raised are not touched.',
+          hint: 'Every student in the class is billed these. Unticking one stops it being charged; invoices already raised are not touched.',
         },
         {
           key: 'subject_ids',
@@ -240,7 +240,7 @@ export const arms: CollectionDef = {
   footer: 'Arm register',
   emptyTitle: 'No arms yet',
   emptyBody:
-    'A class needs at least one arm before pupils can be placed, attendance taken or results uploaded against it.',
+    'A class needs at least one arm before students can be placed, attendance taken or results uploaded against it.',
   noun: 'arm',
   nameKey: 'arm',
   secondaryTo: { to: '/admin/classes', label: 'Classes' },
@@ -253,14 +253,14 @@ export const arms: CollectionDef = {
     { key: 'arm', label: 'Arm', cardRole: 'title' },
     { key: 'klass', label: 'Class', cardRole: 'subtitle' },
     { key: 'teacher', label: 'Form teacher' },
-    { key: 'roll', label: 'Pupils', align: 'right' },
+    { key: 'roll', label: 'Students', align: 'right' },
     { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
   ],
   detail: [
     { key: 'arm', label: 'Arm' },
     { key: 'klass', label: 'Class' },
     { key: 'teacher', label: 'Form teacher' },
-    { key: 'roll', label: 'Pupils' },
+    { key: 'roll', label: 'Students' },
     { key: 'results', label: 'Results recorded' },
     { key: 'attendance', label: 'Attendance records' },
     { key: 'description', label: 'Description' },
@@ -296,24 +296,24 @@ export const arms: CollectionDef = {
   removeBody: armDeleteBody,
   tabs: [
     {
-      label: 'Pupils',
+      label: 'Students',
       columns: [
-        { key: 'name', label: 'Pupil' },
+        { key: 'name', label: 'Student' },
         { key: 'adm', label: 'Adm. no.' },
         { key: 'placed', label: 'Placement', tag: true },
         { key: 'status', label: 'Status', tag: true },
       ],
-      // Pupils admitted into the class but not yet placed are listed too —
+      // Students admitted into the class but not yet placed are listed too —
       // they are exactly who this arm can still take — and marked as such, so
-      // the tab is not read as a roll of pupils who are already here.
+      // the tab is not read as a roll of students who are already here.
       source: async (recordId) => {
         const { students, unassigned_in_class } = await classArmsService.students(recordId)
         return [
-          ...students.map((pupil) => armPupilRow(pupil, true)),
-          ...unassigned_in_class.map((pupil) => armPupilRow(pupil, false)),
+          ...students.map((student) => armStudentRow(student, true)),
+          ...unassigned_in_class.map((student) => armStudentRow(student, false)),
         ]
       },
-      empty: 'No pupil has been placed in this arm yet.',
+      empty: 'No student has been placed in this arm yet.',
     },
   ],
   form: [

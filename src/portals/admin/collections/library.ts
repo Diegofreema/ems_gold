@@ -38,12 +38,12 @@ export const library: CollectionDef = {
   kicker: 'School',
   title: 'Library',
   description:
-    'Every title the school holds, and how many of it. Open a title to issue a copy to a pupil.',
+    'Every title the school holds, and how many of it. Open a title to issue a copy to a student.',
   action: 'Add book',
   searchHint: 'Search title, author, ISBN or section',
   footer: 'School catalogue',
   emptyTitle: 'The catalogue is empty',
-  emptyBody: 'Add your first title to start lending books to pupils.',
+  emptyBody: 'Add your first title to start lending books to students.',
   noun: 'title',
   nameKey: 'title',
   counts: [

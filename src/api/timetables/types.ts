@@ -87,7 +87,7 @@ export type ClassTimetable = {
   message?: string | null
   /**
    * The arm, e.g. "JSS 2 A". On `/timetables/mine` only — the class-scoped
-   * endpoint answers for a class rather than a pupil and omits it.
+   * endpoint answers for a class rather than a student and omits it.
    */
   class_arm?: string | null
 }
@@ -98,7 +98,7 @@ export type ClassTimetable = {
  *
  * The class arrives three times over: flattened here as `class_id` /
  * `class_name` / `class_arm`, and again inside `timetable.class`. The flat
- * ones are the pupil's placement — `class_arm` is the arm they sit in, which
+ * ones are the student's placement — `class_arm` is the arm they sit in, which
  * the grid itself does not carry — so the heading is built from these and the
  * calendar from `timetable`.
  *

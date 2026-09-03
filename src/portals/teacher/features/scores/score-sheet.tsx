@@ -21,7 +21,7 @@ export function ScoreSheet({
       <table className="w-full min-w-140 border-collapse text-sm">
         <thead>
           <tr className="border-b border-divider-strong text-left">
-            <Th>Pupil</Th>
+            <Th>Student</Th>
             <Th className="w-30 text-right">CA ({CA_MAX})</Th>
             <Th className="w-30 text-right">Exam ({EXAM_MAX})</Th>
             <Th className="w-22.5 text-right">Total</Th>

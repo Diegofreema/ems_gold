@@ -69,7 +69,7 @@ test('a row carries the assignment as the list and the assignment page show it',
   assert.equal(row.minutes, 'No limit')
   assert.equal(row.pass, '30%')
   assert.equal(row.state, 'Submitted')
-  // Word for word, so a pupil quoting it is quoting the school.
+  // Word for word, so a student quoting it is quoting the school.
   assert.equal(row.why, 'This test has closed.')
 })
 

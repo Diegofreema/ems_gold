@@ -16,7 +16,7 @@ const filled = {
   sparent_id: '2',
   religion: 'traditionalist',
   // The form holds the ISO code for a country and the school's own id for a
-  // state, which is what a live pupil's record reads back as: Imo is 2663.
+  // state, which is what a live student's record reads back as: Imo is 2663.
   country: 'NG',
   state: '2663',
 }
@@ -80,7 +80,7 @@ test('a class nobody picked is not sent as a zero', () => {
 
 test('the body says nothing about admission or enrolment', () => {
   // Whoever is creating the record decides that, and an edit must not quietly
-  // re-admit a pupil somebody suspended.
+  // re-admit a student somebody suspended.
   const body = studentBody({ ...filled, admission: 'Applied', studentstatus: 'Suspended' }, 1)
   assert.equal('status' in body, false)
   assert.equal('studentstatus' in body, false)

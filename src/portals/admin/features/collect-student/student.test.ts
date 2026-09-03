@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { CollectInvoice } from '../../../../api/collect-fees/types.ts'
-import { ledgerRow, owed, pupilResult, pupilSubtitle, pupilTiles } from './pupil.ts'
+import { ledgerRow, owed, studentResult, studentSubtitle, studentTiles } from './student.ts'
 
 /** Verbatim from GET /collect-fees/students?q=udo. */
 const found = {
@@ -63,15 +63,15 @@ const oldSettled: CollectInvoice = {
   transactions: [],
 }
 
-test('a search result names the pupil and how to be sure of them', () => {
-  assert.deepEqual(pupilResult(found), {
+test('a search result names the student and how to be sure of them', () => {
+  assert.deepEqual(studentResult(found), {
     id: '4',
     name: 'UDOYE OKIGBO',
     regno: 'CUN/2026/4',
     placed: 'SSS I',
   })
-  // The register really does hold pupils with no number on them.
-  assert.equal(pupilResult({ ...found, regno: null }).regno, '—')
+  // The register really does hold students with no number on them.
+  assert.equal(studentResult({ ...found, regno: null }).regno, '—')
 })
 
 test('a receipt is offered only where a payment was recorded', () => {
@@ -87,14 +87,14 @@ test('paying is offered on an invoice still owing and on no other', () => {
   assert.equal(ledgerRow(oldSettled).payable, '')
 })
 
-test('what a pupil owes counts the unsettled invoices alone', () => {
+test('what a student owes counts the unsettled invoices alone', () => {
   assert.equal(owed([base, settled, oldSettled]), 30_000)
   assert.equal(owed([settled, oldSettled]), 0)
   assert.equal(owed([]), 0)
 })
 
 test('the tiles split the ledger into owing and settled', () => {
-  assert.deepEqual(pupilTiles([base, settled, oldSettled]), [
+  assert.deepEqual(studentTiles([base, settled, oldSettled]), [
     { label: 'Still owing', value: '₦30,000' },
     { label: 'Invoices owing', value: '1' },
     { label: 'Settled', value: '2' },
@@ -103,10 +103,10 @@ test('the tiles split the ledger into owing and settled', () => {
 
 test('the ledger heading carries the number and the arm', () => {
   assert.equal(
-    pupilSubtitle({ id: 4, regno: 'CUN/2026/4', department: 'SSS I', class_arm: 'JSS 2 A' }),
+    studentSubtitle({ id: 4, regno: 'CUN/2026/4', department: 'SSS I', class_arm: 'JSS 2 A' }),
     'CUN/2026/4 · JSS 2 A',
   )
   // The search endpoint sends no arm, so the class stands in for it.
-  assert.equal(pupilSubtitle({ id: 4, regno: 'CUN/2026/4', department: 'SSS I' }), 'CUN/2026/4 · SSS I')
-  assert.equal(pupilSubtitle(undefined), '')
+  assert.equal(studentSubtitle({ id: 4, regno: 'CUN/2026/4', department: 'SSS I' }), 'CUN/2026/4 · SSS I')
+  assert.equal(studentSubtitle(undefined), '')
 })

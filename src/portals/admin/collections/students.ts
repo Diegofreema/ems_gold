@@ -21,7 +21,7 @@ const ENROLMENT = ['Active', 'Suspended'] as const
 const APPLIED = 'Applied'
 
 /**
- * A pupil enrolled through this form is admitted and on the register from the
+ * A student enrolled through this form is admitted and on the register from the
  * moment they are created — the office never had another answer to give, so
  * the form does not ask.
  */
@@ -35,7 +35,7 @@ const ACTIVE = 'Active'
 const countStudents = (params: StudentListParams) => async () =>
   (await studentsService.list({ ...params, limit: 1 })).pagination.total
 
-/** The households the school holds, so the register can name a pupil's own. */
+/** The households the school holds, so the register can name a student's own. */
 const guardianNames = () => optionLabels('guardians')
 
 /** A filter's id as the endpoint wants it; an unset filter is left off. */
@@ -43,9 +43,9 @@ function asId(value: string | undefined) {
   return Number(value) || undefined
 }
 
-/** Who the pupil is, as the enrolment form asks for them. */
+/** Who the student is, as the enrolment form asks for them. */
 const IDENTITY: FormSectionSpec = {
-  title: 'Pupil',
+  title: 'Student',
   fields: [
     { key: 'fname', label: 'First name', required: true, placeholder: 'Ngozi' },
     { key: 'lname', label: 'Surname', required: true, placeholder: 'Eze' },
@@ -53,15 +53,15 @@ const IDENTITY: FormSectionSpec = {
     { key: 'dob', label: 'Date of birth', required: true, date: true, past: true },
     { key: 'gender', label: 'Gender', required: true, options: ['Female', 'Male'] },
     { key: 'religion', label: 'Religion', required: true, placeholder: 'Christian' },
-    // The pupil's own, not the household's — that one is on the guardian
-    // record, and this is the address the pupil signs in with.
+    // The student's own, not the household's — that one is on the guardian
+    // record, and this is the address the student signs in with.
     {
       key: 'email',
       label: 'Email',
       required: true,
       email: true,
-      placeholder: 'pupil@example.com',
-      hint: 'The pupil signs in with this.',
+      placeholder: 'student@example.com',
+      hint: 'The student signs in with this.',
     },
     { key: 'phone', label: 'Phone', required: true, numeric: true, placeholder: '0705 883 1190' },
     {
@@ -71,13 +71,13 @@ const IDENTITY: FormSectionSpec = {
       multiline: true,
       wide: true,
       placeholder: '14 Ogui Road, Enugu',
-      hint: 'Where the pupil lives — the household on the guardian record, unless the pupil boards elsewhere.',
+      hint: 'Where the student lives — the household on the guardian record, unless the student boards elsewhere.',
     },
   ],
 }
 
 /**
- * Where the pupil is from. The endpoint takes both as the school's own
+ * Where the student is from. The endpoint takes both as the school's own
  * numbers, and publishes no catalogue for either — `/countries` and `/states`
  * are undeployed — so only the places it has been read to hold can be saved.
  */
@@ -103,7 +103,7 @@ const ORIGIN: FormSectionSpec = {
 }
 
 /**
- * Who to reach about this pupil. The household already holds the email, the
+ * Who to reach about this student. The household already holds the email, the
  * phone and the address, so the form links to it by id rather than asking the
  * office to copy three fields it has on file under Parents.
  */
@@ -168,15 +168,15 @@ export const students: CollectionDef = {
   ],
   path: '/admin/students',
   kicker: 'Students',
-  title: 'Enrolled pupils',
+  title: 'Enrolled students',
   description:
-    'Every enrolled pupil across Primary 1 to SS3. Open a pupil for their record, fees and results.',
-  action: 'Enrol a pupil',
+    'Every enrolled student across JSS 1 to SSS 3. Open a student for their record, fees and results.',
+  action: 'Enrol a student',
   searchHint: 'Search name or admission no.',
-  footer: 'Pupil register',
-  emptyTitle: 'No pupils on the register',
-  emptyBody: 'Enrol your first pupil, or admit one from the applicants list.',
-  noun: 'pupil',
+  footer: 'Student register',
+  emptyTitle: 'No students on the register',
+  emptyBody: 'Enrol your first student, or admit one from the applicants list.',
+  noun: 'student',
   nameKey: 'name',
   counts: [
     { label: 'Enrolled', count: countStudents({ status: 'Admitted' }) },
@@ -218,7 +218,7 @@ export const students: CollectionDef = {
     { key: 'status', label: 'Any admission', options: ADMISSION },
     { key: 'studentstatus', label: 'Any enrolment', options: ENROLMENT },
   ],
-  // Enrolment is its own endpoint rather than a field on the pupil, so it is
+  // Enrolment is its own endpoint rather than a field on the student, so it is
   // offered where the office is already looking at the register.
   rowAction: {
     label: (row) => suspendAction(row.status).label,
@@ -252,7 +252,7 @@ export const students: CollectionDef = {
   save: async (values, recordId) => {
     if (recordId) return studentsService.update(recordId, studentBody(values))
 
-    // A new pupil joins the session the school is currently running. Editing
+    // A new student joins the session the school is currently running. Editing
     // one never moves them between sessions, so this is only asked for here.
     const session = await sessionsService.current().catch(() => undefined)
     return studentsService.create({
@@ -271,7 +271,7 @@ export const students: CollectionDef = {
           key: 'class_arm_id',
           label: 'Arm',
           // Required as the design has it, and because a class changed without
-          // an arm leaves the pupil in an arm of the class they just left.
+          // an arm leaves the student in an arm of the class they just left.
           required: true,
           optionsFrom: 'arms',
           dependsOn: 'department_id',

@@ -5,7 +5,7 @@ export type { Student }
 
 /**
  * Contact details only. regno, class, level, session, status and application
- * number are refused, so a pupil cannot move class, re-admit themselves or
+ * number are refused, so a student cannot move class, re-admit themselves or
  * lift a suspension.
  */
 export type UpdateMyRecordBody = {
@@ -15,7 +15,7 @@ export type UpdateMyRecordBody = {
 
 /**
  * `GET /students/me/dashboard` — five counters and nothing else. The unpaid
- * count is the only place a pupil can read what they still owe: the invoice
+ * count is the only place a student can read what they still owe: the invoice
  * list beside it returns settled bills alone.
  */
 export type StudentDashboard = {
@@ -29,9 +29,9 @@ export type StudentDashboard = {
 }
 
 /**
- * One payment against one of the pupil's invoices — the receipt trail the
+ * One payment against one of the student's invoices — the receipt trail the
  * bursary writes as it takes the money. `discount` and the office's own note
- * are on it, and both are the pupil's own business to read.
+ * are on it, and both are the student's own business to read.
  */
 export type MyPayment = {
   id: number
@@ -63,7 +63,7 @@ export type MyInvoices = {
 }
 
 /**
- * One file a teacher has shared with the pupil's class, as
+ * One file a teacher has shared with the student's class, as
  * `GET /students/me/materials` would send it.
  *
  * Unverified, and less certain than the result shape beside it. Course
@@ -89,8 +89,8 @@ export type MyMaterial = {
 }
 
 /**
- * One subject the pupil is registered for, as `GET /students/me/courses`
- * sends it. Probed 2026-08-31 as pupil 4, who is registered for five.
+ * One subject the student is registered for, as `GET /students/me/courses`
+ * sends it. Probed 2026-08-31 as student 4, who is registered for five.
  *
  * This endpoint flattens: `teachers` is an array of **names**, not the
  * `{ id, name }` records `/subjects/{id}` sends, and there is no `department`
@@ -110,7 +110,7 @@ export type MyCourse = {
 
 /**
  * The whole answer, not just the list. A registration belongs to a class, a
- * session and a term, and the endpoint says which — the pupil's own class is
+ * session and a term, and the endpoint says which — the student's own class is
  * not the one on their record but the one the registration was made against.
  *
  * `message` is the API's own sentence for an empty list; it is null whenever

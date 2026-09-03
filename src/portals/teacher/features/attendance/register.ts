@@ -2,7 +2,7 @@ import type {
   Coverage,
   MarkInput,
   MyClass,
-  RegisterPupil,
+  RegisterStudent,
   SavedRegister,
   StatusCatalogue,
 } from '../../../../api/attendance/types.ts'
@@ -78,7 +78,7 @@ export type RegisterRow = {
   student_id: number
   name: string
   regno: string
-  /** Null where nobody has marked this pupil — never defaulted to present. */
+  /** Null where nobody has marked this student — never defaulted to present. */
   status: string | null
   notes: string
   /** Whether what is on screen differs from what the school holds. */
@@ -86,24 +86,24 @@ export type RegisterRow = {
 }
 
 /**
- * One row per pupil on the roll, with whatever the teacher has ticked on top.
+ * One row per student on the roll, with whatever the teacher has ticked on top.
  *
- * An unmarked pupil stays unmarked. Defaulting them to present would make an
+ * An unmarked student stays unmarked. Defaulting them to present would make an
  * untaken register look exactly like a day when everybody turned up.
  */
-export function registerRows(pupils: RegisterPupil[], edits: Edits): RegisterRow[] {
-  return pupils.map((pupil) => {
-    const key = String(pupil.student_id)
-    const held = pupil.status ?? null
-    const heldNotes = pupil.notes ?? ''
+export function registerRows(students: RegisterStudent[], edits: Edits): RegisterRow[] {
+  return students.map((student) => {
+    const key = String(student.student_id)
+    const held = student.status ?? null
+    const heldNotes = student.notes ?? ''
     const edit = edits[key]
     const status = edit?.status ?? held
     const notes = edit?.notes ?? heldNotes
 
     return {
-      student_id: pupil.student_id,
-      name: pupil.name?.trim() || `Pupil ${pupil.student_id}`,
-      regno: pupil.regno?.trim() || '',
+      student_id: student.student_id,
+      name: student.name?.trim() || `Student ${student.student_id}`,
+      regno: student.regno?.trim() || '',
       status,
       notes,
       edited: status !== held || notes !== heldNotes,
@@ -114,7 +114,7 @@ export function registerRows(pupils: RegisterPupil[], edits: Edits): RegisterRow
 /**
  * The marks to send, as `POST /attendances/register` wants them.
  *
- * **Only the rows the teacher actually touched.** A pupil left out is left
+ * **Only the rows the teacher actually touched.** A student left out is left
  * alone by the endpoint, which is the whole reason a partial save is safe: a
  * dropped connection must never become a child's absence record.
  *
@@ -132,7 +132,7 @@ export function changedMarks(rows: RegisterRow[]): Record<string, MarkInput> {
 }
 
 export type Tally = {
-  pupils: number
+  students: number
   marked: number
   unmarked: number
   /** How many of the marks mean the child was in the building. */
@@ -157,7 +157,7 @@ export function liveTally(rows: RegisterRow[], statuses: StatusOption[]): Tally 
   const marked = rows.filter((row) => row.status).length
 
   return {
-    pupils: rows.length,
+    students: rows.length,
     marked,
     unmarked: rows.length - marked,
     inSchool: statuses
@@ -182,14 +182,14 @@ export function isFuture(date: string, today = toApiDate(new Date()) ?? ''): boo
 /**
  * What the endpoint filed and what it threw away.
  *
- * A pupil id from another class is ignored and named rather than filed against
+ * A student id from another class is ignored and named rather than filed against
  * a class they are not in — so it is worth repeating on screen, since the
  * teacher will otherwise count the saved rows and find one short.
  */
 export function ignoredNote(saved: SavedRegister | undefined): string {
   const ignored = saved?.ignored ?? []
   if (ignored.length === 0) return ''
-  return `${ignored.length} pupil ${ignored.length === 1 ? 'id was' : 'ids were'} not in this class and ${ignored.length === 1 ? 'was' : 'were'} not filed: ${ignored.join(', ')}.`
+  return `${ignored.length} student ${ignored.length === 1 ? 'id was' : 'ids were'} not in this class and ${ignored.length === 1 ? 'was' : 'were'} not filed: ${ignored.join(', ')}.`
 }
 
 /** The days nobody marked, newest first, ready to open. */

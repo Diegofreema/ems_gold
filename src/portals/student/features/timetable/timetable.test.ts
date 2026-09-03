@@ -51,7 +51,7 @@ const JSS1: ClassTimetable = {
   ],
 }
 
-/** Pupil 4's own class, which has nothing entered — the ordinary case here. */
+/** Student 4's own class, which has nothing entered — the ordinary case here. */
 const EMPTY: ClassTimetable = {
   class: { id: 2, name: 'SSS I' },
   session: { id: 8, name: '2024/2025' },
@@ -92,7 +92,7 @@ test('a period names its teacher by joining the two answers on subject id', () =
   assert.equal(igbo?.teacher, '—')
 })
 
-test('a subject the pupil is not registered for still shows its period', () => {
+test('a subject the student is not registered for still shows its period', () => {
   assert.equal(teacherFor({ id: 1, subject_id: 99 }, COURSES), '—')
   assert.equal(teacherFor({ id: 1, subject_id: null }, COURSES), '—')
 })

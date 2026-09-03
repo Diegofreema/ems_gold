@@ -11,12 +11,12 @@ import { timetableKeys } from '@/api/timetables/keys'
 import { timetablesService } from '@/api/timetables/service'
 
 /**
- * The two answers every pupil page is built out of. Kept together so the
+ * The two answers every student page is built out of. Kept together so the
  * dashboard, the sidebar and the fee register all read one cache entry each
  * rather than a copy of the same request per page.
  */
 
-/** `GET /students/me` — the pupil's whole record, relations expanded. */
+/** `GET /students/me` — the student's whole record, relations expanded. */
 export const studentRecordQuery = queryOptions({
   queryKey: mySchoolingKeys.record(),
   queryFn: () => mySchoolingService.record(),
@@ -30,11 +30,11 @@ export const studentStatsQuery = queryOptions({
 
 /**
  * `GET /results/mine` — released marks only, every term at once, with the
- * term average beside them. No parameters: a pupil cannot name a session or a
+ * term average beside them. No parameters: a student cannot name a session or a
  * term to ask for one, since `/sessions` and `/semesters` are shut to them.
  *
- * Not `students/me/results`, which answered `{results: []}` for every pupil
- * ever probed. This is the results controller's own pupil route.
+ * Not `students/me/results`, which answered `{results: []}` for every student
+ * ever probed. This is the results controller's own student route.
  */
 export const studentResultsQuery = queryOptions({
   queryKey: resultKeys.mine({}),
@@ -42,9 +42,9 @@ export const studentResultsQuery = queryOptions({
 })
 
 /**
- * `GET /attendances/mine` — every day somebody took a register on this pupil.
+ * `GET /attendances/mine` — every day somebody took a register on this student.
  *
- * No parameters: the range is the whole record, because a pupil has no term to
+ * No parameters: the range is the whole record, because a student has no term to
  * narrow it by. The percentage on it is the school's own, counted over days
  * marked rather than over the length of term.
  */
@@ -60,9 +60,9 @@ export const studentInvoicesQuery = queryOptions({
 })
 
 /**
- * `GET /students/me/materials` — the files shared with the pupil's class.
+ * `GET /students/me/materials` — the files shared with the student's class.
  *
- * Answers `{ "materials": [] }` for every pupil: the table it reads is empty
+ * Answers `{ "materials": [] }` for every student: the table it reads is empty
  * across the whole school, and no endpoint on this API fills it.
  */
 export const studentMaterialsQuery = queryOptions({
@@ -71,7 +71,7 @@ export const studentMaterialsQuery = queryOptions({
 })
 
 /**
- * `GET /students/me/courses` — the subjects the pupil is registered for.
+ * `GET /students/me/courses` — the subjects the student is registered for.
  *
  * The whole answer, not the list alone: the class, the session and the term
  * the registration was made against arrive beside it, and the record a row
@@ -83,10 +83,10 @@ export const studentCoursesQuery = queryOptions({
 })
 
 /**
- * `GET /timetables/mine` — the pupil's own class grid for the current term.
+ * `GET /timetables/mine` — the student's own class grid for the current term.
  *
  * Asked without a term: both `session_id` and `semester_id` are optional and
- * only matter together, and a pupil has no way to name a past term to ask for
+ * only matter together, and a student has no way to name a past term to ask for
  * one. The whole answer is kept — the class, the session and the term it was
  * drawn for are siblings of `days`, not fields on a period.
  */
@@ -96,7 +96,7 @@ export const studentTimetableQuery = queryOptions({
 })
 
 /**
- * `GET /assignments` — every assignment set for the pupil's own class.
+ * `GET /assignments` — every assignment set for the student's own class.
  *
  * Asked without a `subject_id`, which the endpoint treats as "all of them".
  * Sharing the key with `useAssignments()` so the register and anything else
@@ -117,7 +117,7 @@ export const studentAssignmentsQuery = queryOptions({
  *
  * Never cached: this is the answer that says whether the assignment has been
  * submitted and whether its window is still open, and a stale copy of either
- * would put a pupil into an assignment they cannot send back.
+ * would put a student into an assignment they cannot send back.
  */
 export const studentAssignmentQuery = (setassignmentId: string) =>
   queryOptions({

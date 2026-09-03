@@ -8,7 +8,7 @@ import type { Row } from '../../../../features/collections/types.ts'
 import { when } from '../../../../features/collections/when.ts'
 
 /**
- * Marking what the pupils of one assignment sent back.
+ * Marking what the students of one assignment sent back.
  *
  * The school scores nothing itself — every answer of a submitted assignment
  * comes back with `score: null`, multiple choice included — so every mark here
@@ -45,7 +45,7 @@ export function submissionRows(submissions: AssignmentSubmission[]): Row[] {
       // The submission's own id, under the name the school gives it.
       id: String(submission.assignment_id),
       name:
-        submission.student?.trim() || `Pupil ${submission.student_id ?? submission.assignment_id}`,
+        submission.student?.trim() || `Student ${submission.student_id ?? submission.assignment_id}`,
       adm: submission.regno?.trim() || BLANK,
       // Already formatted by the school, and in its own style — read back onto
       // the one every other date on these pages is shown in. `when` hands back
@@ -70,7 +70,7 @@ export function answerKey(answer: MarkingAnswer): string {
   return String(answer.answer_id)
 }
 
-/** What the pupil picked, in words. Empty where they answered nothing. */
+/** What the student picked, in words. Empty where they answered nothing. */
 export function chosenOption(answer: MarkingAnswer): string {
   return answer.options?.find((option) => option.chosen)?.option_text?.trim() ?? ''
 }
@@ -81,9 +81,9 @@ export function correctOption(answer: MarkingAnswer): string {
 }
 
 /**
- * Whether the pupil picked the right option, where the answer has one to pick.
+ * Whether the student picked the right option, where the answer has one to pick.
  * Null on a theory answer and on one nobody answered — neither is a wrong
- * answer, and showing them as one would be marking a pupil down for the shape
+ * answer, and showing them as one would be marking a student down for the shape
  * of the question.
  */
 export function wasRight(answer: MarkingAnswer): boolean | null {

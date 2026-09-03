@@ -4,7 +4,7 @@ import type { ClassTimetable, Period } from '../../api/timetables/types.ts'
  * The one thing every timetable page has to agree on: what order the week is
  * in. A grid arrives as `days`, a list of days each holding its periods, and
  * three portals read the same grid — the office looking at a class, a teacher
- * looking at the classes they take, a pupil looking at their own.
+ * looking at the classes they take, a student looking at their own.
  */
 
 /** Monday first, and the two the school does not teach on last. */

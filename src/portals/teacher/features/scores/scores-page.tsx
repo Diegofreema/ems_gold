@@ -36,7 +36,7 @@ export function ScoresPage() {
 
   const mine = subjects.data ?? []
   const arms = roll.data?.class_arms ?? []
-  const pupils = roll.data?.items ?? []
+  const students = roll.data?.items ?? []
   const held = marks.data?.items ?? []
 
   if (!mine.length || !arms.length) {
@@ -63,7 +63,7 @@ export function ScoresPage() {
   const arm = arms.find((one) => one.id === armId) ?? arms[0]
 
   const rows = sheetRows(
-    pupils.filter((pupil) => pupil.class_arm_id === arm.id),
+    students.filter((student) => student.class_arm_id === arm.id),
     held,
     subject.id,
     edits,
@@ -135,15 +135,15 @@ export function ScoresPage() {
         <ScoreSheet rows={rows} onMarkChange={setMark} />
       ) : (
         <EmptyState
-          title="No pupils in this arm"
-          body="The office places pupils in arms. Once one is placed here, they appear on this sheet."
+          title="No students in this arm"
+          body="The office places students in arms. Once one is placed here, they appear on this sheet."
         />
       )}
 
       <div className="mt-3.5 text-xs text-muted-foreground">
         {term ? (
           <>
-            {rows.length} pupils · {subject.name} · {arm.arm_name} · filed into{' '}
+            {rows.length} students · {subject.name} · {arm.arm_name} · filed into{' '}
             {term.label}
             {problems.length > 0 && ' · fix the flagged marks before saving'}
           </>

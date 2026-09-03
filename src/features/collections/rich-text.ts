@@ -37,7 +37,7 @@ export function plainText(html: string): string {
  *
  * The same field holds both: an assignment set before the editor existed is
  * the teacher's plain sentence, and one set since is HTML. A reader that
- * assumes the second shows tags to a pupil, and one that assumes the first
+ * assumes the second shows tags to a student, and one that assumes the first
  * throws the formatting away, so which it is has to be asked.
  */
 export function isRichText(value: string): boolean {

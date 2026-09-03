@@ -3,14 +3,14 @@ import type { Row } from '../../../../features/collections/types.ts'
 import { text } from '../../../../features/profile/record.ts'
 
 /**
- * The subjects the pupil is registered for, off `GET /students/me/courses`.
+ * The subjects the student is registered for, off `GET /students/me/courses`.
  *
  * Three columns where the design has five. "Periods / wk" would be counted off
  * the timetable, which has its own page and its own endpoint; a subject's
  * periods are not on this answer, and a count copied between two pages is one
  * more thing to fall out of step. "CA so far" is a mark, and marks have their
  * own page: the results endpoint is the school's approved record of them, and
- * a second copy here would be a number a pupil could read two ways.
+ * a second copy here would be a number a student could read two ways.
  *
  * The class, the session and the term are the registration's, not each
  * subject's — they arrive once, beside the list, so they belong on the record
@@ -33,7 +33,7 @@ export function classOf(answer: MyCourses): string {
 }
 
 /**
- * By name rather than by id. A subject list is not a chronology — a pupil
+ * By name rather than by id. A subject list is not a chronology — a student
  * scans it for one subject, and the alphabet is where they look first.
  */
 function byName(courses: MyCourse[]): MyCourse[] {

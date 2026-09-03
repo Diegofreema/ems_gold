@@ -16,7 +16,7 @@ import { answerRows, resultFields, scoreHeadline, scoreNote } from './result'
  *
  * Reached in two hops on purpose: the result endpoint is keyed on the
  * submission and the URL is keyed on the assignment, because the assignment is what a
- * pupil has a name for. The assignment is read first for the submission's id — and
+ * student has a name for. The assignment is read first for the submission's id — and
  * for the wording of the options, which the result itself sends only as ids.
  */
 export function AssignmentResultPage({ assignmentId }: { assignmentId: string }) {

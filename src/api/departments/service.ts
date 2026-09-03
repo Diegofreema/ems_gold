@@ -23,8 +23,8 @@ export const departmentsService = {
    * With its subjects, arms, fees, levels, terms and dependency counts.
    *
    * `dependencies` sits beside the class in the envelope rather than on it,
-   * and it is the only place the pupil count is stated — the class carries no
-   * pupil list to fall back on. It is folded onto the record here so callers
+   * and it is the only place the student count is stated — the class carries no
+   * student list to fall back on. It is folded onto the record here so callers
    * read one object.
    */
   get: (id: Id) =>
@@ -61,7 +61,7 @@ export const departmentsService = {
   /**
    * Refused with 409 while anything belongs to the class, counts in
    * `errors.dependencies`. `force` orphans those rows — and `students
-   * .department_id` is NOT NULL, so an orphaned pupil stops loading anywhere
+   * .department_id` is NOT NULL, so an orphaned student stops loading anywhere
    * that joins their class.
    */
   remove: (id: Id, force = false) =>

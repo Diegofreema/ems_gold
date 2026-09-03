@@ -2,15 +2,15 @@ import type { Student, UpdateMyRecordBody } from '../../api/my-schooling/types.t
 import { BLANK } from '../../features/collections/blank.ts'
 import { asDate, fullName, initialsOf, text } from '../../features/profile/record.ts'
 import type { ProfileConfig } from '../../features/profile/types.ts'
-import { armOf } from './pupil.ts'
+import { armOf } from './student.ts'
 
 /**
- * The pupil's own record, as they read it.
+ * The student's own record, as they read it.
  *
  * Built from `GET /students/me` — the admission number, the arm and the login
  * beside it, none of which the session carries. Two boxes take an edit: `POST
  * /students/me` accepts a phone and an address and refuses everything else, so
- * a pupil cannot move class, re-admit themselves or lift a suspension.
+ * a student cannot move class, re-admit themselves or lift a suspension.
  */
 
 const NOTE =
@@ -64,7 +64,7 @@ export function studentProfile(student?: Student): ProfileConfig {
     ...EMPTY,
     initials: initialsOf([student.fname, student.lname]),
     // No term. The design's third part is the school calendar, and every
-    // endpoint holding it is refused a pupil login.
+    // endpoint holding it is refused a student login.
     meta: [student.regno, arm].map((part) => part?.trim()).filter(Boolean).join(' · '),
     values: {
       fullname: fullName(student.fname, student.mname, student.lname),
@@ -77,11 +77,11 @@ export function studentProfile(student?: Student): ProfileConfig {
     account: [
       { label: 'Signs in with', value: text(student.user?.username) },
       // Whether the login works at all, which is a different thing from being
-      // admitted: a pupil kept on the roll can still have a disabled account.
+      // admitted: a student kept on the roll can still have a disabled account.
       { label: 'Sign-in', value: text(student.user?.userstatus) },
       { label: 'On record since', value: asDate(student.joindate) },
     ],
-    // Already the pupil's own record: the session has nothing to add to it.
+    // Already the student's own record: the session has nothing to add to it.
     fromRecord: true,
   }
 }

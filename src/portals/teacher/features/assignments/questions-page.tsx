@@ -93,7 +93,7 @@ export function QuestionsPage() {
   const askDelete = (question: AssignmentQuestion) =>
     confirm.ask({
       title: 'Delete this question?',
-      body: 'It goes from the assignment, and the assignment is worth that much less. A pupil who has already sat the assignment keeps the answer they gave.',
+      body: 'It goes from the assignment, and the assignment is worth that much less. A student who has already sat the assignment keeps the answer they gave.',
       subject: question.question_text?.trim() || `Question ${question.id}`,
       cta: 'Delete the question',
       cancel: 'Keep it',

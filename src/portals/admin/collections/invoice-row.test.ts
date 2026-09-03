@@ -51,7 +51,7 @@ test('an invoice is paid in full or not at all, since settle takes no part', () 
   assert.equal(invoiceRow(owing).billed, '₦30,000')
 })
 
-test('the row names the pupil, the fee and the arm the API expanded', () => {
+test('the row names the student, the fee and the arm the API expanded', () => {
   const row = invoiceRow(settled)
   assert.equal(row.student, 'OKONKWO UCHE ARINZE')
   assert.equal(row.fee, 'TUITION FEE')
@@ -59,11 +59,11 @@ test('the row names the pupil, the fee and the arm the API expanded', () => {
   assert.equal(row.session, '2024/2025')
 })
 
-test('an invoice outliving its pupil is still listed and still named', () => {
+test('an invoice outliving its student is still listed and still named', () => {
   const orphan = { ...settled, student: undefined } as unknown as Invoice
-  assert.equal(invoiceRow(orphan).student, 'Pupil 16')
+  assert.equal(invoiceRow(orphan).student, 'Student 16')
   const nameless = { ...settled, student: undefined, student_id: 0 } as unknown as Invoice
-  assert.equal(invoiceRow(nameless).student, 'Deleted pupil')
+  assert.equal(invoiceRow(nameless).student, 'Deleted student')
 })
 
 test('both date spellings this API uses come out readable', () => {

@@ -17,7 +17,7 @@ import { gradeBody, submissionRows } from './marking'
 import { SubmissionList } from './submission-list'
 
 /**
- * Marking an assignment: what the pupils sent back, and then one of them.
+ * Marking an assignment: what the students sent back, and then one of them.
  *
  * Both are in the URL rather than in the route — `?assignment` for what came
  * back and `?submission` for one of them — so a teacher stopped halfway can be
@@ -42,7 +42,7 @@ export function SubmissionsPage() {
         <Header title="Marking" />
         <EmptyState
           title="No assignment chosen"
-          body="Choose an assignment and this is where the answers your pupils sent back are marked."
+          body="Choose an assignment and this is where the answers your students sent back are marked."
           action={
             <Button asChild>
               <Link to="/teacher/assignments">Choose an assignment</Link>
@@ -86,7 +86,7 @@ export function SubmissionsPage() {
     // the list beside it says `graded`, and neither is on the other.
     const head = submission?.submission
     const marked = Boolean(head?.graded_at) || head?.total_score != null
-    const pupil = head?.student?.trim() || 'This pupil'
+    const student = head?.student?.trim() || 'This student'
 
     const save = async (values: MarkingValues) => {
       await grade
@@ -110,7 +110,7 @@ export function SubmissionsPage() {
           Back to the submissions
         </Button>
         <Header
-          title={pupil}
+          title={student}
           description={[title, where].filter(Boolean).join(' · ')}
         />
         <Rule />
@@ -175,7 +175,7 @@ function Header({
       title={title}
       description={
         description ||
-        'What your pupils submitted, for you to mark. The school scores the multiple choice itself; the written answers, and the note beside the mark, are yours.'
+        'What your students submitted, for you to mark. The school scores the multiple choice itself; the written answers, and the note beside the mark, are yours.'
       }
       action={action}
     />

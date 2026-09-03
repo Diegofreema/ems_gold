@@ -90,7 +90,7 @@ export function recordRow(record: AttendanceRecord): Row {
   return {
     id: String(record.id),
     when: day(record.attendance_date),
-    pupil: text(record.student?.name),
+    student: text(record.student?.name),
     adm: text(record.student?.regno),
     klass: [record.student?.department, record.student?.class_arm]
       .filter(Boolean)

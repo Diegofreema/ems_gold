@@ -145,7 +145,7 @@ test('the people figures count what the dashboard endpoint counts', () => {
   assert.deepEqual(
     figures.map((figure) => [figure.label, figure.amount]),
     [
-      ['Pupils enrolled', 7],
+      ['Students enrolled', 7],
       ['Applicants', 0],
       ['Teachers', 4],
       ['Parents', 1],
@@ -162,12 +162,24 @@ test('applicants are only worth flagging while somebody is waiting', () => {
 })
 
 test('the school tiles carry the rest of the counters', () => {
-  assert.deepEqual(schoolTiles(STATS), [
-    { label: 'Classes', value: '6' },
-    { label: 'Subjects', value: '5' },
-    { label: 'Hostels', value: '3' },
-    { label: 'Administrators', value: '10' },
-  ])
+  // Read field by field rather than whole: a tile is also a link and carries
+  // an icon, and neither is what this test is about.
+  assert.deepEqual(
+    schoolTiles(STATS).map((tile) => [tile.label, tile.value]),
+    [
+      ['Classes', '6'],
+      ['Subjects', '5'],
+      ['Hostels', '3'],
+      ['Administrators', '10'],
+    ],
+  )
+})
+
+test('a school tile links to its register, where the school has one', () => {
+  assert.deepEqual(
+    schoolTiles(STATS).map((tile) => tile.to ?? null),
+    ['/admin/classes', '/admin/subjects', null, '/admin/staff-admin'],
+  )
 })
 
 test('every month in the window gets a bar, including the quiet ones', () => {

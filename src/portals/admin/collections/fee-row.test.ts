@@ -31,7 +31,7 @@ test('the catalogue writes the amount as money', () => {
 })
 
 test('the two words feetype takes are said the way an office says them', () => {
-  assert.equal(feeCharge('enrolled'), 'Enrolled pupils')
+  assert.equal(feeCharge('enrolled'), 'Enrolled students')
   assert.equal(feeCharge('none_enrolled'), 'Not yet enrolled')
   // A third word this API grows is shown as sent rather than guessed at.
   assert.equal(feeCharge('boarders'), 'boarders')

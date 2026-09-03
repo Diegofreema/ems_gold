@@ -8,9 +8,9 @@ import { schoolTime, when } from '../../../../features/collections/when.ts'
 import { capitalise, formatNaira } from '../../../../lib/format.ts'
 
 /**
- * The pupil's fee ledger, off `GET /students/me/invoices` — which answers with
+ * The student's fee ledger, off `GET /students/me/invoices` — which answers with
  * both halves of it: the bills, and the payments the bursary took against
- * them. Nothing else a pupil can reach says how a fee was paid.
+ * them. Nothing else a student can reach says how a fee was paid.
  *
  * There is no part payment on this API: an invoice is settled whole, so what
  * has been paid against a bill is its full amount or nothing at all.
@@ -21,7 +21,7 @@ export function reference(invoice: Invoice): string {
   return invoice.invoiceid?.trim() || `#${invoice.id}`
 }
 
-/** What the pupil has actually paid, which the counters do not carry. */
+/** What the student has actually paid, which the counters do not carry. */
 export function paidTotal(invoices: Invoice[]): number {
   return invoices
     .filter((invoice) => invoice.paystatus === SETTLED)
@@ -31,13 +31,13 @@ export function paidTotal(invoices: Invoice[]): number {
 export type FeeCounts = { total: number; unpaid: number; settled: number }
 
 /**
- * How many bills the pupil has, and how many are still owing.
+ * How many bills the student has, and how many are still owing.
  *
  * Counted here rather than read off `GET /students/me/dashboard`, whose fee
- * counters are not scoped to the caller: pupil 4's dashboard says four
- * invoices with one unpaid, while both the pupil's own list and the office's
+ * counters are not scoped to the caller: student 4's dashboard says four
+ * invoices with one unpaid, while both the student's own list and the office's
  * ledger hold the same three, all settled — the unpaid one it is counting
- * belongs to another pupil. The list is the pupil's ledger and agrees with the
+ * belongs to another student. The list is the student's ledger and agrees with the
  * office; the counters do not.
  */
 export function feeCounts(invoices: Invoice[]): FeeCounts {
@@ -49,7 +49,7 @@ export function feeCounts(invoices: Invoice[]): FeeCounts {
  * How the money was taken, in the school's own word for it.
  *
  * `/collect-fees/payment-methods` names these properly, and it is closed to a
- * pupil — so `cash` is shown as "Cash" rather than dropped, and any key the
+ * student — so `cash` is shown as "Cash" rather than dropped, and any key the
  * API grows later reads the same way.
  */
 function methodOf(payment: MyPayment | undefined): string {
@@ -63,7 +63,7 @@ function paymentFor(payments: MyPayment[], invoice: Invoice): MyPayment | undefi
 }
 
 /**
- * One line of the pupil's own fee register.
+ * One line of the student's own fee register.
  *
  * The panel behind it says more than the table has room for: which session the
  * bill belongs to, when it was raised, and the reference on the payment that
@@ -97,7 +97,7 @@ export function invoiceRows(invoices: Invoice[], payments: MyPayment[]): Row[] {
  * The payments taken against one bill, newest first.
  *
  * The office's own note is on the slip — "payment collected by chukwudi" — and
- * it stays: it is the pupil's own receipt, and the name on it is who to ask
+ * it stays: it is the student's own receipt, and the name on it is who to ask
  * for if the payment is ever questioned.
  */
 export function paymentRows(payments: MyPayment[], invoiceId: string): Row[] {

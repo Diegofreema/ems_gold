@@ -15,7 +15,7 @@ import type {
  * yet.
  */
 
-/** The pupil's own grid. Pass both term ids together for a past term. */
+/** The student's own grid. Pass both term ids together for a past term. */
 export function useMyTimetable(params: TermParams = {}) {
   return useQuery({
     queryKey: timetableKeys.mine(params),
@@ -69,7 +69,7 @@ export function usePeriod(id: Id | undefined) {
 
 /**
  * The three writers all invalidate the whole root: a period added to a class
- * changes that class's grid, every pupil's `mine`, and the office's flat list.
+ * changes that class's grid, every student's `mine`, and the office's flat list.
  *
  * A clash answers 409 and the client turns it into an `ApiError` whose message
  * is the school's own sentence, so the default error toast already says what

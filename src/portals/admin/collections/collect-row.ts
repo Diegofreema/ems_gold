@@ -23,13 +23,13 @@ function money(amount: number | string | null | undefined): number {
 }
 
 /**
- * The pupil, however this endpoint spelled them.
+ * The student, however this endpoint spelled them.
  *
- * The queue and the report name a pupil whole; their own ledger sends the
- * parts. A counter still has to be told who the money is for when the pupil's
+ * The queue and the report name a student whole; their own ledger sends the
+ * parts. A counter still has to be told who the money is for when the student's
  * record has gone from under the invoice, so an unnameable one says so.
  */
-export function pupilName(
+export function studentName(
   student: CollectStudent | null | undefined,
   studentId?: number,
 ): string {
@@ -41,12 +41,12 @@ export function pupilName(
     .join(' ')
   if (parts) return parts
   const id = student?.id ?? studentId
-  return id ? `Pupil ${id}` : 'Deleted pupil'
+  return id ? `Student ${id}` : 'Deleted student'
 }
 
 /**
- * Where the pupil sits. The arm is the finer answer and the class the coarser
- * one; the queue sends both and a pupil's own ledger sends the class alone.
+ * Where the student sits. The arm is the finer answer and the class the coarser
+ * one; the queue sends both and a student's own ledger sends the class alone.
  */
 function placedIn(student: CollectStudent | null | undefined): string {
   return text(student?.class_arm ?? student?.department)
@@ -66,7 +66,7 @@ export function collectRow(invoice: CollectInvoice): Row {
   return {
     id: String(invoice.id),
     invoice: `#${invoice.id}`,
-    student: pupilName(invoice.student, invoice.student_id),
+    student: studentName(invoice.student, invoice.student_id),
     regno: text(invoice.student?.regno),
     placed: placedIn(invoice.student),
     fee: text(invoice.fee),
@@ -167,14 +167,14 @@ export function methodTotalsRow(
   }
 }
 
-/** One payment in the report, which names the pupil the queue would name. */
+/** One payment in the report, which names the student the queue would name. */
 export function reportPaymentRow(
   payment: ReportPayment,
   methods?: Record<string, string>,
 ): Row {
   return {
     ...transactionRow(payment, methods),
-    student: pupilName(payment.student),
+    student: studentName(payment.student),
     fee: text(payment.fee),
     invoice: `#${payment.invoice_id}`,
     // The id itself, for the link to the slip this payment was issued.

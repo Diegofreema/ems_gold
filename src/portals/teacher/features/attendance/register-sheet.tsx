@@ -4,10 +4,10 @@ import { BLANK } from '@/features/collections/blank'
 import type { RegisterRow, StatusOption } from './register'
 
 /**
- * The roll: one row per pupil, the school's own words to mark them with, and a
+ * The roll: one row per student, the school's own words to mark them with, and a
  * note beside it.
  *
- * A pupil nobody has marked shows no selected word and says "Not marked" —
+ * A student nobody has marked shows no selected word and says "Not marked" —
  * never a pre-ticked Present, which would make an untaken register read as a
  * day when everybody turned up.
  */
@@ -27,7 +27,7 @@ export function RegisterSheet({
       <table className="w-full min-w-170 border-collapse text-sm">
         <thead>
           <tr className="border-b border-divider-strong text-left">
-            <Th>Pupil</Th>
+            <Th>Student</Th>
             <Th>Mark</Th>
             <Th className="w-60">Note</Th>
           </tr>
@@ -48,7 +48,7 @@ export function RegisterSheet({
                 </div>
               </td>
               <td className="px-2 py-2.75">
-                {/* A fieldset so the radios read as one group per pupil: the
+                {/* A fieldset so the radios read as one group per student: the
                     control itself takes no label, and "Present" alone tells a
                     screen reader nothing about whose mark it is. */}
                 <fieldset>

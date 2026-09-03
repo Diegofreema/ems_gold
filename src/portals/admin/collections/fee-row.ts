@@ -15,11 +15,11 @@ function money(amount: string | number | null | undefined): number {
 
 /**
  * The two words `feetype` takes, as the office would say them. A fee is
- * charged either to pupils on the register or to people who are not on it yet
+ * charged either to students on the register or to people who are not on it yet
  * — applicants paying for a form, say.
  */
 const CHARGE: Record<FeeType, string> = {
-  enrolled: 'Enrolled pupils',
+  enrolled: 'Enrolled students',
   none_enrolled: 'Not yet enrolled',
 }
 

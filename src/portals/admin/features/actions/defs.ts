@@ -54,9 +54,9 @@ const ALL_TEACHERS = 300
 
 const DASH = '—'
 
-/** The pupil as the picker names them. */
-function pupilName(pupil: { fname: string; lname: string; mname?: string | null }) {
-  return [pupil.fname, pupil.mname, pupil.lname].filter(Boolean).join(' ')
+/** The student as the picker names them. */
+function studentName(student: { fname: string; lname: string; mname?: string | null }) {
+  return [student.fname, student.mname, student.lname].filter(Boolean).join(' ')
 }
 
 /**
@@ -64,7 +64,7 @@ function pupilName(pupil: { fname: string; lname: string; mname?: string | null 
  *
  * The design picks class arms; `POST /fees/{id}/allocate` takes classes and
  * levels, and knows nothing about arms — so the picker offers classes. Each
- * one is asked how many pupils it holds, because the whole point of this
+ * one is asked how many students it holds, because the whole point of this
  * screen is seeing what pressing the button will bill.
  *
  * Passing `departments` replaces the whole set, so the classes a fee is
@@ -90,10 +90,10 @@ async function allocate(row?: Row): Promise<ActionDef> {
     kicker: 'Finance · Fee catalogue',
     title: `Allocate ${row?.name ?? 'this fee'}`,
     description:
-      'Pick the classes this fee applies to. Invoices are raised for every pupil in them, at the amount on the fee.',
+      'Pick the classes this fee applies to. Invoices are raised for every student in them, at the amount on the fee.',
     summary: [
       { label: 'Fee', value: row?.name ?? DASH },
-      { label: 'Per pupil', value: formatNaira(amount) },
+      { label: 'Per student', value: formatNaira(amount) },
       { label: 'Charged to', value: row?.charge ?? DASH },
     ],
     picker: {
@@ -101,7 +101,7 @@ async function allocate(row?: Row): Promise<ActionDef> {
       items: classes.map((department, index) => ({
         key: String(department.id),
         label: department.name,
-        meta: `${headcounts[index]} ${headcounts[index] === 1 ? 'pupil' : 'pupils'}`,
+        meta: `${headcounts[index]} ${headcounts[index] === 1 ? 'student' : 'students'}`,
         count: headcounts[index],
       })),
       // Unticking is how a class is dropped, so what it is already charged to
@@ -114,10 +114,10 @@ async function allocate(row?: Row): Promise<ActionDef> {
     unitAmount: amount,
     cta: 'Allocate to these classes',
     footnote: 'Nothing is billed until you press this.',
-    confirm: (total = { pupils: 0, amount: 0 }) => ({
+    confirm: (total = { students: 0, amount: 0 }) => ({
       title: 'Allocate this fee?',
-      body: 'Every pupil in the classes ticked is billed at the fee amount. Classes you unticked stop being charged, and invoices already raised are not touched.',
-      subject: `${total.pupils} ${total.pupils === 1 ? 'pupil' : 'pupils'} · ${formatNaira(total.amount)} · ${row?.name ?? 'this fee'}`,
+      body: 'Every student in the classes ticked is billed at the fee amount. Classes you unticked stop being charged, and invoices already raised are not touched.',
+      subject: `${total.students} ${total.students === 1 ? 'student' : 'students'} · ${formatNaira(total.amount)} · ${row?.name ?? 'this fee'}`,
       cta: 'Allocate the fee',
       cancel: 'Go back',
     }),
@@ -144,7 +144,7 @@ async function allocate(row?: Row): Promise<ActionDef> {
  * pair that does not add up, and would learn that from a 4xx.
  *
  * It always starts from an invoice, because the queue behind it searches by
- * pupil name and registration number: finding the bill is the search, and
+ * student name and registration number: finding the bill is the search, and
  * looking at it before touching money is the point of the screen.
  */
 function payment(row?: Row): ActionDef {
@@ -156,7 +156,7 @@ function payment(row?: Row): ActionDef {
     description:
       'Record money collected over the counter. The invoice is settled in full, less any discount granted — there is no part payment and no undoing it from here.',
     summary: [
-      { label: 'Pupil', value: row?.student ?? DASH },
+      { label: 'Student', value: row?.student ?? DASH },
       { label: 'Reg. no.', value: row?.regno ?? DASH },
       { label: 'Fee', value: row?.fee ?? DASH },
       { label: 'Invoice', value: formatNaira(total) },
@@ -200,7 +200,7 @@ function payment(row?: Row): ActionDef {
       return {
         title: 'Record this payment?',
         body: 'This settles the invoice outright and writes the transaction against your name. There is no undoing it from here.',
-        // The pupil, the fee and the figure — the three things a counter
+        // The student, the fee and the figure — the three things a counter
         // checks before the money is committed to the wrong bill.
         subject: [
           row?.student,
@@ -230,35 +230,35 @@ async function promote(row?: Row): Promise<ActionDef> {
   const armId = row?.class_arm_id ?? ''
   const from = { departmentId: row?.department_id ?? '' }
 
-  // Everyone in the pupil's own arm, plus anyone admitted into the class but
-  // not yet placed — those are exactly the pupils this move can reach.
+  // Everyone in the student's own arm, plus anyone admitted into the class but
+  // not yet placed — those are exactly the students this move can reach.
   const arm = armId
     ? await classArmsService.students(armId).catch(() => undefined)
     : undefined
-  const pupils = [...(arm?.students ?? []), ...(arm?.unassigned_in_class ?? [])]
-  const names = new Map(pupils.map((pupil) => [pupil.id, pupilName(pupil)]))
+  const students = [...(arm?.students ?? []), ...(arm?.unassigned_in_class ?? [])]
+  const names = new Map(students.map((student) => [student.id, studentName(student)]))
 
   return {
     kicker: 'People · Student register',
-    title: 'Promote or transfer pupils',
+    title: 'Promote or transfer students',
     description:
-      'Pick where these pupils are going. Staying in the class moves them between arms; a different class promotes them. Results and invoices stay attached to the pupil, not the arm.',
+      'Pick where these students are going. Staying in the class moves them between arms; a different class promotes them. Results and invoices stay attached to the student, not the arm.',
     summary: [
       { label: 'From', value: row?.arm ?? DASH },
       { label: 'Class', value: row?.class ?? DASH },
-      { label: 'Pupils here', value: String(pupils.length) },
+      { label: 'Students here', value: String(students.length) },
     ],
     picker: {
-      title: 'Pupils to move',
-      items: pupils.map((pupil) => ({
-        key: String(pupil.id),
-        label: pupilName(pupil),
-        meta: pupil.regno ?? pupil.application_no ?? DASH,
+      title: 'Students to move',
+      items: students.map((student) => ({
+        key: String(student.id),
+        label: studentName(student),
+        meta: student.regno ?? student.application_no ?? DASH,
         count: 1,
       })),
       preselected: row?.id ? [row.id] : undefined,
-      note: 'Pupils who owe fees can still be moved; the debt follows them.',
-      requiredMessage: 'Pick at least one pupil to move.',
+      note: 'Students who owe fees can still be moved; the debt follows them.',
+      requiredMessage: 'Pick at least one student to move.',
     },
     fields: [
       { key: 'department_id', label: 'Move to class', required: true, optionsFrom: 'classes' },
@@ -271,9 +271,9 @@ async function promote(row?: Row): Promise<ActionDef> {
         hint: 'The same class means a transfer between arms.',
       },
     ],
-    cta: 'Move selected pupils',
+    cta: 'Move selected students',
     footnote: 'Written to the activity log against your name.',
-    done: (picked) => `${picked} ${picked === 1 ? 'pupil moved' : 'pupils moved'}`,
+    done: (picked) => `${picked} ${picked === 1 ? 'student moved' : 'students moved'}`,
     run: async (values) => {
       const move = studentMove(values as unknown as MoveValues, from)
       const result =
@@ -281,7 +281,7 @@ async function promote(row?: Row): Promise<ActionDef> {
           ? await classArmsService.assignStudents(move.armId, move.body)
           : await studentsService.promote(move.body).then(() => undefined)
 
-      return moveOutcome(move, result, (id) => names.get(id) ?? `Pupil ${id}`)
+      return moveOutcome(move, result, (id) => names.get(id) ?? `Student ${id}`)
     },
   }
 }
@@ -346,19 +346,19 @@ function dueDate(days = LOAN_DAYS): Date {
 }
 
 /**
- * Lending a copy to a pupil.
+ * Lending a copy to a student.
  *
- * The pupil is picked from the admitted register rather than typed, because
- * `POST /admins/books/{id}/lend` is keyed on the pupil's own id and a name
+ * The student is picked from the admitted register rather than typed, because
+ * `POST /admins/books/{id}/lend` is keyed on the student's own id and a name
  * would have to be guessed back into one. There is no field for how many
- * copies: the body takes one pupil and one return date, so a loan is a copy.
+ * copies: the body takes one student and one return date, so a loan is a copy.
  */
 function lend(row?: Row): ActionDef {
   return {
     kicker: 'School · Library',
     title: `Issue ${row?.title ?? 'book'}`,
     description:
-      'Lend a copy to a pupil. Two weeks is the standard loan, and the date can be moved.',
+      'Lend a copy to a student. Two weeks is the standard loan, and the date can be moved.',
     summary: [
       { label: 'Title', value: row?.title ?? DASH },
       { label: 'Author', value: row?.author ?? DASH },
@@ -367,11 +367,11 @@ function lend(row?: Row): ActionDef {
     fields: [
       {
         key: 'student_id',
-        label: 'Pupil',
+        label: 'Student',
         required: true,
         wide: true,
         optionsFrom: 'students',
-        hint: 'Admitted pupils, listed with their admission number.',
+        hint: 'Admitted students, listed with their admission number.',
       },
       { key: 'datetoreturn', label: 'Due back', required: true, date: true, value: dueDate() },
     ],
@@ -398,25 +398,25 @@ function lend(row?: Row): ActionDef {
  * cannot inherit one it has no page for.
  */
 /**
- * Placing pupils into an arm.
+ * Placing students into an arm.
  *
- * `POST /class-arms/{id}/students` judges each pupil separately and reports
+ * `POST /class-arms/{id}/students` judges each student separately and reports
  * what it would not take, so a partial move is a real outcome rather than a
  * failure — the page holds open with the reasons rather than navigating away.
  *
- * The picker offers only `unassigned_in_class`: pupils admitted into this
- * arm's class who are not yet in any arm. A pupil already placed elsewhere is
+ * The picker offers only `unassigned_in_class`: students admitted into this
+ * arm's class who are not yet in any arm. A student already placed elsewhere is
  * moved from the promote flow, not from here.
  */
-async function placePupils(row?: Row): Promise<ActionDef> {
+async function placeStudents(row?: Row): Promise<ActionDef> {
   const armId = String(row?.id ?? '')
   const { unassigned_in_class } = await classArmsService.students(armId)
 
   return {
     kicker: 'Academics · Class arms',
-    title: `Place pupils in ${row?.arm ?? 'this arm'}`,
+    title: `Place students in ${row?.arm ?? 'this arm'}`,
     description:
-      'Pick the pupils to put on this arm’s roll. Only pupils admitted into its class and not yet in any arm are listed.',
+      'Pick the students to put on this arm’s roll. Only students admitted into its class and not yet in any arm are listed.',
     summary: [
       { label: 'Arm', value: row?.arm ?? DASH },
       { label: 'Class', value: row?.klass ?? DASH },
@@ -424,20 +424,20 @@ async function placePupils(row?: Row): Promise<ActionDef> {
     ],
     picker: {
       title: 'Waiting to be placed',
-      items: unassigned_in_class.map((pupil) => ({
-        key: String(pupil.id),
-        label: pupilName(pupil),
-        meta: pupil.regno || 'No adm. no. yet',
+      items: unassigned_in_class.map((student) => ({
+        key: String(student.id),
+        label: studentName(student),
+        meta: student.regno || 'No adm. no. yet',
         count: 1,
       })),
       note:
         unassigned_in_class.length === 0
-          ? 'Every pupil admitted into this class is already in an arm.'
-          : 'A pupil may only join an arm of their own class. Placing them here puts this arm on their register, their result sheet and their attendance.',
-      requiredMessage: 'Pick at least one pupil to place.',
+          ? 'Every student admitted into this class is already in an arm.'
+          : 'A student may only join an arm of their own class. Placing them here puts this arm on their register, their result sheet and their attendance.',
+      requiredMessage: 'Pick at least one student to place.',
     },
     fields: [],
-    cta: 'Place these pupils',
+    cta: 'Place these students',
     footnote: 'Nothing moves until you press this.',
     run: async (values) => {
       const picked = (values.picks as string[] | undefined) ?? []
@@ -445,14 +445,14 @@ async function placePupils(row?: Row): Promise<ActionDef> {
         student_ids: picked.map(Number),
       })
       return {
-        message: `${assigned.length} ${assigned.length === 1 ? 'pupil' : 'pupils'} placed in ${row?.arm ?? 'the arm'}`,
+        message: `${assigned.length} ${assigned.length === 1 ? 'student' : 'students'} placed in ${row?.arm ?? 'the arm'}`,
         failures: failed.map((one) => {
-          const pupil = unassigned_in_class.find((each) => each.id === one.student_id)
-          return `${pupil ? pupilName(pupil) : `Pupil ${one.student_id}`} — ${one.reason}`
+          const student = unassigned_in_class.find((each) => each.id === one.student_id)
+          return `${student ? studentName(student) : `Student ${one.student_id}`} — ${one.reason}`
         }),
       }
     },
-    done: (picked) => `${picked} ${picked === 1 ? 'pupil' : 'pupils'} placed in the arm`,
+    done: (picked) => `${picked} ${picked === 1 ? 'student' : 'students'} placed in the arm`,
   }
 }
 
@@ -767,7 +767,7 @@ function releaseBatch(row?: Row): ActionDef {
     kicker: 'Academics · Result approvals',
     title: `Release ${row?.subject ?? 'this batch'}`,
     description:
-      'Every mark in this batch goes in front of the pupils and their families. Releasing twice changes nothing, and a mark corrected afterwards comes back into the queue on its own.',
+      'Every mark in this batch goes in front of the students and their families. Releasing twice changes nothing, and a mark corrected afterwards comes back into the queue on its own.',
     summary: batchSummary(row),
     fields: [],
     cta: 'Release the batch',
@@ -776,7 +776,7 @@ function releaseBatch(row?: Row): ActionDef {
     done: () => 'Batch released',
     confirm: () => ({
       title: 'Release these marks?',
-      body: 'Pupils and their families see every mark in this batch, and the grade beside each one, as soon as this goes through. Taking one back afterwards is done a mark at a time from the results register.',
+      body: 'Students and their families see every mark in this batch, and the grade beside each one, as soon as this goes through. Taking one back afterwards is done a mark at a time from the results register.',
       subject: batchSubject(row),
       cta: 'Release the batch',
       cancel: 'Go back',
@@ -851,7 +851,7 @@ export const adminFlows: Record<string, AdminFlow[]> = {
   // Record-scoped, not `fromList`: a payment needs the invoice it settles,
   // and the queue's own search is how that invoice is found.
   collect: [{ name: 'pay', label: 'Take a payment', when: payAction, build: payment }],
-  arms: [{ name: 'place', label: 'Place pupils', build: placePupils }],
+  arms: [{ name: 'place', label: 'Place students', build: placeStudents }],
   subjects: [{ name: 'classes', label: 'Teach to classes', build: teachTo }],
   students: [{ name: 'move', label: 'Promote or transfer', build: promote }],
   applicants: [{ name: 'review', label: 'Review application', build: review }],

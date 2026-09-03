@@ -8,16 +8,16 @@ import { formatNaira } from '../../../../lib/format.ts'
 import { feeCounts, paidTotal, reference } from '../fees/fees.ts'
 
 /**
- * The pupil's home page, off `GET /students/me/dashboard` and
+ * The student's home page, off `GET /students/me/dashboard` and
  * `GET /students/me/invoices`.
  *
- * Six endpoints answer a pupil login and no more: the record, five counters,
+ * Six endpoints answer a student login and no more: the record, five counters,
  * their invoices, and three lists — courses, results and materials — that are
- * empty for every pupil on this school. So the design's two panels are not
+ * empty for every student on this school. So the design's two panels are not
  * buildable as drawn: a term average needs a published result, and the week
  * ahead needs a timetable, which is not an endpoint here at all. The money
- * the school has actually taken from this pupil is what the page shows
- * instead, and it is the one thing on it a pupil would check twice.
+ * the school has actually taken from this student is what the page shows
+ * instead, and it is the one thing on it a student would check twice.
  */
 
 export type StudentStats = NonNullable<StudentDashboard['stats']>
@@ -30,15 +30,15 @@ function counted(amount: number, one: string, many: string): string {
 /**
  * The four counters across the top.
  *
- * The two fee figures are counted from the pupil's own bills, not from the
+ * The two fee figures are counted from the student's own bills, not from the
  * stats: `invoices_unpaid` and `invoices_total` there are not scoped to the
- * caller, and read straight they tell a pupil whose fees are settled that one
- * is still owing. The other two are the school's own counts of lists a pupil
+ * caller, and read straight they tell a student whose fees are settled that one
+ * is still owing. The other two are the school's own counts of lists a student
  * cannot otherwise reach.
  *
- * The unpaid one is the only figure here a pupil can act on, so it is the only
+ * The unpaid one is the only figure here a student can act on, so it is the only
  * one ever flagged. Neither a term average nor a position is among them: no
- * result has been published to this pupil, and a figure invented from an empty
+ * result has been published to this student, and a figure invented from an empty
  * list would be the one believed.
  */
 export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
@@ -52,7 +52,7 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
       amount: paidTotal(invoices),
       format: 'naira' as const,
       delta: counted(fees.settled, 'invoice', 'invoices') + ' settled',
-      // Never flagged: money already taken is not something a pupil can act on.
+      // Never flagged: money already taken is not something a student can act on.
       hot: false,
       icon: Banknote,
       to: '/student/invoices',
@@ -116,7 +116,7 @@ export function studentAction(invoices: Invoice[]): StudentAction {
     : { to: '/student/results', label: 'My results' }
 }
 
-/** The bills the school has raised for this pupil, newest first. */
+/** The bills the school has raised for this student, newest first. */
 export function billEntries(invoices: Invoice[]) {
   return newestFirst(invoices).map((invoice) => {
     const settled = invoice.paystatus === SETTLED
@@ -133,7 +133,7 @@ export function billEntries(invoices: Invoice[]) {
   })
 }
 
-/** Each settled bill as a bar, so a pupil can see where the money went. */
+/** Each settled bill as a bar, so a student can see where the money went. */
 export function feeBars(invoices: Invoice[]) {
   const bars = newestFirst(invoices)
     .filter((invoice) => invoice.paystatus === SETTLED)

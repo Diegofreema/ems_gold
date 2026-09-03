@@ -26,7 +26,7 @@ export const feesService = {
 
   activate: (id: Id) => request<unknown>(`fees/${id}/activate`, { method: 'POST' }),
 
-  /** Raises the fee against every pupil in the classes given. */
+  /** Raises the fee against every student in the classes given. */
   allocate: (id: Id, body: AllocateFeeBody) =>
     request<unknown>(`fees/${id}/allocate`, { method: 'POST', body }),
 

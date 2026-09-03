@@ -9,7 +9,7 @@ import { isTheory, typeLabel } from './question'
  *
  * The answer is shown, not hidden: this is the page where it is decided, and an
  * assignment whose key can only be checked by opening every question one at a time
- * is an assignment nobody proof-reads. The pupil's own copy never carries it.
+ * is an assignment nobody proof-reads. The student's own copy never carries it.
  */
 export function QuestionCard({
   question,
@@ -77,7 +77,7 @@ export function QuestionCard({
           ))}
           {!question.options?.length && (
             <li className="text-2xs text-danger-ink">
-              This question offers no choices, so no pupil can answer it.
+              This question offers no choices, so no student can answer it.
             </li>
           )}
         </ul>

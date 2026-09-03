@@ -10,7 +10,7 @@ const email = z
 export const signInSchema = z.object({
   /**
    * The API calls this the username: an email address for staff, a
-   * registration number for pupils. So it cannot be held to the email shape.
+   * registration number for students. So it cannot be held to the email shape.
    */
   username: z.string().trim().min(1, 'Required'),
   password: z.string().min(6, 'Your password is at least six characters'),

@@ -19,7 +19,7 @@ import {
  * it answers with — never against what the step before it produced — so a
  * change that moves two of them together still has to answer to both.
  *
- * Marking is not here: it needs a pupil to have submitted, and no submission
+ * Marking is not here: it needs a student to have submitted, and no submission
  * has ever been seen from this server.
  */
 
@@ -128,7 +128,7 @@ test('writing the first question sends what the school asks for', () => {
   })
 })
 
-test('an assignment that holds a question is one a pupil can sit', () => {
+test('an assignment that holds a question is one a student can sit', () => {
   // The school counts the questions itself, so the state moves without this
   // portal being told anything else.
   assert.equal(stateOf(JUST_SET, NOW), 'No questions')

@@ -31,7 +31,7 @@ import { useRegisterArms } from './use-register-arms';
  * The daily register: one arm, one day.
  *
  * Nothing is filed until the teacher saves, and only the rows they touched are
- * sent — a pupil left out is left alone by the endpoint, which is what makes a
+ * sent — a student left out is left alone by the endpoint, which is what makes a
  * half-finished register safe to leave.
  */
 export function RegisterPage() {
@@ -187,7 +187,7 @@ export function RegisterPage() {
       <TileStrip
         className="mb-5"
         tiles={[
-          { label: 'On the roll', value: formatCount(tally.pupils) },
+          { label: 'On the roll', value: formatCount(tally.students) },
           { label: 'In school', value: formatCount(tally.inSchool) },
           ...tally.byStatus
             .filter((one) => !inSchool || one.value !== inSchool.value)
@@ -210,8 +210,8 @@ export function RegisterPage() {
         />
       ) : (
         <EmptyState
-          title="No pupils on this roll"
-          body="The office places pupils in arms. Once one is placed here, they appear on this register."
+          title="No students on this roll"
+          body="The office places students in arms. Once one is placed here, they appear on this register."
         />
       )}
 
@@ -219,7 +219,7 @@ export function RegisterPage() {
         {day.data?.taken
           ? 'This register has been taken. Changing a mark files the change over it.'
           : 'Nobody has marked this day yet.'}{' '}
-        A pupil you leave alone stays as they are — nothing here marks anyone
+        A student you leave alone stays as they are — nothing here marks anyone
         absent by default.
         {/* The school's own sentence about what its words mean, rather than
             this page's paraphrase of it. */}
@@ -234,7 +234,7 @@ function Header({ action }: { action?: React.ReactNode }) {
     <PageHeader
       kicker="Teaching"
       title="Take attendance"
-      description="One arm, one day. Nothing is filed until you save, and only the pupils you mark are sent."
+      description="One arm, one day. Nothing is filed until you save, and only the students you mark are sent."
       action={action}
     />
   );

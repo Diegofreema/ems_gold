@@ -17,7 +17,7 @@ function asId(value: string) {
 }
 
 /**
- * The class broadsheet: every pupil against every subject, with the position.
+ * The class broadsheet: every student against every subject, with the position.
  *
  * Not one of the generic registers — a register's columns are written into its
  * definition, and this sheet's columns are the class's subjects, which are
@@ -54,7 +54,7 @@ export function ClassSheetPage() {
       <PageHeader
         kicker="Academics"
         title="Class broadsheet"
-        description="Every pupil in a class against every subject, with the position worked out. Position is computed each time it is asked for and ties share a place — nothing here is stored."
+        description="Every student in a class against every subject, with the position worked out. Position is computed each time it is asked for and ties share a place — nothing here is stored."
       />
       <Rule />
       <SheetFilters values={filters} onChange={onChange} />
@@ -129,7 +129,7 @@ export function ClassSheetPage() {
           <thead>
             <tr className="border-b border-divider-strong bg-neutral-100 text-left">
               <th className="sticky left-0 z-10 bg-neutral-100 px-3 py-2.5 font-heading text-2xs uppercase tracking-label">
-                Pupil
+                Student
               </th>
               <th className="px-3 py-2.5 font-heading text-2xs uppercase tracking-label">
                 Adm. no.
@@ -157,7 +157,7 @@ export function ClassSheetPage() {
             {sheet.rows.map((row) => (
               <tr key={row.id} className="border-b border-divider last:border-b-0">
                 <td className="sticky left-0 z-10 bg-background px-3 py-2.5 font-semibold">
-                  {row.pupil}
+                  {row.student}
                 </td>
                 <td className="px-3 py-2.5 text-muted-foreground">{row.adm}</td>
                 {sheet.columns.map((column) => (
@@ -177,7 +177,7 @@ export function ClassSheetPage() {
       </div>
 
       <p className="mt-2.5 text-xs text-muted-foreground">
-        {sheet.rows.length} {sheet.rows.length === 1 ? 'pupil' : 'pupils'} ·{' '}
+        {sheet.rows.length} {sheet.rows.length === 1 ? 'student' : 'students'} ·{' '}
         {sheet.columns.length} {sheet.columns.length === 1 ? 'subject' : 'subjects'}
       </p>
     </div>

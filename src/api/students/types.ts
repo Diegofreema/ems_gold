@@ -3,7 +3,7 @@ import type { Department } from '../departments/types.ts'
 import type { PageParams } from '../types.ts'
 import type { User } from '../users/types.ts'
 
-/** Reference rows the detail endpoint expands alongside the pupil. */
+/** Reference rows the detail endpoint expands alongside the student. */
 export type Country = {
   id: number
   name: string
@@ -18,7 +18,7 @@ export type Lga = { id: number; name: string }
 /** The year of study, as the API's university template names it. */
 export type Level = { id: number; name: string }
 
-/** A pupil record. Applicants are the same row with `status: 'Applied'`. */
+/** A student record. Applicants are the same row with `status: 'Applied'`. */
 export type Student = {
   id: number
   user_id: number | null
@@ -69,7 +69,7 @@ export type Student = {
   level?: Level | null
   /**
    * Only `GET /students/{id}` expands these, and each comes back null where
-   * the pupil has no such row — a record entered without one has no state.
+   * the student has no such row — a record entered without one has no state.
    */
   country?: Country | null
   state?: State | null
@@ -105,7 +105,7 @@ export type StudentBody = {
   religion?: string
   /**
    * The school's own numbering, not any package's — see `country-ids.ts`.
-   * Every live pupil is country 160 with a state in the 2646+ range.
+   * Every live student is country 160 with a state in the 2646+ range.
    */
   country_id?: number
   state_id?: number
@@ -116,7 +116,7 @@ export type SetStudentStatusBody = {
   status: 'Active' | 'Suspended'
 }
 
-/** Moves the listed pupils into a class, and into an arm if one is given. */
+/** Moves the listed students into a class, and into an arm if one is given. */
 export type PromoteStudentsBody = {
   student_ids: number[]
   department_id: number

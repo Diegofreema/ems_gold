@@ -19,14 +19,14 @@ import { useDebounced } from '@/hooks/use-debounced'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import {
   ledgerRow,
-  pupilHeading,
-  pupilResult,
-  pupilSubtitle,
-  pupilTiles,
-} from './pupil'
+  studentHeading,
+  studentResult,
+  studentSubtitle,
+  studentTiles,
+} from './student'
 
 const RESULTS = toTableColumns([
-  { key: 'name', label: 'Pupil', cardRole: 'title' },
+  { key: 'name', label: 'Student', cardRole: 'title' },
   { key: 'regno', label: 'Reg. no.', cardRole: 'subtitle' },
   { key: 'placed', label: 'Class' },
 ])
@@ -45,15 +45,15 @@ type Scope = (typeof SCOPES)[number]
 const rowKey = (row: Row) => row.id
 
 /**
- * Everything one pupil has been billed, settled or not.
+ * Everything one student has been billed, settled or not.
  *
- * The counter queue answers "who owes what" and cannot see a pupil who owes
+ * The counter queue answers "who owes what" and cannot see a student who owes
  * nothing or a payment already taken. This is where a family's history is, and
  * it is the only way to reach a receipt for a payment that has been made.
  */
-export function PupilLookupPage() {
+export function StudentLookupPage() {
   const [query, setQuery] = useQueryState('q', parseAsString.withDefault(''))
-  const [pupil, setPupil] = useQueryState('pupil', parseAsString.withDefault(''))
+  const [student, setStudent] = useQueryState('student', parseAsString.withDefault(''))
   const [scope, setScope] = useQueryState(
     'scope',
     parseAsStringLiteral(SCOPES).withDefault('session'),
@@ -64,8 +64,8 @@ export function PupilLookupPage() {
       <BackLink to="/admin/collect" label="Back to fee collection" />
       <PageHeader
         kicker="Finance · Fee collection"
-        title="Find a pupil"
-        description="Everything one pupil has been billed, settled or not. The queue lists only what is owed — a family's history and their receipts are here."
+        title="Find a student"
+        description="Everything one student has been billed, settled or not. The queue lists only what is owed — a family's history and their receipts are here."
       />
       <Rule />
     </>
@@ -74,33 +74,33 @@ export function PupilLookupPage() {
   return (
     <div className="max-w-[900px]">
       {header}
-      {pupil ? (
+      {student ? (
         <>
           <Button
             variant="outline"
             className="mb-5.5"
-            onClick={() => void setPupil(null)}
+            onClick={() => void setStudent(null)}
           >
             Search for someone else
           </Button>
-          <PupilLedger
-            pupilId={pupil}
+          <StudentLedger
+            studentId={student}
             scope={scope}
             onScope={(next) => void setScope(next)}
           />
         </>
       ) : (
-        <PupilSearch
+        <StudentSearch
           query={query}
           onQuery={(value) => void setQuery(value || null)}
-          onPick={(id) => void setPupil(id)}
+          onPick={(id) => void setStudent(id)}
         />
       )}
     </div>
   )
 }
 
-function PupilSearch({
+function StudentSearch({
   query,
   onQuery,
   onPick,
@@ -123,14 +123,14 @@ function PupilSearch({
       <FilterBar
         query={query}
         onQueryChange={onQuery}
-        placeholder="Search pupil name or reg. no."
+        placeholder="Search student name or reg. no."
         count={data ? `${data.length} found` : ''}
       />
 
       {!term ? (
         <EmptyState
-          title="Search for a pupil"
-          body="Type a name or a registration number. Pupils who owe nothing are found here too."
+          title="Search for a student"
+          body="Type a name or a registration number. Students who owe nothing are found here too."
         />
       ) : error ? (
         <EmptyState
@@ -148,7 +148,7 @@ function PupilSearch({
       ) : (
         <DataTable
           columns={RESULTS}
-          rows={data.map(pupilResult)}
+          rows={data.map(studentResult)}
           rowKey={rowKey}
           onRowClick={(row) => onPick(row.id)}
           compact
@@ -158,20 +158,20 @@ function PupilSearch({
   )
 }
 
-function PupilLedger({
-  pupilId,
+function StudentLedger({
+  studentId,
   scope,
   onScope,
 }: {
-  pupilId: string
+  studentId: string
   scope: Scope
   onScope: (next: Scope) => void
 }) {
   const navigate = useNavigate()
   const { data, isPending, error, refetch } = useQuery({
-    queryKey: collectFeeKeys.ledger(pupilId, scope === 'all'),
-    queryFn: () => collectFeesService.studentLedger(pupilId, scope === 'all'),
-    // Widening to every session keeps the pupil's name and figures on screen
+    queryKey: collectFeeKeys.ledger(studentId, scope === 'all'),
+    queryFn: () => collectFeesService.studentLedger(studentId, scope === 'all'),
+    // Widening to every session keeps the student's name and figures on screen
     // rather than dropping the whole panel back to a skeleton for one request.
     placeholderData: keepPreviousData,
   })
@@ -179,7 +179,7 @@ function PupilLedger({
   if (error) {
     return (
       <EmptyState
-        title="That pupil could not be loaded"
+        title="That student could not be loaded"
         body={errorMessage(error, OFFLINE_MESSAGE)}
         action={<Button onClick={() => void refetch()}>Try again</Button>}
       />
@@ -194,13 +194,13 @@ function PupilLedger({
     // the entrance says "you moved somewhere" rather than the rows jumping.
     <div className="animate-ems-up">
       <div className="mb-4.5">
-        <h2 className="text-detail-title">{pupilHeading(student)}</h2>
+        <h2 className="text-detail-title">{studentHeading(student)}</h2>
         <div className="mt-1.5 text-xs text-muted-foreground">
-          {pupilSubtitle(student)}
+          {studentSubtitle(student)}
         </div>
       </div>
 
-      <TileStrip className="mb-5" tiles={pupilTiles(invoices)} />
+      <TileStrip className="mb-5" tiles={studentTiles(invoices)} />
 
       <SegmentedControl<Scope>
         name="scope"
@@ -244,8 +244,8 @@ function PupilLedger({
       <div className="mt-2.5 text-xs text-muted-foreground">
         {invoices.length === 0
           ? scope === 'all'
-            ? 'Nothing has ever been billed to this pupil.'
-            : 'Nothing has been billed to this pupil this session.'
+            ? 'Nothing has ever been billed to this student.'
+            : 'Nothing has been billed to this student this session.'
           : `${invoices.length} ${invoices.length === 1 ? 'invoice' : 'invoices'}, newest first`}
       </div>
     </div>

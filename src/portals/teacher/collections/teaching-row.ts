@@ -41,13 +41,13 @@ export function mySubjectRow(subject: TeacherSubject): Row {
 }
 
 /**
- * A pupil on the roll.
+ * A student on the roll.
  *
- * `status` is where they are in admission — every pupil on a roll reads
+ * `status` is where they are in admission — every student on a roll reads
  * "Admitted" — and `studentstatus` is the one that says Active or Suspended,
  * so whichever of the two the school has filled in is what the column shows.
  */
-export function pupilRow(student: TeacherStudent): Row {
+export function studentRow(student: TeacherStudent): Row {
   return {
     id: String(student.id),
     adm: text(student.regno ?? student.application_no),
@@ -65,7 +65,7 @@ export function pupilRow(student: TeacherStudent): Row {
     email: text(student.email),
     phone: text(student.phone),
     address: text(student.address),
-    // What the pupil record itself holds; the linked household has no name on it.
+    // What the student record itself holds; the linked household has no name on it.
     father: joined(student.fathersname, student.fatherphone),
     mother: joined(student.mothersname, student.motherphone),
     enrolled: when(student.joindate),
@@ -74,7 +74,7 @@ export function pupilRow(student: TeacherStudent): Row {
 }
 
 /**
- * One mark, on the pupil's own page. The subject arrives as an id, so the
+ * One mark, on the student's own page. The subject arrives as an id, so the
  * teacher's subject list is what names it; a mark against a subject not on
  * that list is still shown, by its id, rather than dropped.
  */
@@ -157,17 +157,17 @@ function examParts(result: TeacherResult): string {
 /**
  * One mark in the register a teacher browses.
  *
- * Everything is read off the mark itself: the subject, the class and the pupil
+ * Everything is read off the mark itself: the subject, the class and the student
  * all arrive expanded beside it, so this needs neither the roll nor the
  * subject list. The arm does not — only its id is sent, and an id is no use to
  * anybody — so the class the mark was filed under is what the row names.
  */
 export function markRow(result: TeacherResult): Row {
-  const pupil = result.student
+  const student = result.student
   return {
     id: String(result.id),
     name: text(
-      [pupil?.fname, pupil?.mname, pupil?.lname].filter(Boolean).join(' '),
+      [student?.fname, student?.mname, student?.lname].filter(Boolean).join(' '),
     ),
     subject: result.subject?.name?.trim() || `Subject ${result.subject_id}`,
     klass: text(result.department?.name),
@@ -181,7 +181,7 @@ export function markRow(result: TeacherResult): Row {
     state: text(result.approval_status && capitalised(result.approval_status)),
 
     // Everything below is read by the record panel rather than the table.
-    adm: text(result.regno ?? pupil?.regno),
+    adm: text(result.regno ?? student?.regno),
     term: joined(result.semester?.name, result.session?.name),
     exams: examParts(result),
     remark: text(result.remark),

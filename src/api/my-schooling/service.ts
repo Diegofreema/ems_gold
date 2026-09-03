@@ -8,7 +8,7 @@ import type {
   UpdateMyRecordBody,
 } from './types'
 
-/** Everything under `/students/me` — the pupil is resolved from the token. */
+/** Everything under `/students/me` — the student is resolved from the token. */
 export const mySchoolingService = {
   record: () => request<{ student: Student }>('students/me').then((data) => data.student),
 

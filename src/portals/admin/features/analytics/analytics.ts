@@ -5,6 +5,7 @@ import type {
   SeriesPoint,
 } from '../../../../api/analytics/types.ts'
 import { BLANK } from '../../../../features/collections/blank.ts'
+import type { Option } from '../../../../features/collections/options.ts'
 import type { Row } from '../../../../features/collections/types.ts'
 import { schoolTime, when } from '../../../../features/collections/when.ts'
 import { formatCount, formatNaira } from '../../../../lib/format.ts'
@@ -40,19 +41,19 @@ export function enrolmentTiles(intelligence: BusinessIntelligence | undefined) {
 
   return [
     {
-      label: 'Admitted pupils',
+      label: 'Admitted students',
       value: formatCount(admitted(classes)),
       delta: 'Counted by the API, not by this page',
     },
     {
       label: 'Classes',
       value: formatCount(classes.length),
-      delta: 'With at least one pupil admitted',
+      delta: 'With at least one student admitted',
     },
     {
       label: 'States of origin',
       value: formatCount(states.length),
-      delta: `${formatCount(admitted(states))} pupils have one on file`,
+      delta: `${formatCount(admitted(states))} students have one on file`,
     },
     {
       label: 'Local governments',
@@ -63,7 +64,7 @@ export function enrolmentTiles(intelligence: BusinessIntelligence | undefined) {
   ]
 }
 
-/** Pupils per class, tallest first, so the largest arm reads at a glance. */
+/** Students per class, tallest first, so the largest arm reads at a glance. */
 export function classBars(
   intelligence: BusinessIntelligence | undefined,
   names: ReadonlyMap<string, string>,
@@ -87,12 +88,12 @@ export function genderRates(intelligence: BusinessIntelligence | undefined) {
   return buckets.map((bucket) => ({
     label: bucket.gender?.trim() || 'Not recorded',
     percent: total ? Math.round((bucket.count / total) * 100) : 0,
-    amount: `${formatCount(bucket.count)} ${bucket.count === 1 ? 'pupil' : 'pupils'}`,
+    amount: `${formatCount(bucket.count)} ${bucket.count === 1 ? 'student' : 'students'}`,
   }))
 }
 
 /**
- * Pupils by state of origin, most first.
+ * Students by state of origin, most first.
  *
  * `state_id` is the school's own numbering, which `optionLabels('states')`
  * can resolve for Nigeria and nowhere else; a state it cannot name is shown
@@ -109,7 +110,7 @@ export function stateRows(
       state:
         names.get(String(bucket.state_id)) ??
         (bucket.state_id === null ? 'Not recorded' : `State ${bucket.state_id}`),
-      pupils: formatCount(bucket.count),
+      students: formatCount(bucket.count),
     }))
 }
 
@@ -213,6 +214,21 @@ export function seriesTotal(points: SeriesPoint[] | undefined): number {
 /* ------------------------------------------------------------------ *
  * Settled transactions — `admins/payments`
  * ------------------------------------------------------------------ */
+
+/**
+ * How many settled transactions to ask `payments` for — the endpoint's own
+ * `limit`, offered as a choice rather than fixed, because reconciling a busy
+ * term needs more rows than glancing at a quiet one.
+ */
+export const LIMITS: Option[] = [
+  { value: '25', label: '25 newest' },
+  { value: '50', label: '50 newest' },
+  { value: '100', label: '100 newest' },
+  { value: '250', label: '250 newest' },
+]
+
+/** What `payments` is asked for until somebody chooses otherwise. */
+export const DEFAULT_LIMIT = '100'
 
 /** The keys a transaction might carry each of its four readable parts under. */
 const WHEN_KEYS = ['payment_date', 'paydate', 'payday', 'datecreated', 'createdate', 'created_at']

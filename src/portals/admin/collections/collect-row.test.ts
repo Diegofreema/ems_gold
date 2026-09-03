@@ -7,7 +7,7 @@ import {
   collectRow,
   payAction,
   paymentBody,
-  pupilName,
+  studentName,
   reportPaymentRow,
   transactionRow,
 } from './collect-row.ts'
@@ -63,7 +63,7 @@ const METHODS = {
   cheque: 'Cheque',
 }
 
-test('the queue reads the pupil, the class arm and what is owed', () => {
+test('the queue reads the student, the class arm and what is owed', () => {
   const row = collectRow(owing)
   assert.equal(row.id, '2441')
   assert.equal(row.invoice, '#2441')
@@ -93,15 +93,15 @@ test('is_settled decides the status, not the gateway word', () => {
   assert.equal(collectRow(owing).collected, '—')
 })
 
-test('a pupil is named whichever way the endpoint spelled them', () => {
-  assert.equal(pupilName({ id: 4, regno: null, name: 'UDOYE OKIGBO', department: null }), 'UDOYE OKIGBO')
+test('a student is named whichever way the endpoint spelled them', () => {
+  assert.equal(studentName({ id: 4, regno: null, name: 'UDOYE OKIGBO', department: null }), 'UDOYE OKIGBO')
   assert.equal(
-    pupilName({ id: 4, regno: null, fname: 'UDOYE', lname: 'OKIGBO', department: null }),
+    studentName({ id: 4, regno: null, fname: 'UDOYE', lname: 'OKIGBO', department: null }),
     'UDOYE OKIGBO',
   )
   // The queue really does send `"student": null` against a live invoice.
-  assert.equal(pupilName(null, 90), 'Pupil 90')
-  assert.equal(pupilName(null), 'Deleted pupil')
+  assert.equal(studentName(null, 90), 'Student 90')
+  assert.equal(studentName(null), 'Deleted student')
 })
 
 test('payment is offered on an invoice still owing and on no other', () => {
@@ -168,7 +168,7 @@ test('the pay response dates a transaction differently, and it still reads', () 
   assert.equal(transactionRow(entry, METHODS).taken, '27 Aug 2026, 12:56')
 })
 
-test('a payment in the report names the pupil and the invoice', () => {
+test('a payment in the report names the student and the invoice', () => {
   const row = reportPaymentRow(
     {
       ...paid.transactions![0],

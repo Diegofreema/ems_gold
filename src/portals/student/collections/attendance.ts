@@ -40,7 +40,7 @@ export const attendance: CollectionDef = {
     {
       label: 'Attendance',
       // A range nobody marked has no rate, and nought per cent would read as a
-      // pupil who missed every day rather than a school that took no register.
+      // student who missed every day rather than a school that took no register.
       count: async () => attendanceRate(await register()) ?? -1,
       format: (value) => (value < 0 ? '—' : `${Math.round(value)}%`),
     },
@@ -53,7 +53,7 @@ export const attendance: CollectionDef = {
   ],
   /*
    * Read whole and searched here. The endpoint takes a date range and a
-   * status, and a pupil has no term to name to fill a dropdown with — so the
+   * status, and a student has no term to name to fill a dropdown with — so the
    * box matches the date, the day and the mark at once instead.
    */
   source: (params) =>

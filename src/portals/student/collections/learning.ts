@@ -11,7 +11,7 @@ import { materialRows } from '../features/materials/materials';
 import { periodRows } from '../features/timetable/timetable';
 
 /**
- * The subjects the pupil is registered for, through the cache so the list and
+ * The subjects the student is registered for, through the cache so the list and
  * the record it opens read one answer between them.
  */
 const registered = () =>
@@ -37,7 +37,7 @@ export const courses: CollectionDef = {
     'Your subjects appear here once the office registers you for them, and a registration is made for one class and one term at a time. Your marks are on My results whether or not a subject is listed here.',
   noun: 'course',
   nameKey: 'name',
-  // No history and no tiles: this is a list of what a pupil takes, and the
+  // No history and no tiles: this is a list of what a student takes, and the
   // API keeps no record of when they were put on it.
   tabs: [],
   columns: [
@@ -59,7 +59,7 @@ export const courses: CollectionDef = {
 };
 
 /**
- * The notes and assignments shared with the pupil's class, through the cache so the
+ * The notes and assignments shared with the student's class, through the cache so the
  * list and the record it opens read one answer between them.
  */
 const shared = () =>
@@ -85,7 +85,7 @@ export const materials: CollectionDef = {
     'Notes, slides and past papers appear here as your teachers share them. None have been shared with any class yet.',
   noun: 'material',
   nameKey: 'title',
-  // No history and no tiles: a pupil may read what was shared with them, and
+  // No history and no tiles: a student may read what was shared with them, and
   // the API keeps no record of who opened what.
   tabs: [],
   columns: [
@@ -107,7 +107,7 @@ export const materials: CollectionDef = {
 /**
  * The week as the school runs it, off `GET /timetables/mine`.
  *
- * Two answers, not one: the grid says what is taught when, and the pupil's
+ * Two answers, not one: the grid says what is taught when, and the student's
  * course list says who teaches it — a period carries `subject_id` but no
  * teacher, and the two endpoints number subjects the same way. Both go through
  * the cache, so the calendar, the record a block opens and My subjects share
@@ -142,7 +142,7 @@ export const timetable: CollectionDef = {
   footer: 'Monday to Friday, in order',
   emptyTitle: 'No timetable to show',
   // The API's own sentence is "No timetable has been entered for this class
-  // yet." Said here in the pupil's terms: a definition takes a static string,
+  // yet." Said here in the student's terms: a definition takes a static string,
   // and the reason is the same either way.
   emptyBody:
     'The office has not entered the week’s periods for your class yet. The subjects you take, and who teaches each, are on My subjects.',
@@ -159,7 +159,7 @@ export const timetable: CollectionDef = {
   ],
   // The design's fifth column is Room, and it is not built: `where`, `venue`
   // and `lecturehall_id` are null on every period the school holds, and a room
-  // is the one field here that could send a pupil to the wrong door.
+  // is the one field here that could send a student to the wrong door.
   detail: [
     { key: 'subject', label: 'Subject' },
     { key: 'day', label: 'Day' },

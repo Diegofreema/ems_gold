@@ -6,7 +6,7 @@ import { studentInvoicesQuery } from '../api/queries'
 import { feeCounts, invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
 
 /**
- * The pupil's fee ledger, from `GET /students/me/invoices` — one answer
+ * The student's fee ledger, from `GET /students/me/invoices` — one answer
  * carrying both the bills and the payments taken against them.
  *
  * Through the cache rather than fetched per panel: the list, the record it
@@ -24,7 +24,7 @@ export const invoices: CollectionDef = {
   title: 'My invoices',
   description:
     'Every fee raised against your record and what has been paid on each. This is the same ledger the bursary keeps — the reference on a settled bill is the one to quote if a payment is ever questioned.',
-  // No button. The design's was "Download receipt", and a pupil login can
+  // No button. The design's was "Download receipt", and a student login can
   // reach no receipt endpoint; what a receipt would say — the reference, the
   // method, the bursary's own note — is on the record panel instead.
   action: 'Download receipt',

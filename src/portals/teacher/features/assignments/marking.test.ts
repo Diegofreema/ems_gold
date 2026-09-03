@@ -90,12 +90,12 @@ test('a submission is identified by the id the school calls `assignment_id`', ()
   assert.equal(row.id, '36')
 })
 
-test('the pupil is a name and an admission number, flat on the row', () => {
+test('the student is a name and an admission number, flat on the row', () => {
   const [row] = submissionRows([SUBMITTED])
   assert.equal(row.name, 'OBILO AJASINA')
   assert.equal(row.adm, 'NETPRO/2026/3')
   // Nameless is still openable, by whichever id the row does carry.
-  assert.equal(submissionRows([{ assignment_id: 44, student_id: 9 }])[0].name, 'Pupil 9')
+  assert.equal(submissionRows([{ assignment_id: 44, student_id: 9 }])[0].name, 'Student 9')
 })
 
 test('the submitted stamp is read back onto the format every other date uses', () => {

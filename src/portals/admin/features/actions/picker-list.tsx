@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { PickerSpec } from './types'
 
-/** The rows a flow acts on: class arms, pupils, documents on file. */
+/** The rows a flow acts on: class arms, students, documents on file. */
 export function PickerList<TValues extends FieldValues>({
   name,
   picker,

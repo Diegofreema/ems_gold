@@ -14,7 +14,7 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
  */
 
 /**
- * Exactly the classes this account may open — its own for a pupil, one per
+ * Exactly the classes this account may open — its own for a student, one per
  * child for a guardian, all of them for staff. The server's own answer, so no
  * page has to decide it from a role.
  */

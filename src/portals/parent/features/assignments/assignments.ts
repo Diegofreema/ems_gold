@@ -51,7 +51,7 @@ export function assignmentRow(assignment: ChildAssignment, now: Date): Row {
  * The assignments set for one child.
  *
  * The endpoint answers for the household — every child with their own list —
- * so the page picks its child out rather than asking again per pupil. A
+ * so the page picks its child out rather than asking again per student. A
  * child with nothing set is not an error: their class has no assignment open.
  */
 export function childAssignments(

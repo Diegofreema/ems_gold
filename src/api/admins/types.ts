@@ -26,6 +26,12 @@ export type CreateAdminBody = {
   lastname: string
   middlename?: string
   gender?: string
+  /**
+   * `YYYY-MM-DD`. The Admins row has held a `dob` column all along — it comes
+   * back on every office record — and the teaching record has none, which is
+   * why only this half of the staff form asks for one.
+   */
+  dob?: string
   department_id?: number
   phone?: string
   address?: string

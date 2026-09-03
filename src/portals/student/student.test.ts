@@ -2,20 +2,20 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Invoice } from '../../api/invoices/types.ts'
 import type { Student } from '../../api/my-schooling/types.ts'
-import { armOf, feeStanding } from './pupil.ts'
+import { armOf, feeStanding } from './student.ts'
 
 const STUDENT = {
   class_arm: { id: 4, arm_name: 'JSS 2 A' },
   department: { id: 2, name: 'SSS I' },
 } as unknown as Student
 
-/** `paid` bills first, then `owing` ones — the ledger the pupil's own list returns. */
+/** `paid` bills first, then `owing` ones — the ledger the student's own list returns. */
 const ledger = (paid: number, owing = 0): Invoice[] => [
   ...Array.from({ length: paid }, (_, i) => ({ id: i + 1, paystatus: 'success' })),
   ...Array.from({ length: owing }, (_, i) => ({ id: 100 + i, paystatus: 'Unpaid' })),
 ] as Invoice[]
 
-test('the arm is what the pupil is shown as, with the class behind it', () => {
+test('the arm is what the student is shown as, with the class behind it', () => {
   assert.equal(armOf(STUDENT), 'JSS 2 A')
   assert.equal(armOf({ ...STUDENT, class_arm: undefined } as Student), 'SSS I')
 })
@@ -34,9 +34,9 @@ test('no answer yet says nothing, rather than saying cleared', () => {
   assert.equal(feeStanding([]), null)
 })
 
-test('the tag counts the pupil’s own bills, not the dashboard’s counters', () => {
-  // Pupil 4's dashboard says one invoice is unpaid; their ledger — and the
+test('the tag counts the student’s own bills, not the dashboard’s counters', () => {
+  // Student 4's dashboard says one invoice is unpaid; their ledger — and the
   // office's, which holds the same three rows — is settled in full. The bill
-  // the counter names is another pupil's, and this tag must not repeat it.
+  // the counter names is another student's, and this tag must not repeat it.
   assert.equal(feeStanding(ledger(3))?.owing, false)
 })

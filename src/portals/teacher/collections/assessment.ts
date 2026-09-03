@@ -89,7 +89,7 @@ export const uploads: CollectionDef = {
     {
       label: 'Lines',
       columns: [
-        { key: 'pupil', label: 'Pupil' },
+        { key: 'student', label: 'Student' },
         { key: 'adm', label: 'Adm. no.' },
         { key: 'ca', label: 'CA', align: 'right' },
         { key: 'exam', label: 'Exam', align: 'right' },
@@ -118,7 +118,7 @@ export const results: CollectionDef = {
   // caps are applied; nothing here writes, and no endpoint deletes a mark.
   readonly: true,
   action: 'Browse results',
-  searchHint: 'Search pupil, subject, class or grade',
+  searchHint: 'Search student, subject, class or grade',
   footer: 'Newest first',
   emptyTitle: 'No marks on file yet',
   emptyBody:
@@ -128,7 +128,7 @@ export const results: CollectionDef = {
   counts: [
     { label: 'Marks', count: async () => (await myMarks()).pagination.total },
     {
-      label: 'Pupils',
+      label: 'Students',
       count: async () =>
         new Set((await myMarks()).items.map((mark) => mark.student_id)).size,
     },
@@ -141,7 +141,7 @@ export const results: CollectionDef = {
     },
   ],
   columns: [
-    { key: 'name', label: 'Pupil', cardRole: 'title' },
+    { key: 'name', label: 'Student', cardRole: 'title' },
     { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
     { key: 'klass', label: 'Class' },
     { key: 'ca', label: 'CA', align: 'right' },
@@ -151,7 +151,7 @@ export const results: CollectionDef = {
     { key: 'state', label: 'Approval', tag: true, cardRole: 'tag' },
   ],
   detail: [
-    { key: 'name', label: 'Pupil' },
+    { key: 'name', label: 'Student' },
     { key: 'adm', label: 'Admission no.' },
     { key: 'subject', label: 'Subject' },
     { key: 'klass', label: 'Class' },
@@ -170,8 +170,8 @@ export const results: CollectionDef = {
    * Read whole and narrowed here.
    *
    * The endpoint pages and takes `subject_id`, `session_id` and `semester_id`,
-   * but it ignores a search term — and finding one pupil is what this page is
-   * for. Reading the register whole means the box matches the pupil, the
+   * but it ignores a search term — and finding one student is what this page is
+   * for. Reading the register whole means the box matches the student, the
    * subject, the class, the term and the grade at once, which is every axis a
    * dropdown would have offered and one the API cannot narrow by at all.
    */

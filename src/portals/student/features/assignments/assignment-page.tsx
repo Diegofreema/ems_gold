@@ -9,12 +9,12 @@ import { questionsOf, windowProblem } from './assignment'
 import { stateOf } from './assignments'
 
 /**
- * One assignment: its terms first, and its questions only once the pupil says they
+ * One assignment: its terms first, and its questions only once the student says they
  * are ready.
  *
  * The brief is not ceremony. An assignment can be sat once, the clock starts when it
  * is started, and `actual_start_time` is sent back as part of the submission —
- * so the moment the questions appear has to be a moment the pupil chose.
+ * so the moment the questions appear has to be a moment the student chose.
  */
 export function AssignmentPage({ assignmentId }: { assignmentId: string }) {
   const { data: assignment } = useSuspenseQuery(studentAssignmentQuery(assignmentId))

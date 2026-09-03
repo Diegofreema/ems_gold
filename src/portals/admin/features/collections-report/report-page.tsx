@@ -34,7 +34,7 @@ const BY_METHOD = toTableColumns([
 // for. The slip itself carries the reference, which is where it is quoted from.
 const PAYMENTS = toTableColumns([
   { key: 'taken', label: 'When', cardRole: 'subtitle' },
-  { key: 'student', label: 'Pupil', cardRole: 'title' },
+  { key: 'student', label: 'Student', cardRole: 'title' },
   { key: 'fee', label: 'Fee' },
   { key: 'method', label: 'Method' },
   { key: 'discount', label: 'Discount', align: 'right' },

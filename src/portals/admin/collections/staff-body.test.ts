@@ -118,8 +118,31 @@ test('the admin body is exactly what POST /admins/new-admin documents', () => {
       department_id: 1,
       phone: '08000000000',
       address: 'Address',
+      dob: undefined,
     },
   )
+})
+
+test('the birthday goes as the date the office picked, not as the browser read it', () => {
+  // The calendar hands back a Date at local midnight. Read through
+  // `toISOString` a January birthday west of Greenwich becomes 31 December of
+  // the year before, so the parts are taken off the calendar instead.
+  const body = adminBody({ dob: new Date(2001, 0, 1) })
+  assert.equal(body.dob, '2001-01-01')
+})
+
+test('a form with no birthday drops the key rather than clearing one on file', () => {
+  // The endpoint is a partial write: an empty string here would blank a
+  // birthday the office had already entered elsewhere.
+  assert.equal(adminBody({}).dob, undefined)
+  assert.equal(adminBody({ dob: '' }).dob, undefined)
+  assert.equal(adminBody({ dob: new Date('nonsense') }).dob, undefined)
+})
+
+test('an edit sends the birthday too', () => {
+  // It rides on `adminBody`, so this pins the two together rather than the
+  // update growing its own list to fall behind with.
+  assert.equal(adminUpdate({ dob: new Date(1990, 11, 25) }).dob, '1990-12-25')
 })
 
 test('an update sends everything the create does', () => {

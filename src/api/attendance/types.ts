@@ -68,7 +68,7 @@ export type AttendanceReportParams = PageParams & {
 /** The CSV export takes the report's filters minus paging. */
 export type AttendanceExportParams = Omit<AttendanceReportParams, 'page' | 'limit'>
 
-/** One mark: one pupil, one day. */
+/** One mark: one student, one day. */
 export type AttendanceRecord = {
   id: number
   /** YYYY-MM-DD. */
@@ -117,7 +117,7 @@ export type AttendanceReport = {
  * Read from `GET /attendances/statuses` rather than written down: **the flag
  * is a separate list, not a property of each word** — late is present because
  * the child is in the building, and excused is an authorised absence that is
- * neither held against the pupil nor counted as attendance.
+ * neither held against the student nor counted as attendance.
  */
 export type StatusCatalogue = {
   statuses: string[]
@@ -138,18 +138,18 @@ export type MyClass = {
   class: string
   /** Why this arm is theirs, in the API's own words. */
   mine_because: string
-  /** How many pupils are on the roll. */
+  /** How many students are on the roll. The API's own spelling. */
   pupils: number
 }
 
-/** One pupil on one day. `status` is null where nobody has marked them yet. */
-export type RegisterPupil = {
+/** One student on one day. `status` is null where nobody has marked them yet. */
+export type RegisterStudent = {
   student_id: number
   name: string
   regno: string | null
   status: string | null
   notes: string | null
-  /** The row the mark was saved as; absent on a pupil nobody has marked. */
+  /** The row the mark was saved as; absent on a student nobody has marked. */
   attendance_id?: number | null
 }
 
@@ -160,6 +160,7 @@ export type RegisterSummary = {
   late: number
   excused: number
   unmarked: number
+  /** The API's own spelling. */
   pupils: number
 }
 
@@ -176,7 +177,8 @@ export type Register = {
   /** YYYY-MM-DD. */
   date: string
   arm: RegisterArm
-  pupils: RegisterPupil[]
+  /** The API's own spelling; every screen calls them students. */
+  pupils: RegisterStudent[]
   /** Whether anybody has marked this day at all. */
   taken: boolean
   summary: RegisterSummary
@@ -196,7 +198,7 @@ export type TakeRegisterBody = {
   /** YYYY-MM-DD. A date in the future is a 422. */
   date: string
   /**
-   * Keyed by student id. **A pupil left out is left alone**, not marked
+   * Keyed by student id. **A student left out is left alone**, not marked
    * absent — a partial save is a partial save, and guessing would turn a
    * dropped connection into a child's absence record.
    */
@@ -237,7 +239,7 @@ export type MyAttendanceParams = {
 }
 
 /**
- * A pupil's own record, or a guardian's children.
+ * A student's own record, or a guardian's children.
  *
  * Unverified shape — `marksOf` and `attendanceTally` in the student portal
  * name the keys they try. The percentage on it is in-school over **days

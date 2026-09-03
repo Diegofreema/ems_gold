@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { BusinessIntelligence } from '../../../../api/analytics/types.ts'
 import {
+  DEFAULT_LIMIT,
+  LIMITS,
   admitted,
   classBars,
   enrolmentTiles,
@@ -35,7 +37,7 @@ const STATES = new Map([['2647', 'Abia']])
 test('the tiles count the school, not the buckets', () => {
   const tiles = enrolmentTiles(intelligence)
   assert.equal(tiles[0].value, '3')
-  // One class holds all three, so the class count is 1 and the pupil count 3.
+  // One class holds all three, so the class count is 1 and the student count 3.
   assert.equal(tiles[1].value, '1')
   assert.equal(tiles[2].value, '1')
   assert.equal(tiles[3].value, '1')
@@ -85,7 +87,7 @@ test('classes are ordered by size, largest first', () => {
 
 test('the gender split is a share of everyone counted', () => {
   assert.deepEqual(genderRates(intelligence), [
-    { label: 'Male', percent: 100, amount: '3 pupils' },
+    { label: 'Male', percent: 100, amount: '3 students' },
   ])
   const mixed = genderRates({
     ...intelligence,
@@ -97,15 +99,15 @@ test('the gender split is a share of everyone counted', () => {
   assert.deepEqual(
     mixed.map((rate) => [rate.label, rate.percent, rate.amount]),
     [
-      ['Male', 75, '3 pupils'],
-      ['Not recorded', 25, '1 pupil'],
+      ['Male', 75, '3 students'],
+      ['Not recorded', 25, '1 student'],
     ],
   )
 })
 
 test('a state the school can name is named, and one it cannot keeps its count', () => {
   assert.deepEqual(stateRows(intelligence, STATES), [
-    { id: '2647', state: 'Abia', pupils: '1' },
+    { id: '2647', state: 'Abia', students: '1' },
   ])
   assert.equal(stateRows(intelligence, new Map())[0].state, 'State 2647')
 })
@@ -211,4 +213,11 @@ test('a transaction missing everything still occupies one row', () => {
 test('the settled total ignores anything it cannot read as money', () => {
   assert.equal(paymentsTotal([{ amount: '30000' }, { amount: 'n/a' }, { amount: 500 }]), 30500)
   assert.equal(paymentsTotal([]), 0)
+})
+
+test('the row count the page starts on is one it offers', () => {
+  // The select shows nothing at all for a default that is not on the list,
+  // and the page and the catalogue are edited in different places.
+  assert.ok(LIMITS.some((option) => option.value === DEFAULT_LIMIT))
+  assert.ok(LIMITS.every((option) => Number(option.value) > 0))
 })

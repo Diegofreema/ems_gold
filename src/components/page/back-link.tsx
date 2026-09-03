@@ -8,8 +8,8 @@ const STYLE = 'mb-3.5 px-1 text-brand'
 /**
  * The way off a page that was opened from another one.
  *
- * Every page used to leave by the same fixed door — a pupil went back to the
- * pupil register whatever had led to them, so opening one from a class's roll,
+ * Every page used to leave by the same fixed door — a student went back to the
+ * student register whatever had led to them, so opening one from a class's roll,
  * a parent's children or a search left the office somewhere it had never been
  * and made it find its way again. Where there is a page behind this one, that
  * page is the one to return to.

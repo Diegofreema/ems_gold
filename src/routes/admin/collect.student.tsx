@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { PupilLookupPage } from '@/portals/admin/features/collect-pupil/pupil-page'
+import { StudentLookupPage } from '@/portals/admin/features/collect-student/student-page'
 
-export const Route = createFileRoute('/admin/collect/pupil')({
-  staticData: { title: 'Find a pupil', crumb: 'Finance · Fee collection', crumbTo: '/admin/collect' },
-  component: PupilLookupPage,
+export const Route = createFileRoute('/admin/collect/student')({
+  staticData: { title: 'Find a student', crumb: 'Finance · Fee collection', crumbTo: '/admin/collect' },
+  component: StudentLookupPage,
 })

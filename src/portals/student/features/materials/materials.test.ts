@@ -42,7 +42,7 @@ test('an unexpanded subject is named by its id rather than left blank', () => {
   assert.equal(row.subject, 'Subject 2')
 })
 
-test('a material with nothing on it still reads as a row a pupil can ask about', () => {
+test('a material with nothing on it still reads as a row a student can ask about', () => {
   const [row] = materialRows([{ id: 7 }])
   assert.equal(row.title, 'Material 7')
   assert.equal(row.subject, '—')

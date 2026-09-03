@@ -12,8 +12,8 @@ import {
 } from './dashboard.ts'
 
 /**
- * `GET /students/me/dashboard` for pupil 4. Its fee counters are the school's
- * and not this pupil's — four invoices with one unpaid, against a ledger of
+ * `GET /students/me/dashboard` for student 4. Its fee counters are the school's
+ * and not this student's — four invoices with one unpaid, against a ledger of
  * three that are settled in full — and the page must not repeat them.
  */
 const STATS: StudentStats = {
@@ -24,7 +24,7 @@ const STATS: StudentStats = {
   fees_settled_this_session: 6,
 }
 
-/** Pupil 4's ledger, which is every bill the office holds against them. */
+/** Student 4's ledger, which is every bill the office holds against them. */
 const INVOICES = [
   {
     id: 2453,
@@ -58,17 +58,17 @@ const INVOICES = [
   },
 ] as unknown as Invoice[]
 
-test('the fee tiles count the pupil’s own bills, not the school’s counters', () => {
+test('the fee tiles count the student’s own bills, not the school’s counters', () => {
   const [paid, unpaid, results, materials] = studentFigures(STATS, INVOICES)
-  assert.deepEqual(paid, {
-    label: 'Paid this session',
-    amount: 80000,
-    format: 'naira',
-    // Three settled, not the counters' six.
-    delta: '3 invoices settled',
-    hot: false,
-  })
-  // The counters say one is unpaid. Nothing in this pupil's ledger is.
+  // Field by field rather than whole: the tile also carries an icon, which is
+  // not what this test is about.
+  assert.equal(paid?.label, 'Paid this session')
+  assert.equal(paid?.amount, 80000)
+  assert.equal(paid?.format, 'naira')
+  // Three settled, not the counters' six.
+  assert.equal(paid?.delta, '3 invoices settled')
+  assert.equal(paid?.hot, false)
+  // The counters say one is unpaid. Nothing in this student's ledger is.
   assert.equal(unpaid?.amount, 0)
   assert.equal(unpaid?.delta, 'Nothing owing')
   assert.equal(unpaid?.hot, false)
@@ -76,7 +76,7 @@ test('the fee tiles count the pupil’s own bills, not the school’s counters',
   assert.equal(materials?.delta, 'Nothing shared yet')
 })
 
-test('a bill the pupil really owes is counted and flagged', () => {
+test('a bill the student really owes is counted and flagged', () => {
   const owing = [...INVOICES, { id: 9, amount: '50000', paystatus: 'Unpaid' } as Invoice]
   const [, unpaid] = studentFigures(STATS, owing)
   assert.equal(unpaid?.amount, 1)
@@ -84,7 +84,7 @@ test('a bill the pupil really owes is counted and flagged', () => {
   assert.equal(unpaid?.hot, true)
 })
 
-test('only what a pupil can act on is flagged', () => {
+test('only what a student can act on is flagged', () => {
   const cleared = studentFigures(STATS, INVOICES)
   assert.equal(cleared.filter((figure) => figure.hot).length, 0)
 })
@@ -114,7 +114,7 @@ test('the greeting says what is waiting, in the right number', () => {
   )
 })
 
-test('the button points at whatever needs the pupil', () => {
+test('the button points at whatever needs the student', () => {
   assert.deepEqual(studentAction(OWING), { to: '/student/invoices', label: 'My invoices' })
   assert.deepEqual(studentAction(INVOICES), { to: '/student/results', label: 'My results' })
 })

@@ -52,7 +52,7 @@ test('a batch missing everything still reads as a row rather than crashing', () 
   assert.equal(row.subject, '—')
 })
 
-test('a line names its pupil however the endpoint spells them', () => {
+test('a line names its student however the endpoint spells them', () => {
   const row = lineRow(
     {
       id: 11,
@@ -66,10 +66,10 @@ test('a line names its pupil however the endpoint spells them', () => {
     },
     0,
   )
-  assert.equal(row.pupil, 'Aniegbokas Chukwudi')
+  assert.equal(row.student, 'Aniegbokas Chukwudi')
   assert.equal(row.adm, 'MGS/2020535')
   assert.equal(row.exam, '62.00')
-  assert.equal(lineRow({ regno: 'CUN/2026/4' }, 3).pupil, 'CUN/2026/4')
+  assert.equal(lineRow({ regno: 'CUN/2026/4' }, 3).student, 'CUN/2026/4')
   // A line the endpoint did not number is still a distinct row.
   assert.equal(lineRow({ regno: 'CUN/2026/4' }, 3).id, '3')
 })

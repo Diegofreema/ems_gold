@@ -9,7 +9,7 @@ export const studentPortal: PortalConfig = {
   basePath: '/student',
   nav: studentNav,
   useNotifications: useMyNotifications,
-  notFoundAudience: 'pupils',
+  notFoundAudience: 'students',
   notFoundLinks: [
     // Hints describe the page, not its contents: nothing here has counted
     // anything, and a figure written in would be read as one that had.
@@ -32,8 +32,8 @@ export const studentPortal: PortalConfig = {
   ],
   context: <StudentContext />,
   // No `headerStatus`. The design's "First Term · Week 9 · Exams begin 02 Dec"
-  // wants the school calendar, and a pupil login is refused every endpoint
+  // wants the school calendar, and a student login is refused every endpoint
   // that holds it — `/settings`, `/sessions` and `/semesters` all answer
-  // "restricted to administrators". What a pupil can be told about themselves
+  // "restricted to administrators". What a student can be told about themselves
   // is in the sidebar instead, where it is read off their own record.
 };

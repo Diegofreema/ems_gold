@@ -3,13 +3,13 @@ import type { PageParams } from '../types.ts'
 /**
  * The counter's own view of an invoice. Deliberately not the `/invoices`
  * shape: this endpoint flattens what that one expands — `fee` and `session`
- * arrive as names, `amount` as a number, and the pupil as the four things a
+ * arrive as names, `amount` as a number, and the student as the four things a
  * bursary counter needs to be sure it has the right family.
  */
 export type CollectInvoice = {
   id: number
   student_id: number
-  /** Null where the pupil record behind the invoice has since gone. */
+  /** Null where the student record behind the invoice has since gone. */
   student: CollectStudent | null
   fee: string | null
   session: string | null
@@ -19,13 +19,13 @@ export type CollectInvoice = {
   is_settled: boolean
   payday: string | null
   createdate: string
-  /** Present on one invoice and on a pupil's ledger; absent from the queue. */
+  /** Present on one invoice and on a student's ledger; absent from the queue. */
   transactions?: Transaction[]
 }
 
 /**
- * Two spellings in the wild: the queue and the report name the pupil whole,
- * a pupil's own ledger sends the parts. Both carry the registration number,
+ * Two spellings in the wild: the queue and the report name the student whole,
+ * a student's own ledger sends the parts. Both carry the registration number,
  * which is what a counter actually checks.
  */
 export type CollectStudent = {
@@ -64,7 +64,7 @@ export type CollectStats = {
 }
 
 export type OutstandingParams = PageParams & {
-  /** Matches a pupil's name or registration number. */
+  /** Matches a student's name or registration number. */
   q?: string
 }
 
@@ -110,7 +110,7 @@ export type MethodTotals = {
   entries: number
 }
 
-/** A payment in the report carries the pupil and fee the queue would show. */
+/** A payment in the report carries the student and fee the queue would show. */
 export type ReportPayment = Transaction & {
   student: CollectStudent | null
   fee: string | null

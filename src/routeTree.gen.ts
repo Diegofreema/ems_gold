@@ -90,8 +90,8 @@ import { Route as TeacherTopicsRouteImport } from './routes/teacher/topics'
 import { Route as AdminCollectionActionRouteImport } from './routes/admin/$collection.action'
 import { Route as AdminCollectionNewRouteImport } from './routes/admin/$collection.new'
 import { Route as AdminCollectIndexRouteImport } from './routes/admin/collect.index'
-import { Route as AdminCollectPupilRouteImport } from './routes/admin/collect.pupil'
 import { Route as AdminCollectReportRouteImport } from './routes/admin/collect.report'
+import { Route as AdminCollectStudentRouteImport } from './routes/admin/collect.student'
 import { Route as ParentCollectionRecordIdRouteImport } from './routes/parent/$collection.$recordId'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
 import { Route as ParentChildrenAddRouteImport } from './routes/parent/children.add'
@@ -514,14 +514,14 @@ const AdminCollectIndexRoute = AdminCollectIndexRouteImport.update({
   path: '/collect/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminCollectPupilRoute = AdminCollectPupilRouteImport.update({
-  id: '/collect/pupil',
-  path: '/collect/pupil',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const AdminCollectReportRoute = AdminCollectReportRouteImport.update({
   id: '/collect/report',
   path: '/collect/report',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCollectStudentRoute = AdminCollectStudentRouteImport.update({
+  id: '/collect/student',
+  path: '/collect/student',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const ParentCollectionRecordIdRoute =
@@ -699,8 +699,8 @@ export interface FileRoutesByFullPath {
   '/teacher/': typeof TeacherIndexRoute
   '/admin/$collection/action': typeof AdminCollectionActionRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
-  '/admin/collect/pupil': typeof AdminCollectPupilRoute
   '/admin/collect/report': typeof AdminCollectReportRoute
+  '/admin/collect/student': typeof AdminCollectStudentRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/parent/pay/done': typeof ParentPayDoneRoute
@@ -796,8 +796,8 @@ export interface FileRoutesByTo {
   '/teacher': typeof TeacherIndexRoute
   '/admin/$collection/action': typeof AdminCollectionActionRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
-  '/admin/collect/pupil': typeof AdminCollectPupilRoute
   '/admin/collect/report': typeof AdminCollectReportRoute
+  '/admin/collect/student': typeof AdminCollectStudentRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/parent/pay/done': typeof ParentPayDoneRoute
@@ -899,8 +899,8 @@ export interface FileRoutesById {
   '/teacher/': typeof TeacherIndexRoute
   '/admin/$collection/action': typeof AdminCollectionActionRoute
   '/admin/$collection/new': typeof AdminCollectionNewRoute
-  '/admin/collect/pupil': typeof AdminCollectPupilRoute
   '/admin/collect/report': typeof AdminCollectReportRoute
+  '/admin/collect/student': typeof AdminCollectStudentRoute
   '/parent/$collection/$recordId': typeof ParentCollectionRecordIdRoute
   '/parent/children/add': typeof ParentChildrenAddRoute
   '/parent/pay/done': typeof ParentPayDoneRoute
@@ -1002,8 +1002,8 @@ export interface FileRouteTypes {
     | '/teacher/'
     | '/admin/$collection/action'
     | '/admin/$collection/new'
-    | '/admin/collect/pupil'
     | '/admin/collect/report'
+    | '/admin/collect/student'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/parent/pay/done'
@@ -1099,8 +1099,8 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/admin/$collection/action'
     | '/admin/$collection/new'
-    | '/admin/collect/pupil'
     | '/admin/collect/report'
+    | '/admin/collect/student'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/parent/pay/done'
@@ -1201,8 +1201,8 @@ export interface FileRouteTypes {
     | '/teacher/'
     | '/admin/$collection/action'
     | '/admin/$collection/new'
-    | '/admin/collect/pupil'
     | '/admin/collect/report'
+    | '/admin/collect/student'
     | '/parent/$collection/$recordId'
     | '/parent/children/add'
     | '/parent/pay/done'
@@ -1801,18 +1801,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCollectIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/collect/pupil': {
-      id: '/admin/collect/pupil'
-      path: '/collect/pupil'
-      fullPath: '/admin/collect/pupil'
-      preLoaderRoute: typeof AdminCollectPupilRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/admin/collect/report': {
       id: '/admin/collect/report'
       path: '/collect/report'
       fullPath: '/admin/collect/report'
       preLoaderRoute: typeof AdminCollectReportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/collect/student': {
+      id: '/admin/collect/student'
+      path: '/collect/student'
+      fullPath: '/admin/collect/student'
+      preLoaderRoute: typeof AdminCollectStudentRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/parent/$collection/$recordId': {
@@ -1970,8 +1970,8 @@ interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCollectionActionRoute: typeof AdminCollectionActionRoute
   AdminCollectionNewRoute: typeof AdminCollectionNewRoute
-  AdminCollectPupilRoute: typeof AdminCollectPupilRoute
   AdminCollectReportRoute: typeof AdminCollectReportRoute
+  AdminCollectStudentRoute: typeof AdminCollectStudentRoute
   AdminCollectIndexRoute: typeof AdminCollectIndexRoute
   AdminCollectionRecordIdEditRoute: typeof AdminCollectionRecordIdEditRoute
   AdminCollectReceiptInvoiceIdRoute: typeof AdminCollectReceiptInvoiceIdRoute
@@ -2011,8 +2011,8 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminCollectionActionRoute: AdminCollectionActionRoute,
   AdminCollectionNewRoute: AdminCollectionNewRoute,
-  AdminCollectPupilRoute: AdminCollectPupilRoute,
   AdminCollectReportRoute: AdminCollectReportRoute,
+  AdminCollectStudentRoute: AdminCollectStudentRoute,
   AdminCollectIndexRoute: AdminCollectIndexRoute,
   AdminCollectionRecordIdEditRoute: AdminCollectionRecordIdEditRoute,
   AdminCollectReceiptInvoiceIdRoute: AdminCollectReceiptInvoiceIdRoute,

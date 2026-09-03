@@ -44,7 +44,7 @@ export function teacherFigures(dashboard: TeacherDashboard) {
   return [
     {
       ...countTile(
-        'Pupils I teach',
+        'Students I teach',
         stats.my_students,
         `Of ${stats.total_students} in the school`,
       ),

@@ -7,7 +7,7 @@ import { BLANK } from './blank.ts'
  */
 export function mark(value: string | number | null | undefined): string {
   // Before the number: `Number(null)` and `Number('')` are both 0, and a mark
-  // the school never filed is not a pupil who scored nothing.
+  // the school never filed is not a student who scored nothing.
   if (value === null || value === undefined || String(value).trim() === '') return BLANK
   const parsed = Number(value)
   return Number.isFinite(parsed) ? String(Math.round(parsed * 100) / 100) : BLANK

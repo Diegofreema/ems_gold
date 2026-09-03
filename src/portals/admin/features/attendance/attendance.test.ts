@@ -86,10 +86,10 @@ test('a class row is keyed by its arm, so two arms of one class do not collide',
   assert.equal(classCountRow(DASHBOARD.today[2]).id, '8-none')
 })
 
-test('a mark reads its pupil, class and arm as one line', () => {
+test('a mark reads its student, class and arm as one line', () => {
   const row = recordRow(REPORT.records[0])
   assert.equal(row.when, '27 Aug 2026')
-  assert.equal(row.pupil, 'Aniegbokas Chukwudi')
+  assert.equal(row.student, 'Aniegbokas Chukwudi')
   assert.equal(row.adm, 'MGS/2020535')
   assert.equal(row.klass, 'JSS 1 · JSS1 A')
   assert.equal(row.status, 'Present')
@@ -98,7 +98,7 @@ test('a mark reads its pupil, class and arm as one line', () => {
   assert.equal(row.notes, BLANK)
 })
 
-test('a pupil with no admission number yet reads blank', () => {
+test('a student with no admission number yet reads blank', () => {
   const record: AttendanceRecord = {
     ...REPORT.records[0],
     student: { ...REPORT.records[0].student, regno: null, class_arm: null },

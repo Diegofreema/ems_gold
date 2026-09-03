@@ -37,7 +37,7 @@ export type UpdateMyTeachingProfileBody = {
 }
 
 /**
- * The home page's counters. `my_students` counts the pupils in the arms this
+ * The home page's counters. `my_students` counts the students in the arms this
  * teacher takes, against `total_students` for the whole school;
  * `pending_assignments` counts the assignments they have set that are still open —
  * it reads 0 for a teacher whose two assignments both closed before today.
@@ -97,14 +97,14 @@ export type TeacherSubject = SubjectRecord & {
 }
 
 /**
- * A pupil on the teacher's roll — the whole pupil record, with the arm, the
+ * A student on the teacher's roll — the whole student record, with the arm, the
  * class and the login expanded.
  */
 export type TeacherStudent = Student
 
 /**
  * The roll, with the arms it was drawn from beside it. An arm the teacher
- * takes but which holds nobody appears here and in no pupil's row, which is
+ * takes but which holds nobody appears here and in no student's row, which is
  * why the two are read separately.
  */
 export type TeacherRoll = Paginated<TeacherStudent> & {

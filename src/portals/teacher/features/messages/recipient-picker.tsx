@@ -12,10 +12,10 @@ import {
 } from './recipients'
 
 /**
- * Who the message goes to: an arm, then the pupils in it.
+ * Who the message goes to: an arm, then the students in it.
  *
  * The selection is not cleared when the arm changes. A teacher who takes two
- * arms may well be writing to a few pupils from each, and losing the first
+ * arms may well be writing to a few students from each, and losing the first
  * half on the way to the second would be the picker undoing their work.
  * `selectionNote` says how many are held outside the arm on screen so the
  * count never looks wrong.
@@ -24,7 +24,7 @@ export function RecipientPicker({
   arms,
   armId,
   onArmChange,
-  pupils,
+  students,
   query,
   onQueryChange,
   chosen,
@@ -34,14 +34,14 @@ export function RecipientPicker({
   arms: ArmOption[]
   armId: string
   onArmChange: (armId: string) => void
-  pupils: Recipient[]
+  students: Recipient[]
   query: string
   onQueryChange: (query: string) => void
   chosen: number[]
   onChange: (chosen: number[]) => void
   error?: string
 }) {
-  const shown = matching(pupils, query)
+  const shown = matching(students, query)
   const allShown = shown.length > 0 && shown.every((one) => chosen.includes(one.id))
 
   return (
@@ -82,22 +82,22 @@ export function RecipientPicker({
 
       {shown.length === 0 ? (
         <p className="rounded-lg border border-divider bg-raised px-4 py-5 text-sm text-muted-foreground">
-          {pupils.length === 0
-            ? 'No pupil sits in this arm yet. The office places pupils in arms.'
-            : 'No pupil in this arm matches that search.'}
+          {students.length === 0
+            ? 'No student sits in this arm yet. The office places students in arms.'
+            : 'No student in this arm matches that search.'}
         </p>
       ) : (
         <ul className="max-h-76 overflow-y-auto rounded-lg border border-divider bg-raised">
-          {shown.map((pupil) => (
-            <li key={pupil.id} className="border-b border-divider last:border-b-0">
+          {shown.map((student) => (
+            <li key={student.id} className="border-b border-divider last:border-b-0">
               <label className="flex cursor-pointer items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-foreground/5">
                 <Checkbox
-                  checked={chosen.includes(pupil.id)}
-                  onCheckedChange={() => onChange(toggled(chosen, pupil.id))}
+                  checked={chosen.includes(student.id)}
+                  onCheckedChange={() => onChange(toggled(chosen, student.id))}
                 />
-                <span className="min-w-0 flex-1 truncate text-sm">{pupil.name}</span>
+                <span className="min-w-0 flex-1 truncate text-sm">{student.name}</span>
                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                  {pupil.adm}
+                  {student.adm}
                 </span>
               </label>
             </li>

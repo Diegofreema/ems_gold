@@ -24,9 +24,9 @@ export type StudentHome = {
 }
 
 /**
- * The page is two endpoints, not one: the invoice list is the pupil's fee
+ * The page is two endpoints, not one: the invoice list is the student's fee
  * ledger, and the counters are the only count of the results and materials
- * lists a pupil is given. The counters' own fee figures are not scoped to the
+ * lists a student is given. The counters' own fee figures are not scoped to the
  * caller and are not read — see `feeCounts`.
  *
  * Shaped here rather than in the fetch so each cache entry holds what its

@@ -6,7 +6,7 @@
  * none takes a search.
  */
 
-/** One bucket of a breakdown: how many admitted pupils fall in it. */
+/** One bucket of a breakdown: how many admitted students fall in it. */
 export type Bucket<TKey extends string, TValue> = { count: number } & Record<
   TKey,
   TValue

@@ -24,7 +24,7 @@ export type Parent = {
 
 /**
  * An invoice as a guardian's own list sends it — one call for every child on
- * the record, and a different shape from the office register: the pupil and
+ * the record, and a different shape from the office register: the student and
  * the fee arrive as names rather than as expanded records, and the amount as
  * a string.
  *
@@ -35,7 +35,7 @@ export type Parent = {
 export type FamilyInvoice = {
   id: number
   student_id: number
-  /** The pupil's name, whole. Null where the record behind it has gone. */
+  /** The student's name, whole. Null where the record behind it has gone. */
   student: string | null
   fee: string | null
   session: string | null
@@ -54,7 +54,7 @@ export type ParentListParams = PageParams & {
   q?: string
 }
 
-/** A child as the parent screens see them — a slim view of the pupil record. */
+/** A child as the parent screens see them — a slim view of the student record. */
 export type Child = {
   id: number
   regno: string | null
@@ -127,7 +127,7 @@ export type ChildResults = {
  *
  * The endpoint answered with an empty list for every child on this school, so
  * the row is typed from `admin-attendances/report`, which reads the same
- * table. Only the fields the register shows are declared: the pupil this
+ * table. Only the fields the register shows are declared: the student this
  * endpoint has already named above the list, and anything else it sends is
  * ignored rather than guessed at.
  */

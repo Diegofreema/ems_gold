@@ -71,6 +71,36 @@ test('a bare id is read as a teacher rather than dropped', () => {
   assert.deepEqual(parseStaffKey('14'), { kind: 'teacher', id: '14' })
 })
 
+test('the birthday is read twice: once to show and once to open the picker', () => {
+  // One key for both showed the design's dash inside the calendar field, and
+  // saving that back would have written a dash over the date.
+  const born = adminRow({ ...admin, dob: '07/04/1988' })
+  assert.equal(born.born, '07 Apr 1988')
+  assert.equal(born.dob, '1988-04-07')
+
+  // What this app's own form writes, which is the other spelling in the wild.
+  const own = adminRow({ ...admin, dob: '1988-04-07' })
+  assert.equal(own.born, '07 Apr 1988')
+  assert.equal(own.dob, '1988-04-07')
+})
+
+test('an office record with no birthday shows the dash and opens the picker empty', () => {
+  // Bronze sends an empty string here rather than null on records the office
+  // has never filled in, so both have to read as nothing held.
+  for (const stored of [null, '']) {
+    const row = adminRow({ ...admin, dob: stored })
+    assert.equal(row.born, '—')
+    assert.equal(row.dob, '')
+  }
+})
+
+test('a teacher answers the shared panel’s birthday row blank', () => {
+  // The mixed register draws one panel for both populations, and `POST
+  // /teachers` has no birthday to store — a teacher's row has to say so
+  // rather than leaving the row reading as data that failed to load.
+  assert.equal(teacherRow(teacher).born, '—')
+})
+
 test('a missing qualification reads blank rather than empty', () => {
   assert.equal(teacherRow({ ...teacher, qualification: null }).qualification, '—')
 })

@@ -20,7 +20,7 @@ const AHEAD = 5
 
 /**
  * The years the dropdown offers, and the order to read them in. A date already
- * behind us is listed newest first — a pupil born in 2014 is three rows down
+ * behind us is listed newest first — a student born in 2014 is three rows down
  * rather than eighty-eight.
  */
 function bounds(past: boolean | undefined, today: Date) {

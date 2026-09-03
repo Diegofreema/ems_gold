@@ -73,7 +73,7 @@ const CHILDREN_TAB: CollectionDef['tabs'] = [
       { key: 'status', label: 'Status', tag: true },
     ],
     source: (recordId) => parentsService.children(recordId).then((kids) => kids.map(childRow)),
-    empty: 'No pupil on the register is linked to this guardian yet.',
+    empty: 'No student on the register is linked to this guardian yet.',
   },
 ]
 
@@ -90,7 +90,7 @@ export const parents: CollectionDef = {
   footer: 'Guardian accounts',
   emptyTitle: 'No parent accounts',
   emptyBody:
-    'Parent accounts are created when you enrol a pupil, or you can add one directly.',
+    'Parent accounts are created when you enrol a student, or you can add one directly.',
   noun: 'parent',
   nameKey: 'name',
   counts: [
@@ -141,7 +141,7 @@ export const parents: CollectionDef = {
     announceLogin(created)
     return created
   },
-  // Refused with 409 while a pupil still points at the household, which the
+  // Refused with 409 while a student still points at the household, which the
   // confirm says before the button rather than a toast saying it after.
   remove: (recordId) => parentsService.remove(recordId),
   removeBody: parentDeleteBody,

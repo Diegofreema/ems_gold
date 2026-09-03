@@ -4,7 +4,7 @@ import type { Teacher } from '../teachers/types.ts'
 import type { Admin, Role, User } from '../users/types.ts'
 
 export type LoginBody = {
-  /** The account's username — a reg number for pupils, an email for staff. */
+  /** The account's username — a reg number for students, an email for staff. */
   username: string
   password: string
 }

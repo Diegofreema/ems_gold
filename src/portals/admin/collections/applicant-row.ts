@@ -14,9 +14,9 @@ function file(value: string | null | undefined): string {
 }
 
 /**
- * An application, as the admissions register reads it. A pupil and an
+ * An application, as the admissions register reads it. A student and an
  * applicant are the same record at different points in admission, so this is
- * the pupil row under the names the applications page uses, plus the files the
+ * the student row under the names the applications page uses, plus the files the
  * family uploaded.
  */
 export function applicantRow(student: Student): Row {

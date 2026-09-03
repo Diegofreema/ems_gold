@@ -1,100 +1,41 @@
 import { useQuery } from '@tanstack/react-query'
-import { parseAsString, useQueryStates } from 'nuqs'
-import { useCallback, useMemo, type ReactNode } from 'react'
-import {
-  useBusinessIntelligence,
-  useFinancialAnalytics,
-  usePayments,
-  useResultAnalytics,
-} from '@/api/analytics/hooks'
-import { BarChart, type Bar } from '@/components/charts/bar-chart'
-import { RateBars, type Rate } from '@/components/charts/rate-bars'
+import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
+import { useCallback } from 'react'
 import { SectionHeading } from '@/components/common/section-heading'
-import { DataTable } from '@/components/data-table/data-table'
-import { Shimmer } from '@/components/feedback/shimmer'
+import { SegmentedControl } from '@/components/common/segmented-control'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
-import { TileStrip, type Tile } from '@/components/page/tile-strip'
-import { toTableColumns } from '@/features/collections/components/collection-columns'
 import { optionsQuery } from '@/features/collections/option-feeds'
-import type { Row } from '@/features/collections/types'
-import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
-import { formatCount, formatNaira } from '@/lib/format'
-import { AnalyticsFilters } from './analytics-filters'
-import { SettlePayment } from './settle-payment'
-import {
-  classBars,
-  enrolmentTiles,
-  genderRates,
-  paymentRow,
-  paymentRows,
-  paymentsTotal,
-  seriesBars,
-  seriesTotal,
-  sharedPeak,
-  stateRows,
-} from './analytics'
+import { DEFAULT_LIMIT } from './analytics'
+import { AnalyticsFilters, type FilterField, type Filters } from './analytics-filters'
+import { EnrolmentPanel } from './enrolment-panel'
+import { GradesPanel } from './grades-panel'
+import { MoneyPanel } from './money-panel'
 
-/** How many settled transactions the reconciliation list holds. */
-const PAYMENT_SCAN = 100
+const TABS = ['grades', 'money'] as const
+type Tab = (typeof TABS)[number]
 
-const STATES = toTableColumns([
-  { key: 'state', label: 'State of origin', cardRole: 'title' },
-  { key: 'pupils', label: 'Pupils', align: 'right' },
-])
+const TAB_OPTIONS = [
+  { value: 'grades', label: 'Grades' },
+  { value: 'money', label: 'Money' },
+] as const satisfies readonly { value: Tab; label: string }[]
 
-const PAYMENTS = toTableColumns([
-  { key: 'paid', label: 'When', cardRole: 'subtitle' },
-  { key: 'payer', label: 'Paid by', cardRole: 'title' },
-  { key: 'fee', label: 'For' },
-  { key: 'reference', label: 'Reference' },
-  { key: 'amount', label: 'Amount', align: 'right' },
-])
-
-const rowKey = (row: Row) => row.id
-
-/**
- * A section that can fail on its own.
- *
- * Four endpoints answer this page and any one of them can be down while the
- * rest are fine, so a failure is reported where it happened rather than
- * replacing the page — an office that cannot read the grade comparison can
- * still read what was collected.
- */
-function Panel({
-  pending,
-  error,
-  empty,
-  children,
-}: {
-  pending: boolean
-  error: unknown
-  /** Shown when the endpoint answered and had nothing to say. */
-  empty?: string
-  children: ReactNode
-}) {
-  if (error) {
-    return (
-      <p className="rounded-lg border border-danger/50 bg-danger-subtle px-4 py-3.5 text-sm text-muted-foreground">
-        {errorMessage(error, OFFLINE_MESSAGE)}
-      </p>
-    )
-  }
-  if (pending) return <Shimmer className="h-47.5 w-full" />
-  if (empty) {
-    return <p className="py-6 text-sm text-muted-foreground">{empty}</p>
-  }
-  return <>{children}</>
-}
-
-/** A chart's caption — what the whole series came to, in one line. */
-function Caption({ children }: { children: ReactNode }) {
-  return <p className="mt-2 text-xs text-muted-foreground">{children}</p>
+/** The filters each tab's endpoints actually take. Nothing else is drawn. */
+const TAB_FILTERS: Record<Tab, readonly FilterField[]> = {
+  // result-analytics?subject_id&session_id
+  grades: ['session', 'subject'],
+  // financial-analytics?session_id and payments?session_id&limit
+  money: ['session', 'limit'],
 }
 
 /**
  * The office's analytics: who is enrolled, what they scored and what was
  * paid, off the four `/admins` reads that answer for the school as a whole.
+ *
+ * Enrolment sits above the tabs because it takes no parameters — it is the
+ * school as it stands. The two comparisons below it are each a question about
+ * one session, and they are tabbed apart so the filter bar can show only the
+ * filters the endpoints on screen actually send.
  *
  * Every figure here is the API's own. Nothing is added up from a register
  * this page pulled itself, which is deliberate — the dashboard already does
@@ -102,65 +43,29 @@ function Caption({ children }: { children: ReactNode }) {
  * how a school ends up with two answers to one question.
  */
 export function AdminAnalyticsPage() {
-  const [filters, setFilters] = useQueryStates({
+  const [state, setState] = useQueryStates({
+    tab: parseAsStringLiteral(TABS).withDefault('grades'),
     session: parseAsString.withDefault(''),
     subject: parseAsString.withDefault(''),
+    limit: parseAsString.withDefault(DEFAULT_LIMIT),
   })
 
   const sessions = useQuery(optionsQuery('sessions', ''))
   const subjects = useQuery(optionsQuery('subjects', ''))
 
-  // Neither endpoint has a default of its own, so the page picks one: the
+  // Neither comparison has a default of its own, so the page picks one: the
   // newest session, which is the order the feed already sends them in, and
   // the first subject on the register. Both are only until something is
   // chosen, and what was chosen lives in the URL so the view can be shared.
-  const session = filters.session || sessions.data?.[0]?.value || ''
-  const subject = filters.subject || subjects.data?.[0]?.value || ''
+  const session = state.session || sessions.data?.[0]?.value || ''
+  const subject = state.subject || subjects.data?.[0]?.value || ''
+  const values: Filters = { session, subject, limit: state.limit }
+
+  const onChange = useCallback((next: Filters) => void setState(next), [setState])
+  const onTab = useCallback((tab: Tab) => void setState({ tab }), [setState])
+
   const sessionId = Number(session) || undefined
   const subjectId = Number(subject) || undefined
-
-  const onChange = useCallback(
-    (next: { session: string; subject: string }) => void setFilters(next),
-    [setFilters],
-  )
-
-  const intelligence = useBusinessIntelligence()
-  const financial = useFinancialAnalytics(sessionId)
-  const results = useResultAnalytics({ subject_id: subjectId, session_id: sessionId })
-  const payments = usePayments({ session_id: sessionId, limit: PAYMENT_SCAN })
-
-  // The class and state feeds are the same ones the forms use, so naming the
-  // buckets costs a request only when nothing has needed them for five
-  // minutes. Nigeria's are the only states this API's numbering is known for.
-  const classFeed = useQuery(optionsQuery('classes', ''))
-  const stateFeed = useQuery(optionsQuery('states', 'NG'))
-  const classNames = useMemo(
-    () => new Map((classFeed.data ?? []).map((option) => [option.value, option.label])),
-    [classFeed.data],
-  )
-  const stateNames = useMemo(
-    () => new Map((stateFeed.data ?? []).map((option) => [option.value, option.label])),
-    [stateFeed.data],
-  )
-
-  const tiles: Tile[] = enrolmentTiles(intelligence.data)
-  const classes: Bar[] = classBars(intelligence.data, classNames)
-  const genders: Rate[] = genderRates(intelligence.data)
-  const states: Row[] = stateRows(intelligence.data, stateNames)
-
-  const money = {
-    current: seriesBars(financial.data?.current, true) as Bar[],
-    previous: seriesBars(financial.data?.previous, true) as Bar[],
-  }
-  const moneyPeak = sharedPeak(money.current, money.previous)
-
-  const grades = {
-    current: seriesBars(results.data?.current, false) as Bar[],
-    previous: seriesBars(results.data?.previous, false) as Bar[],
-  }
-  const gradePeak = sharedPeak(grades.current, grades.previous)
-
-  const settled = paymentRows(payments.data)
   const sessionName = sessions.data?.find((option) => option.value === session)?.label
 
   return (
@@ -168,162 +73,45 @@ export function AdminAnalyticsPage() {
       <PageHeader
         kicker="Finance"
         title="Analytics"
-        description="Enrolment, grades and money collected, each compared against the session before it. Every figure on this page is the API's own."
+        description="Who is enrolled, and how grades and money collected compare against the session before. Every figure on this page is the API's own."
       />
       <Rule />
 
+      <SectionHeading className="mb-4">Enrolment</SectionHeading>
+      <EnrolmentPanel />
+
+      <Rule className="mt-8" />
+
+      <SegmentedControl
+        name="analytics-tab"
+        className="mb-6"
+        options={TAB_OPTIONS}
+        value={state.tab}
+        onChange={onTab}
+      />
+
       <AnalyticsFilters
-        session={session}
-        subject={subject}
+        fields={TAB_FILTERS[state.tab]}
+        values={values}
         sessions={sessions.data ?? []}
         subjects={subjects.data ?? []}
         onChange={onChange}
       />
 
-      <SectionHeading className="mb-4">Enrolment</SectionHeading>
-      <Panel pending={intelligence.isPending} error={intelligence.error}>
-        <TileStrip tiles={tiles} size="lg" />
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.35fr_1fr]">
-          <section>
-            <h4 className="mb-0.5 text-xl">Pupils per class</h4>
-            <p className="text-xs text-muted-foreground">
-              Admitted pupils, largest class first.
-            </p>
-            {classes.length > 0 ? (
-              <BarChart bars={classes} peak={sharedPeak(classes)} />
-            ) : (
-              <Caption>No pupil has been admitted into a class yet.</Caption>
-            )}
-          </section>
-
-          <section>
-            <h4 className="mb-0.5 text-xl">Gender split</h4>
-            <p className="text-xs text-muted-foreground">
-              Share of everyone admitted.
-            </p>
-            {genders.length > 0 ? (
-              <RateBars rates={genders} weakBelow={0} />
-            ) : (
-              <Caption>No gender has been recorded against an admitted pupil.</Caption>
-            )}
-          </section>
-        </div>
-
-        <h4 className="mb-3.5 mt-8 text-xl">Where pupils come from</h4>
-        <DataTable columns={STATES} rows={states} rowKey={rowKey} compact />
-        <Caption>
-          Local governments are counted on the tile above but not named — this
-          API publishes no LGA catalogue to name them from.
-        </Caption>
-      </Panel>
-
-      <Rule className="mt-8" />
-      <SectionHeading className="mb-4">
-        Money collected{sessionName ? ` · ${sessionName}` : ''}
-      </SectionHeading>
-      <Panel
-        pending={financial.isPending || sessions.isPending}
-        error={financial.error}
-        empty={
-          money.current.length === 0 && money.previous.length === 0
-            ? 'Nothing has been paid against this session or the one before it.'
-            : undefined
-        }
-      >
-        {/* The one honest directional delta on this page: both totals are the
-            API's own, so the arrow compares two real figures. */}
-        <TileStrip
-          className="mb-6"
-          tiles={(() => {
-            const current = seriesTotal(financial.data?.current)
-            const previous = seriesTotal(financial.data?.previous)
-            const level = current === previous
-            return [
-              {
-                label: 'Collected this session',
-                value: formatNaira(current),
-                delta: level
-                  ? 'Level with the session before'
-                  : `${formatNaira(Math.abs(current - previous))} ${
-                      current > previous ? 'more' : 'less'
-                    } than the session before`,
-                deltaTone: level ? 'muted' : current > previous ? 'up' : 'down',
-              } as const,
-              {
-                label: 'The session before',
-                value: formatNaira(previous),
-              },
-            ]
-          })()}
+      {state.tab === 'grades' ? (
+        <GradesPanel
+          sessionId={sessionId}
+          subjectId={subjectId}
+          filtersPending={sessions.isPending || subjects.isPending}
         />
-
-        <div className="grid gap-8 lg:grid-cols-2">
-          <section>
-            <h4 className="mb-0.5 text-xl">This session</h4>
-            <BarChart bars={money.current} peak={moneyPeak} />
-            <Caption>{formatNaira(seriesTotal(financial.data?.current))} collected</Caption>
-          </section>
-          <section>
-            <h4 className="mb-0.5 text-xl">The session before</h4>
-            <BarChart bars={money.previous} peak={moneyPeak} />
-            <Caption>{formatNaira(seriesTotal(financial.data?.previous))} collected</Caption>
-          </section>
-        </div>
-      </Panel>
-
-      <Rule className="mt-8" />
-      <SectionHeading className="mb-4">
-        Grades{results.data?.subject?.name ? ` · ${results.data.subject.name}` : ''}
-      </SectionHeading>
-      <Panel
-        pending={results.isPending || subjects.isPending}
-        error={results.error}
-        empty={
-          grades.current.length === 0 && grades.previous.length === 0
-            ? 'No result has been filed for this subject in either session.'
-            : undefined
-        }
-      >
-        <div className="grid gap-8 lg:grid-cols-2">
-          <section>
-            <h4 className="mb-0.5 text-xl">This session</h4>
-            <BarChart bars={grades.current} peak={gradePeak} />
-            <Caption>{formatCount(seriesTotal(results.data?.current))} results filed</Caption>
-          </section>
-          <section>
-            <h4 className="mb-0.5 text-xl">The session before</h4>
-            <BarChart bars={grades.previous} peak={gradePeak} />
-            <Caption>{formatCount(seriesTotal(results.data?.previous))} results filed</Caption>
-          </section>
-        </div>
-      </Panel>
-
-      <Rule className="mt-8" />
-      <SectionHeading className="mb-4">Settled transactions</SectionHeading>
-      <Panel pending={payments.isPending} error={payments.error}>
-        <TileStrip
-          className="mb-6.5"
-          tiles={[
-            { label: 'Payments settled', value: formatCount(settled.length) },
-            { label: 'Worth', value: formatNaira(paymentsTotal(settled)) },
-          ]}
+      ) : (
+        <MoneyPanel
+          sessionId={sessionId}
+          sessionName={sessionName}
+          limit={Number(state.limit) || Number(DEFAULT_LIMIT)}
+          filtersPending={sessions.isPending}
         />
-        <DataTable
-          columns={PAYMENTS}
-          rows={settled.map(paymentRow)}
-          rowKey={rowKey}
-          compact
-        />
-        <Caption>
-          Settled transactions only — nothing pending appears here. The newest{' '}
-          {formatCount(PAYMENT_SCAN)} are listed.
-        </Caption>
-      </Panel>
-
-      <Rule className="mt-8" />
-      <SectionHeading className="mb-4">Chase up a payment</SectionHeading>
-      <SettlePayment />
+      )}
     </div>
   )
 }

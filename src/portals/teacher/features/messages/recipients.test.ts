@@ -39,7 +39,7 @@ const BARE_A = {
   department: { id: 6, name: 'SSS I' },
 } as unknown as TeacherRoll['class_arms'][number]
 
-const pupil = (over: Partial<TeacherStudent>): TeacherStudent =>
+const student = (over: Partial<TeacherStudent>): TeacherStudent =>
   ({
     id: 10,
     fname: 'Aniegbokas',
@@ -67,17 +67,17 @@ test('an arm does not say its class twice, and never says none at all', () => {
 })
 
 test('an arm with nobody in it is still on the picker', () => {
-  const options = armOptions(roll([pupil({ class_arm_id: 4 })], [JSS2A, BARE_A]))
+  const options = armOptions(roll([student({ class_arm_id: 4 })], [JSS2A, BARE_A]))
   assert.deepEqual(options, [
     { value: '4', label: 'SSS I · JSS 2 A', count: 1 },
-    // Teacher2 takes this arm and no pupil sits in it. Dropping it would tell
+    // Teacher2 takes this arm and no student sits in it. Dropping it would tell
     // them they do not take it.
     { value: '11', label: 'SSS I · A', count: 0 },
   ])
 })
 
-test('a pupil is named whole, with the admission number beside it', () => {
-  assert.deepEqual(recipientOf(pupil({ mname: 'OZOMGBO' })), {
+test('a student is named whole, with the admission number beside it', () => {
+  assert.deepEqual(recipientOf(student({ mname: 'OZOMGBO' })), {
     id: 10,
     name: 'Aniegbokas OZOMGBO Chukwudi',
     adm: 'MGS/2020535',
@@ -85,15 +85,15 @@ test('a pupil is named whole, with the admission number beside it', () => {
   })
 })
 
-test('a pupil the school gave no admission number is still told apart', () => {
-  const anonymous = recipientOf(pupil({ id: 22, regno: null, fname: '', lname: '' }))
-  assert.equal(anonymous.name, 'Pupil 22')
-  assert.equal(anonymous.adm, 'Pupil 22')
+test('a student the school gave no admission number is still told apart', () => {
+  const anonymous = recipientOf(student({ id: 22, regno: null, fname: '', lname: '' }))
+  assert.equal(anonymous.name, 'Student 22')
+  assert.equal(anonymous.adm, 'Student 22')
 })
 
 test('the roll is cut to the arm that was picked', () => {
   const both = roll(
-    [pupil({ id: 10, class_arm_id: 3 }), pupil({ id: 4, class_arm_id: 4 })],
+    [student({ id: 10, class_arm_id: 3 }), student({ id: 4, class_arm_id: 4 })],
     [JSS1A, JSS2A],
   )
   assert.deepEqual(recipientsIn(both, 3).map((one) => one.id), [10])
@@ -102,35 +102,35 @@ test('the roll is cut to the arm that was picked', () => {
 })
 
 test('the search box answers to the name and to the admission number', () => {
-  const pupils = [
-    recipientOf(pupil({ id: 10, fname: 'Aniegbokas', lname: 'Chukwudi' })),
-    recipientOf(pupil({ id: 4, fname: 'UDOYE', lname: 'OKIGBO', regno: 'CUN/2026/4' })),
+  const students = [
+    recipientOf(student({ id: 10, fname: 'Aniegbokas', lname: 'Chukwudi' })),
+    recipientOf(student({ id: 4, fname: 'UDOYE', lname: 'OKIGBO', regno: 'CUN/2026/4' })),
   ]
-  assert.deepEqual(matching(pupils, 'udo').map((one) => one.id), [4])
-  assert.deepEqual(matching(pupils, 'cun/2026').map((one) => one.id), [4])
+  assert.deepEqual(matching(students, 'udo').map((one) => one.id), [4])
+  assert.deepEqual(matching(students, 'cun/2026').map((one) => one.id), [4])
   // Case is not the teacher's problem: the school stores one name shouted.
-  assert.deepEqual(matching(pupils, 'CHUKWUDI').map((one) => one.id), [10])
-  assert.deepEqual(matching(pupils, '  ').map((one) => one.id), [10, 4])
+  assert.deepEqual(matching(students, 'CHUKWUDI').map((one) => one.id), [10])
+  assert.deepEqual(matching(students, '  ').map((one) => one.id), [10, 4])
 })
 
-test('a pupil is picked up and put down again', () => {
+test('a student is picked up and put down again', () => {
   assert.deepEqual(toggled([], 4), [4])
   assert.deepEqual(toggled([4, 10], 4), [10])
 })
 
-test('select-all takes the pupils on screen and leaves the others alone', () => {
-  const shown = [recipientOf(pupil({ id: 10 })), recipientOf(pupil({ id: 11 }))]
-  // A pupil chosen in another arm survives select-all here.
+test('select-all takes the students on screen and leaves the others alone', () => {
+  const shown = [recipientOf(student({ id: 10 })), recipientOf(student({ id: 11 }))]
+  // A student chosen in another arm survives select-all here.
   assert.deepEqual(allToggled([4], shown), [4, 10, 11])
   // Everyone shown is already in, so the same press takes them out — and
-  // still leaves the pupil from the other arm.
+  // still leaves the student from the other arm.
   assert.deepEqual(allToggled([4, 10, 11], shown), [4])
   // Half in: the press completes the set rather than clearing it.
   assert.deepEqual(allToggled([10], shown), [10, 11])
 })
 
 test('the note counts the whole selection, not just this arm', () => {
-  const shown = [recipientOf(pupil({ id: 10 })), recipientOf(pupil({ id: 11 }))]
+  const shown = [recipientOf(student({ id: 10 })), recipientOf(student({ id: 11 }))]
   assert.equal(selectionNote([10], shown), '1 selected · 2 shown')
   // Someone chosen in an arm that is not on screen has to be accounted for,
   // or the count reads as a bug.

@@ -29,7 +29,7 @@ import type { ActionDef, ActionField } from './types'
 type Values = Record<string, unknown>
 
 /**
- * The pupils the API would not move, and what it said about each. Shaped like
+ * The students the API would not move, and what it said about each. Shaped like
  * the form's own error banner, since it is the same kind of news.
  */
 function NotMoved({ failures }: { failures: string[] }) {
@@ -42,8 +42,8 @@ function NotMoved({ failures }: { failures: string[] }) {
       <div>
         <div className="font-heading text-sm font-extrabold">
           {failures.length === 1
-            ? 'One pupil was not moved'
-            : `${failures.length} pupils were not moved`}
+            ? 'One student was not moved'
+            : `${failures.length} students were not moved`}
         </div>
         <ul className="mt-0.75 space-y-0.5 text-sm text-muted-foreground">
           {failures.map((failure) => (
@@ -123,7 +123,7 @@ function renderField(field: ActionField) {
 }
 
 /**
- * The guided flows: allocating a fee, taking a payment, promoting pupils,
+ * The guided flows: allocating a fee, taking a payment, promoting students,
  * reviewing an application, issuing a book. One page — they differ only in
  * what they summarise, what they ask to be picked and what they ask for.
  */
@@ -187,7 +187,7 @@ export function ActionPage({
     ...action.summary,
     ...(total
       ? [
-          { label: 'Pupils selected', value: String(total.pupils) },
+          { label: 'Students selected', value: String(total.students) },
           { label: 'Will bill', value: formatNaira(total.amount) },
         ]
       : []),

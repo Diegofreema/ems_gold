@@ -4,7 +4,7 @@ export type PickerItem = {
   key: string
   label: string
   meta: string
-  /** Pupils in the arm — the allocate flow bills every one of them. */
+  /** Students in the arm — the allocate flow bills every one of them. */
   count: number
   /**
    * A stored file behind this row. Set by review, where the reader needs to
@@ -46,7 +46,7 @@ export type ActionDef = {
   fields: ActionField[]
   cta: string
   footnote: string
-  /** Set by allocate: the per-pupil amount behind the running total. */
+  /** Set by allocate: the per-student amount behind the running total. */
   unitAmount?: number
   /**
    * Figures recomputed from the answers as they are typed, shown beside the
@@ -74,7 +74,7 @@ export type ActionDef = {
    * — the dialog is the last chance to notice the wrong invoice.
    */
   confirm?: (
-    total?: { pupils: number; amount: number },
+    total?: { students: number; amount: number },
     values?: Record<string, unknown>,
   ) => ActionConfirm | Promise<ActionConfirm>
 }
@@ -82,7 +82,7 @@ export type ActionDef = {
 /** What the API did, as the flow page reports it. */
 export type ActionOutcome = {
   message: string
-  /** One line per pupil the API would not move, with its reason. */
+  /** One line per student the API would not move, with its reason. */
   failures?: string[]
 }
 

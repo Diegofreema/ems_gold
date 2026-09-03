@@ -4,7 +4,7 @@ import type { AssignmentBody } from '../../../api/set-assignments/types.ts'
  * What the assignment form submits.
  *
  * `test_type` is not asked for. Every assignment the API has ever sent is a
- * `cbt_test`, and it is the only kind the pupil's portal can sit — offering a
+ * `cbt_test`, and it is the only kind the student's portal can sit — offering a
  * dropdown of one choice, or of kinds nobody has seen the school accept, would
  * be inventing a decision the teacher does not have.
  *

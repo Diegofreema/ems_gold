@@ -21,6 +21,7 @@ import {
   privilegeRow,
   staffDeleteBody,
   staffTarget,
+  TEACHERS,
   teacherRow,
   teacherSubjectRow,
 } from './staff-row'
@@ -186,6 +187,29 @@ const PLACE: FormSectionSpec = {
   ],
 }
 
+/**
+ * What only the office record keeps.
+ *
+ * `POST /teachers` has no birthday field and the teaching record comes back
+ * without one, so the teaching half of the form does not ask — a date typed
+ * there would be dropped on save and read back empty.
+ */
+const OFFICE: FormSectionSpec = {
+  title: 'Office record',
+  when: (values) => values.kind !== TEACHERS,
+  fields: [
+    {
+      key: 'dob',
+      label: 'Date of birth',
+      date: true,
+      // A birthday is behind us, so the picker opens on the years going back
+      // rather than making the office scroll through eighteen of them.
+      past: true,
+      hint: 'Held on the office record only.',
+    },
+  ],
+}
+
 const TEACHING: FormSectionSpec = {
   title: 'Teaching',
   when: isTeaching,
@@ -202,7 +226,7 @@ const TEACHING: FormSectionSpec = {
       label: 'About',
       multiline: true,
       wide: true,
-      placeholder: 'What pupils and parents see when they look this teacher up.',
+      placeholder: 'What students and parents see when they look this teacher up.',
       hint: 'Held on the teaching record only.',
     },
   ],
@@ -222,6 +246,7 @@ const STAFF_DETAIL = [
   { key: 'role', label: 'Role' },
   { key: 'status', label: 'Status' },
   { key: 'gender', label: 'Gender' },
+  { key: 'born', label: 'Date of birth' },
   { key: 'phone', label: 'Phone' },
   { key: 'place', label: 'Address' },
   { key: 'qualification', label: 'Qualification' },
@@ -329,13 +354,14 @@ export const staff: CollectionDef = {
           key: 'kind',
           label: 'Kind of record',
           required: true,
-          options: ['Teacher', ADMINISTRATORS],
+          options: [TEACHERS, ADMINISTRATORS],
           hint: 'A teaching record carries subjects, a class and a qualification; an office record carries privileges. This is what decides which fields follow.',
         },
       ],
     },
     IDENTITY,
     ACCOUNT,
+    OFFICE,
     PLACE,
     TEACHING,
   ],
@@ -416,6 +442,7 @@ export const staffAdmin = staffSlice(
       { key: 'privilegeCount', label: 'Privileges' },
       { key: 'phone', label: 'Phone' },
       { key: 'gender', label: 'Gender' },
+      { key: 'born', label: 'Date of birth' },
       { key: 'place', label: 'Address' },
       { key: 'department', label: 'Class' },
       { key: 'joined', label: 'On record since' },
@@ -458,7 +485,7 @@ export const staffAdmin = staffSlice(
       },
       ...(ACTIVITY_TAB ?? []),
     ],
-    form: [IDENTITY, ACCOUNT],
+    form: [IDENTITY, ACCOUNT, OFFICE],
   },
 )
 
@@ -524,7 +551,7 @@ export const staffOther = staffSlice(
     counts: undefined,
     // Adding one here writes the office record the empty state points at, so
     // the button does what the page says rather than nothing.
-    form: [IDENTITY, ACCOUNT],
+    form: [IDENTITY, ACCOUNT, OFFICE],
     save: saveStaff('admin'),
   },
 )

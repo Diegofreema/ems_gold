@@ -7,12 +7,12 @@ import { text } from '../../../../features/profile/record.ts'
 import { teachersOf } from '../courses/courses.ts'
 
 /**
- * The pupil's week, off `GET /timetables/mine`.
+ * The student's week, off `GET /timetables/mine`.
  *
  * Four columns where the design has five. "Room" is the one dropped: the
  * period carries `where`, `venue` and `lecturehall_id` and all three are null
  * on every period this school holds. A room number is the one thing on this
- * page that would send a pupil to the wrong door, so it is left out rather
+ * page that would send a student to the wrong door, so it is left out rather
  * than filled with a dash down the whole column.
  *
  * "Teacher" is not on a period either, but it is knowable: a period names its

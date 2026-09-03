@@ -96,7 +96,7 @@ export type ActionPath =
   | '/admin/calendar'
   | '/admin/terms'
   | '/admin/collect/report'
-  | '/admin/collect/pupil'
+  | '/admin/collect/student'
   | '/parent/pay'
   | '/parent/children/add'
   | '/admin/collect'
@@ -195,7 +195,7 @@ export type ListResult = Paginated<Row> & { tally?: number }
 
 /**
  * A control on every row of a list, beside the link into the record — a state
- * a register turns on and off rather than edits, like suspending a pupil.
+ * a register turns on and off rather than edits, like suspending a student.
  *
  * Every part is read off the row, so one spec covers both directions of a
  * state that toggles: the button offers whichever of the two the record is

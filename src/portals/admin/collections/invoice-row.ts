@@ -29,7 +29,7 @@ export function payStatus(paystatus: string | null | undefined): string {
 }
 
 /**
- * Who the invoice is against. The pupil's row can be deleted out from under
+ * Who the invoice is against. The student's row can be deleted out from under
  * an invoice — the API flags that rather than dropping the invoice — and a
  * bill nobody can be named for still has to be listed, so it says so.
  */
@@ -39,7 +39,7 @@ function billedTo(invoice: Invoice): string {
     .filter(Boolean)
     .join(' ')
   if (name) return name
-  return invoice.student_id ? `Pupil ${invoice.student_id}` : 'Deleted pupil'
+  return invoice.student_id ? `Student ${invoice.student_id}` : 'Deleted student'
 }
 
 /**

@@ -13,7 +13,7 @@ export type ConfirmRequest = {
   body: string
   /** The record the action applies to, shown in a neutral block. */
   subject: string
-  /** Label of the destructive button, e.g. "Delete the pupil". */
+  /** Label of the destructive button, e.g. "Delete the student". */
   cta: string
   /** Label of the cancel button — "Keep it", "Go back", "Keep working". */
   cancel?: string

@@ -134,7 +134,7 @@ export function SettingsForm() {
           name="regnoformat"
           label="Admission number prefix"
           placeholder="NETPRO/"
-          hint="Goes in front of every new pupil's admission number. Numbers already issued keep the prefix they were given."
+          hint="Goes in front of every new student's admission number. Numbers already issued keep the prefix they were given."
         />
         <TextField<SettingsValues>
           name="application_no_prefix"

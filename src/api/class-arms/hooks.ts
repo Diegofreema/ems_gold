@@ -62,12 +62,12 @@ export function useClassArmStudents(id: Id | undefined, all = false) {
   })
 }
 
-/** Placing a pupil in an arm changes how they read on the student screens too. */
+/** Placing a student in an arm changes how they read on the student screens too. */
 export function useAssignStudentsToArm(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: AssignStudentsBody) => classArmsService.assignStudents(id, body),
-    meta: { success: 'Pupils moved into the arm' },
+    meta: { success: 'Students moved into the arm' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: classArmKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
@@ -79,7 +79,7 @@ export function useRemoveStudentFromArm(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (classArmStudentId: Id) => classArmsService.removeStudent(id, classArmStudentId),
-    meta: { success: 'Pupil removed from the arm' },
+    meta: { success: 'Student removed from the arm' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: classArmKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: studentKeys.lists() })

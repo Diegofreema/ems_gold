@@ -72,7 +72,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
         student.regno,
       ]
         .filter(Boolean)
-        .join(' · ') || `Pupil ${student.id}`,
+        .join(' · ') || `Student ${student.id}`,
     }))
   }
 
@@ -142,7 +142,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
   }
 
   if (key === 'my-arms') {
-    // The arms come back beside the roll rather than on it, and one pupil is
+    // The arms come back beside the roll rather than on it, and one student is
     // enough of the roll to read them off.
     const { class_arms } = await teachingService.students({ limit: 1 })
     return class_arms.map((arm) => ({
@@ -199,7 +199,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
 
 /**
  * A feed as a lookup from id to label, for a register that holds a foreign key
- * the list endpoint does not expand — a pupil's guardian, an arm's class. It
+ * the list endpoint does not expand — a student's guardian, an arm's class. It
  * reads the same cache the forms' selects do, so asking for it costs a request
  * only when nothing has needed that feed for five minutes, and a feed that
  * fails leaves the column falling back rather than the page failing with it.

@@ -1,6 +1,9 @@
 import type { Child, Parent } from '../../../api/parents/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
+import { parentName } from '../../../features/collections/guardian-option.ts'
 import type { Row } from '../../../features/collections/types.ts'
+
+export { parentName }
 
 function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
@@ -9,18 +12,6 @@ function text(value: string | null | undefined): string {
 /** Joins the parts a record actually carries, e.g. "Teacher · 0803 441 2280". */
 function joined(...parts: (string | null | undefined)[]): string {
   return parts.map((part) => part?.trim()).filter(Boolean).join(' · ') || BLANK
-}
-
-/**
- * A household as one line. The API keeps a father and a mother on the same
- * record rather than a person per row, so the name is both of them where the
- * school holds both.
- */
-export function parentName(parent: Pick<Parent, 'fathersname' | 'mothersname'>): string {
-  return [parent.fathersname, parent.mothersname]
-    .map((name) => name?.trim())
-    .filter(Boolean)
-    .join(' & ')
 }
 
 /** The API spells its two statuses in lower case; the register does not. */
@@ -78,7 +69,7 @@ export function childRow(child: Child): Row {
 
 /**
  * What deleting a household would strand. The API refuses outright while a
- * pupil still points at it, so this is the sentence that explains the refusal
+ * student still points at it, so this is the sentence that explains the refusal
  * before the button rather than after it.
  */
 export function parentDeleteBody(row: Row | undefined): string {
@@ -86,12 +77,12 @@ export function parentDeleteBody(row: Row | undefined): string {
   const name = row?.name && row.name !== BLANK ? row.name : 'This household'
   // The register is told nothing about children, so a row that came from the
   // list cannot promise either sentence. Saying "permanently" over a household
-  // that has four pupils would be reassuring and wrong.
+  // that has four students would be reassuring and wrong.
   if (!Number.isFinite(count)) {
-    return `${name} loses the record and the login behind it, permanently. If a pupil is still linked to the household the register will refuse — open the record first to see who, or block the sign-in instead.`
+    return `${name} loses the record and the login behind it, permanently. If a student is still linked to the household the register will refuse — open the record first to see who, or block the sign-in instead.`
   }
   if (count > 0) {
-    return `${count} ${count === 1 ? 'pupil is' : 'pupils are'} linked to this household, and the register will refuse to delete it while they are — every one of them would be left with no guardian. Move them to another household first, or block the sign-in instead.`
+    return `${count} ${count === 1 ? 'student is' : 'students are'} linked to this household, and the register will refuse to delete it while they are — every one of them would be left with no guardian. Move them to another household first, or block the sign-in instead.`
   }
   return `${name} loses the record and the login behind it, permanently. If they are only leaving for a while, deactivate the account instead — that closes the sign-in and keeps everything else.`
 }

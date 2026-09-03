@@ -102,7 +102,7 @@ test('two children of the same name in the same arm are told apart by id', () =>
   )
   assert.deepEqual(
     weeks.map((week) => week.name),
-    ['Diego Freeman · pupil 24', 'Diego Freeman · pupil 27', 'Diego Freeman'],
+    ['Diego Freeman · student 24', 'Diego Freeman · student 27', 'Diego Freeman'],
   )
 })
 
@@ -152,13 +152,13 @@ test('a tab says only as much as the household forces it to', () => {
   )
 
   // The bronze household: same name, same class, same arm. Nothing shorter
-  // than the pupil id tells 24 and 27 apart.
+  // than the student id tells 24 and 27 apart.
   assert.deepEqual(
     [...tabLabels([entry({ student_id: 24 }), entry({ student_id: 27 }), UNDRAWN]).values()],
     [
-      'Diego Freeman · pupil 24',
-      'Diego Freeman · pupil 27',
-      'Diego Freeman · pupil 25',
+      'Diego Freeman · student 24',
+      'Diego Freeman · student 27',
+      'Diego Freeman · student 25',
     ],
   )
 })

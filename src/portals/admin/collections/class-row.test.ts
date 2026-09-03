@@ -40,12 +40,12 @@ const JSS1: Department = {
   dependencies: { students: 6, subjects: 3, class_arms: 2, results: 0, teachers: 2 },
 }
 
-test('counts come off dependencies, which see pupils no arm holds', () => {
+test('counts come off dependencies, which see students no arm holds', () => {
   const counts = classCounts(JSS1)
-  // The two arms hold four pupils between them; the class has six.
+  // The two arms hold four students between them; the class has six.
   assert.deepEqual(counts, {
     arms: 2,
-    pupils: 6,
+    students: 6,
     subjects: 3,
     armNames: ['JSS1 A', 'B'],
   })
@@ -55,7 +55,7 @@ test('a class without dependencies falls back to the lists it expanded', () => {
   const { dependencies: _dropped, ...bare } = JSS1
   assert.deepEqual(classCounts(bare), {
     arms: 2,
-    pupils: 0,
+    students: 0,
     subjects: 3,
     armNames: ['JSS1 A', 'B'],
   })
@@ -65,20 +65,20 @@ test('the census totals every class and keys each by id', () => {
   const other: Department = { ...JSS1, id: 5, name: 'JSS III', dependencies: { students: 1, class_arms: 0, subjects: 2 } }
   const { counts, totals } = census([JSS1, other])
   assert.equal(totals.classes, 2)
-  assert.equal(totals.pupils, 7)
+  assert.equal(totals.students, 7)
   assert.equal(totals.arms, 2)
   assert.equal(totals.subjects, 5)
-  assert.equal(counts.get('5')?.pupils, 1)
+  assert.equal(counts.get('5')?.students, 1)
 })
 
 test('a row reads its counts, and reads blank rather than zero without them', () => {
   const withCounts = classRow(JSS1, classCounts(JSS1))
   assert.equal(withCounts.name, 'JSS 1')
-  assert.equal(withCounts.pupils, '6')
+  assert.equal(withCounts.students, '6')
   assert.equal(withCounts.fees, 'TUITION FEE, Meidcal FEE')
 
   const bare = classRow(JSS1)
-  assert.equal(bare.pupils, BLANK)
+  assert.equal(bare.students, BLANK)
   assert.equal(bare.arms, BLANK)
 })
 
@@ -171,18 +171,18 @@ test('a subject row spells the numeric status as the register does', () => {
 
 test('the delete confirm names what is in the way', () => {
   const body = classDeleteBody(classRow(JSS1, classCounts(JSS1)))
-  assert.match(body, /6 pupils/)
+  assert.match(body, /6 students/)
   assert.match(body, /2 arms/)
   assert.match(body, /3 subjects/)
 })
 
 test('a single dependency is named in the singular', () => {
-  const body = classDeleteBody({ id: '2', pupils: '1', armCount: '0', subjectCount: '0' })
-  assert.match(body, /1 pupil\b/)
+  const body = classDeleteBody({ id: '2', students: '1', armCount: '0', subjectCount: '0' })
+  assert.match(body, /1 student\b/)
   assert.doesNotMatch(body, /arms/)
 })
 
 test('an empty class says so rather than listing nothing', () => {
-  const body = classDeleteBody({ id: '2', pupils: '0', armCount: '0', subjectCount: '0' })
+  const body = classDeleteBody({ id: '2', students: '0', armCount: '0', subjectCount: '0' })
   assert.match(body, /Nothing belongs to this class/)
 })

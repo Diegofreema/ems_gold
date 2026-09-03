@@ -9,24 +9,24 @@ import { fullName } from '../../../../features/profile/record.ts'
  * Who a teacher may write to, off `GET /teachers/me/students`.
  *
  * One call answers both halves the picker needs: `class_arms` is every arm the
- * teacher takes and `students` is the roll across all of them, each pupil
+ * teacher takes and `students` is the roll across all of them, each student
  * carrying the `class_arm_id` they sit in. So the arms are not asked for
  * separately, and an arm the teacher takes but which holds nobody still
- * appears — it comes off `class_arms`, where a pupil-less arm is listed all
+ * appears — it comes off `class_arms`, where a student-less arm is listed all
  * the same.
  *
  * `/teachers/me/eclasses` is not this list: it is the teacher's video meeting
- * links, and holds no pupils at all.
+ * links, and holds no students at all.
  */
 
-/** An arm on the picker: what it is called, and how many pupils it holds. */
+/** An arm on the picker: what it is called, and how many students it holds. */
 export type ArmOption = {
   value: string
   label: string
   count: number
 }
 
-/** One pupil, as the picker lists them. */
+/** One student, as the picker lists them. */
 export type Recipient = {
   id: number
   name: string
@@ -54,48 +54,48 @@ export function armLabel(arm: TeacherClassArm): string {
   return `${klass} · ${name}`
 }
 
-export function recipientOf(pupil: TeacherStudent): Recipient {
+export function recipientOf(student: TeacherStudent): Recipient {
   return {
-    id: pupil.id,
-    name: fullName(pupil.fname, pupil.mname, pupil.lname) || `Pupil ${pupil.id}`,
-    // Not every pupil has one, and this is what tells two of a name apart.
-    adm: pupil.regno?.trim() || `Pupil ${pupil.id}`,
-    armId: pupil.class_arm_id ?? null,
+    id: student.id,
+    name: fullName(student.fname, student.mname, student.lname) || `Student ${student.id}`,
+    // Not every student has one, and this is what tells two of a name apart.
+    adm: student.regno?.trim() || `Student ${student.id}`,
+    armId: student.class_arm_id ?? null,
   }
 }
 
-/** Every arm the teacher takes, each carrying how many pupils sit in it. */
+/** Every arm the teacher takes, each carrying how many students sit in it. */
 export function armOptions(roll: TeacherRoll): ArmOption[] {
   return roll.class_arms.map((arm) => ({
     value: String(arm.id),
     label: armLabel(arm),
-    count: roll.items.filter((pupil) => pupil.class_arm_id === arm.id).length,
+    count: roll.items.filter((student) => student.class_arm_id === arm.id).length,
   }))
 }
 
 /** The roll of one arm, in the order the school sent it. */
 export function recipientsIn(roll: TeacherRoll, armId: number): Recipient[] {
   return roll.items
-    .filter((pupil) => pupil.class_arm_id === armId)
+    .filter((student) => student.class_arm_id === armId)
     .map(recipientOf)
 }
 
 /**
- * The pupils a search box is asking for.
+ * The students a search box is asking for.
  *
  * Matched on the name and the admission number both, because a teacher looking
- * for one pupil in a full arm reaches for whichever they have to hand.
+ * for one student in a full arm reaches for whichever they have to hand.
  */
-export function matching(pupils: Recipient[], query: string): Recipient[] {
+export function matching(students: Recipient[], query: string): Recipient[] {
   const term = query.trim().toLowerCase()
-  if (!term) return pupils
-  return pupils.filter(
-    (pupil) =>
-      pupil.name.toLowerCase().includes(term) || pupil.adm.toLowerCase().includes(term),
+  if (!term) return students
+  return students.filter(
+    (student) =>
+      student.name.toLowerCase().includes(term) || student.adm.toLowerCase().includes(term),
   )
 }
 
-/** Adds a pupil to the selection, or takes them out of it. */
+/** Adds a student to the selection, or takes them out of it. */
 export function toggled(chosen: number[], id: number): number[] {
   return chosen.includes(id) ? chosen.filter((one) => one !== id) : [...chosen, id]
 }
@@ -105,11 +105,11 @@ export function toggled(chosen: number[], id: number): number[] {
  * it — with everyone shown taken out.
  *
  * Scoped to what the search box has narrowed to rather than to the whole arm,
- * so "select all" after a search means the pupils on screen. Pupils chosen in
+ * so "select all" after a search means the students on screen. Students chosen in
  * another arm are left alone: a message can go to a class captain from each.
  */
 export function allToggled(chosen: number[], shown: Recipient[]): number[] {
-  const ids = shown.map((pupil) => pupil.id)
+  const ids = shown.map((student) => student.id)
   const every = ids.length > 0 && ids.every((id) => chosen.includes(id))
   if (every) return chosen.filter((id) => !ids.includes(id))
   return [...chosen, ...ids.filter((id) => !chosen.includes(id))]
@@ -117,7 +117,7 @@ export function allToggled(chosen: number[], shown: Recipient[]): number[] {
 
 /** e.g. "3 selected · 2 in this arm". */
 export function selectionNote(chosen: number[], shown: Recipient[]): string {
-  const here = shown.filter((pupil) => chosen.includes(pupil.id)).length
+  const here = shown.filter((student) => chosen.includes(student.id)).length
   const elsewhere = chosen.length - here
   const parts = [`${chosen.length} selected`]
   if (elsewhere > 0) parts.push(`${here} of them here`)

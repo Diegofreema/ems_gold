@@ -1,5 +1,6 @@
 import type { CreateStaffBody, UpdateStaffBody } from '../../../api/teachers/types.ts'
 import type { CreateAdminBody, UpdateAdminRecordBody } from '../../../api/admins/types.ts'
+import { isoDate } from '../../../features/collections/birthday.ts'
 import { schoolCountryId } from '../../../features/collections/country-ids.ts'
 
 /** The form's values, all strings from the inputs and selects. */
@@ -69,6 +70,10 @@ export function adminBody(values: FormValues): CreateAdminBody {
     username: text(values.username) ?? '',
     surname: text(values.firstname) ?? '',
     lastname: text(values.lastname) ?? '',
+    // The calendar hands back a Date; a form opened on a record that holds no
+    // birthday leaves it undefined, which drops the key rather than sending an
+    // empty string over a date the office may have on file elsewhere.
+    dob: isoDate(values.dob),
   }
 }
 

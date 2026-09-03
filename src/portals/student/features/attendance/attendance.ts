@@ -6,9 +6,9 @@ import { when } from '../../../../features/collections/when.ts'
 import { capitalise } from '../../../../lib/format.ts'
 
 /**
- * A pupil's own register, off `GET /attendances/mine`.
+ * A student's own register, off `GET /attendances/mine`.
  *
- * Unverified — no pupil login has read it — so the envelope, the row and the
+ * Unverified — no student login has read it — so the envelope, the row and the
  * figures are each read for the first key that carries something, and the
  * candidate lists below are the guess. One live answer retires them.
  */
@@ -29,7 +29,7 @@ function rows(answer: MyAttendance | undefined): Loose[] {
   return Array.isArray(list) ? (list as Loose[]) : []
 }
 
-/** Every day somebody marked this pupil, newest first. */
+/** Every day somebody marked this student, newest first. */
 export function marksOf(answer: MyAttendance | undefined): Loose[] {
   return [...rows(answer)].sort((one, two) =>
     String(pick(two, ...DATE_KEYS) ?? '').localeCompare(String(pick(one, ...DATE_KEYS) ?? '')),
@@ -48,7 +48,7 @@ export function markRow(record: Loose, index: number): Row {
 
   return {
     // The mark's own id where it has one; otherwise the day, which is unique
-    // per pupil — one row per pupil per day is the endpoint's own rule.
+    // per student — one row per student per day is the endpoint's own rule.
     id: String(looseNumber(pick(record, 'id', 'attendance_id')) ?? date ?? index) || String(index),
     date: when(date),
     day: dated ? at.toLocaleDateString('en-NG', { weekday: 'long' }) : BLANK,

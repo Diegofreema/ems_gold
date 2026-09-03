@@ -4,7 +4,7 @@ import type { ProfileSave } from '@/features/profile/types'
 import { studentContactBody } from './profile'
 
 /**
- * Saving the pupil's own record — the phone and the address, which is all
+ * Saving the student's own record — the phone and the address, which is all
  * `POST /students/me` accepts.
  */
 export function useStudentProfileSave(): ProfileSave {

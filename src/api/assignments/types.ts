@@ -8,7 +8,7 @@
  * Two fields count the same thing and disagree: `total_questions` is what the
  * teacher said the assignment would hold when they set it, and `question_count` is
  * how many questions they have actually written. Assignment 6 says 4 and 1. The
- * pupil is shown the second — an assignment says "1 question" and holds one.
+ * student is shown the second — an assignment says "1 question" and holds one.
  */
 export type Assignment = {
   id: number
@@ -16,7 +16,7 @@ export type Assignment = {
   details?: string | null
   /** `cbt_test` on every assignment so far; the school's own word for the kind. */
   test_type?: string | null
-  /** The teacher's own state for the assignment, e.g. `active`. Not the pupil's. */
+  /** The teacher's own state for the assignment, e.g. `active`. Not the student's. */
   status?: string | null
   subject_id?: number | null
   subject?: string | null
@@ -57,7 +57,7 @@ export type QuestionOption = {
 }
 
 /**
- * One question of an assignment. The answer key is never sent to a pupil: options
+ * One question of an assignment. The answer key is never sent to a student: options
  * carry their text and nothing marking one of them right.
  */
 export type Question = {
@@ -70,7 +70,7 @@ export type Question = {
   options?: QuestionOption[] | null
 }
 
-/** The pupil's own attempt at an assignment, where they have made one. */
+/** The student's own attempt at an assignment, where they have made one. */
 export type MySubmission = {
   id: number
   status?: string | null
@@ -105,7 +105,7 @@ export type AssignmentDetail = {
  */
 export type SubmitAssignmentBody = {
   answers: Record<string, number | string>
-  /** When the pupil actually opened the assignment. See `startedAt` in `assignment.ts`. */
+  /** When the student actually opened the assignment. See `startedAt` in `assignment.ts`. */
   actual_start_time?: string
 }
 
@@ -120,7 +120,7 @@ export type ResultAnswer = {
   is_correct?: boolean | null
   /**
    * Only on the teacher's marking view, together with `correct_option_id`.
-   * A pupil is told whether they were right, never which option was.
+   * A student is told whether they were right, never which option was.
    */
   theory_score?: number | null
   correct_option_id?: number | null

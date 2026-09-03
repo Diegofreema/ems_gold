@@ -13,7 +13,7 @@ export function FilterBar({
   query: string
   onQueryChange: (query: string) => void
   placeholder: string
-  /** e.g. "11 pupils". */
+  /** e.g. "11 students". */
   count: string
   /** Extra filter controls, rendered between the search box and the count. */
   children?: ReactNode

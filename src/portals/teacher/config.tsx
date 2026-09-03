@@ -15,7 +15,7 @@ export const teacherPortal: PortalConfig = {
     // anything, and a figure written in would be read as one that had.
     { to: '/teacher', label: 'Dashboard', hint: 'Your counters and the assignments you set' },
     { to: '/teacher/scores', label: 'Enter scores', hint: 'Mark a class, subject by subject' },
-    { to: '/teacher/students', label: 'My students', hint: 'The pupils on your roll' },
+    { to: '/teacher/students', label: 'My students', hint: 'The students on your roll' },
     { to: '/teacher/topics', label: 'Topics taught', hint: 'What the office reads' },
   ],
   context: <MarkingTerm />,

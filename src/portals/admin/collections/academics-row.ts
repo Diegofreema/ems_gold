@@ -67,7 +67,7 @@ function countOf(arm: ClassArm, key: string): string {
  */
 export function armDeleteBody(row: Row | undefined): string {
   const held = [
-    [row?.roll, 'pupil', 'pupils'],
+    [row?.roll, 'student', 'students'],
     [row?.results, 'result', 'results'],
     [row?.attendance, 'attendance record', 'attendance records'],
   ]
@@ -178,12 +178,12 @@ export function subjectClassRow(klass: SubjectClass): Row {
 }
 
 /**
- * One line of an arm's pupils tab, from `GET /class-arms/{id}/students`. That
+ * One line of an arm's students tab, from `GET /class-arms/{id}/students`. That
  * endpoint answers with two lists — who is in the arm, and who is admitted
  * into the class but not yet placed anywhere. Both belong on the page, so the
- * row says which it is rather than reading as one roll of pupils who are here.
+ * row says which it is rather than reading as one roll of students who are here.
  */
-export function armPupilRow(student: Student, placed: boolean): Row {
+export function armStudentRow(student: Student, placed: boolean): Row {
   return {
     id: String(student.id),
     name: text([student.fname, student.mname, student.lname].filter(Boolean).join(' ')),

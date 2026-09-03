@@ -3,11 +3,11 @@ import type { DetailTab } from '@/features/collections/types'
 export const staffTabs: DetailTab[] = [
   {
     label: 'Subjects',
-    columns: [{ key: 'subject', label: 'Subject' }, { key: 'arm', label: 'Arm' }, { key: 'pupils', label: 'Pupils', align: 'right' }],
+    columns: [{ key: 'subject', label: 'Subject' }, { key: 'arm', label: 'Arm' }, { key: 'students', label: 'Students', align: 'right' }],
     rows: [
-      { id: 'ss-1', subject: 'Mathematics', arm: 'SS1 A', pupils: '35' },
-      { id: 'ss-2', subject: 'Mathematics', arm: 'SS2 A', pupils: '36' },
-      { id: 'ss-3', subject: 'Further Maths', arm: 'SS2 A', pupils: '18' },
+      { id: 'ss-1', subject: 'Mathematics', arm: 'SS1 A', students: '35' },
+      { id: 'ss-2', subject: 'Mathematics', arm: 'SS2 A', students: '36' },
+      { id: 'ss-3', subject: 'Further Maths', arm: 'SS2 A', students: '18' },
     ],
   },
   {

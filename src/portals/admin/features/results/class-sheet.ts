@@ -8,17 +8,17 @@ import {
 } from '../../../../features/collections/loose.ts'
 
 /**
- * The broadsheet: every pupil in a class against every subject.
+ * The broadsheet: every student in a class against every subject.
  *
  * **Position is computed by the server on every request, never stored** — it
- * depends on every other pupil's marks, so a stored copy is wrong the moment
+ * depends on every other student's marks, so a stored copy is wrong the moment
  * one of them changes. Ties share a place. Nothing here recomputes it: a
  * second opinion about who came first is the last thing a school needs.
  *
  * **The response shape is unverified.** `GET /results/class-sheet` has not
  * been read with a class on it, so this reads the answer for the shape rather
- * than for named keys: the pupils are whichever array it carries, and a
- * pupil's subject marks are whichever array or map sits on their row. That is
+ * than for named keys: the students are whichever array it carries, and a
+ * student's subject marks are whichever array or map sits on their row. That is
  * the whole guess, in this file, under test.
  */
 
@@ -28,9 +28,9 @@ export type SheetColumn = { key: string; label: string }
 
 export type SheetRow = {
   id: string
-  pupil: string
+  student: string
   adm: string
-  /** Keyed by `SheetColumn.key`; a subject the pupil has no mark in is absent. */
+  /** Keyed by `SheetColumn.key`; a subject the student has no mark in is absent. */
   marks: Record<string, string>
   total: string
   average: string
@@ -39,17 +39,17 @@ export type SheetRow = {
 
 export type Sheet = { columns: SheetColumn[]; rows: SheetRow[] }
 
-const PUPIL_LISTS = ['students', 'pupils', 'sheet', 'rows', 'results', 'items', 'data']
+const STUDENT_LISTS = ['students', 'pupils', 'sheet', 'rows', 'results', 'items', 'data']
 const SUBJECT_LISTS = ['subjects', 'marks', 'results', 'scores', 'grades']
 
 function isRecord(value: unknown): value is Loose {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
-/** The array of pupils, whichever key carries it. */
-function pupilsOf(answer: ClassSheet | undefined): Loose[] {
+/** The array of students, whichever key carries it. */
+function studentsOf(answer: ClassSheet | undefined): Loose[] {
   if (!answer) return []
-  for (const key of PUPIL_LISTS) {
+  for (const key of STUDENT_LISTS) {
     const value = (answer as Loose)[key]
     if (Array.isArray(value) && value.every(isRecord)) return value as Loose[]
   }
@@ -60,17 +60,17 @@ function pupilsOf(answer: ClassSheet | undefined): Loose[] {
 }
 
 /** Every part of the name the sheet holds, however it was nested. */
-export function sheetPupil(row: Loose): string {
-  const pupil = isRecord(row.student) ? row.student : row
+export function sheetStudent(row: Loose): string {
+  const student = isRecord(row.student) ? row.student : row
   const named = ['fname', 'mname', 'lname']
-    .map((part) => pupil[part])
+    .map((part) => student[part])
     .filter((part): part is string => typeof part === 'string' && Boolean(part.trim()))
     .join(' ')
     .trim()
   if (named) return named
-  const single = pick(pupil, 'name', 'fullname', 'student_name')
+  const single = pick(student, 'name', 'fullname', 'student_name')
   if (single !== undefined) return looseText(single)
-  return looseText(pick(pupil, 'regno', 'id'))
+  return looseText(pick(student, 'regno', 'id'))
 }
 
 /** A figure as a broadsheet reads it — whole marks, and a blank for no mark. */
@@ -80,7 +80,7 @@ export function figure(value: unknown): string {
   return parsed === undefined ? looseText(value) : String(Math.round(parsed * 100) / 100)
 }
 
-/** The subject entries on one pupil's row, as an array whichever way they came. */
+/** The subject entries on one student's row, as an array whichever way they came. */
 function subjectsOf(row: Loose): Loose[] {
   for (const key of SUBJECT_LISTS) {
     const value = row[key]
@@ -105,7 +105,7 @@ function columnOf(entry: Loose): SheetColumn {
 /**
  * The subject columns, in the order the sheet first mentions them.
  *
- * Taken across every pupil rather than off the first: a pupil with no mark in
+ * Taken across every student rather than off the first: a student with no mark in
  * a subject may not carry it at all, and a column missing because the first
  * child on the register happened to miss that test would silently drop a
  * whole subject from the broadsheet.
@@ -121,7 +121,7 @@ export function sheetColumns(answer: ClassSheet | undefined): SheetColumn[] {
     }
   }
 
-  for (const row of pupilsOf(answer)) {
+  for (const row of studentsOf(answer)) {
     for (const entry of subjectsOf(row)) {
       const column = columnOf(entry)
       if (column.label !== BLANK && !columns.has(column.key)) columns.set(column.key, column)
@@ -140,14 +140,14 @@ export function sheetRow(row: Loose, index: number): SheetRow {
     marks[key] = figure(pick(entry, 'total', 'score', 'mark', 'value'))
   }
 
-  const pupil = isRecord(row.student) ? row.student : row
+  const student = isRecord(row.student) ? row.student : row
 
   return {
-    id: looseText(pick(pupil, 'student_id', 'id')) === BLANK
+    id: looseText(pick(student, 'student_id', 'id')) === BLANK
       ? String(index)
-      : looseText(pick(pupil, 'student_id', 'id')),
-    pupil: sheetPupil(row),
-    adm: looseText(pick(pupil, 'regno', 'admission_no')),
+      : looseText(pick(student, 'student_id', 'id')),
+    student: sheetStudent(row),
+    adm: looseText(pick(student, 'regno', 'admission_no')),
     marks,
     total: figure(pick(row, 'total', 'total_marks', 'grand_total')),
     average: figure(pick(row, 'average', 'avg', 'mean')),
@@ -159,7 +159,7 @@ export function sheetRow(row: Loose, index: number): SheetRow {
 export function classSheet(answer: ClassSheet | undefined): Sheet {
   return {
     columns: sheetColumns(answer),
-    rows: pupilsOf(answer).map(sheetRow),
+    rows: studentsOf(answer).map(sheetRow),
   }
 }
 

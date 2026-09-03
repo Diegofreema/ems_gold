@@ -161,7 +161,7 @@ export function peopleFigures(stats: DashboardStats) {
   return [
     {
       ...countTile(
-        'Pupils enrolled',
+        'Students enrolled',
         stats.students,
         `Across ${counted(stats.classes, 'class', 'classes')}`,
       ),

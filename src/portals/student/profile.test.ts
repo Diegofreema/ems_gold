@@ -23,7 +23,7 @@ const STUDENT = {
   user: { id: 483, username: 'UDOYE2608264308', userstatus: 'Enabled' },
 } as unknown as Student
 
-test('the form is filled from the pupil record', () => {
+test('the form is filled from the student record', () => {
   const config = studentProfile(STUDENT)
   assert.equal(config.values.fullname, 'UDOYE OZOMGBO OKIGBO')
   assert.equal(config.values.phone, '09000000000')
@@ -38,7 +38,7 @@ test('the arm is the class shown, and the term is left off', () => {
   assert.equal(config.meta, 'CUN/2026/4 · JSS 2 A')
 })
 
-test('a pupil with no arm falls back to the class the office filed them under', () => {
+test('a student with no arm falls back to the class the office filed them under', () => {
   const config = studentProfile({ ...STUDENT, class_arm: undefined })
   assert.equal(config.values.arm, 'SSS I')
 })
@@ -49,7 +49,7 @@ test('an email the school never took reads as blank, not as a box', () => {
   assert.equal(config.fields.find((field) => field.key === 'email')?.locked, true)
 })
 
-test('no guardian anywhere on the page — it is the office\'s record, not the pupil\'s', () => {
+test('no guardian anywhere on the page — it is the office\'s record, not the student\'s', () => {
   const config = studentProfile({ ...STUDENT, fathersname: 'Mr Okigbo' })
   assert.equal(config.fields.some((field) => field.key === 'guardian'), false)
   assert.equal(config.values.guardian, undefined)

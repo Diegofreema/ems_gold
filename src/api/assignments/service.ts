@@ -13,10 +13,10 @@ export const assignmentsService = {
    * Every assignment set for the caller's own class, newest last.
    *
    * `subject_id` narrows it and is optional — without one the whole list comes
-   * back, which is what the pupil's own list wants. An assignment set for another
+   * back, which is what the student's own list wants. An assignment set for another
    * class never appears whatever is asked for.
    *
-   * Pupils only: an office or teaching login is refused with "No student
+   * Students only: an office or teaching login is refused with "No student
    * record is linked to this account."
    */
   list: (subjectId?: number) =>

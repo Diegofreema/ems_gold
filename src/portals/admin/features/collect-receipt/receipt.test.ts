@@ -35,7 +35,7 @@ const METHODS = { cash: 'Cash', bank_transfer: 'Bank Transfer', pos: 'POS', cheq
 test('the slip reads in the order a receipt is read', () => {
   const lines = receiptLines(discounted, METHODS)
   assert.deepEqual(lines.map((line) => line.label), [
-    'Pupil',
+    'Student',
     'Reg. no.',
     'Class',
     'Fee',

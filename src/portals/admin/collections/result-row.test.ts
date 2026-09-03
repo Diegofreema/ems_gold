@@ -12,7 +12,7 @@ import {
   markState,
   parseBatchId,
   partsTotal,
-  pupilName,
+  studentName,
 } from './result-row.ts'
 
 /**
@@ -67,9 +67,9 @@ test('the decimal nothings come off, and an unreadable mark is no mark', () => {
   assert.equal(markRow({ ...MARK, total: null }).total, '—')
 })
 
-test('a pupil with no name falls back to something that identifies them', () => {
-  assert.equal(pupilName({ ...MARK, student: null }), 'NP/2025/001')
-  assert.equal(pupilName({ ...MARK, student: null, regno: null }), 'Pupil 483')
+test('a student with no name falls back to something that identifies them', () => {
+  assert.equal(studentName({ ...MARK, student: null }), 'NP/2025/001')
+  assert.equal(studentName({ ...MARK, student: null, regno: null }), 'Student 483')
 })
 
 test('the office’s three words cover whatever the column holds', () => {
@@ -161,8 +161,8 @@ test('a correction leaves out what was not filled in', () => {
   // travel as a nought and zero a CA nobody touched.
   assert.deepEqual(correctBody({ first_exam: '40', second_ca: '' }), { first_exam: 40 })
   assert.deepEqual(correctBody({}), {})
-  // The pupil and the subject are never resent: a mark against the wrong
-  // pupil is deleted, not reassigned.
+  // The student and the subject are never resent: a mark against the wrong
+  // student is deleted, not reassigned.
   assert.deepEqual(correctBody({ student_id: '9', first_ca: '1' }), { first_ca: 1 })
 })
 

@@ -60,9 +60,9 @@ export const results: CollectionDef = {
   kicker: 'Academics',
   title: 'Results',
   description:
-    'Every mark on file, whoever entered it. A mark is one pupil in one subject for one term, and nothing reaches a family until the office releases the batch it belongs to.',
+    'Every mark on file, whoever entered it. A mark is one student in one subject for one term, and nothing reaches a family until the office releases the batch it belongs to.',
   action: 'Enter a mark',
-  searchHint: 'Search pupil, subject or class',
+  searchHint: 'Search student, subject or class',
   footer: 'Newest first',
   emptyTitle: 'No marks on file',
   emptyBody:
@@ -89,7 +89,7 @@ export const results: CollectionDef = {
     { key: 'approval_status', label: 'Any state', options: STATUSES },
   ],
   columns: [
-    { key: 'name', label: 'Pupil', cardRole: 'title' },
+    { key: 'name', label: 'Student', cardRole: 'title' },
     { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
     { key: 'klass', label: 'Class' },
     { key: 'term', label: 'Term' },
@@ -98,7 +98,7 @@ export const results: CollectionDef = {
     { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
   ],
   detail: [
-    { key: 'name', label: 'Pupil' },
+    { key: 'name', label: 'Student' },
     { key: 'adm', label: 'Admission no.' },
     { key: 'subject', label: 'Subject' },
     { key: 'klass', label: 'Class' },
@@ -149,7 +149,7 @@ export const results: CollectionDef = {
       row.state === STATE_LABEL.approved ? 'Withdraw this mark?' : 'Release this mark?',
     confirm: (row) =>
       row.state === STATE_LABEL.approved
-        ? 'The pupil and their family stop seeing it at once. It goes back to pending, which is also what makes it deletable again.'
+        ? 'The student and their family stop seeing it at once. It goes back to pending, which is also what makes it deletable again.'
         : `${row.name} and their family will see this mark, and the ${row.grade} beside it, as soon as you do this.`,
     cta: (row) => (row.state === STATE_LABEL.approved ? 'Withdraw it' : 'Release it'),
     done: (row) =>
@@ -167,10 +167,10 @@ export const results: CollectionDef = {
       fields: [
         {
           key: 'student_id',
-          label: 'Pupil',
+          label: 'Student',
           required: true,
           optionsFrom: 'students',
-          hint: 'Fixed once the mark is filed — a mark against the wrong pupil is deleted, not moved.',
+          hint: 'Fixed once the mark is filed — a mark against the wrong student is deleted, not moved.',
         },
         {
           key: 'subject_id',
@@ -199,7 +199,7 @@ export const resultQueue: CollectionDef = {
   kicker: 'Academics',
   title: 'Result approvals',
   description:
-    'Batches of marks waiting on the office. Releasing one puts every mark in it in front of the pupils and their families; sending it back returns it to the teacher with your reason on it.',
+    'Batches of marks waiting on the office. Releasing one puts every mark in it in front of the students and their families; sending it back returns it to the teacher with your reason on it.',
   // A batch is not a record anyone edits — it is a decision the office takes.
   readonly: true,
   action: 'Result approvals',

@@ -27,7 +27,7 @@ export function useCreateInvoice() {
     meta: { success: 'Invoice created' },
     onSuccess: (_data, body) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() })
-      // The pupil's own invoice list is a different endpoint holding the same row.
+      // The student's own invoice list is a different endpoint holding the same row.
       queryClient.invalidateQueries({ queryKey: studentKeys.invoices(body.student_id) })
     },
   })
@@ -51,7 +51,7 @@ export function useDeleteInvoice() {
   })
 }
 
-/** Settling moves money, so both the invoice and the pupil's ledger go stale. */
+/** Settling moves money, so both the invoice and the student's ledger go stale. */
 export function useSettleInvoice(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({

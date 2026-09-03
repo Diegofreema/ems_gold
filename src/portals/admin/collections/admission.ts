@@ -14,7 +14,7 @@ function text(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function pupilName(row: Row): string {
+function studentName(row: Row): string {
   return [row.fname, row.mname, row.lname]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -38,7 +38,7 @@ export function admission(
 ): { body: StudentBody; message: string } {
   const admit = values.decision === ADMIT
   const department = Number(values.department_id)
-  const name = pupilName(row) || 'The applicant'
+  const name = studentName(row) || 'The applicant'
 
   return {
     body: {

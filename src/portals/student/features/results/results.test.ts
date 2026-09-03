@@ -41,7 +41,7 @@ test('a mark reads as the sheet has it, with the parts on the panel', () => {
 
 test('a mark filed the older way still reads', () => {
   // `teachers/me/scores` files a two-column mark into the same table, so a
-  // pupil's sheet can hold both shapes at once.
+  // student's sheet can hold both shapes at once.
   const [row] = resultRows([
     { ...RESULT, first_ca: null, first_exam: null, ca: '26.00', score: '52.00' },
   ])
@@ -80,7 +80,7 @@ test('the term average is read beside the marks, or not at all', () => {
   assert.equal(termAverage({ average: 78.5 }), 78.5)
   assert.equal(termAverage({ summary: { average: '78.50' } }), 78.5)
   assert.equal(termAverage({ term_average: 61 }), 61)
-  // Nothing rather than nought: a pupil shown "0" for a term nobody has
+  // Nothing rather than nought: a student shown "0" for a term nobody has
   // marked them in has been told something false about themselves.
   assert.equal(termAverage({ results: [] }), undefined)
   assert.equal(termAverage(undefined), undefined)

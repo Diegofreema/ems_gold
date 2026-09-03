@@ -6,7 +6,7 @@ import { topicBody, topicUpdate } from './teaching-body';
 import {
   eclassRow,
   mySubjectRow,
-  pupilRow,
+  studentRow,
   scoreRow,
   subjectNames,
   topicRow,
@@ -24,8 +24,8 @@ const topicRows = async (): Promise<Row[]> => {
 const eclassRows = async (): Promise<Row[]> =>
   (await myEClasses()).map(eclassRow);
 
-const pupilRows = async (): Promise<Row[]> =>
-  (await myRoll()).items.map(pupilRow);
+const studentRows = async (): Promise<Row[]> =>
+  (await myRoll()).items.map(studentRow);
 
 export const subjects: CollectionDef = {
   id: 'subjects',
@@ -73,19 +73,19 @@ export const students: CollectionDef = {
   kicker: 'Teaching',
   title: 'My students',
   description:
-    'Every pupil in the class you take. Open a pupil for what the school holds about them and their marks in your subjects.',
-  // The office admits pupils and places them in arms; a teacher reads the roll.
+    'Every student in the class you take. Open a student for what the school holds about them and their marks in your subjects.',
+  // The office admits students and places them in arms; a teacher reads the roll.
   readonly: true,
   action: 'My students',
-  searchHint: 'Search pupil, admission no. or arm',
+  searchHint: 'Search student, admission no. or arm',
   footer: 'The classes you take',
-  emptyTitle: 'No pupils on your roll',
+  emptyTitle: 'No students on your roll',
   emptyBody:
-    'Pupils appear here once the office has placed them in an arm you take.',
-  noun: 'pupil',
+    'Students appear here once the office has placed them in an arm you take.',
+  noun: 'student',
   nameKey: 'name',
   counts: [
-    { label: 'Pupils', count: async () => (await myRoll()).pagination.total },
+    { label: 'Students', count: async () => (await myRoll()).pagination.total },
     // The arms come back beside the roll rather than on it, which is the only
     // way an arm the teacher takes but which holds nobody is counted at all.
     { label: 'Classes', count: async () => (await myRoll()).class_arms.length },
@@ -116,9 +116,9 @@ export const students: CollectionDef = {
   // The endpoint pages but ignores a search term, so the roll is read whole
   // and searched here — on every column, not the one field a parameter would
   // have narrowed.
-  source: async (params) => pageRows(await pupilRows(), params),
+  source: async (params) => pageRows(await studentRows(), params),
   record: async (recordId) =>
-    (await pupilRows()).find((pupil) => pupil.id === String(recordId)),
+    (await studentRows()).find((student) => student.id === String(recordId)),
   tabs: [
     {
       label: 'Marks in my subjects',
@@ -138,7 +138,7 @@ export const students: CollectionDef = {
           .map((mark) => scoreRow(mark, names));
       },
       empty:
-        'No mark has been recorded for this pupil in any of your subjects.',
+        'No mark has been recorded for this student in any of your subjects.',
     },
   ],
 };

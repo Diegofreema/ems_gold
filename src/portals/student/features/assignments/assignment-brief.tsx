@@ -21,7 +21,7 @@ const RichTextView = lazy(() =>
 
 /**
  * An assignment before it is sat, or once it can no longer be: its terms, its state,
- * and the one thing the pupil can do about it.
+ * and the one thing the student can do about it.
  *
  * The same panel serves all three ways in — start it, you already did, you
  * cannot — because they differ only in the tag at the top and the button at

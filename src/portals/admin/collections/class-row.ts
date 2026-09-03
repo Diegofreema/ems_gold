@@ -22,7 +22,7 @@ function text(value: string | null | undefined): string {
  */
 export type ClassCounts = {
   arms: number
-  pupils: number
+  students: number
   subjects: number
   /**
    * The arms by name. A class is split into JSS1 A and B — "2" is a fact
@@ -32,7 +32,7 @@ export type ClassCounts = {
 }
 
 /**
- * `dependencies` is the authority — it counts every pupil whose class this is,
+ * `dependencies` is the authority — it counts every student whose class this is,
  * including any not placed in an arm. The expanded lists are the fallback for
  * a response that carries them without the counts.
  */
@@ -44,7 +44,7 @@ export function classCounts(department: Department): ClassCounts {
 
   return {
     arms: of('class_arms', department.class_arms),
-    pupils: of('students'),
+    students: of('students'),
     subjects: of('subjects', department.subjects),
     // Only the detail expands the arms, so a class that answered with counts
     // alone is named by neither — the register reads blank, not "0".
@@ -57,16 +57,16 @@ export function classCounts(department: Department): ClassCounts {
 /** The totals the tiles above the register report. */
 export function census(departments: Department[]): {
   counts: Map<string, ClassCounts>
-  totals: { classes: number; arms: number; pupils: number; subjects: number }
+  totals: { classes: number; arms: number; students: number; subjects: number }
 } {
   const counts = new Map<string, ClassCounts>()
-  const totals = { classes: departments.length, arms: 0, pupils: 0, subjects: 0 }
+  const totals = { classes: departments.length, arms: 0, students: 0, subjects: 0 }
 
   for (const department of departments) {
     const held = classCounts(department)
     counts.set(String(department.id), held)
     totals.arms += held.arms
-    totals.pupils += held.pupils
+    totals.students += held.students
     totals.subjects += held.subjects
   }
 
@@ -111,7 +111,7 @@ export function classRow(department: Department, counts?: ClassCounts): Row {
     name: text(department.name),
     code: text(department.deptcode),
     arms: joined(counts?.armNames),
-    pupils: tally(counts?.pupils),
+    students: tally(counts?.students),
     subjectCount: tally(counts?.subjects),
 
     // Not a column. The arms are shown by name; the delete warning still has
@@ -190,7 +190,7 @@ export function classSubjectRow(subject: ClassSubject): Row {
  */
 export function classDeleteBody(row: Row | undefined): string {
   const held = [
-    [row?.pupils, 'pupil', 'pupils'],
+    [row?.students, 'student', 'students'],
     [row?.armCount, 'arm', 'arms'],
     [row?.subjectCount, 'subject', 'subjects'],
   ]

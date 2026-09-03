@@ -28,7 +28,7 @@ import { useCountdown } from './use-countdown'
  * The assignment itself, one question at a time.
  *
  * `openedAt` is passed in rather than taken here: the endpoint wants when the
- * pupil actually started, and that is the moment they pressed the button on
+ * student actually started, and that is the moment they pressed the button on
  * the brief, not the moment this component happened to mount.
  */
 export function AssignmentSitting({
@@ -84,7 +84,7 @@ export function AssignmentSitting({
           const one = questions[at]
           // The same test the counter below uses. A theory box holding only
           // spaces is not an answer, and a filled pip over "3 of 4 answered"
-          // is the assignment telling the pupil two different things at once.
+          // is the assignment telling the student two different things at once.
           return one ? isAnswered(draft, one) : false
         }}
         onJump={(next) => void setQuestion(next + 1)}
@@ -184,7 +184,7 @@ function AssignmentClock({
   const allowed = limitSeconds(assignment)
   const { seconds } = useCountdown(allowed ?? 0)
   // Once, on the tick that reaches zero. The assignment goes in as it stands, which
-  // is what "time allowed" means — the alternative is a pupil holding answers
+  // is what "time allowed" means — the alternative is a student holding answers
   // the school will not accept.
   const sent = useRef(false)
 

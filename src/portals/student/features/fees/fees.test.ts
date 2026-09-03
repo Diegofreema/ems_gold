@@ -5,7 +5,7 @@ import type { MyPayment } from '../../../../api/my-schooling/types.ts'
 import { newestFirst } from '../../../../features/collections/newest.ts'
 import { invoiceRows, paidTotal, paymentRows, reference } from './fees.ts'
 
-/** Two of the three bills `GET /students/me/invoices` sends for pupil 4. */
+/** Two of the three bills `GET /students/me/invoices` sends for student 4. */
 const INVOICES = [
   {
     id: 2440,

@@ -59,15 +59,15 @@ function mark(over: Partial<AttendanceRecord>): AttendanceRecord {
 /** A Sunday, which belongs to the week that began on the 24th. */
 const TODAY = new Date(2026, 7, 30)
 
-test('a pupil is named as the school entered them, in the order it writes them', () => {
+test('a student is named as the school entered them, in the order it writes them', () => {
   assert.equal(childFull(ENROLLED), 'UDOYE OZOMGBO OKIGBO')
   assert.equal(childName(ENROLLED), 'UDOYE')
 })
 
-test('a pupil with no name on record is still nameable', () => {
+test('a student with no name on record is still nameable', () => {
   const nameless = { ...ENROLLED, fname: '', mname: null, lname: '' } as EnrolledChild
-  assert.equal(childFull(nameless), 'Pupil 4')
-  assert.equal(childName(nameless), 'Pupil 4')
+  assert.equal(childFull(nameless), 'Student 4')
+  assert.equal(childName(nameless), 'Student 4')
 })
 
 test('an invoice is paid in full or not at all, so amount splits in two', () => {
@@ -136,9 +136,9 @@ test('a child is what the three endpoints say between them', () => {
   assert.equal(child.invoices.length, 3)
 })
 
-test('a pupil the school has issued no number to is still identified', () => {
+test('a student the school has issued no number to is still identified', () => {
   const child = familyChild({ ...ENROLLED, regno: null } as EnrolledChild, [], [], TODAY)
-  assert.equal(child.adm, 'Pupil 4')
+  assert.equal(child.adm, 'Student 4')
   // No arm on record falls back to the class, which is what the switcher shows.
   const classOnly = { ...ENROLLED, class_arm: null } as EnrolledChild
   assert.equal(familyChild(classOnly, [], [], TODAY).arm, 'SSS I')

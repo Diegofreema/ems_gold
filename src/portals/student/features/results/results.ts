@@ -8,7 +8,7 @@ import { when } from '../../../../features/collections/when.ts'
 import { text } from '../../../../features/profile/record.ts'
 
 /**
- * The pupil's own results, off `GET /results/mine`.
+ * The student's own results, off `GET /results/mine`.
  *
  * Released marks only — the endpoint never sends one still with the office, so
  * there is no approval column here: every row on this page has already been
@@ -16,7 +16,7 @@ import { text } from '../../../../features/profile/record.ts'
  * puts one back there, so a subject can disappear from this page again.
  *
  * This used to read `students/me/results`, which answered `{results: []}` for
- * every pupil ever probed. The new controller's own pupil route sends the
+ * every student ever probed. The new controller's own student route sends the
  * released marks *and* the term average, which is a figure this page had no
  * way to show before.
  *
@@ -38,7 +38,7 @@ export function marksOf(answer: MyMarks | undefined): Mark[] {
  * The term average the endpoint worked out, or nothing where it sent none.
  *
  * Nothing rather than nought: an average of no marks is not zero, it is a
- * figure there is nothing to compute — and a pupil shown "0" for a term they
+ * figure there is nothing to compute — and a student shown "0" for a term they
  * have not been marked in has been told something false about themselves.
  */
 export function termAverage(answer: MyMarks | undefined): number | undefined {
@@ -66,7 +66,7 @@ export function resultRows(results: Mark[]): Row[] {
   return newestFirst(results).map((result) => ({
     id: String(result.id),
     // A mark whose subject was not expanded still has to be nameable: the row
-    // is what a pupil would read out to a teacher who disputes it.
+    // is what a student would read out to a teacher who disputes it.
     subject: result.subject?.name?.trim() || `Subject ${result.subject_id ?? result.id}`,
     term: termOf(result),
     // `first_exam` is the examination and the two CAs and the project are the

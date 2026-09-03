@@ -40,7 +40,7 @@ function metaFor(account: Account): string {
 
 /**
  * Whether this person can change their own record. `PATCH /users/profile` is
- * the administrator's own; teachers, pupils and guardians have no endpoint for
+ * the administrator's own; teachers, students and guardians have no endpoint for
  * theirs, so the school office is the only route to a correction.
  */
 export function ownsProfile(account: Account | null): boolean {

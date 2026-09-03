@@ -117,7 +117,7 @@ export type UpdateAdminBody = UpdateProfileBody & {
 export type DashboardStats = {
   students: number
   applied: number
-  /** Reads 0 on a school with pupils enrolled. Use `students`. */
+  /** Reads 0 on a school with students enrolled. Use `students`. */
   current_students: number
   alumni: number
   teachers: number

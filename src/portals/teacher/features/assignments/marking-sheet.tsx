@@ -137,7 +137,7 @@ export function MarkingSheet({
         <div className="mt-6 max-w-140">
           <TextField<MarkingValues>
             name="comment"
-            label="A note for the pupil"
+            label="A note for the student"
             multiline
             placeholder="Good work."
             hint="Read on their own result page, beside the mark."
@@ -238,7 +238,7 @@ function AnswerCard({
   );
 }
 
-/** What this answer was worth to the pupil. Every answer carries one. */
+/** What this answer was worth to the student. Every answer carries one. */
 function AnswerScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
   const key = answerKey(answer);
   const name = `scores.${key}` as const;

@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import type { MyCourses } from '../../../../api/my-schooling/types.ts'
 import { classOf, courseRows, teachersOf } from './courses.ts'
 
-/** `GET /students/me/courses` as it answers pupil 4, trimmed to two subjects. */
+/** `GET /students/me/courses` as it answers student 4, trimmed to two subjects. */
 const ANSWER: MyCourses = {
   courses: [
     {
@@ -53,7 +53,7 @@ test('a class the school has not named at all is a dash, not a stray separator',
   assert.equal(classOf({}), '—')
 })
 
-test('alphabetical, because a pupil scans the list for one subject', () => {
+test('alphabetical, because a student scans the list for one subject', () => {
   const rows = courseRows({
     courses: [
       { id: 2, name: 'MATHEMATICS' },

@@ -82,7 +82,7 @@ export function batchRow(batch: UploadBatch): Row {
 }
 
 /**
- * One line of a batch: the pupil, what was read for them and how it stands.
+ * One line of a batch: the student, what was read for them and how it stands.
  *
  * Read the same way the batch itself is — `uploads/{subject}/{class}/{term}/
  * {session}` answers `{"results": []}` on this deployment, so the spelling of
@@ -90,14 +90,14 @@ export function batchRow(batch: UploadBatch): Row {
  * `/teachers/me/results` uses, since both come off the same table.
  */
 export function lineRow(line: ResultRow, index: number): Row {
-  const pupil = pick(line, 'student') as Record<string, unknown> | undefined
-  const named = [pupil?.fname, pupil?.lname]
+  const student = pick(line, 'student') as Record<string, unknown> | undefined
+  const named = [student?.fname, student?.lname]
     .filter((part) => typeof part === 'string' && part.trim())
     .join(' ')
 
   return {
     id: text(pick(line, 'id')) === BLANK ? String(index) : text(pick(line, 'id')),
-    pupil: named || text(pick(line, 'regno', 'student_id')),
+    student: named || text(pick(line, 'regno', 'student_id')),
     adm: text(pick(line, 'regno')),
     ca: text(pick(line, 'ca')),
     exam: text(pick(line, 'score', 'exam')),

@@ -31,14 +31,14 @@ test('the line is the profile type, not the role name the school renamed', () =>
   assert.equal(summary.line, 'Teacher')
 })
 
-test('a pupil and a guardian record spell their names differently', () => {
-  const pupil = accountSummary({
+test('a student and a guardian record spell their names differently', () => {
+  const student = accountSummary({
     user: login,
     profile_type: 'student',
     profile: { fname: 'Ada', lname: 'Eze' },
   } as Account)
-  assert.equal(pupil.name, 'Ada Eze')
-  assert.equal(pupil.line, 'Student')
+  assert.equal(student.name, 'Ada Eze')
+  assert.equal(student.line, 'Student')
 })
 
 test('the office record has only its two name fields, and both are used', () => {

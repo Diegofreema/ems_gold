@@ -6,7 +6,7 @@ import { lengthOf, mineTally, periodTally, weekGrid } from './week-grid.ts'
 /**
  * The two payloads bronze actually sends, cut down to what the grid reads:
  * class 1, which holds the school's only periods (both Monday, First Term),
- * and the pupil's own class 2, which holds none.
+ * and the student's own class 2, which holds none.
  */
 const JSS1 = {
   class: { id: 1, name: 'JSS 1' },
@@ -151,11 +151,11 @@ test('marks the reader\u2019s own periods, and leaves the question unasked elsew
   )
   assert.equal(mineTally(weekGrid(JSS1, WEDNESDAY, ownEnglish)), 1)
 
-  // A pupil's own grid never asks whose a period is, so nothing is marked and
+  // A student's own grid never asks whose a period is, so nothing is marked and
   // nothing is stepped back either.
-  const [mondayForPupil] = weekGrid(JSS1, WEDNESDAY, named)
+  const [mondayForStudent] = weekGrid(JSS1, WEDNESDAY, named)
   assert.deepEqual(
-    mondayForPupil.periods.map((period) => period.mine),
+    mondayForStudent.periods.map((period) => period.mine),
     [undefined, undefined],
   )
   assert.equal(mineTally(weekGrid(JSS1, WEDNESDAY, named)), 0)

@@ -3,7 +3,7 @@ import type { PageParams } from '../types.ts'
 /**
  * Marks, and the queue they pass through on the way to a family.
  *
- * A mark is one pupil, one subject, one term. A **batch** is one subject for
+ * A mark is one student, one subject, one term. A **batch** is one subject for
  * one class in one term, and that is the unit the office signs off: a teacher
  * enters, the office releases, and `POST /results/approve` is a 403 for the
  * teacher who entered the batch. That separation is the point of the
@@ -109,7 +109,7 @@ export type EnterMarkBody = {
  * correcting only the exam does not silently zero the CA — which is why this
  * is a partial rather than the whole body again.
  *
- * A correction returns the mark to the queue and the pupil stops seeing it: a
+ * A correction returns the mark to the queue and the student stops seeing it: a
  * released mark that changes without anyone signing it off is a report sheet
  * nobody checked.
  */
@@ -150,10 +150,10 @@ export type ClassSheetParams = {
 }
 
 /**
- * The broadsheet: every pupil in the class against every subject.
+ * The broadsheet: every student in the class against every subject.
  *
  * **Unverified**, and read through `sheetTable`. Position is **computed, never
- * stored** — it depends on every other pupil's marks, so a stored copy is
+ * stored** — it depends on every other student's marks, so a stored copy is
  * wrong the moment one changes — and ties share a place.
  */
 export type ClassSheet = Record<string, unknown>
@@ -165,7 +165,7 @@ export type MyMarkParams = {
 }
 
 /**
- * The signed-in pupil's own released marks, with the term average.
+ * The signed-in student's own released marks, with the term average.
  *
  * **The envelope is unverified.** `marksOf` and `averageOf` read it, and a
  * shape that turns out to differ is corrected in those two functions rather

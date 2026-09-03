@@ -23,7 +23,7 @@ test('everything else still opens its own page', () => {
   for (const action of [
     'Create fee',
     'Take a payment',
-    'Enrol a pupil',
+    'Enrol a student',
     'Add a child',
     'Upload CSV / XLSX',
     'Upload results',

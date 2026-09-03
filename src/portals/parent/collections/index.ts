@@ -117,7 +117,7 @@ export function invoicesFor(child: Child, family: Child[]): CollectionDef {
 /**
  * Every child's assignments in one answer.
  *
- * The endpoint takes no pupil, so asking it per child would be the same
+ * The endpoint takes no student, so asking it per child would be the same
  * request four times over. It goes through the cache instead: the list and
  * the record page want the same answer on the same render, and react-query
  * collapses them into one call. Nothing is held between visits.
@@ -141,7 +141,7 @@ export function assignmentsFor(child: Child): CollectionDef {
     scope: child.adm,
     kicker: 'Assignments',
     title: `Assignments for ${child.name}`,
-    description: `Assignments set for ${child.name}'s class, and where they stand on each. An assignment is answered by the pupil in their own portal and marked by their teacher; this is where each one stands.`,
+    description: `Assignments set for ${child.name}'s class, and where they stand on each. An assignment is answered by the student in their own portal and marked by their teacher; this is where each one stands.`,
     // A parent cannot open an assignment on their child's behalf, so the list offers
     // no button rather than one that opens nothing.
     action: 'Open the assignment',

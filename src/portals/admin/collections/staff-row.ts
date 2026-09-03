@@ -2,6 +2,7 @@ import type { ActivityLog } from '../../../api/admins/types.ts'
 import type { Place } from '../../../api/types.ts'
 import type { Teacher, TeacherSubject } from '../../../api/teachers/types.ts'
 import type { Admin } from '../../../api/users/types.ts'
+import { birthday, isoBirthday } from '../../../features/collections/birthday.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import { countryIso } from '../../../features/collections/country-ids.ts'
 import type { Row } from '../../../features/collections/types.ts'
@@ -22,6 +23,9 @@ export type StaffKind = 'teacher' | 'admin'
  * exactly this word for an edit to open on the right kind.
  */
 export const ADMINISTRATORS = 'Administrators'
+
+/** The other half of the same select. */
+export const TEACHERS = 'Teacher'
 
 const PREFIX: Record<StaffKind, string> = { teacher: 't', admin: 'a' }
 
@@ -87,7 +91,7 @@ export function teacherRow(teacher: Teacher): Row {
   return {
     id: staffKey('teacher', teacher.id),
     name: text(fullName(teacher.firstname, teacher.middlename, teacher.lastname)),
-    role: 'Teacher',
+    role: TEACHERS,
     phone: text(teacher.phone),
     gender: text(teacher.gender),
     // The teaching record has no status of its own; whether they can sign in
@@ -104,6 +108,7 @@ export function teacherRow(teacher: Teacher): Row {
     // the composed line there would have saved the country into the street.
     place: text(placeOf(teacher)),
     address: text(teacher.address),
+    born: BLANK,
     about: text(teacher.profile),
     joined: asDate(teacher.date_created),
     username: text(teacher.user?.username),
@@ -119,7 +124,7 @@ export function teacherRow(teacher: Teacher): Row {
     // The edit form is keyed as the endpoint is, and prefills from here.
     // `kind` is the form's own word, kept apart from `role` above: that one is
     // the job for reading, and the two coincide only for a teacher.
-    kind: 'Teacher',
+    kind: TEACHERS,
     firstname: teacher.firstname ?? '',
     lastname: teacher.lastname ?? '',
     middlename: teacher.middlename ?? '',
@@ -223,7 +228,8 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     lastname: admin.lastname ?? '',
     department: text(admin.department?.name),
     department_id: id(admin.department_id),
-    dob: text(admin.dob),
+    born: birthday(admin.dob),
+    dob: isoBirthday(admin.dob),
     username: text(admin.user?.username),
     user_id: String(admin.user_id),
     // The job as the office writes it — "ICT Director", "Registrar".

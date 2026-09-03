@@ -49,13 +49,13 @@ export type ClassArmBody = {
 
 export type ArmStudents = {
   students: Student[]
-  /** Admitted pupils of the same class not yet placed in any arm. */
+  /** Admitted students of the same class not yet placed in any arm. */
   unassigned_in_class: Student[]
 }
 
 /**
  * Each id is judged separately; the response reports what was assigned and
- * what failed. A pupil may only join an arm of their own class.
+ * what failed. A student may only join an arm of their own class.
  */
 export type AssignStudentsBody = {
   student_ids: number[]

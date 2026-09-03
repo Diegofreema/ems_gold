@@ -18,7 +18,7 @@ export function useSaveRecord(definition: CollectionDef, editing: boolean) {
       values: Record<string, unknown>
       recordId?: string
     }) => definition.save!(values, recordId),
-    // "Pupil created", to read like every other toast in the app.
+    // "Student created", to read like every other toast in the app.
     meta: {
       success: `${capitalise(definition.noun)} ${editing ? 'updated' : 'created'}`,
     },

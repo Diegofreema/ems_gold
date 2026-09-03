@@ -13,7 +13,15 @@ import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useRecordForm } from '@/hooks/use-record-form'
 
-const ARMS = ['JSS1 A', 'JSS2 A', 'SS1 A', 'SS2 B', 'Primary 5 A'] as const
+/*
+ * The class is typed rather than picked. A guardian login can read no register
+ * of classes — `/departments`, `/class-arms` and `/subjects` all answer
+ * "restricted to administrators" — so a select here could only offer a list
+ * written into this file, and the one that was here offered five arms this
+ * school does not have. The office checks the answer against the record
+ * either way; a wrong class is a question they ask, an invented one is a
+ * choice this app put in the parent's mouth.
+ */
 const RELATIONSHIPS = ['Mother', 'Father', 'Legal guardian'] as const
 
 const required = z.string().trim().min(1, 'Required')
@@ -35,14 +43,14 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>
 
-/** Links an already-enrolled pupil to this account, subject to office review. */
+/** Links an already-enrolled student to this account, subject to office review. */
 export function AddChildForm() {
   const navigate = useNavigate()
   const form = useRecordForm<Values>(schema, {
     adm: '',
     surname: '',
     firstname: '',
-    arm: ARMS[0],
+    arm: '',
     relationship: RELATIONSHIPS[0],
     phone: '',
     declared: false,
@@ -59,7 +67,7 @@ export function AddChildForm() {
       <PageHeader
         kicker="My children"
         title="Add a child to your account"
-        description="The pupil must already be enrolled. The office checks that the details match their record before the child appears here."
+        description="The student must already be enrolled. The office checks that the details match their record before the child appears here."
       />
       <Rule />
 
@@ -79,21 +87,27 @@ export function AddChildForm() {
               label="Admission number"
               required
               placeholder="NEB/2024/1610"
-              hint="On the pupil’s invoice and report sheet"
+              hint="On the student’s invoice and report sheet"
             />
             <TextField<Values>
               name="surname"
-              label="Pupil surname"
+              label="Student surname"
               required
               placeholder="Udo"
             />
             <TextField<Values>
               name="firstname"
-              label="Pupil first name"
+              label="Student first name"
               required
               placeholder="Chidi"
             />
-            <SelectField<Values> name="arm" label="Class" required options={toOptions(ARMS)} />
+            <TextField<Values>
+              name="arm"
+              label="Class"
+              required
+              placeholder="JSS 1 A"
+              hint="The class and arm as it reads on their report sheet"
+            />
             <SelectField<Values>
               name="relationship"
               label="Your relationship"
@@ -102,7 +116,7 @@ export function AddChildForm() {
             />
             <TextField<Values>
               name="phone"
-              label="Phone on the pupil record"
+              label="Phone on the student record"
               required
               placeholder="0803 000 0000"
               hint="Must match the number the school holds"
@@ -111,8 +125,8 @@ export function AddChildForm() {
 
           <DeclarationField<Values>
             name="declared"
-            statement="I am the parent or legal guardian of this pupil and accept that the school may check this claim against its records."
-            hint="The office checks this against the pupil record"
+            statement="I am the parent or legal guardian of this student and accept that the school may check this claim against its records."
+            hint="The office checks this against the student record"
           />
           <Rule />
 

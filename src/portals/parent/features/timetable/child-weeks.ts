@@ -43,7 +43,7 @@ export function classLine(entry: ChildTimetable): string {
 }
 
 function nameOf(entry: ChildTimetable): string {
-  return entry.name?.trim() || `Pupil ${entry.student_id}`
+  return entry.name?.trim() || `Student ${entry.student_id}`
 }
 
 /**
@@ -52,7 +52,7 @@ function nameOf(entry: ChildTimetable): string {
  * Households really do repeat a name: one guardian on bronze has two children
  * both called "Diego Freeman", both in JSS 1 arm B, and a third of the same
  * name in JSS III. Neither the name nor the class tells those two apart, so a
- * heading that would repeat carries the pupil id and one that would not stays
+ * heading that would repeat carries the student id and one that would not stays
  * as the school wrote it.
  */
 function headings(children: ChildTimetable[]): Map<number, string> {
@@ -64,7 +64,7 @@ function headings(children: ChildTimetable[]): Map<number, string> {
     children.map((entry) => {
       const id = entry.student_id ?? 0
       const name = nameOf(entry)
-      return [id, (seen.get(key(entry)) ?? 0) > 1 ? `${name} · pupil ${id}` : name]
+      return [id, (seen.get(key(entry)) ?? 0) > 1 ? `${name} · student ${id}` : name]
     }),
   )
 }
@@ -76,7 +76,7 @@ function headings(children: ChildTimetable[]): Map<number, string> {
  * The escalation is the household's to force. On a household of Ada and Chidi
  * the tabs say "Ada" and "Chidi"; on the bronze household of three children
  * called "Diego Freeman", two of them in the same arm, nothing shorter than
- * the pupil id separates them and the tabs say so.
+ * the student id separates them and the tabs say so.
  */
 export function tabLabels(children: ChildTimetable[]): Map<number, string> {
   const first = (entry: ChildTimetable) => nameOf(entry).split(/\s+/)[0]
@@ -84,7 +84,7 @@ export function tabLabels(children: ChildTimetable[]): Map<number, string> {
     first,
     nameOf,
     (entry: ChildTimetable) => `${nameOf(entry)} \u00b7 ${classLine(entry)}`,
-    (entry: ChildTimetable) => `${nameOf(entry)} \u00b7 pupil ${entry.student_id}`,
+    (entry: ChildTimetable) => `${nameOf(entry)} \u00b7 student ${entry.student_id}`,
   ]
 
   const label =

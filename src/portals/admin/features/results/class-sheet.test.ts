@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { classSheet, figure, sheetCaption, sheetPupil } from './class-sheet.ts'
+import { classSheet, figure, sheetCaption, sheetStudent } from './class-sheet.ts'
 
 /*
  * Every shape below is a guess by construction — `GET /results/class-sheet`
  * has never been read with a class on it. What these prove is that the reader
- * finds the pupils, the subjects and the position out of whatever it is
+ * finds the students, the subjects and the position out of whatever it is
  * handed, not that any one of these shapes is the real one.
  */
 
@@ -34,28 +34,28 @@ const NESTED = {
   ],
 }
 
-test('the broadsheet reads pupils down and subjects across', () => {
+test('the broadsheet reads students down and subjects across', () => {
   const sheet = classSheet(NESTED)
   assert.deepEqual(
     sheet.columns.map((column) => column.label),
     ['ENGLISH', 'MATHS'],
   )
   assert.equal(sheet.rows.length, 2)
-  assert.equal(sheet.rows[0].pupil, 'Ada Obi')
+  assert.equal(sheet.rows[0].student, 'Ada Obi')
   assert.equal(sheet.rows[0].adm, 'NP/001')
   assert.equal(sheet.rows[0].marks['1'], '85')
   assert.equal(sheet.rows[0].position, '1')
 })
 
-test('a subject only one pupil sat is still a column', () => {
-  // Taken across every pupil, not off the first: a column missing because the
+test('a subject only one student sat is still a column', () => {
+  // Taken across every student, not off the first: a column missing because the
   // first child on the register skipped that test would drop a whole subject.
   const sheet = classSheet(NESTED)
   assert.equal(sheet.columns.length, 2)
   assert.equal(sheet.rows[1].marks['2'], undefined)
 })
 
-test('a flat pupil row with a subject map reads the same way', () => {
+test('a flat student row with a subject map reads the same way', () => {
   const sheet = classSheet({
     rows: [
       {
@@ -73,7 +73,7 @@ test('a flat pupil row with a subject map reads the same way', () => {
     sheet.columns.map((column) => column.label),
     ['ENGLISH', 'MATHS'],
   )
-  assert.equal(sheet.rows[0].pupil, 'Chidi Nwosu')
+  assert.equal(sheet.rows[0].student, 'Chidi Nwosu')
   assert.equal(sheet.rows[0].marks.ENGLISH, '70')
   assert.equal(sheet.rows[0].position, '3')
 })
@@ -85,10 +85,10 @@ test('position is read, never worked out', () => {
   assert.equal(sheet.rows[1].position, '—')
 })
 
-test('a pupil with no name is still identified', () => {
-  assert.equal(sheetPupil({ regno: 'NP/009' }), 'NP/009')
-  assert.equal(sheetPupil({ student: { fname: 'Ada' } }), 'Ada')
-  assert.equal(sheetPupil({ fullname: 'Ada Obi' }), 'Ada Obi')
+test('a student with no name is still identified', () => {
+  assert.equal(sheetStudent({ regno: 'NP/009' }), 'NP/009')
+  assert.equal(sheetStudent({ student: { fname: 'Ada' } }), 'Ada')
+  assert.equal(sheetStudent({ fullname: 'Ada Obi' }), 'Ada Obi')
 })
 
 test('a mark reads whole, and no mark reads blank rather than nought', () => {

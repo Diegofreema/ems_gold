@@ -17,7 +17,7 @@ import { armOptions, recipientsIn } from './recipients'
 
 /** `POST /teachers/me/message-students` — the two fields plus who gets it. */
 const schema = z.object({
-  student_ids: z.array(z.number()).min(1, 'Pick at least one pupil.'),
+  student_ids: z.array(z.number()).min(1, 'Pick at least one student.'),
   subject: z.string().trim().min(1, 'Required'),
   message: z.string().trim().min(1, 'Write your message.'),
 })
@@ -27,7 +27,7 @@ type Values = z.infer<typeof schema>
 const EMPTY: Values = { student_ids: [], subject: '', message: '' }
 
 /**
- * A message to pupils the teacher picks.
+ * A message to students the teacher picks.
  *
  * The arms and the roll are one read — `GET /teachers/me/students` answers
  * both — so the picker needs no second request when the arm changes. Which arm
@@ -68,7 +68,7 @@ export function StudentsMessageForm() {
         <Header />
         <EmptyState
           title="You do not take an arm yet"
-          body="Messages go to the pupils in an arm you are class teacher of. The school office assigns arms."
+          body="Messages go to the students in an arm you are class teacher of. The school office assigns arms."
         />
       </>
     )
@@ -77,7 +77,7 @@ export function StudentsMessageForm() {
   // The first arm until one is picked, and again if the URL names an arm the
   // office has since taken off this teacher.
   const armId = arms.find((arm) => arm.value === chosenArm)?.value ?? arms[0].value
-  const pupils = recipientsIn(data, Number(armId))
+  const students = recipientsIn(data, Number(armId))
 
   const submit = form.handleSubmit(async (values) => {
     await send.mutateAsync(values).then(
@@ -85,7 +85,7 @@ export function StudentsMessageForm() {
         form.reset(EMPTY)
         void setQuery('')
       },
-      // Announced by the mutation cache. The message and the pupils picked
+      // Announced by the mutation cache. The message and the students picked
       // stay put, so a refusal costs nothing already typed.
       () => undefined,
     )
@@ -110,7 +110,7 @@ export function StudentsMessageForm() {
                   arms={arms}
                   armId={armId}
                   onArmChange={(value) => void setArm(value)}
-                  pupils={pupils}
+                  students={students}
                   query={query}
                   onQueryChange={(value) => void setQuery(value)}
                   chosen={field.value}
@@ -120,12 +120,12 @@ export function StudentsMessageForm() {
               )}
             />
 
-            <MessageFields<Values> bodyHint="Each pupil picked above receives this in their portal." />
+            <MessageFields<Values> bodyHint="Each student picked above receives this in their portal." />
 
             <div>
               <Button type="submit" pending={send.isPending}>
                 {chosen.length
-                  ? `Send to ${chosen.length} pupil${chosen.length === 1 ? '' : 's'}`
+                  ? `Send to ${chosen.length} student${chosen.length === 1 ? '' : 's'}`
                   : 'Send message'}
               </Button>
             </div>
@@ -142,7 +142,7 @@ function Header() {
       <PageHeader
         kicker="Messages"
         title="Message my students"
-        description="Pick an arm, then the pupils in it. Search to narrow the list; picking in one arm survives a move to another."
+        description="Pick an arm, then the students in it. Search to narrow the list; picking in one arm survives a move to another."
       />
       <Rule />
     </>

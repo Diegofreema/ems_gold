@@ -6,7 +6,7 @@ import { capitalise } from '../../lib/format.ts'
 /**
  * How each kind of record spells a name.
  *
- * Four shapes, four spellings: a teacher's record says `firstname`, a pupil's
+ * Four shapes, four spellings: a teacher's record says `firstname`, a student's
  * and a guardian's say `fname`, and the office's own says `surname` beside
  * `lastname` and nothing else. Read in this order so the two-field office
  * record still yields both halves.

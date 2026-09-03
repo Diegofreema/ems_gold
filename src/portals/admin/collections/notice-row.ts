@@ -27,10 +27,10 @@ function text(value: string | null | undefined): string {
  */
 export const AUDIENCE_LABELS: Record<string, string> = {
   all: 'Everyone',
-  students: 'Pupils',
+  students: 'Students',
   teachers: 'Teachers',
   parents: 'Guardians',
-  students_parents: 'Pupils and guardians',
+  students_parents: 'Students and guardians',
 }
 
 export function audienceLabel(recipients: string | null | undefined): string {

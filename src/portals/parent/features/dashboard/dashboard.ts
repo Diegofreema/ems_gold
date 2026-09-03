@@ -16,7 +16,7 @@ function moneyTile(label: string, amount: number, delta: string, hot = false) {
  * The four figures over the parent's dashboard.
  *
  * Neither an average nor an attendance rate is among them, and both were on
- * the design: no result has been approved for any pupil on this school, so an
+ * the design: no result has been approved for any student on this school, so an
  * average would be a figure invented from nothing, and a rate needs a register
  * to be a share of. What the register does say — days present out of days
  * marked — is here instead, and reads honestly on a child nobody has marked.

@@ -43,7 +43,7 @@ test('the rate is the school’s own figure, not one worked out here', () => {
   assert.equal(attendanceRate(answer), 100)
 })
 
-test('a pupil nobody has marked has no rate rather than nought per cent', () => {
+test('a student nobody has marked has no rate rather than nought per cent', () => {
   assert.equal(attendanceRate({ attendance: [], stats: { total: 0, rate: 0 } }), undefined)
   assert.equal(daysMarked({ attendance: [] }), 0)
 })

@@ -24,7 +24,7 @@ export const OWING = 'Owing'
  *
  * `sparents/my-children/{id}/attendance` sends `ChildMark` and
  * `admin-attendances/report` sends `AttendanceRecord`; both satisfy this, and
- * nothing below needs the pupil naming that only the second one carries.
+ * nothing below needs the student naming that only the second one carries.
  */
 export type Mark = Pick<AttendanceRecord, 'attendance_date' | 'status'>
 
@@ -74,11 +74,11 @@ export function childFull(child: EnrolledChild): string {
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(' ')
-  return name || `Pupil ${child.id}`
+  return name || `Student ${child.id}`
 }
 
 /**
- * What a pupil is called in a sentence. The school enters names in whatever
+ * What a student is called in a sentence. The school enters names in whatever
  * case it likes and this does not correct it — a parent knows their own
  * child's name better than a title-caser does.
  */
@@ -192,8 +192,8 @@ export function familyChild(
     full,
     arm: text(enrolled.class_arm ?? enrolled.department),
     // The school does not always issue one, and this is on screen beside the
-    // name, so it says which pupil it is rather than nothing at all.
-    adm: enrolled.regno?.trim() || `Pupil ${enrolled.id}`,
+    // name, so it says which student it is rather than nothing at all.
+    adm: enrolled.regno?.trim() || `Student ${enrolled.id}`,
     owing,
     paid,
     present: marks.filter((mark) => ATTENDED.includes(mark.status?.toLowerCase())).length,

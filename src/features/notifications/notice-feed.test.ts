@@ -26,7 +26,7 @@ const RESUMPTION: Notice = {
   posted_by: 'Chukwudi Aniegboka',
 }
 
-/** The older one, which only the pupil is served. */
+/** The older one, which only the student is served. */
 const TEST_NOTE: Notice = {
   ...RESUMPTION,
   id: 1,
@@ -98,7 +98,7 @@ test('a notice with no readable date has no place in a feed ordered by time', ()
   assert.deepEqual(noticeFeed([{ ...RESUMPTION, datecreated: 'sometime' }], NOW), [])
 })
 
-test('the pupil’s two notices come back newest first', () => {
+test('the student’s two notices come back newest first', () => {
   const items = noticeFeed([TEST_NOTE, RESUMPTION], NOW)
   assert.deepEqual(
     items.map((item) => [item.noticeId, item.group, item.when]),

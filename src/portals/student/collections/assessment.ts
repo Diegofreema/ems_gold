@@ -6,7 +6,7 @@ import { assignmentRows, assignmentTally } from '../features/assignments/assignm
 import { marksOf, resultRows, termAverage } from '../features/results/results';
 
 /**
- * Every assignment set for the pupil's arm, through the cache so the list and
+ * Every assignment set for the student's arm, through the cache so the list and
  * the three tiles above it read one answer between them.
  *
  * The rows are not what the assignment page reads: opening an assignment asks
@@ -35,7 +35,7 @@ export const assignments: CollectionDef = {
     'Assignments appear here when a teacher opens one for your arm. Only assignments set for your own class are ever listed.',
   noun: 'assignment',
   nameKey: 'title',
-  // No history: the API keeps no record of a pupil opening an assignment, only of
+  // No history: the API keeps no record of a student opening an assignment, only of
   // submitting one, and that is the state column.
   tabs: [],
   counts: [
@@ -59,7 +59,7 @@ export const assignments: CollectionDef = {
   ],
   /*
    * Read whole and searched here. The endpoint takes a `subject_id` and
-   * nothing else — no search term, no state — and a pupil cannot list the
+   * nothing else — no search term, no state — and a student cannot list the
    * subjects to fill a dropdown with, so the box matches the title, the
    * subject and the state at once instead.
    */
@@ -79,7 +79,7 @@ export const results: CollectionDef = {
   title: 'My results',
   description:
     'Every mark the office has approved for you, newest term first. A subject appears once your teacher has filed it and the office has approved the batch it came in.',
-  // No button. The design's was "Download result sheet", and a pupil login can
+  // No button. The design's was "Download result sheet", and a student login can
   // reach no result sheet — nor any endpoint that would rank one.
   action: 'Download result sheet',
   readonly: true,
@@ -93,7 +93,7 @@ export const results: CollectionDef = {
   // No history. The one figure worth a tile is the term average, and it is
   // the API's own — this page never worked one out, because an average over
   // marks from different terms is not a term average. A position needs the
-  // class broadsheet, which a pupil login cannot reach.
+  // class broadsheet, which a student login cannot reach.
   tabs: [],
   counts: [
     {
@@ -103,7 +103,7 @@ export const results: CollectionDef = {
     {
       label: 'Term average',
       // Nought is a real average and "not marked yet" is not, so a term with
-      // nothing in it reads as a dash rather than as a pupil who scored zero.
+      // nothing in it reads as a dash rather than as a student who scored zero.
       count: async () => termAverage(await sheet()) ?? -1,
       format: (value) => (value < 0 ? '—' : String(Math.round(value * 10) / 10)),
     },
@@ -131,8 +131,8 @@ export const results: CollectionDef = {
   ],
   /*
    * Read whole and searched here. The endpoint takes a session and a term, and
-   * a pupil cannot name either of them — `/sessions` and `/semesters` are shut
-   * to a pupil login — so a dropdown would have nothing to put in it. The box
+   * a student cannot name either of them — `/sessions` and `/semesters` are shut
+   * to a student login — so a dropdown would have nothing to put in it. The box
    * matches the subject, the term and the grade at once instead.
    */
   source: (params) => marks().then((all) => pageRows(all, params)),

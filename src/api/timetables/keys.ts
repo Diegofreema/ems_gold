@@ -3,7 +3,7 @@ import type { ChildrenParams, PeriodParams, TermParams } from './types'
 /**
  * `mine`, `children` and `classes` are scoped to the token, so no id is in
  * their keys. Everything hangs off one root: adding, editing or removing a
- * period changes the grid a pupil reads, and one
+ * period changes the grid a student reads, and one
  * `invalidateQueries({ queryKey: timetableKeys.all })` covers both.
  */
 export const timetableKeys = {

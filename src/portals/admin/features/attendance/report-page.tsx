@@ -28,7 +28,7 @@ import { type FilterValues, ReportFilters } from './report-filters'
 
 const COLUMNS = toTableColumns([
   { key: 'when', label: 'Date', cardRole: 'subtitle' },
-  { key: 'pupil', label: 'Pupil', cardRole: 'title' },
+  { key: 'student', label: 'Student', cardRole: 'title' },
   { key: 'adm', label: 'Adm. no.' },
   { key: 'klass', label: 'Class' },
   { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
@@ -75,7 +75,7 @@ export function AttendanceReportPage() {
       <PageHeader
         kicker="Students"
         title="Attendance report"
-        description="Every mark taken over a range, pupil by pupil. An empty range is this month — the days the figures cover are named above them."
+        description="Every mark taken over a range, student by student. An empty range is this month — the days the figures cover are named above them."
         action={
           <Button
             pending={download.isPending}

@@ -26,7 +26,7 @@ export function SubmissionList({
   onOpen: (submissionId: string) => void
 }) {
   const columns: Column<Row>[] = [
-    { key: 'name', label: 'Pupil', cell: (row) => row.name, cardRole: 'title' },
+    { key: 'name', label: 'Student', cell: (row) => row.name, cardRole: 'title' },
     { key: 'adm', label: 'Adm. no.', cell: (row) => row.adm, cardRole: 'subtitle' },
     { key: 'submitted', label: 'Submitted', cell: (row) => row.submitted, nowrap: true },
     { key: 'score', label: 'Score', align: 'right', cell: (row) => row.score },
@@ -65,7 +65,7 @@ export function SubmissionList({
       ) : (
         <EmptyState
           title="No submissions yet"
-          body="Answers appear here as the pupils it was set for submit them. Nothing is marked before then."
+          body="Answers appear here as the students it was set for submit them. Nothing is marked before then."
         />
       )}
     </>

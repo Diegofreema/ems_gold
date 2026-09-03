@@ -14,9 +14,9 @@ import { queryClient } from '@/lib/query-client'
  * How much of the roll and the mark sheet is asked for at once.
  *
  * ponytail: both endpoints paginate and both are read whole here — a teacher's
- * roll is the pupils in their own arms and the marks are their own subjects' —
+ * roll is the students in their own arms and the marks are their own subjects' —
  * so this is one page in every school this runs in. A teacher with more than
- * this many pupils wants a search parameter on the endpoint, which it does not
+ * this many students wants a search parameter on the endpoint, which it does not
  * have today, rather than a longer limit.
  */
 export const ALL = 500

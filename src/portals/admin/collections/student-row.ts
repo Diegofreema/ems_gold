@@ -30,7 +30,7 @@ function asDate(value: string | null | undefined): string {
 
 /**
  * Suspending is a switch, not an edit: the button offers whichever of the two
- * states the pupil is not currently in, and says so in the past tense once the
+ * states the student is not currently in, and says so in the past tense once the
  * API has taken it.
  */
 export function suspendAction(status: string): {
@@ -44,18 +44,18 @@ export function suspendAction(status: string): {
 }
 
 /**
- * A pupil, as both the register and their own record read them. The list
+ * A student, as both the register and their own record read them. The list
  * endpoint expands fewer relations than the detail one, so the fields only
  * `GET /students/{id}` answers for come back blank in the table — which never
  * shows them anyway.
  *
- * `fees` stays blank throughout: whether a pupil owes is `GET /users/fees/{id}`,
- * one request per pupil, so the column waits for an endpoint that answers for
+ * `fees` stays blank throughout: whether a student owes is `GET /users/fees/{id}`,
+ * one request per student, so the column waits for an endpoint that answers for
  * a page at a time.
  *
- * `guardians` names the households the school holds, keyed by id. The pupil
+ * `guardians` names the households the school holds, keyed by id. The student
  * record carries `sparent_id` but no name to go with it, so without the
- * lookup the column falls back to whichever parent was typed onto the pupil.
+ * lookup the column falls back to whichever parent was typed onto the student.
  */
 export function studentRow(
   student: Student,
@@ -67,20 +67,20 @@ export function studentRow(
     name: text([student.fname, student.mname, student.lname].filter(Boolean).join(' ')),
     arm: text(student.class_arm?.arm_name ?? student.department?.name),
     // The linked household where one is known, and otherwise whichever parent
-    // was typed onto the pupil — which is all the pupil record itself holds.
+    // was typed onto the student — which is all the student record itself holds.
     parent: text(
       guardians?.get(String(student.sparent_id)) ??
         (student.fathersname || student.mothersname),
     ),
     fees: BLANK,
-    // `status` is where they are in admission — every enrolled pupil reads
+    // `status` is where they are in admission — every enrolled student reads
     // "Admitted". `studentstatus` is the one that says Active or Suspended.
     status: text(student.studentstatus ?? student.status),
 
     // Everything below is read by the record panel rather than the table.
     class: text(student.department?.name),
     gender: text(student.gender),
-    // Read through the same function the picker uses, so a pupil the office
+    // Read through the same function the picker uses, so a student the office
     // enrolled here is shown "10 Nov 1986" like every other record rather than
     // the raw YYYY-MM-DD this form stored them as.
     born: birthday(student.dob),
@@ -141,7 +141,7 @@ function naira(amount: string | null | undefined): string {
   return amount && !Number.isNaN(parsed) ? formatNaira(parsed) : BLANK
 }
 
-/** One line of a pupil's fees tab, from `GET /students/{id}/invoices`. */
+/** One line of a student's fees tab, from `GET /students/{id}/invoices`. */
 export function invoiceRow(invoice: Invoice): Row {
   return {
     id: String(invoice.id),
@@ -149,13 +149,13 @@ export function invoiceRow(invoice: Invoice): Row {
     fee: text(pick(invoice.fee, 'name', 'feename', 'fee_name', 'title')),
     amount: naira(invoice.amount),
     // The API says `success`; every other invoice column in the app says Paid,
-    // and one pupil's fees tab is no place to start a second vocabulary.
+    // and one student's fees tab is no place to start a second vocabulary.
     state: payStatus(invoice.paystatus),
   }
 }
 
 /**
- * One line of a pupil's results tab, from `GET /students/{id}/results`.
+ * One line of a student's results tab, from `GET /students/{id}/results`.
  *
  * That endpoint is typed `Record<string, unknown>` because no response has
  * been seen yet, so each cell is read by trying the spellings this API uses

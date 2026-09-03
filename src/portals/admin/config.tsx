@@ -14,7 +14,7 @@ export const adminPortal: PortalConfig = {
   notFoundLinks: [
     { to: '/admin', label: 'Dashboard', hint: 'Money and people at a glance' },
     { to: '/admin/collect', label: 'Fee collection', hint: 'Outstanding invoices' },
-    { to: '/admin/students', label: 'Student register', hint: 'Every pupil on file' },
+    { to: '/admin/students', label: 'Student register', hint: 'Every student on file' },
     { to: '/admin/logs', label: 'Activity log', hint: 'Who did what' },
   ],
   headerStatus: <CurrentTerm />,

@@ -8,7 +8,7 @@ export type MoveValues = {
 }
 
 /**
- * Where the pupils are now, so the move can tell which kind it is.
+ * Where the students are now, so the move can tell which kind it is.
  */
 export type MoveFrom = { departmentId: string }
 
@@ -24,7 +24,7 @@ function ids(picks: string[]): number[] {
  * Which of the two moves the school is asking for.
  *
  * Staying in the class and changing arm is a transfer, and goes to the arm's
- * own endpoint — that one judges each pupil separately and reports who it
+ * own endpoint — that one judges each student separately and reports who it
  * refused, which matters when a parent asks why their child did not move.
  * Changing class is a promotion, and goes out as one batch.
  */
@@ -62,7 +62,7 @@ export function moveOutcome(
       : move.body.student_ids.length - failed.length
 
   return {
-    message: `${moved} ${moved === 1 ? 'pupil' : 'pupils'} moved`,
+    message: `${moved} ${moved === 1 ? 'student' : 'students'} moved`,
     failures: failed.map((one) => `${nameFor(one.student_id)} — ${one.reason}`),
   }
 }

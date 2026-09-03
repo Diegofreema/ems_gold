@@ -50,7 +50,7 @@ export const fees: CollectionDef = {
   kicker: 'Finance',
   title: 'Fee catalogue',
   description:
-    'Every chargeable fee and what it costs. Allocate one to classes and it is billed to every pupil in them; retire it and invoices already raised stay payable.',
+    'Every chargeable fee and what it costs. Allocate one to classes and it is billed to every student in them; retire it and invoices already raised stay payable.',
   action: 'Create fee',
   searchHint: 'Search fee name or item code',
   footer: 'Newest first',
@@ -152,7 +152,7 @@ export const fees: CollectionDef = {
           required: true,
           money: true,
           placeholder: '30,000',
-          hint: 'Charged per pupil, every time this fee is raised.',
+          hint: 'Charged per student, every time this fee is raised.',
         },
         {
           key: 'feetype',
@@ -191,7 +191,7 @@ const countInvoices = (status?: string) => async () =>
 /** What an invoice's own page reads, whichever register opened it. */
 const INVOICE_DETAIL = [
   { key: 'invoice', label: 'Reference' },
-  { key: 'student', label: 'Pupil' },
+  { key: 'student', label: 'Student' },
   { key: 'arm', label: 'Arm' },
   { key: 'fee', label: 'Fee' },
   { key: 'billed', label: 'Amount' },
@@ -204,7 +204,7 @@ const INVOICE_DETAIL = [
 
 /**
  * Settling is offered wherever an invoice is listed. It is its own endpoint
- * rather than a field on the invoice, and it names the pupil so a mistyped
+ * rather than a field on the invoice, and it names the student so a mistyped
  * reference cannot clear someone else's bill. Every part is read off the row,
  * and an invoice already paid gets no button at all.
  */
@@ -252,12 +252,12 @@ const paymentsTaken: DetailTab = {
 }
 
 /**
- * The rest of the same pupil's bill. A parent at the counter settling one
+ * The rest of the same student's bill. A parent at the counter settling one
  * invoice is the moment to know they are also down for the bus, so this asks
  * for every session rather than only the current one.
  */
-const pupilLedger: DetailTab = {
-  label: "This pupil's invoices",
+const studentLedger: DetailTab = {
+  label: "This student's invoices",
   columns: [
     { key: 'invoice', label: 'Invoice' },
     { key: 'fee', label: 'Fee' },
@@ -265,7 +265,7 @@ const pupilLedger: DetailTab = {
     { key: 'billed', label: 'Amount', align: 'right' },
     { key: 'status', label: 'Status', tag: true },
   ],
-  empty: 'This pupil has no other invoices.',
+  empty: 'This student has no other invoices.',
   source: async (recordId) => {
     const invoice = await collectFeesService.invoice(recordId)
     const ledger = await collectFeesService.studentLedger(invoice.student_id)
@@ -282,17 +282,17 @@ export const collect: CollectionDef = {
     'The counter queue: every invoice still owing. Open one to take the payment — it is settled in full, less any discount you grant.',
   // Finding a family is the counter's own job and comes first; the report is
   // the end-of-day one.
-  action: 'Find a pupil',
-  actionTo: '/admin/collect/pupil',
+  action: 'Find a student',
+  actionTo: '/admin/collect/student',
   secondaryTo: { to: '/admin/collect/report', label: 'Collections report' },
   // Unlike the invoice register, this endpoint really does search — `q`
-  // matches a pupil's name or registration number.
-  searchHint: 'Search pupil name or reg. no.',
+  // matches a student's name or registration number.
+  searchHint: 'Search student name or reg. no.',
   searchable: true,
   footer: 'Newest first',
   emptyTitle: 'Nothing outstanding',
   emptyBody:
-    'Every invoice raised has been settled. New ones appear here as fees are charged to pupils.',
+    'Every invoice raised has been settled. New ones appear here as fees are charged to students.',
   noun: 'invoice',
   nameKey: 'student',
   // Counted by the API over the whole ledger rather than summed over the page
@@ -310,7 +310,7 @@ export const collect: CollectionDef = {
   // word all the way down. The registration number earns its place instead —
   // it is what a counter checks a family against.
   columns: [
-    { key: 'student', label: 'Pupil', cardRole: 'title' },
+    { key: 'student', label: 'Student', cardRole: 'title' },
     { key: 'regno', label: 'Reg. no.', cardRole: 'subtitle' },
     { key: 'placed', label: 'Class' },
     { key: 'fee', label: 'Fee' },
@@ -318,7 +318,7 @@ export const collect: CollectionDef = {
   ],
   detail: [
     { key: 'invoice', label: 'Invoice' },
-    { key: 'student', label: 'Pupil' },
+    { key: 'student', label: 'Student' },
     { key: 'regno', label: 'Reg. no.' },
     { key: 'placed', label: 'Class' },
     { key: 'fee', label: 'Fee' },
@@ -329,7 +329,7 @@ export const collect: CollectionDef = {
     { key: 'raised', label: 'Raised' },
     { key: 'settledOn', label: 'Settled' },
   ],
-  tabs: [paymentsTaken, pupilLedger],
+  tabs: [paymentsTaken, studentLedger],
   // The record is not edited from here: an invoice is written by the register
   // and closed by a payment, and there is nothing on it a counter may retype.
   readonly: true,
@@ -350,16 +350,16 @@ export const invoices: CollectionDef = {
   kicker: 'Finance',
   title: 'Invoices',
   description:
-    'Every invoice raised against a pupil, settled or not. Open one for the pupil, the fee and when it was paid.',
+    'Every invoice raised against a student, settled or not. Open one for the student, the fee and when it was paid.',
   action: 'Create invoice',
-  searchHint: 'Search invoice or pupil',
+  searchHint: 'Search invoice or student',
   // The endpoint takes no search term — it answers with the whole register
   // whatever is passed — and a box that narrows nothing is worse than none.
   searchable: false,
   footer: 'Newest first',
   emptyTitle: 'No invoices yet',
   emptyBody:
-    'Invoices appear here once a fee is raised against a pupil. Create the first one to start billing.',
+    'Invoices appear here once a fee is raised against a student. Create the first one to start billing.',
   noun: 'invoice',
   nameKey: 'student',
   counts: [
@@ -369,7 +369,7 @@ export const invoices: CollectionDef = {
   ],
   columns: [
     { key: 'invoice', label: 'Invoice', cardRole: 'subtitle' },
-    { key: 'student', label: 'Pupil', cardRole: 'title' },
+    { key: 'student', label: 'Student', cardRole: 'title' },
     { key: 'fee', label: 'Fee' },
     { key: 'billed', label: 'Amount', align: 'right' },
     { key: 'paid', label: 'Paid', align: 'right' },
@@ -414,11 +414,11 @@ export const invoices: CollectionDef = {
       fields: [
         {
           key: 'student_id',
-          label: 'Pupil',
+          label: 'Student',
           required: true,
           wide: true,
           optionsFrom: 'students',
-          hint: 'Only pupils already admitted can be billed.',
+          hint: 'Only students already admitted can be billed.',
         },
         { key: 'fee_id', label: 'Fee', required: true, optionsFrom: 'fees' },
         {

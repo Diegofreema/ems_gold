@@ -108,14 +108,14 @@ test('children are counted where the detail expanded them, blank where not', () 
 
 test('a household with children cannot be deleted, and the dialog says why', () => {
   const body = parentDeleteBody(parentRow(HOUSEHOLD))
-  assert.match(body, /2 pupils are linked/)
+  assert.match(body, /2 students are linked/)
   assert.match(body, /refuse to delete/)
   assert.doesNotMatch(body, /permanently/)
 })
 
 test('one child is named in the singular', () => {
   const alone = { ...HOUSEHOLD, children: HOUSEHOLD.children!.slice(0, 1) }
-  assert.match(parentDeleteBody(parentRow(alone)), /1 pupil is linked/)
+  assert.match(parentDeleteBody(parentRow(alone)), /1 student is linked/)
 })
 
 test('an empty household is deletable, and offered the lesser answer first', () => {
@@ -141,10 +141,10 @@ test('the sign-in action offers whichever state the household is not in', () => 
 
 test('a household deleted from the register promises nothing about children', () => {
   // The list is told no count, so neither of the other two sentences is true
-  // of it — this household has four pupils and the row cannot know.
+  // of it — this household has four students and the row cannot know.
   const { children: _none, ...listed } = HOUSEHOLD
   const body = parentDeleteBody(parentRow(listed))
   assert.match(body, /the register will refuse/)
   assert.match(body, /open the record first/)
-  assert.doesNotMatch(body, /pupils are linked/)
+  assert.doesNotMatch(body, /students are linked/)
 })

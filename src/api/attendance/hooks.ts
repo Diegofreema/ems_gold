@@ -110,7 +110,7 @@ export function useTakeRegister() {
   })
 }
 
-/** The signed-in pupil's own record. */
+/** The signed-in student's own record. */
 export function useMyAttendance(params: MyAttendanceParams = {}) {
   return useQuery({
     queryKey: registerKeys.mine(params),

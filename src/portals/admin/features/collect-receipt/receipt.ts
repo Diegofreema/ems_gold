@@ -2,7 +2,7 @@ import type { Receipt } from '../../../../api/collect-fees/types.ts'
 import { BLANK } from '../../../../features/collections/blank.ts'
 import { formatNaira } from '../../../../lib/format.ts'
 import { methodLabel } from '../../../../features/collections/payment-methods.ts'
-import { pupilName } from '../../collections/collect-row.ts'
+import { studentName } from '../../collections/collect-row.ts'
 import { when } from '../../../../features/collections/when.ts'
 
 function text(value: string | null | undefined): string {
@@ -23,7 +23,7 @@ export function receiptLines(
   if (!receipt) return []
 
   return [
-    { label: 'Pupil', value: pupilName(receipt.student) },
+    { label: 'Student', value: studentName(receipt.student) },
     { label: 'Reg. no.', value: text(receipt.student?.regno) },
     { label: 'Class', value: text(receipt.student?.department) },
     { label: 'Fee', value: text(receipt.fee) },

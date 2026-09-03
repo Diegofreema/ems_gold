@@ -5,7 +5,7 @@ import type { Subject } from '../../../api/subjects/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import {
   armDeleteBody,
-  armPupilRow,
+  armStudentRow,
   armRow,
   subjectClassRow,
   subjectDeleteBody,
@@ -92,7 +92,7 @@ test('statuses are shown as words, not as the API spells them', () => {
 
 test('the arm delete confirm names what would be stranded', () => {
   const body = armDeleteBody(armRow(detailed))
-  assert.match(body, /2 pupils/)
+  assert.match(body, /2 students/)
   assert.match(body, /1 result\b/)
   // Zero attendances are not worth naming.
   assert.doesNotMatch(body, /attendance record/)
@@ -161,26 +161,26 @@ test('a teacher row reads the one joined name the API sends', () => {
   assert.equal(subjectTeacherRow({ id: 2, name: 'Teacher u 1 New Teacher' }).name, 'Teacher u 1 New Teacher')
 })
 
-test('a pupil on the arm tab reads their number and status', () => {
-  const pupil = {
+test('a student on the arm tab reads their number and status', () => {
+  const student = {
     id: 4, fname: 'UDOYE', lname: 'OKIGBO', mname: null,
     regno: 'CUN/2026/4', application_no: null,
     studentstatus: null, status: 'Admitted',
   } as never
-  const row = armPupilRow(pupil, true)
+  const row = armStudentRow(student, true)
   assert.equal(row.name, 'UDOYE OKIGBO')
   assert.equal(row.adm, 'CUN/2026/4')
   assert.equal(row.status, 'Admitted')
   assert.equal(row.placed, 'In this arm')
 })
 
-test('a pupil the arm could still take is not counted as being in it', () => {
+test('a student the arm could still take is not counted as being in it', () => {
   const waiting = {
     id: 11, fname: 'Tolu', lname: 'Ayo', mname: null,
     regno: null, application_no: 'APP/0091',
     studentstatus: null, status: 'Admitted',
   } as never
-  const row = armPupilRow(waiting, false)
+  const row = armStudentRow(waiting, false)
   assert.equal(row.placed, 'Not placed')
   // No reg number yet, so the application number stands in for one.
   assert.equal(row.adm, 'APP/0091')

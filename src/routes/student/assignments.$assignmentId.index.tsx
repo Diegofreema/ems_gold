@@ -8,7 +8,7 @@ export const Route = createFileRoute('/student/assignments/$assignmentId/')({
     crumb: 'Assessment · Assignments',
     crumbTo: '/student/assignments',
   },
-  // Fetched here so the page never suspends into an empty shell: a pupil about
+  // Fetched here so the page never suspends into an empty shell: a student about
   // to sit an assignment should see the assignment, not a flash of nothing.
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(studentAssignmentQuery(params.assignmentId)),

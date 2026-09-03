@@ -49,7 +49,7 @@ export const attendanceService = {
 }
 
 /**
- * The daily register: what a class teacher takes, and what a pupil or a
+ * The daily register: what a class teacher takes, and what a student or a
  * guardian reads off it.
  *
  * The class teacher of an arm takes its register, not every teacher who
@@ -77,7 +77,7 @@ export const registerService = {
   coverage: (params: CoverageParams) =>
     request<Coverage>('attendances/coverage', { query: { ...params } }),
 
-  /** The signed-in pupil's own record. */
+  /** The signed-in student's own record. */
   mine: (params: MyAttendanceParams = {}) =>
     request<MyAttendance>('attendances/mine', { query: { ...params } }),
 
@@ -89,9 +89,9 @@ export const registerService = {
   children: () => request<MyAttendance>('attendances/children'),
 
   /**
-   * Whose pupil this is decides the answer, not the id in the URL — a class
-   * teacher may read their own arm's pupils, a guardian only their children,
-   * a pupil only themselves. Unused for the same reason as `children`.
+   * Whose student this is decides the answer, not the id in the URL — a class
+   * teacher may read their own arm's students, a guardian only their children,
+   * a student only themselves. Unused for the same reason as `children`.
    */
   forStudent: (studentId: Id, params: MyAttendanceParams = {}) =>
     request<MyAttendance>(`attendances/student/${studentId}`, { query: { ...params } }),

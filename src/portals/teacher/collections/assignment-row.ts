@@ -6,9 +6,9 @@ import { schoolMillis, schoolTime, when } from '../../../features/collections/wh
 /**
  * The teacher's own register of assignments, off `GET /setassignments`.
  *
- * Unlike the pupil's list, nothing here has been worked out by the server:
+ * Unlike the student's list, nothing here has been worked out by the server:
  * there is no `window_problem` on a set assignment, because the question the server
- * answers for a pupil — may I sit this? — is not the question a teacher is
+ * answers for a student — may I sit this? — is not the question a teacher is
  * asking. What a teacher wants to know is whether the assignment is finished, and
  * the only thing that says so is whether it holds any questions at all.
  */

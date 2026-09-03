@@ -109,7 +109,7 @@ export function AttendanceDashboard() {
       {rows.length === 0 ? (
         <EmptyState
           title="No classes to show"
-          body="The school has no classes with pupils on the roll, so there is nothing to mark."
+          body="The school has no classes with students on the roll, so there is nothing to mark."
         />
       ) : (
         <DataTable columns={COLUMNS} rows={rows} rowKey={rowKey} compact />

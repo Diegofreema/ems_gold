@@ -29,7 +29,7 @@ export const resultsService = {
     ),
 
   /**
-   * Every pupil in the class against every subject, with the position worked
+   * Every student in the class against every subject, with the position worked
    * out. `department_id` is required.
    */
   classSheet: (params: ClassSheetParams) =>
@@ -66,7 +66,7 @@ export const resultsService = {
   decide: (id: Id, body: DecideBody) =>
     request<unknown>(`results/${id}/decide`, { method: 'POST', body }),
 
-  /** The signed-in pupil's own released marks, with the term average. */
+  /** The signed-in student's own released marks, with the term average. */
   mine: (params: MyMarkParams = {}) =>
     request<MyMarks>('results/mine', { query: { ...params } }),
 
@@ -74,9 +74,9 @@ export const resultsService = {
   children: () => request<Record<string, unknown>>('results/children'),
 
   /**
-   * One pupil's marks. Whose pupil it is decides the answer rather than the id
+   * One student's marks. Whose student it is decides the answer rather than the id
    * in the URL — a teacher may read a class they are attached to, a guardian
-   * only their own children, a pupil only themselves; 403 otherwise.
+   * only their own children, a student only themselves; 403 otherwise.
    */
   forStudent: (studentId: Id, params: MyMarkParams = {}) =>
     request<MyMarks>(`results/student/${studentId}`, { query: { ...params } }),

@@ -6,7 +6,7 @@ import type {
 import type { MarkingTerm } from '../term/term.ts'
 import { CA_MAX, EXAM_MAX, markOf, totalOf } from './grade.ts'
 
-/** What a teacher has typed but not yet filed, keyed subject and pupil. */
+/** What a teacher has typed but not yet filed, keyed subject and student. */
 export type Edit = { ca?: string; exam?: string }
 export type Edits = Record<string, Edit>
 
@@ -38,10 +38,10 @@ function marked(value: string | number | null | undefined): string {
   return Number.isFinite(parsed) ? String(Math.round(parsed)) : String(value)
 }
 
-function pupilName(pupil: TeacherStudent): string {
+function studentName(student: TeacherStudent): string {
   return (
-    [pupil.fname, pupil.mname, pupil.lname].filter(Boolean).join(' ').trim() ||
-    `Pupil ${pupil.id}`
+    [student.fname, student.mname, student.lname].filter(Boolean).join(' ').trim() ||
+    `Student ${student.id}`
   )
 }
 
@@ -53,35 +53,35 @@ function problemWith(ca: string, exam: string): string {
 }
 
 /**
- * One sheet: every pupil in the arm, against the mark the school already holds
+ * One sheet: every student in the arm, against the mark the school already holds
  * for them in this subject, with whatever the teacher has typed on top.
  *
- * A pupil with no mark yet is a blank row rather than a missing one — the
+ * A student with no mark yet is a blank row rather than a missing one — the
  * whole point of the sheet is filing the first mark.
  */
 export function sheetRows(
-  pupils: TeacherStudent[],
+  students: TeacherStudent[],
   marks: TeacherResult[],
   subjectId: number,
   edits: Edits,
 ): SheetRow[] {
-  return pupils.map((pupil) => {
+  return students.map((student) => {
     const held = marks.find(
-      (mark) => mark.student_id === pupil.id && mark.subject_id === subjectId,
+      (mark) => mark.student_id === student.id && mark.subject_id === subjectId,
     )
     const heldCa = marked(held?.ca)
     // `score` is the exam half; `total` is that plus the CA, worked out by the
     // school rather than sent to it.
     const heldExam = marked(held?.score)
-    const edit = edits[editKey(subjectId, pupil.id)]
+    const edit = edits[editKey(subjectId, student.id)]
     const ca = edit?.ca ?? heldCa
     const exam = edit?.exam ?? heldExam
     const edited = ca !== heldCa || exam !== heldExam
 
     return {
-      student_id: pupil.id,
-      name: pupilName(pupil),
-      adm: pupil.regno?.trim() || '',
+      student_id: student.id,
+      name: studentName(student),
+      adm: student.regno?.trim() || '',
       ca,
       exam,
       total: totalOf(ca, exam),
@@ -98,7 +98,7 @@ export function sheetRows(
 
 /**
  * The rows to file, as `POST /teachers/me/scores` wants them — one call per
- * pupil, and only for the rows actually changed. A row the endpoint would
+ * student, and only for the rows actually changed. A row the endpoint would
  * refuse is left out; the sheet flags it instead.
  */
 export function changedMarks(

@@ -16,7 +16,7 @@ export type Invoice = {
   fee?: Record<string, unknown>
   /** The session the invoice was raised under, expanded by list and detail. */
   session?: Record<string, unknown>
-  /** Set when the pupil's row has since been deleted. */
+  /** Set when the student's row has since been deleted. */
   student_missing?: boolean
 }
 
@@ -44,7 +44,7 @@ export type InvoiceBody = {
 }
 
 /**
- * Marks the invoice paid and closes its transaction. The pupil is named so a
+ * Marks the invoice paid and closes its transaction. The student is named so a
  * mistyped invoice number cannot settle someone else's bill.
  */
 export type SettleInvoiceBody = {

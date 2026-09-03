@@ -78,7 +78,7 @@ export function useMessageAdmin() {
 export function useMessageMyStudents() {
   return useMutation({
     mutationFn: (body: MessageStudentsBody) => teachingService.messageStudents(body),
-    meta: { success: 'Message sent to your pupils' },
+    meta: { success: 'Message sent to your students' },
   })
 }
 
@@ -118,7 +118,7 @@ export function useMyResults(params: MyResultParams = {}) {
 }
 
 /**
- * A whole sheet, one mark at a time — the endpoint takes a single pupil, and a
+ * A whole sheet, one mark at a time — the endpoint takes a single student, and a
  * school's network is not the place for thirty concurrent writes. It stops at
  * the first refusal: the marks already taken stay, and the sheet is re-read
  * either way, so what stuck is what shows.

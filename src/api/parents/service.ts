@@ -90,7 +90,7 @@ export const myFamilyService = {
   /**
    * Every invoice raised against every child on the record, in one call —
    * this is the only endpoint that answers for the household rather than for
-   * one pupil.
+   * one student.
    */
   invoices: (params: { page?: number; limit?: number } = {}) =>
     request<Record<string, unknown>>('sparents/my-invoices', { query: { ...params } }).then(

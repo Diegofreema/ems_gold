@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { RegisterPupil } from '../../../../api/attendance/types.ts'
+import type { RegisterStudent } from '../../../../api/attendance/types.ts'
 import {
   changedMarks,
   ignoredNote,
@@ -12,7 +12,7 @@ import {
   statusOptions,
 } from './register.ts'
 
-const pupil = (over: Partial<RegisterPupil> = {}): RegisterPupil => ({
+const student = (over: Partial<RegisterStudent> = {}): RegisterStudent => ({
   student_id: 19,
   name: 'OGWA NDU',
   regno: 'NETPRO/2026/19',
@@ -21,29 +21,29 @@ const pupil = (over: Partial<RegisterPupil> = {}): RegisterPupil => ({
   ...over,
 })
 
-test('an unmarked pupil stays unmarked rather than defaulting to present', () => {
-  const [row] = registerRows([pupil()], {})
+test('an unmarked student stays unmarked rather than defaulting to present', () => {
+  const [row] = registerRows([student()], {})
   assert.equal(row.status, null)
   assert.equal(row.edited, false)
 })
 
-test('a pupil already marked reads what the school holds', () => {
-  const [row] = registerRows([pupil({ status: 'late', notes: 'Bus was late' })], {})
+test('a student already marked reads what the school holds', () => {
+  const [row] = registerRows([student({ status: 'late', notes: 'Bus was late' })], {})
   assert.equal(row.status, 'late')
   assert.equal(row.notes, 'Bus was late')
   assert.equal(row.edited, false)
 })
 
-test('only touched rows are sent, so an untouched pupil is left alone', () => {
+test('only touched rows are sent, so an untouched student is left alone', () => {
   const rows = registerRows(
-    [pupil(), pupil({ student_id: 2, name: 'ADA EZE' })],
+    [student(), student({ student_id: 2, name: 'ADA EZE' })],
     { '2': { status: 'absent' } },
   )
   assert.deepEqual(changedMarks(rows), { '2': 'absent' })
 })
 
 test('a mark with no note travels as a bare word, one with a note as an object', () => {
-  const rows = registerRows([pupil(), pupil({ student_id: 2, name: 'ADA EZE' })], {
+  const rows = registerRows([student(), student({ student_id: 2, name: 'ADA EZE' })], {
     '19': { status: 'present' },
     '2': { status: 'late', notes: ' Bus was late ' },
   })
@@ -54,7 +54,7 @@ test('a mark with no note travels as a bare word, one with a note as an object',
 })
 
 test('a note typed against no status is not sent — there is no mark to carry it', () => {
-  const rows = registerRows([pupil()], { '19': { notes: 'Saw them at the gate' } })
+  const rows = registerRows([student()], { '19': { notes: 'Saw them at the gate' } })
   assert.deepEqual(changedMarks(rows), {})
 })
 
@@ -66,7 +66,7 @@ test('the tally reads in-school off the statuses, not off the word', () => {
     { value: 'late', label: 'Late', inSchool: false },
   ]
   const rows = registerRows(
-    [pupil({ status: 'present' }), pupil({ student_id: 2, name: 'ADA', status: 'late' }), pupil({ student_id: 3, name: 'OBI' })],
+    [student({ status: 'present' }), student({ student_id: 2, name: 'ADA', status: 'late' }), student({ student_id: 3, name: 'OBI' })],
     {},
   )
   const tally = liveTally(rows, statuses)
@@ -130,7 +130,7 @@ test('a date after today is refused before it is sent', () => {
 test('ignored ids are named, because the saved count will otherwise look short', () => {
   assert.match(
     ignoredNote({ saved: 1, ignored: [2, 3], register: {} as never }),
-    /2 pupil ids were not in this class/,
+    /2 student ids were not in this class/,
   )
   assert.equal(ignoredNote({ saved: 1, ignored: [], register: {} as never }), '')
 })

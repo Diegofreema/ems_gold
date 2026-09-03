@@ -52,9 +52,9 @@ const AFTER = new Date('2026-08-31T08:00:00+01:00')
 const BEFORE = new Date('2026-08-28T08:00:00+01:00')
 
 test('the counters read the school off the record', () => {
-  const [pupils, subjects, arms, assignments] = teacherFigures(DASHBOARD)
-  assert.equal(pupils.amount, 2)
-  assert.equal(pupils.delta, 'Of 5 in the school')
+  const [students, subjects, arms, assignments] = teacherFigures(DASHBOARD)
+  assert.equal(students.amount, 2)
+  assert.equal(students.delta, 'Of 5 in the school')
   assert.equal(subjects.amount, 3)
   assert.equal(arms.amount, 1)
   assert.equal(arms.delta, 'JSS1 A')

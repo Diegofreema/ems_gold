@@ -79,11 +79,11 @@ function marksFor(children: EnrolledChild[], from: string, to: string) {
  *   billed against them still appears in the switcher
  * - `sparents/my-invoices` — every invoice raised against every child, in one
  *   call. It is the only read here that answers for the household rather than
- *   for one pupil
+ *   for one student
  * - `sparents/my-children/{id}/attendance` — the marks, one child at a time
  *
  * This portal used to read `sparents/{id}/children`, `admin-attendances/report`
- * and the counter's per-pupil ledgers instead, because the deployment resolved
+ * and the counter's per-student ledgers instead, because the deployment resolved
  * every caller to user 1 and the `my-*` routes answered "No parent record is
  * linked to this account" whatever token was presented. Bronze started
  * identifying the caller on 2026-09-01 and those three now answer "This

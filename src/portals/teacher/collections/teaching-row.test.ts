@@ -10,7 +10,7 @@ import {
   eclassRow,
   markRow,
   mySubjectRow,
-  pupilRow,
+  studentRow,
   roomOf,
   scoreRow,
   subjectNames,
@@ -34,7 +34,7 @@ const SUBJECT = {
 } as unknown as TeacherSubject
 
 /** Verbatim from GET /teachers/me/students. */
-const PUPIL = {
+const STUDENT = {
   id: 10,
   fname: 'Aniegbokas',
   lname: 'Chukwudi',
@@ -82,8 +82,8 @@ test('a withdrawn subject is not read as an active one', () => {
   assert.equal(mySubjectRow({ ...SUBJECT, status: 0 }).status, 'Inactive')
 })
 
-test('a pupil reads their admission number, arm and class', () => {
-  const row = pupilRow(PUPIL)
+test('a student reads their admission number, arm and class', () => {
+  const row = studentRow(STUDENT)
   assert.equal(row.adm, 'MGS/2020535')
   assert.equal(row.name, 'Aniegbokas Chukwudi')
   assert.equal(row.arm, 'JSS1 A')
@@ -93,22 +93,22 @@ test('a pupil reads their admission number, arm and class', () => {
 })
 
 test('a birthday stored the other way round is still written as a date', () => {
-  // A pupil the office enrolled through this app is stored YYYY-MM-DD, and
+  // A student the office enrolled through this app is stored YYYY-MM-DD, and
   // used to reach the panel raw — "2023-04-07" beside every other date in the
   // design's own wording.
-  assert.equal(pupilRow({ ...PUPIL, dob: '2023-04-07' }).born, '07 Apr 2023')
+  assert.equal(studentRow({ ...STUDENT, dob: '2023-04-07' }).born, '07 Apr 2023')
 })
 
 test('the standing shown is the one the school filled in', () => {
-  // Admission is all the roll carries for a pupil the office has not marked.
-  assert.equal(pupilRow(PUPIL).status, 'Admitted')
-  assert.equal(pupilRow({ ...PUPIL, studentstatus: 'Suspended' }).status, 'Suspended')
+  // Admission is all the roll carries for a student the office has not marked.
+  assert.equal(studentRow(STUDENT).status, 'Admitted')
+  assert.equal(studentRow({ ...STUDENT, studentstatus: 'Suspended' }).status, 'Suspended')
 })
 
 test('a parent nobody typed onto the record is left blank, not half-joined', () => {
-  assert.equal(pupilRow(PUPIL).father, '—')
+  assert.equal(studentRow(STUDENT).father, '—')
   assert.equal(
-    pupilRow({ ...PUPIL, fathersname: 'Emeka Udo', fatherphone: '08033' }).father,
+    studentRow({ ...STUDENT, fathersname: 'Emeka Udo', fatherphone: '08033' }).father,
     'Emeka Udo · 08033',
   )
 })
@@ -186,7 +186,7 @@ const FILED = {
   user: { id: 1, fname: 'Chukwudi', lname: 'Aniegboka' },
 } as unknown as TeacherResult
 
-test('a filed mark reads the pupil, the subject and the class off itself', () => {
+test('a filed mark reads the student, the subject and the class off itself', () => {
   const row = markRow(FILED)
   assert.equal(row.name, 'UDOYE OZOMGBO OKIGBO')
   assert.equal(row.adm, 'CUN/2026/4')

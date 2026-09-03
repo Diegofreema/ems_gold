@@ -1,3 +1,4 @@
+import { isoDate } from '../../../features/collections/birthday.ts'
 import { schoolCountryId } from '../../../features/collections/country-ids.ts'
 import type { StudentBody } from '../../../api/students/types.ts'
 
@@ -13,19 +14,11 @@ function asId(value: unknown): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
-/** The API takes `YYYY-MM-DD`, which is what the calendar field's Date becomes. */
-function isoDate(value: unknown): string | undefined {
-  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return undefined
-  const month = String(value.getMonth() + 1).padStart(2, '0')
-  const day = String(value.getDate()).padStart(2, '0')
-  return `${value.getFullYear()}-${month}-${day}`
-}
-
 /**
  * The enrol/edit form as `POST /students` wants it.
  *
  * Fields the form left empty are dropped rather than sent blank, so editing
- * one section of a pupil never clears another. `department_id` is the only
+ * one section of a student never clears another. `department_id` is the only
  * number the endpoint insists on; the arm and guardian go as the strings the
  * selects hold, which is what the API accepts for them.
  *

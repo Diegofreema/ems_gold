@@ -24,7 +24,7 @@ test('a notice reads as one line of the office register', () => {
   const row = noticeRow(NOTICE)
   assert.equal(row.id, '1')
   assert.equal(row.title, 'test note')
-  assert.equal(row.audience, 'Pupils')
+  assert.equal(row.audience, 'Students')
   assert.equal(row.reach, 'Whole school')
   assert.equal(row.views, '4')
   assert.equal(row.status, 'active')
@@ -55,7 +55,7 @@ test('an assignment raising its own notice is told apart from the office writing
 
 test('audiences read as an office says them, and an unknown one reads as itself', () => {
   assert.equal(audienceLabel('all'), 'Everyone')
-  assert.equal(audienceLabel('students_parents'), 'Pupils and guardians')
+  assert.equal(audienceLabel('students_parents'), 'Students and guardians')
   // The school growing a sixth audience must not blank the column.
   assert.equal(audienceLabel('bursary'), 'bursary')
   assert.equal(audienceLabel(null), '—')
@@ -67,10 +67,10 @@ test('the form offers exactly the audiences the board published', () => {
     audienceOptions(['all', 'students', 'teachers', 'parents', 'students_parents']),
     [
       { value: 'all', label: 'Everyone' },
-      { value: 'students', label: 'Pupils' },
+      { value: 'students', label: 'Students' },
       { value: 'teachers', label: 'Teachers' },
       { value: 'parents', label: 'Guardians' },
-      { value: 'students_parents', label: 'Pupils and guardians' },
+      { value: 'students_parents', label: 'Students and guardians' },
     ],
   )
 })

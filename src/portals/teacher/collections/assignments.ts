@@ -53,7 +53,7 @@ export const assignments: CollectionDef = {
   kicker: 'Assessment',
   title: 'Set assignments',
   description:
-    'The assignments you have set, and what each one still needs. Pupils answer in their own portal once an assignment holds questions and its window opens, and what they send back comes here to be marked.',
+    'The assignments you have set, and what each one still needs. Students answer in their own portal once an assignment holds questions and its window opens, and what they send back comes here to be marked.',
   action: 'Set an assignment',
   searchHint: 'Search assignment, subject or class',
   footer: 'What still needs questions first',
@@ -113,12 +113,12 @@ export const assignments: CollectionDef = {
       ],
       source: questionRows,
       empty:
-        'This assignment holds no questions yet, so no pupil can sit it. Write them before its window opens.',
+        'This assignment holds no questions yet, so no student can sit it. Write them before its window opens.',
     },
     {
       label: 'Submissions',
       columns: [
-        { key: 'name', label: 'Pupil' },
+        { key: 'name', label: 'Student' },
         { key: 'adm', label: 'Adm. no.' },
         { key: 'submitted', label: 'Submitted' },
         { key: 'score', label: 'Score', align: 'right' },
@@ -129,7 +129,7 @@ export const assignments: CollectionDef = {
           (await setAssignmentsService.submissions(recordId)).submissions ?? [],
         ),
       empty:
-        'No pupil has submitted this assignment yet. Answers appear here as they send them in.',
+        'No student has submitted this assignment yet. Answers appear here as they send them in.',
       // The marking itself is its own page: a written answer is read and given
       // a figure, which is not something a row of a table can be.
       action: (recordId) => ({
@@ -150,7 +150,7 @@ export const assignments: CollectionDef = {
   },
   remove: (recordId) => setAssignmentsService.remove(recordId),
   removeBody: (row) =>
-    `The assignment and its ${row.questions} question${row.questions === '1' ? '' : 's'} go with it. An assignment pupils have already sat is better left to close than deleted.`,
+    `The assignment and its ${row.questions} question${row.questions === '1' ? '' : 's'} go with it. An assignment students have already sat is better left to close than deleted.`,
   form: [
     {
       title: 'The assignment',
@@ -182,7 +182,7 @@ export const assignments: CollectionDef = {
           label: 'Class',
           required: true,
           optionsFrom: 'my-classes',
-          hint: 'Who sits it. Every pupil of the class sees the assignment; no other class does.',
+          hint: 'Who sits it. Every student of the class sees the assignment; no other class does.',
         },
       ],
     },
@@ -194,7 +194,7 @@ export const assignments: CollectionDef = {
           label: 'Time allowed (minutes)',
           number: true,
           min: 1,
-          hint: 'From the moment a pupil starts. Leave blank for no limit.',
+          hint: 'From the moment a student starts. Leave blank for no limit.',
         },
         {
           key: 'passing_score',

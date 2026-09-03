@@ -10,7 +10,7 @@ import { studentCoursesQuery, studentTimetableQuery } from '../../api/queries'
 import { classOf, teacherFor } from './timetable'
 
 /**
- * The pupil's week, drawn as the week rather than listed as rows.
+ * The student's week, drawn as the week rather than listed as rows.
  *
  * Two answers make it: `GET /timetables/mine` says what is taught when, and
  * `GET /students/me/courses` says who teaches it — a period carries a subject
@@ -50,7 +50,7 @@ export function TimetablePage() {
         <EmptyState
           title="No timetable to show"
           // The API's own sentence is "No timetable has been entered for this
-          // class yet." Said here in the pupil's terms, and pointing at the
+          // class yet." Said here in the student's terms, and pointing at the
           // page that does have their subjects on it.
           body="The office has not entered the week’s periods for your class yet. The subjects you take, and who teaches each, are on My subjects."
         />

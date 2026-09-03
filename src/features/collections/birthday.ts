@@ -5,9 +5,9 @@ import { formatDate } from '../../lib/format.ts'
  * A stored birthday as the date picker reads it.
  *
  * **Two spellings reach this, and both have to be read.** The school's older
- * records hold DD/MM/YYYY; a pupil enrolled through this app's own form is
+ * records hold DD/MM/YYYY; a student enrolled through this app's own form is
  * stored as YYYY-MM-DD, because that is what `studentBody` sends. Reading only
- * the first left the edit form's picker empty for every pupil the office had
+ * the first left the edit form's picker empty for every student the office had
  * created itself — the birthday was on the record and on the panel beside it,
  * and the field meant to hold it opened blank.
  *
@@ -34,10 +34,26 @@ export function isoBirthday(stored: string | null | undefined): string {
 }
 
 /**
+ * A date chosen in the calendar field, as the API takes it.
+ *
+ * The inverse of `isoBirthday`, and here beside it so the two halves of the
+ * round trip are read together: the picker hands back a `Date`, every endpoint
+ * that stores a birthday wants `YYYY-MM-DD`, and the parts are taken off the
+ * calendar rather than off `toISOString`, which would move the day west of
+ * Greenwich onto the one before.
+ */
+export function isoDate(value: unknown): string | undefined {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return undefined
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${value.getFullYear()}-${month}-${day}`
+}
+
+/**
  * A birthday as the design writes dates, whichever way it was stored.
  *
  * Shared rather than per-portal: the office and the teacher read the same
- * pupil off two endpoints that spell the date differently, and a mapper that
+ * student off two endpoints that spell the date differently, and a mapper that
  * knew about only one of them showed a raw `2023-04-07` on the panel.
  *
  * Built off the calendar's own year, month and day rather than through

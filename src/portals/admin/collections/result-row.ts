@@ -31,13 +31,13 @@ function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
 }
 
-/** Every part of the pupil's name the mark carries, or the number instead. */
-export function pupilName(entry: Mark): string {
+/** Every part of the student's name the mark carries, or the number instead. */
+export function studentName(entry: Mark): string {
   const named = [entry.student?.fname, entry.student?.mname, entry.student?.lname]
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(' ')
-  return named || entry.student?.regno?.trim() || entry.regno?.trim() || `Pupil ${entry.student_id}`
+  return named || entry.student?.regno?.trim() || entry.regno?.trim() || `Student ${entry.student_id}`
 }
 
 /** Who filed it — not always a teacher: a batch the office uploaded is theirs. */
@@ -54,14 +54,14 @@ export function filedBy(entry: Mark): string {
  *
  * The four parts are on the record panel rather than the table: a register
  * showing eight numeric columns is a spreadsheet, and what an office scans
- * for is the pupil, the subject, the total and whether it has been released.
+ * for is the student, the subject, the total and whether it has been released.
  */
 export function markRow(entry: Mark): Row {
   const state = markState(entry.approval_status)
 
   return {
     id: String(entry.id),
-    name: pupilName(entry),
+    name: studentName(entry),
     subject: looseText(entry.subject) === BLANK ? `Subject ${entry.subject_id}` : looseText(entry.subject),
     klass: looseText(entry.department),
     total: mark(entry.total),
@@ -193,8 +193,8 @@ export function enterBody(values: Record<string, unknown>): EnterMarkBody {
 /**
  * A correction. Only the parts, and only the ones filled in — **a field left
  * out keeps whatever the mark already had**, so correcting the exam alone
- * does not silently zero the CA. The pupil and the subject are not sent: a
- * mark filed against the wrong pupil is deleted, not reassigned.
+ * does not silently zero the CA. The student and the subject are not sent: a
+ * mark filed against the wrong student is deleted, not reassigned.
  */
 export function correctBody(values: Record<string, unknown>): CorrectMarkBody {
   const body: CorrectMarkBody = {}

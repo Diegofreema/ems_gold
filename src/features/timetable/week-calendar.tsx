@@ -21,7 +21,7 @@ import type { PeriodBlock, WeekColumn } from './week-grid'
  * button, which is the same detail on a touch screen that has no hover.
  *
  * `mine` marks a teacher's own periods, and is undefined on the portals where
- * the question does not arise — a pupil's grid is all theirs.
+ * the question does not arise — a student's grid is all theirs.
  */
 export function WeekCalendar({
   columns,

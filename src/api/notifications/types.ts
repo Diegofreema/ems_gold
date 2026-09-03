@@ -90,7 +90,7 @@ export type NoticeDetail = {
  * `unread_count` is the same number `/notifications/unread-count` serves on
  * its own, so a screen showing the list never needs the second call.
  * `audience` is the bucket the caller was served under — "teachers" for a
- * teaching login, "students" for a pupil — and is the server saying which
+ * teaching login, "students" for a student — and is the server saying which
  * `recipients` values it matched them against.
  */
 export type MyNoticesEnvelope = {
@@ -124,7 +124,7 @@ export type NoticeListParams = {
  * drift. It names no audience for the office itself, which is consistent with
  * an admin's own `/notifications/mine` coming back empty.
  *
- * **It is not the whole board.** admin1 reads one notice here while a pupil
+ * **It is not the whole board.** admin1 reads one notice here while a student
  * and a teacher both read two — notice 31 is on nobody's office list and on
  * everybody else's. Whatever scopes this is server-side and unexplained, so
  * the page built on it says it is the office's list rather than "every notice
