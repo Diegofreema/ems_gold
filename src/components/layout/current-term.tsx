@@ -31,7 +31,7 @@ export function CurrentTerm() {
   const ends = endOfTerm(calendar.current_term_ends)
   return (
     <>
-      <div className="uppercase tracking-[0.06em]">
+      <div className="uppercase tracking-label">
         {[calendar.session, calendar.semester].filter(Boolean).join(' · ')}
       </div>
       {ends && <div>Term ends {ends}</div>}

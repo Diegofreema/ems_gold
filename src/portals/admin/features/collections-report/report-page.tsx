@@ -118,7 +118,7 @@ export function CollectionsReportPage() {
     <div className="max-w-[980px]">
       {header}
 
-      <div className="mb-2 text-[12.5px] text-muted-foreground">
+      <div className="mb-2 text-xs text-muted-foreground">
         Covering {rangeLabel(report)}
         {/* The API echoes the key back; the school's own word for it is
             what the page has been saying everywhere else. */}
@@ -126,7 +126,7 @@ export function CollectionsReportPage() {
           ? ` · ${methodLabel(report.range.payment_method, methods)}`
           : ''}
       </div>
-      <TileStrip className="mb-[30px]" tiles={reportTiles(report.totals)} />
+      <TileStrip className="mb-7.5" tiles={reportTiles(report.totals)} />
 
       <SectionHeading className="mb-4">By method</SectionHeading>
       <DataTable
@@ -136,7 +136,7 @@ export function CollectionsReportPage() {
         compact
       />
 
-      <SectionHeading className="mb-4 mt-[30px]">
+      <SectionHeading className="mb-4 mt-7.5">
         Payments in this range
       </SectionHeading>
       <DataTable
@@ -155,7 +155,7 @@ export function CollectionsReportPage() {
         compact
       />
 
-      <div className="mt-2.5 text-[12.5px] text-muted-foreground">
+      <div className="mt-2.5 text-xs text-muted-foreground">
         {payments.length === 0
           ? 'Nothing was collected in this range.'
           : `${payments.length} ${payments.length === 1 ? 'payment' : 'payments'}, newest first`}

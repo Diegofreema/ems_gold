@@ -119,7 +119,7 @@ export function CollectionList({
   //
   //   primary === 'file' ? (
   //     <Button onClick={() => toast(fileActionToast(definition.action))}>
-  //       <Download className="size-[15px]" strokeWidth={2} />
+  //       <Download className="size-3.75" strokeWidth={2} />
   //       {definition.action}
   //     </Button>
   //   ) : ...
@@ -141,7 +141,7 @@ export function CollectionList({
     ) : primary === 'create' && routes.create ? (
       <Button asChild>
         <Link to={routes.create} params={{ collection: definition.id }}>
-          <Plus className="size-[15px]" strokeWidth={2} />
+          <Plus className="size-3.75" strokeWidth={2} />
           {definition.action}
         </Link>
       </Button>

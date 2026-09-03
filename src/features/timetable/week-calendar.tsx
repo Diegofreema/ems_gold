@@ -43,7 +43,7 @@ export function WeekCalendar({
 
           <div className="flex flex-1 flex-col gap-2 p-2.5">
             {column.periods.length === 0 ? (
-              <p className="px-1 py-2 text-[12px] text-muted-foreground">No lessons</p>
+              <p className="px-1 py-2 text-xs text-muted-foreground">No lessons</p>
             ) : (
               column.periods.map((period) => (
                 <PeriodCard
@@ -72,7 +72,7 @@ function DayHeading({ column }: { column: WeekColumn }) {
     >
       <div
         className={cn(
-          'font-heading text-[13px] font-extrabold uppercase tracking-[0.08em]',
+          'font-heading text-sm font-extrabold uppercase tracking-label',
           column.today ? 'text-brand-800' : 'text-foreground',
         )}
       >
@@ -80,7 +80,7 @@ function DayHeading({ column }: { column: WeekColumn }) {
       </div>
       <div
         className={cn(
-          'mt-0.5 text-[11px] tabular-nums',
+          'mt-0.5 text-2xs tabular-nums',
           column.today ? 'text-brand-700' : 'text-muted-foreground',
         )}
       >
@@ -113,7 +113,7 @@ function PeriodCard({
   onOpen?: (period: PeriodBlock) => void
 }) {
   const look = cn(
-    'block w-full border-l-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden',
+    'block w-full rounded-r-md border-l-2 px-2.5 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden',
     blockLook(period),
   )
 
@@ -122,21 +122,21 @@ function PeriodCard({
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(
-            'text-[11px] tabular-nums',
+            'text-2xs tabular-nums',
             period.mine === false ? 'text-neutral-600' : 'text-brand-700',
           )}
         >
           {period.time}
         </span>
         {period.mine && (
-          <Tag variant="accent" className="px-1.5 py-0 text-[10px] tracking-[0.06em]">
+          <Tag variant="accent" className="px-1.5 py-0 text-2xs tracking-label">
             YOURS
           </Tag>
         )}
       </div>
       <div
         className={cn(
-          'mt-1 font-heading text-[13.5px] leading-tight font-extrabold',
+          'mt-1 font-heading text-sm leading-tight font-extrabold',
           period.mine && 'text-brand-900',
         )}
       >
@@ -158,14 +158,14 @@ function PeriodCard({
       </HoverCardTrigger>
 
       <HoverCardContent align="start">
-        <div className="font-heading text-[15px] leading-tight font-extrabold">
+        <div className="font-heading text-base leading-tight font-extrabold">
           {period.subject}
         </div>
-        <div className="mt-1 text-[11px] uppercase tracking-[0.08em] text-brand-700">
+        <div className="mt-1 text-2xs uppercase tracking-label text-brand-700">
           {column.date ? `${column.day} · ${column.date}` : column.day}
         </div>
 
-        <dl className="mt-2.5 space-y-1.5 text-[12.5px]">
+        <dl className="mt-2.5 space-y-1.5 text-xs">
           <Detail icon={<Clock className="size-3.5" strokeWidth={1.8} />} label="Time">
             {period.length ? `${period.time} · ${period.length}` : period.time}
           </Detail>

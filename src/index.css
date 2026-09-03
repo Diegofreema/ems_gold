@@ -204,6 +204,12 @@
   --text-base: 15px;
   --text-base--line-height: 1.55;
 
+  /* Letterspacing roles. Every uppercase eyebrow is a kicker; every small
+     uppercase column/field label is a label. The nine hand-tuned em values
+     collapse onto these two. */
+  --tracking-kicker: 0.12em;
+  --tracking-label: 0.08em;
+
   /* Fluid type — the design scales these rather than switching at a breakpoint. */
   --text-page-title: clamp(23px, 6.2vw, 30px);
   --text-detail-title: clamp(25px, 7vw, 34px);

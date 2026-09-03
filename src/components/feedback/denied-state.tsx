@@ -38,7 +38,7 @@ export function DeniedState({
             key={row.label}
             className="flex gap-4 border-b border-divider px-0.5 py-3"
           >
-            <div className="w-2/5 text-2xs uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="w-2/5 text-2xs uppercase tracking-label text-muted-foreground">
               {row.label}
             </div>
             <div className="flex-1 text-sm">{row.value}</div>

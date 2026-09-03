@@ -11,7 +11,7 @@ export function ContactPrefs({ prefs }: { prefs: ProfilePref[] }) {
       {prefs.map((pref, index) => (
         <label
           key={pref.label}
-          className="flex cursor-pointer items-start gap-3 text-[13.5px] leading-normal"
+          className="flex cursor-pointer items-start gap-3 text-sm leading-normal"
         >
           <Checkbox
             checked={on[index]}
@@ -24,7 +24,7 @@ export function ContactPrefs({ prefs }: { prefs: ProfilePref[] }) {
           />
           <span>
             <span>{pref.label}</span>
-            <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+            <span className="mt-0.5 block text-2xs text-muted-foreground">
               {pref.hint}
             </span>
           </span>

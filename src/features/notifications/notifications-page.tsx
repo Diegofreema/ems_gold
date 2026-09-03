@@ -59,7 +59,7 @@ export function NotificationsPage({
       <Rule />
 
       {boardError && (
-        <div className="mb-5 border-2 border-divider bg-brand/6 px-4 py-3 text-[13px]">
+        <div className="mb-5 rounded-lg border border-divider bg-brand/6 px-4 py-3 text-sm">
           <span className="font-bold">The notice board could not be read.</span>{' '}
           <span className="text-muted-foreground">
             {notifications.length > 0
@@ -81,11 +81,11 @@ export function NotificationsPage({
       />
 
       {visible.length === 0 ? (
-        <div className="border-2 border-divider px-6 py-14 text-center">
-          <div className="font-heading text-[17px] font-extrabold">
+        <div className="rounded-xl border border-divider px-6 py-14 text-center">
+          <div className="font-heading text-lg font-extrabold">
             Nothing to read
           </div>
-          <p className="mt-2 text-[13.5px] text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             You are up to date. New notifications appear here as they arrive.
           </p>
         </div>

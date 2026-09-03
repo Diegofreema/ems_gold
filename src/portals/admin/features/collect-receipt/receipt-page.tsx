@@ -78,16 +78,16 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
       {header}
 
       <div data-slot="receipt" className="border-2 border-divider bg-background">
-        <div className="border-b-2 border-divider px-5 py-[18px]">
-          <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
+        <div className="border-b-2 border-divider px-5 py-4.5">
+          <div className="text-2xs uppercase tracking-kicker text-brand-700">
             {receipt.school ?? 'Fee receipt'}
           </div>
-          <h3 className="mt-2 font-heading text-[22px] font-extrabold leading-tight">
+          <h3 className="mt-2 font-heading text-xl font-extrabold leading-tight">
             {receiptTotal(receipt)}
           </h3>
           {/* The reference is what a parent quotes back when they query the
               payment, so it sits under the figure rather than in the table. */}
-          <div className="mt-1.5 break-all text-[12px] text-muted-foreground">
+          <div className="mt-1.5 break-all text-xs text-muted-foreground">
             {receipt.reference}
           </div>
         </div>
@@ -96,17 +96,17 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
           {receiptLines(receipt, methods).map((line) => (
             <div
               key={line.label}
-              className="flex gap-3.5 border-b border-divider py-[11px] last:border-b-0"
+              className="flex gap-3.5 border-b border-divider py-2.75 last:border-b-0"
             >
-              <div className="w-[45%] text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+              <div className="w-[45%] text-2xs uppercase tracking-label text-muted-foreground">
                 {line.label}
               </div>
-              <div className="flex-1 text-[13.5px] tabular-nums">{line.value}</div>
+              <div className="flex-1 text-sm tabular-nums">{line.value}</div>
             </div>
           ))}
         </div>
 
-        <div className="border-t-2 border-divider px-5 py-3.5 text-[11.5px] text-muted-foreground">
+        <div className="border-t-2 border-divider px-5 py-3.5 text-2xs text-muted-foreground">
           Issued by {receipt.school ?? 'the school'}. Keep this slip — it is the
           school's record of the payment as well as yours.
         </div>
@@ -114,7 +114,7 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
 
       <div data-print-hide className="mt-5 flex flex-wrap gap-2.5">
         <Button onClick={() => window.print()}>
-          <Printer className="size-[15px]" strokeWidth={2} />
+          <Printer className="size-3.75" strokeWidth={2} />
           Print receipt
         </Button>
         <Button asChild variant="outline">

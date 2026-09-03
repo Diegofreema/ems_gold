@@ -81,7 +81,7 @@ export function AttendanceReportPage() {
             pending={download.isPending}
             onClick={() => void download.mutate(params)}
           >
-            <Download className="size-[15px]" strokeWidth={2} />
+            <Download className="size-3.75" strokeWidth={2} />
             Export CSV
           </Button>
         }
@@ -124,14 +124,14 @@ export function AttendanceReportPage() {
     <div className="max-w-[1040px]">
       {header}
 
-      <div className="mb-2 text-[12.5px] text-muted-foreground">
+      <div className="mb-2 text-xs text-muted-foreground">
         Covering {coveringLabel(data)}
       </div>
       <TileStrip className="mb-2.5" tiles={reportTiles(data)} />
       {/* The endpoint counts all four whatever status is asked for, which is
           what makes them a breakdown rather than four copies of the total.
           Saying so is cheaper than a reader deciding the page is broken. */}
-      <div className="mb-[26px] text-[12.5px] text-muted-foreground">
+      <div className="mb-6.5 text-xs text-muted-foreground">
         {filters.status
           ? `Every status is counted above; the marks below are the ${filters.status} ones.`
           : 'Counted over the whole range, whatever the table below is narrowed to.'}

@@ -8,7 +8,7 @@ export function SidebarBrand({ roleLabel }: { roleLabel: string }) {
           <div className="font-heading text-base leading-none font-extrabold">
             NETPRO EMS
           </div>
-          <div className="mt-0.75 text-2xs uppercase tracking-[0.1em] text-muted-foreground">
+          <div className="mt-0.75 text-2xs uppercase tracking-kicker text-muted-foreground">
             {roleLabel}
           </div>
         </div>

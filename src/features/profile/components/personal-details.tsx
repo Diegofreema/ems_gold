@@ -17,7 +17,7 @@ function LockedField({ field, value }: { field: ProfileField; value: string }) {
       hint="Set by the school office"
       span={field.wide ? 2 : undefined}
     >
-      <div className="border-2 border-divider bg-neutral-100 px-3 py-[9px] text-sm text-neutral-700">
+      <div className="rounded-md border border-divider bg-neutral-100 px-3 py-2.25 text-sm text-neutral-700">
         {value}
       </div>
     </FieldShell>
@@ -51,9 +51,9 @@ export function PersonalDetails({
         noValidate
       >
         <SectionHeading className="mb-4">Personal details</SectionHeading>
-        <p className="mb-4 text-[13px] text-muted-foreground">{note}</p>
+        <p className="mb-4 text-sm text-muted-foreground">{note}</p>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[18px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4.5">
           {fields.map((field) =>
             field.locked ? (
               <LockedField
@@ -76,7 +76,7 @@ export function PersonalDetails({
         {/* A record nobody here can save is a record with nothing to type
             into, so neither button has anything left to do. */}
         {onSave && (
-          <div className="mt-[22px] flex flex-wrap gap-2.5">
+          <div className="mt-5.5 flex flex-wrap gap-2.5">
             <Button type="submit" pending={saving}>
               {saving ? 'Saving…' : 'Save changes'}
             </Button>

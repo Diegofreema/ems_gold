@@ -66,24 +66,24 @@ function RowBody({
 }) {
   return (
     <>
-      <div className={cn('mt-[7px] size-2 flex-none', read ? 'bg-neutral-300' : 'bg-brand')} />
+      <div className={cn('mt-1.75 size-2 flex-none', read ? 'bg-neutral-300' : 'bg-brand')} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-2.5">
           <div
             className={cn(
-              compact ? 'text-[13.5px]' : 'text-[15px]',
+              compact ? 'text-sm' : 'text-base',
               read ? 'font-normal' : 'font-bold',
             )}
           >
             {notification.title}
           </div>
           {!compact && (
-            <Tag variant="neutral" className="px-1.5 py-px text-[10px]">
+            <Tag variant="neutral" className="px-1.5 py-px text-2xs">
               {notification.kicker}
             </Tag>
           )}
         </div>
-        <div className="mt-1 text-[13px] leading-normal text-muted-foreground">
+        <div className="mt-1 text-sm leading-normal text-muted-foreground">
           {notification.body}
         </div>
         {/* The panel has no room for a column of times, so the stamp joins the
@@ -91,7 +91,7 @@ function RowBody({
         {(compact || notification.meta) && (
           <div
             className={cn(
-              'mt-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground',
+              'mt-1.5 text-2xs uppercase tracking-label text-muted-foreground',
               compact && 'truncate',
             )}
           >
@@ -102,7 +102,7 @@ function RowBody({
         )}
       </div>
       {!compact && (
-        <div className="flex-none text-[11.5px] tabular-nums text-muted-foreground">
+        <div className="flex-none text-2xs tabular-nums text-muted-foreground">
           {notification.when}
         </div>
       )}

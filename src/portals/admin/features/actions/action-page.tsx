@@ -36,16 +36,16 @@ function NotMoved({ failures }: { failures: string[] }) {
   return (
     <div
       role="alert"
-      className="mb-6 flex animate-ems-up gap-3 border-2 border-brand px-4 py-3.5"
+      className="mb-6 flex animate-ems-up gap-3 rounded-lg border border-danger/50 bg-danger-subtle px-4 py-3.5"
     >
-      <CircleAlert className="mt-px size-[18px] flex-none text-brand" strokeWidth={2.2} />
+      <CircleAlert className="mt-px size-4.5 flex-none text-danger-ink" strokeWidth={2.2} />
       <div>
         <div className="font-heading text-sm font-extrabold">
           {failures.length === 1
             ? 'One pupil was not moved'
             : `${failures.length} pupils were not moved`}
         </div>
-        <ul className="mt-[3px] space-y-0.5 text-[13px] text-muted-foreground">
+        <ul className="mt-0.75 space-y-0.5 text-sm text-muted-foreground">
           {failures.map((failure) => (
             <li key={failure}>{failure}</li>
           ))}
@@ -222,13 +222,13 @@ export function ActionPage({
           })}
           noValidate
         >
-          {tiles.length > 0 && <TileStrip className="mb-[26px]" tiles={tiles} />}
+          {tiles.length > 0 && <TileStrip className="mb-6.5" tiles={tiles} />}
 
           {action.picker && (
             <PickerList<Values> name="picks" picker={action.picker} />
           )}
 
-          <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px]">
+          <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4.5">
             {action.fields.map(renderField)}
           </div>
 
@@ -255,7 +255,7 @@ export function ActionPage({
               Cancel
             </Button>
             <div className="flex-1" />
-            <div className="text-[12.5px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               {action.footnote}
             </div>
           </div>

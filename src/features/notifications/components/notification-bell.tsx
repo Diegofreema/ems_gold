@@ -42,7 +42,7 @@ export function NotificationBell({
       >
         <Bell className="size-4" strokeWidth={1.9} />
         {unread.length > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 grid h-[17px] min-w-[17px] place-items-center bg-brand px-1 font-heading text-[10px] font-extrabold tabular-nums text-white">
+          <span className="absolute -top-1.5 -right-1.5 grid h-4.25 min-w-4.25 place-items-center rounded-full bg-brand px-1 font-heading text-2xs font-extrabold tabular-nums text-white">
             {unread.length}
           </span>
         )}
@@ -55,9 +55,9 @@ export function NotificationBell({
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute top-[calc(100%+10px)] right-0 z-50 max-h-[70vh] w-[min(380px,88vw)] animate-ems-pop overflow-y-auto border-2 border-foreground bg-background shadow-lg">
-            <div className="flex items-center gap-2.5 border-b-2 border-divider px-4 py-3.5">
-              <div className="flex-1 font-heading text-[15px] font-extrabold">
+          <div className="absolute top-[calc(100%+10px)] right-0 z-50 max-h-[70vh] w-[min(380px,88vw)] animate-ems-pop overflow-y-auto rounded-lg bg-background shadow-float ring-1 ring-foreground/10">
+            <div className="flex items-center gap-2.5 border-b border-divider px-4 py-3.5">
+              <div className="flex-1 font-heading text-base font-extrabold">
                 Notifications
               </div>
               <Button

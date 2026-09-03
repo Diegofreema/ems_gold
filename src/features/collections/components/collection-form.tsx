@@ -64,7 +64,7 @@ function renderField(field: FieldSpec) {
     return (
       <Suspense
         key={field.key}
-        fallback={<div className="col-[1/-1] h-[15rem] animate-ems-fade rounded-lg border border-input" />}
+        fallback={<div className="col-[1/-1] h-60 animate-ems-fade rounded-lg border border-input" />}
       >
         <RichTextField
           {...shared}

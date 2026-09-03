@@ -32,7 +32,7 @@ export function TableView<TRow>({
             <th
               key={column.key}
               className={cn(
-                'border-b-2 border-divider p-2 text-2xs font-normal uppercase tracking-[0.08em] whitespace-nowrap text-muted-foreground',
+                'border-b-2 border-divider p-2 text-2xs font-normal uppercase tracking-label whitespace-nowrap text-muted-foreground',
                 column.align === 'right' ? 'text-right' : 'text-left',
               )}
             >

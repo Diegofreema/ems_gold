@@ -42,7 +42,7 @@ function FilterSelect({
       onValueChange={(chosen) => onChange(chosen === ANY ? '' : chosen)}
       disabled={waiting}
     >
-      <SelectTrigger aria-label={spec.label} className="h-8 min-w-[150px]">
+      <SelectTrigger aria-label={spec.label} className="h-8 min-w-37.5">
         <SelectValue placeholder={spec.label} />
       </SelectTrigger>
       <SelectContent>

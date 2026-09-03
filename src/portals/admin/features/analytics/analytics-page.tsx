@@ -75,21 +75,21 @@ function Panel({
 }) {
   if (error) {
     return (
-      <p className="border-2 border-brand px-4 py-3.5 text-[13px] text-muted-foreground">
+      <p className="rounded-lg border border-danger/50 bg-danger-subtle px-4 py-3.5 text-sm text-muted-foreground">
         {errorMessage(error, OFFLINE_MESSAGE)}
       </p>
     )
   }
-  if (pending) return <Shimmer className="h-[190px] w-full" />
+  if (pending) return <Shimmer className="h-47.5 w-full" />
   if (empty) {
-    return <p className="py-6 text-[13px] text-muted-foreground">{empty}</p>
+    return <p className="py-6 text-sm text-muted-foreground">{empty}</p>
   }
   return <>{children}</>
 }
 
 /** A chart's caption — what the whole series came to, in one line. */
 function Caption({ children }: { children: ReactNode }) {
-  return <p className="mt-2 text-[12.5px] text-muted-foreground">{children}</p>
+  return <p className="mt-2 text-xs text-muted-foreground">{children}</p>
 }
 
 /**
@@ -187,7 +187,7 @@ export function AdminAnalyticsPage() {
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.35fr_1fr]">
           <section>
             <h4 className="mb-0.5 text-xl">Pupils per class</h4>
-            <p className="text-[12.5px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Admitted pupils, largest class first.
             </p>
             {classes.length > 0 ? (
@@ -199,7 +199,7 @@ export function AdminAnalyticsPage() {
 
           <section>
             <h4 className="mb-0.5 text-xl">Gender split</h4>
-            <p className="text-[12.5px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Share of everyone admitted.
             </p>
             {genders.length > 0 ? (
@@ -276,7 +276,7 @@ export function AdminAnalyticsPage() {
       <SectionHeading className="mb-4">Settled transactions</SectionHeading>
       <Panel pending={payments.isPending} error={payments.error}>
         <TileStrip
-          className="mb-[26px]"
+          className="mb-6.5"
           tiles={[
             { label: 'Payments settled', value: formatCount(settled.length) },
             { label: 'Worth', value: formatNaira(paymentsTotal(settled)) },

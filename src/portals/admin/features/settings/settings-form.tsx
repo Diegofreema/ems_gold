@@ -66,11 +66,11 @@ export function SettingsForm() {
     return (
       <div className="max-w-[780px]">
         <Shimmer className="h-3 w-24" />
-        <Shimmer className="mt-3.5 h-[34px] w-56" />
+        <Shimmer className="mt-3.5 h-8.5 w-56" />
         <Rule />
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4.5">
           {Array.from({ length: 8 }, (_, index) => (
-            <Shimmer key={index} className="h-[58px]" />
+            <Shimmer key={index} className="h-14.5" />
           ))}
         </div>
       </div>
@@ -178,11 +178,11 @@ function CurrentlyIn() {
   const calendar = data?.calendar
 
   return (
-    <div className="col-[1/-1] border-2 border-divider px-4 py-3.5">
-      <div className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
+    <div className="col-[1/-1] rounded-lg border border-divider px-4 py-3.5">
+      <div className="text-2xs uppercase tracking-label text-muted-foreground">
         The school is in
       </div>
-      <div className="mt-1.5 font-heading text-[15px] font-extrabold">
+      <div className="mt-1.5 font-heading text-base font-extrabold">
         {[calendar?.session, calendar?.semester].filter(Boolean).join(' · ') || '—'}
       </div>
       <p className="mt-2 text-sm text-muted-foreground">

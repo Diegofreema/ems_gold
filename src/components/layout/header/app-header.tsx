@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useShellStore } from '@/stores/shell.store'
 import { ThemeToggle } from './theme-toggle'
 
-const CRUMB = 'truncate text-2xs uppercase tracking-[0.12em] text-muted-foreground'
+const CRUMB = 'truncate text-2xs uppercase tracking-kicker text-muted-foreground'
 
 /**
  * Sticky bar: breadcrumb over page title on the left, portal status and the

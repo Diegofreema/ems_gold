@@ -36,7 +36,7 @@ function AdminDashboard() {
         </div>
         <Button asChild>
           <Link to="/admin/analytics">
-            <ChartColumn className="size-[15px]" strokeWidth={2} />
+            <ChartColumn className="size-3.75" strokeWidth={2} />
             Business intelligence
           </Link>
         </Button>
@@ -55,7 +55,7 @@ function AdminDashboard() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.35fr_1fr]">
         <section>
           <h4 className="mb-0.5 text-xl">Fee collections</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Naira settled per month, the last six months.
           </p>
           <BarChart bars={data.collections.bars} peak={data.collections.peak} />
@@ -63,7 +63,7 @@ function AdminDashboard() {
 
         <section>
           <h4 className="mb-0.5 text-xl">Latest activity</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Everything is written to the audit log.
           </p>
           <ActivityList entries={data.activity} />

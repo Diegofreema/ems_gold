@@ -26,7 +26,7 @@ export function ChangePassword() {
 
   return (
     <>
-      <Rule className="mt-[30px]" />
+      <Rule className="mt-7.5" />
       <SectionHeading className="mb-4">Change password</SectionHeading>
 
       <FormProvider {...form}>
@@ -37,7 +37,7 @@ export function ChangePassword() {
             toast('Password updated — other devices were signed out')
           })}
           noValidate
-          className="flex max-w-[420px] flex-col gap-[18px]"
+          className="flex max-w-[420px] flex-col gap-4.5"
         >
           <TextField<ChangePasswordValues>
             name="current"

@@ -9,12 +9,12 @@ export function ProfileIdentity({
   meta: string
 }) {
   return (
-    <div className="flex flex-wrap items-start gap-[18px]">
-      <div className="grid size-16 flex-none place-items-center bg-brand font-heading text-[22px] font-extrabold text-white">
+    <div className="flex flex-wrap items-start gap-4.5">
+      <div className="grid size-16 flex-none place-items-center rounded-lg bg-brand font-heading text-xl font-extrabold text-white">
         {initials}
       </div>
       <div className="min-w-[220px] flex-1">
-        <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
+        <div className="text-2xs uppercase tracking-kicker text-brand-700">
           My account
         </div>
         <h2 className="mt-2 text-page-title">{name}</h2>

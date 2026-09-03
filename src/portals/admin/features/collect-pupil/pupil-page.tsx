@@ -78,7 +78,7 @@ export function PupilLookupPage() {
         <>
           <Button
             variant="outline"
-            className="mb-[22px]"
+            className="mb-5.5"
             onClick={() => void setPupil(null)}
           >
             Search for someone else
@@ -190,10 +190,12 @@ function PupilLedger({
   const { student, invoices } = data
 
   return (
-    <>
-      <div className="mb-[18px]">
+    // The page swaps wholesale from the search to this ledger on a pick, so
+    // the entrance says "you moved somewhere" rather than the rows jumping.
+    <div className="animate-ems-up">
+      <div className="mb-4.5">
         <h2 className="text-detail-title">{pupilHeading(student)}</h2>
-        <div className="mt-1.5 text-[12.5px] text-muted-foreground">
+        <div className="mt-1.5 text-xs text-muted-foreground">
           {pupilSubtitle(student)}
         </div>
       </div>
@@ -202,7 +204,7 @@ function PupilLedger({
 
       <SegmentedControl<Scope>
         name="scope"
-        className="mb-[18px]"
+        className="mb-4.5"
         value={scope}
         onChange={onScope}
         options={[
@@ -239,13 +241,13 @@ function PupilLedger({
         compact
       />
 
-      <div className="mt-2.5 text-[12.5px] text-muted-foreground">
+      <div className="mt-2.5 text-xs text-muted-foreground">
         {invoices.length === 0
           ? scope === 'all'
             ? 'Nothing has ever been billed to this pupil.'
             : 'Nothing has been billed to this pupil this session.'
           : `${invoices.length} ${invoices.length === 1 ? 'invoice' : 'invoices'}, newest first`}
       </div>
-    </>
+    </div>
   )
 }

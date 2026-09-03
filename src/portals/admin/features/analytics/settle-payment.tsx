@@ -53,12 +53,12 @@ function SettleCard<TValues extends RetryValues | RrrValues>({
   children: ReactNode
 }) {
   return (
-    <section className="border-2 border-divider p-5">
-      <h5 className="font-heading text-[15px] font-extrabold">{title}</h5>
-      <p className="mt-1 mb-4 text-[12.5px] text-muted-foreground">{description}</p>
+    <section className="rounded-lg border border-divider p-5 shadow-card">
+      <h5 className="font-heading text-base font-extrabold">{title}</h5>
+      <p className="mt-1 mb-4 text-xs text-muted-foreground">{description}</p>
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-[18px]">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4.5">
             {children}
           </div>
           <Button className="mt-4" type="submit" pending={pending}>

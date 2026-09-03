@@ -159,7 +159,7 @@ export function CollectionDetail({
 
       <div className="flex flex-wrap items-start justify-between gap-4.5">
         <div className="max-w-[60ch]">
-          <div className="text-2xs uppercase tracking-[0.12em] text-brand-700">
+          <div className="text-2xs uppercase tracking-kicker text-brand-700">
             {definition.kicker} · {definition.title}
           </div>
           <h2 className="mt-2 text-detail-title">{record[definition.nameKey]}</h2>
@@ -265,7 +265,7 @@ export function CollectionDetail({
                   key={field.key}
                   className="border-b border-divider px-0.5 py-2.75"
                 >
-                  <div className="text-2xs uppercase tracking-[0.06em] text-muted-foreground">
+                  <div className="text-2xs uppercase tracking-label text-muted-foreground">
                     {field.label}
                   </div>
                   <Suspense fallback={<div className="mt-2 h-6" />}>
@@ -277,7 +277,7 @@ export function CollectionDetail({
                   key={field.key}
                   className="flex gap-3.5 border-b border-divider px-0.5 py-2.75"
                 >
-                  <div className="w-[45%] text-2xs uppercase tracking-[0.06em] text-muted-foreground">
+                  <div className="w-[45%] text-2xs uppercase tracking-label text-muted-foreground">
                     {field.label}
                   </div>
                   <div className="flex-1 text-sm tabular-nums">

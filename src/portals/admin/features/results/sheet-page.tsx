@@ -119,36 +119,36 @@ export function ClassSheetPage() {
       {header}
 
       {caption && (
-        <div className="mb-2 text-[12.5px] text-muted-foreground">{caption}</div>
+        <div className="mb-2 text-xs text-muted-foreground">{caption}</div>
       )}
 
       {/* The sheet is as wide as the class has subjects, so it scrolls inside
           its own frame rather than pushing the page sideways. */}
       <div className="overflow-x-auto border-2 border-divider">
-        <table className="w-full min-w-max border-collapse text-[13px]">
+        <table className="w-full min-w-max border-collapse text-sm">
           <thead>
             <tr className="border-b-2 border-divider bg-neutral-100 text-left">
-              <th className="sticky left-0 z-10 bg-neutral-100 px-3 py-2.5 font-heading text-[11px] uppercase tracking-[0.06em]">
+              <th className="sticky left-0 z-10 bg-neutral-100 px-3 py-2.5 font-heading text-2xs uppercase tracking-label">
                 Pupil
               </th>
-              <th className="px-3 py-2.5 font-heading text-[11px] uppercase tracking-[0.06em]">
+              <th className="px-3 py-2.5 font-heading text-2xs uppercase tracking-label">
                 Adm. no.
               </th>
               {sheet.columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-3 py-2.5 text-right font-heading text-[11px] uppercase tracking-[0.06em]"
+                  className="px-3 py-2.5 text-right font-heading text-2xs uppercase tracking-label"
                 >
                   {column.label}
                 </th>
               ))}
-              <th className="px-3 py-2.5 text-right font-heading text-[11px] uppercase tracking-[0.06em]">
+              <th className="px-3 py-2.5 text-right font-heading text-2xs uppercase tracking-label">
                 Total
               </th>
-              <th className="px-3 py-2.5 text-right font-heading text-[11px] uppercase tracking-[0.06em]">
+              <th className="px-3 py-2.5 text-right font-heading text-2xs uppercase tracking-label">
                 Average
               </th>
-              <th className="px-3 py-2.5 text-right font-heading text-[11px] uppercase tracking-[0.06em]">
+              <th className="px-3 py-2.5 text-right font-heading text-2xs uppercase tracking-label">
                 Position
               </th>
             </tr>
@@ -176,7 +176,7 @@ export function ClassSheetPage() {
         </table>
       </div>
 
-      <p className="mt-2.5 text-[12.5px] text-muted-foreground">
+      <p className="mt-2.5 text-xs text-muted-foreground">
         {sheet.rows.length} {sheet.rows.length === 1 ? 'pupil' : 'pupils'} ·{' '}
         {sheet.columns.length} {sheet.columns.length === 1 ? 'subject' : 'subjects'}
       </p>

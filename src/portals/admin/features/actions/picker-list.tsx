@@ -31,7 +31,7 @@ export function PickerList<TValues extends FieldValues>({
   }
 
   return (
-    <div className="mb-[26px]">
+    <div className="mb-6.5">
       <SectionHeading
         className="mb-3.5"
         action={
@@ -62,7 +62,7 @@ export function PickerList<TValues extends FieldValues>({
               key={item.key}
               style={{ animationDelay: `${index * 26}ms` }}
               className={cn(
-                'flex animate-ems-row items-center gap-3.5 border-b border-divider px-[15px] py-[13px] text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
+                'flex animate-ems-row items-center gap-3.5 border-b border-divider px-3.75 py-3.25 text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
                 on && 'bg-brand/9',
               )}
             >
@@ -74,7 +74,7 @@ export function PickerList<TValues extends FieldValues>({
               >
                 <span
                   className={cn(
-                    'grid size-[18px] flex-none place-items-center border-2',
+                    'grid size-4.5 flex-none place-items-center rounded-sm border',
                     on ? 'border-brand bg-brand' : 'border-divider',
                   )}
                 >
@@ -102,7 +102,7 @@ export function PickerList<TValues extends FieldValues>({
       <div
         className={cn(
           'mt-2.5 text-xs',
-          fieldState.error ? 'text-brand-700' : 'text-muted-foreground',
+          fieldState.error ? 'text-danger-ink' : 'text-muted-foreground',
         )}
       >
         {fieldState.error?.message ?? picker.note}

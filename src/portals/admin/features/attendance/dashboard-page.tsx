@@ -96,12 +96,12 @@ export function AttendanceDashboard() {
     <div className="max-w-[900px]">
       {header}
 
-      <div className="mb-2 text-[12.5px] text-muted-foreground">{day(answered)}</div>
+      <div className="mb-2 text-xs text-muted-foreground">{day(answered)}</div>
       <TileStrip className="mb-2.5" tiles={dashboardTiles(data)} />
       {/* A class nobody has marked and a class where everyone is away both
           come back as nought present, and the endpoint gives no way to tell
           them apart — so the page does not claim to. */}
-      <div className="mb-[26px] text-[12.5px] text-muted-foreground">
+      <div className="mb-6.5 text-xs text-muted-foreground">
         A class showing none present either has not been marked yet or had
         nobody in. The report says which.
       </div>
@@ -139,7 +139,7 @@ function DayPicker({
   return (
     <FormProvider {...form}>
       <form
-        className="mb-[26px] grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-[18px]"
+        className="mb-6.5 grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-4.5"
         onSubmit={(event) => event.preventDefault()}
       >
         <DateField<Picked> name="date" label="Day" past placeholder="Today" />

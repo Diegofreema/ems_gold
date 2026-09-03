@@ -15,7 +15,7 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-[60ch]">
-        <div className="text-2xs uppercase tracking-[0.12em] text-brand-700">
+        <div className="text-2xs uppercase tracking-kicker text-brand-700">
           {kicker}
         </div>
         <h2 className="mt-2 text-page-title">{title}</h2>
