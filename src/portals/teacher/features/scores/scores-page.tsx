@@ -122,7 +122,7 @@ export function ScoresPage() {
         />
         <div className="flex-1" />
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+          <div className="text-2xs uppercase tracking-label text-muted-foreground">
             Sheet average
           </div>
           <div className="font-heading text-2xl font-extrabold tabular-nums">
@@ -186,8 +186,8 @@ function Picker({
   onChange: (value: string) => void
 }) {
   return (
-    <div className="min-w-[200px]">
-      <div className="mb-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+    <div className="min-w-50">
+      <div className="mb-1.5 text-2xs uppercase tracking-label text-muted-foreground">
         {label}
       </div>
       <SegmentedControl name={name} value={value} onChange={onChange} options={options} />

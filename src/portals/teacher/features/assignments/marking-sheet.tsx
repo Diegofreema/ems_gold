@@ -129,7 +129,7 @@ export function MarkingSheet({
         </ol>
 
         {answers.length === 0 && (
-          <p className="border-2 border-divider px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="rounded-xl border border-divider px-6 py-10 text-center text-sm text-muted-foreground">
             This submission came back with no answers on it.
           </p>
         )}
@@ -148,7 +148,7 @@ export function MarkingSheet({
           <Button type="submit" pending={pending}>
             {marked ? 'Save the correction' : 'Save the marks'}
           </Button>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             {hand.length === 0
               ? 'The multiple choice is marked against the answer key already — check it and save.'
               : 'The multiple choice is filled in from the answer key; the written answers are yours. A box left empty is saved as nought.'}
@@ -174,7 +174,7 @@ function AnswerCard({
   const correct = wasRight(answer);
 
   return (
-    <li className="border-2 border-divider p-4">
+    <li className="rounded-lg border border-divider p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex gap-3">
           <span className="font-heading text-sm font-extrabold tabular-nums text-muted-foreground">
@@ -186,7 +186,7 @@ function AnswerCard({
             </p>
             <div className="mt-1.5 flex items-center gap-2">
               <Tag>{theory ? 'Theory' : 'Multiple choice'}</Tag>
-              <span className="text-[11px] tabular-nums text-muted-foreground">
+              <span className="text-2xs tabular-nums text-muted-foreground">
                 {points} point{points === 1 ? '' : 's'}
               </span>
             </div>
@@ -210,7 +210,7 @@ function AnswerCard({
         </div>
       </div>
 
-      <div className="mt-3 pl-7 text-[13px]">
+      <div className="mt-3 pl-7 text-sm">
         {theory ? (
           <p
             className={cn(
@@ -246,10 +246,10 @@ function AnswerScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
   const error = form.formState.errors.scores?.[key]?.message;
 
   return (
-    <div className="w-[132px]">
+    <div className="w-33">
       <Label
         htmlFor={name}
-        className="mb-[5px] block text-xs font-normal text-foreground/70"
+        className="mb-1.25 block text-xs font-normal text-foreground/70"
       >
         Mark out of {cap}
       </Label>
@@ -261,7 +261,7 @@ function AnswerScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
         {...form.register(name)}
       />
       {error && (
-        <div className="mt-1 text-[11px] text-brand-700">{String(error)}</div>
+        <div className="mt-1 text-2xs text-danger-ink">{String(error)}</div>
       )}
     </div>
   );

@@ -25,7 +25,7 @@ export function QuestionCard({
   const points = question.points ?? 0
 
   return (
-    <li className="animate-ems-up border-2 border-divider p-4">
+    <li className="animate-ems-up rounded-lg border border-divider p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex gap-3">
           <span className="font-heading text-sm font-extrabold tabular-nums text-muted-foreground">
@@ -37,7 +37,7 @@ export function QuestionCard({
             </p>
             <div className="mt-1.5 flex items-center gap-2">
               <Tag>{typeLabel(question.question_type)}</Tag>
-              <span className="text-[11px] text-muted-foreground tabular-nums">
+              <span className="text-2xs text-muted-foreground tabular-nums">
                 {points} point{points === 1 ? '' : 's'}
               </span>
             </div>
@@ -55,7 +55,7 @@ export function QuestionCard({
       </div>
 
       {isTheory(question) ? (
-        <p className="mt-3 pl-7 text-[11px] text-muted-foreground">
+        <p className="mt-3 pl-7 text-2xs text-muted-foreground">
           Marked by hand once the assignment is sat.
         </p>
       ) : (
@@ -63,7 +63,7 @@ export function QuestionCard({
           {(question.options ?? []).map((option, index) => (
             <li
               key={option.id ?? index}
-              className="flex items-center gap-2 text-[13px]"
+              className="flex items-center gap-2 text-sm"
             >
               {option.is_correct ? (
                 <Check className="size-3.5 text-brand" aria-label="The right answer" />
@@ -76,7 +76,7 @@ export function QuestionCard({
             </li>
           ))}
           {!question.options?.length && (
-            <li className="text-[11px] text-brand-700">
+            <li className="text-2xs text-danger-ink">
               This question offers no choices, so no pupil can answer it.
             </li>
           )}

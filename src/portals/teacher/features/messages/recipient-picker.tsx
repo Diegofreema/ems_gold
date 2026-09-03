@@ -46,7 +46,7 @@ export function RecipientPicker({
 
   return (
     <div>
-      <div className="mb-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+      <div className="mb-1.5 text-2xs uppercase tracking-label text-muted-foreground">
         To <span className="text-brand">*</span>
       </div>
 
@@ -81,13 +81,13 @@ export function RecipientPicker({
       </FilterBar>
 
       {shown.length === 0 ? (
-        <p className="border-2 border-divider px-4 py-5 text-[13px] text-muted-foreground">
+        <p className="rounded-lg border border-divider px-4 py-5 text-sm text-muted-foreground">
           {pupils.length === 0
             ? 'No pupil sits in this arm yet. The office places pupils in arms.'
             : 'No pupil in this arm matches that search.'}
         </p>
       ) : (
-        <ul className="max-h-[19rem] overflow-y-auto border-2 border-divider">
+        <ul className="max-h-76 overflow-y-auto rounded-lg border border-divider">
           {shown.map((pupil) => (
             <li key={pupil.id} className="border-b border-divider last:border-b-0">
               <label className="flex cursor-pointer items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-foreground/5">
@@ -95,7 +95,7 @@ export function RecipientPicker({
                   checked={chosen.includes(pupil.id)}
                   onCheckedChange={() => onChange(toggled(chosen, pupil.id))}
                 />
-                <span className="min-w-0 flex-1 truncate text-[13px]">{pupil.name}</span>
+                <span className="min-w-0 flex-1 truncate text-sm">{pupil.name}</span>
                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                   {pupil.adm}
                 </span>

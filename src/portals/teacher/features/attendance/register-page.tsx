@@ -172,14 +172,14 @@ export function RegisterPage() {
       />
 
       {future && (
-        <div className="mb-5 border-2 border-brand px-4 py-3.5 text-[13px]">
+        <div className="mb-5 rounded-lg border border-divider bg-brand/6 px-4 py-3.5 text-sm">
           That day has not happened yet. A register can only be taken for today
           or a day already gone.
         </div>
       )}
 
       {ignored && (
-        <div className="mb-5 border-2 border-divider px-4 py-3.5 text-[13px]">
+        <div className="mb-5 rounded-lg border border-divider px-4 py-3.5 text-sm">
           {ignored}
         </div>
       )}

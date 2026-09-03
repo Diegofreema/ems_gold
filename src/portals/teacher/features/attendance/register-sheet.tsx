@@ -24,12 +24,12 @@ export function RegisterSheet({
 }) {
   return (
     <div className="overflow-x-auto border-2 border-divider">
-      <table className="w-full min-w-[680px] border-collapse text-[13.5px]">
+      <table className="w-full min-w-170 border-collapse text-sm">
         <thead>
           <tr className="border-b-2 border-divider text-left">
             <Th>Pupil</Th>
             <Th>Mark</Th>
-            <Th className="w-[240px]">Note</Th>
+            <Th className="w-60">Note</Th>
           </tr>
         </thead>
         <tbody>
@@ -39,15 +39,15 @@ export function RegisterSheet({
               style={{ animationDelay: `${index * 30}ms` }}
               className="animate-ems-row border-b border-divider last:border-b-0"
             >
-              <td className="px-2 py-[11px]">
+              <td className="px-2 py-2.75">
                 <div className="font-semibold">{row.name}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                <div className="mt-0.5 text-2xs text-muted-foreground">
                   {row.regno || BLANK}
                   {!row.status && <span> · Not marked</span>}
                   {row.edited && <span className="text-brand"> · Unsaved</span>}
                 </div>
               </td>
-              <td className="px-2 py-[11px]">
+              <td className="px-2 py-2.75">
                 {/* A fieldset so the radios read as one group per pupil: the
                     control itself takes no label, and "Present" alone tells a
                     screen reader nothing about whose mark it is. */}
@@ -61,7 +61,7 @@ export function RegisterSheet({
                   />
                 </fieldset>
               </td>
-              <td className="px-2 py-[11px]">
+              <td className="px-2 py-2.75">
                 <Input
                   aria-label={`Note for ${row.name}`}
                   value={row.notes}
@@ -80,7 +80,7 @@ export function RegisterSheet({
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th
-      className={`px-2 py-[11px] text-[11px] font-normal uppercase tracking-[0.06em] text-muted-foreground ${className ?? ''}`}
+      className={`px-2 py-2.75 text-2xs font-normal uppercase tracking-label text-muted-foreground ${className ?? ''}`}
     >
       {children}
     </th>

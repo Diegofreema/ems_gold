@@ -102,7 +102,7 @@ export function CoveragePage() {
       />
 
       {covered && (
-        <p className="mb-3 text-[12.5px] text-muted-foreground">
+        <p className="mb-3 text-xs text-muted-foreground">
           Counting {covered}.
         </p>
       )}
@@ -116,14 +116,14 @@ export function CoveragePage() {
               // The arm as a number, so the router writes `arm=16` rather than
               // a quoted string the page would read back as no arm at all.
               search={{ arm: armId, date: day.iso }}
-              className="border-2 border-divider px-2.5 py-1.5 text-[12.5px] text-foreground transition-colors hover:border-brand hover:text-brand-700"
+              className="rounded-md border border-divider px-2.5 py-1.5 text-xs text-foreground transition-colors hover:border-brand hover:text-brand-700"
             >
               {day.label}
             </Link>
           ))}
         </div>
       ) : (
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Every school day in this range has a register.
         </p>
       )}
@@ -156,10 +156,10 @@ function RangeFields({
   return (
     <FormProvider {...form}>
       <form
-        className="flex flex-wrap gap-[18px]"
+        className="flex flex-wrap gap-4.5"
         onSubmit={(event) => event.preventDefault()}
       >
-        <div className="min-w-[200px]">
+        <div className="min-w-50">
           <DateField<Range>
             name="from"
             label="From"
@@ -167,7 +167,7 @@ function RangeFields({
             placeholder="Last 30 days"
           />
         </div>
-        <div className="min-w-[200px]">
+        <div className="min-w-50">
           <DateField<Range> name="to" label="To" past placeholder="Today" />
         </div>
       </form>

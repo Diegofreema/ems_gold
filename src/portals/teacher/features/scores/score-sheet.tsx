@@ -18,14 +18,14 @@ export function ScoreSheet({
 }) {
   return (
     <div className="overflow-x-auto border-2 border-divider">
-      <table className="w-full min-w-[560px] border-collapse text-[13.5px]">
+      <table className="w-full min-w-140 border-collapse text-sm">
         <thead>
           <tr className="border-b-2 border-divider text-left">
             <Th>Pupil</Th>
-            <Th className="w-[120px] text-right">CA ({CA_MAX})</Th>
-            <Th className="w-[120px] text-right">Exam ({EXAM_MAX})</Th>
-            <Th className="w-[90px] text-right">Total</Th>
-            <Th className="w-[80px]">Grade</Th>
+            <Th className="w-30 text-right">CA ({CA_MAX})</Th>
+            <Th className="w-30 text-right">Exam ({EXAM_MAX})</Th>
+            <Th className="w-22.5 text-right">Total</Th>
+            <Th className="w-20">Grade</Th>
           </tr>
         </thead>
         <tbody>
@@ -35,12 +35,12 @@ export function ScoreSheet({
               style={{ animationDelay: `${index * 30}ms` }}
               className="animate-ems-row border-b border-divider last:border-b-0"
             >
-              <td className="px-2 py-[11px]">
+              <td className="px-2 py-2.75">
                 <div className="font-semibold">{row.name}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                <div className="mt-0.5 text-2xs text-muted-foreground">
                   {row.adm || BLANK}
                   {row.problem && (
-                    <span className="text-brand"> · {row.problem}</span>
+                    <span className="text-danger-ink"> · {row.problem}</span>
                   )}
                 </div>
               </td>
@@ -56,10 +56,10 @@ export function ScoreSheet({
                 invalid={Boolean(row.problem)}
                 onChange={(value) => onMarkChange(row.student_id, 'exam', value)}
               />
-              <td className="px-2 py-[11px] text-right font-heading font-extrabold tabular-nums">
+              <td className="px-2 py-2.75 text-right font-heading font-extrabold tabular-nums">
                 {row.total}
               </td>
-              <td className="px-2 py-[11px]">
+              <td className="px-2 py-2.75">
                 {/* The school works the grade out; a row still being typed has
                     none until it has been filed. */}
                 {row.grade ? (
@@ -87,7 +87,7 @@ function Th({
 }) {
   return (
     <th
-      className={`px-2 py-[11px] text-[11px] font-normal uppercase tracking-[0.06em] text-muted-foreground ${className ?? ''}`}
+      className={`px-2 py-2.75 text-2xs font-normal uppercase tracking-label text-muted-foreground ${className ?? ''}`}
     >
       {children}
     </th>
@@ -106,14 +106,14 @@ function MarkCell({
   onChange: (value: string) => void
 }) {
   return (
-    <td className="px-2 py-[11px] text-right">
+    <td className="px-2 py-2.75 text-right">
       <Input
         aria-label={label}
         aria-invalid={invalid}
         inputMode="numeric"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="ml-auto w-full max-w-[84px] text-right tabular-nums"
+        className="ml-auto w-full max-w-21 text-right tabular-nums"
       />
     </td>
   )

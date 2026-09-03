@@ -39,7 +39,7 @@ export function RegisterFilters({
       <ArmPicker arms={arms} armId={armId} onArm={onArm} />
       <FormProvider {...form}>
         <form
-          className="min-w-[220px]"
+          className="min-w-55"
           onSubmit={(event) => event.preventDefault()}
         >
           <DateField<Day> name="day" label="Day" past placeholder="Today" />

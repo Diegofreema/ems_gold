@@ -18,7 +18,7 @@ export function ArmPicker({
 }) {
   return (
     <div>
-      <div className="mb-1.5 text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+      <div className="mb-1.5 text-2xs uppercase tracking-label text-muted-foreground">
         Arm
       </div>
       <SegmentedControl

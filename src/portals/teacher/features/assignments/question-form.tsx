@@ -88,11 +88,11 @@ export function QuestionForm({
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
-        className="animate-ems-up mb-6 border-2 border-divider p-5"
+        className="animate-ems-up mb-6 rounded-lg border border-divider p-5"
       >
         <FormErrorBanner count={Object.keys(form.formState.errors).length} />
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4.5">
           <TextField<QuestionValues>
             name="question_text"
             label="Question"
@@ -156,7 +156,7 @@ function OptionList() {
 
   return (
     <div className="mt-6">
-      <Label className="mb-[5px] block text-xs font-normal text-foreground/70">
+      <Label className="mb-1.25 block text-xs font-normal text-foreground/70">
         Choices<span className="text-brand">*</span>
       </Label>
 
@@ -213,7 +213,7 @@ function OptionList() {
             <Plus /> Add a choice
           </Button>
         )}
-        <div className={cn('text-[11px]', error ? 'text-brand-700' : 'text-muted-foreground')}>
+        <div className={cn('text-2xs', error ? 'text-danger-ink' : 'text-muted-foreground')}>
           {error ?? 'The one you mark is the answer the school marks against.'}
         </div>
       </div>

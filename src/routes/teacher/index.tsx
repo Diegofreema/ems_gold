@@ -45,7 +45,7 @@ function TeacherDashboard() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         <section>
           <h4 className="mb-0.5 text-xl">Assignments you have set</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             The most recent first, with the ones still open flagged.
           </p>
           {data.assignments.length ? (
@@ -67,13 +67,13 @@ function TeacherDashboard() {
 
         <section>
           <h4 className="mb-0.5 text-xl">Class you take</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             The classes the office has put you in front of.
           </p>
           {data.arms.length ? (
             <DetailRows rows={data.arms} />
           ) : (
-            <p className="mt-3.5 border-t-2 border-divider py-3 text-[13px] text-muted-foreground">
+            <p className="mt-3.5 border-t-2 border-divider py-3 text-sm text-muted-foreground">
               You are not class teacher this session.
             </p>
           )}

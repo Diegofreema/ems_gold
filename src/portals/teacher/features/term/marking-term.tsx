@@ -19,8 +19,8 @@ export function MarkingTerm() {
   if (!term) return null
 
   return (
-    <div className="border-b-2 border-divider px-4 pt-3.5 pb-2.5">
-      <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+    <div className="border-b border-divider px-4 pt-3.5 pb-2.5">
+      <div className="text-2xs uppercase tracking-label text-muted-foreground">
         Marking for
       </div>
       <div className="mt-1 font-heading text-sm font-extrabold">{term.label}</div>
