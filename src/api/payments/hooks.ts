@@ -1,4 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dropMoneyReads } from '../money'
 import { paymentKeys } from './keys'
 import { paymentsService } from './service'
 import type { InitialisePaymentBody, PaymentState } from './types'
@@ -42,15 +43,19 @@ export function useInitialisePayment() {
 /**
  * Settles the invoice behind a reference.
  *
- * Invalidates nothing on its own — what a settled invoice changes depends on
- * who is looking at it, so the page that calls this says so. A refusal is
+ * A settled invoice is money moved, and it reaches further than the guardian
+ * who paid it: the office's register, the counter's outstanding list and the
+ * school's revenue all read it too, and the caller that returns from the
+ * gateway knows about none of them. See `dropMoneyReads`. A refusal is
  * announced by the mutation cache like any other; 402 means the payment did
  * not cover the invoice.
  */
 export function useVerifyPayment() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (reference: string) => paymentsService.verify(reference),
     meta: { success: 'Payment confirmed' },
+    onSuccess: () => dropMoneyReads(queryClient),
   })
 }
 

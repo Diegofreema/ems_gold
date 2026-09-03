@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dropCurriculumReads } from '../curriculum'
 import type { Id } from '../types'
 import { departmentKeys } from './keys'
 import { departmentsService } from './service'
@@ -53,7 +54,10 @@ export function useCreateDepartment() {
   return useMutation({
     mutationFn: (body: DepartmentBody) => departmentsService.create(body),
     meta: { success: 'Class created' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: departmentKeys.lists() }),
+    // The root, not the register: `options()` and `classes()` are siblings of
+    // `lists()` and both are cached for ever, so a class created here was one
+    // no form in the app would offer until the tab was reloaded.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: departmentKeys.all }),
   })
 }
 
@@ -71,7 +75,8 @@ export function useAddSubjectsToClass(id: Id) {
   return useMutation({
     mutationFn: (body: AddSubjectsBody) => departmentsService.addSubjects(id, body),
     meta: { success: 'Subjects added to the class' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: departmentKeys.detail(id) }),
+    // The subject's own record holds the same fact — see `dropCurriculumReads`.
+    onSuccess: () => dropCurriculumReads(queryClient),
   })
 }
 
@@ -80,7 +85,7 @@ export function useAllocateToClass(id: Id) {
   return useMutation({
     mutationFn: (body: AllocateToClassBody) => departmentsService.allocate(id, body),
     meta: { success: 'Allocated to the class' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: departmentKeys.detail(id) }),
+    onSuccess: () => dropCurriculumReads(queryClient),
   })
 }
 
@@ -89,7 +94,7 @@ export function useRemoveSubjectFromClass(id: Id) {
   return useMutation({
     mutationFn: (subjectId: Id) => departmentsService.removeSubject(id, subjectId),
     meta: { success: 'Subject removed from the class' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: departmentKeys.detail(id) }),
+    onSuccess: () => dropCurriculumReads(queryClient),
   })
 }
 

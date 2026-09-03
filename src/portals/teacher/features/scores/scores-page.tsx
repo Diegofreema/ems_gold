@@ -80,12 +80,18 @@ export function ScoresPage() {
 
   const submit = async () => {
     if (!term) return
-    await save
+    const filed = await save
       .mutateAsync(changedMarks(rows, subject.id, term))
       // A refusal has already been announced by the mutation cache. What was
       // taken before it stays taken, and the sheet is re-read either way.
-      .catch(() => undefined)
-    setEdits({})
+      .then(
+        () => true,
+        () => false,
+      )
+    // Only once the school has them. Clearing regardless wiped a whole sheet of
+    // typed marks off the screen on a refusal, with nothing filed to replace
+    // them — the teacher's work, gone because the network was not there.
+    if (filed) setEdits({})
   }
 
   return (

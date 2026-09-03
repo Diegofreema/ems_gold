@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,18 @@ import { toTableColumns } from './collection-columns'
 /** How many rows the tab shimmers while it loads. */
 const SKELETON_ROWS = 3
 
-function TabTable({ tab, rows }: { tab: DetailTab; rows: Row[] }) {
+function TabTable({
+  tab,
+  rows,
+  recordId,
+}: {
+  tab: DetailTab
+  rows: Row[]
+  recordId: string
+}) {
+  const navigate = useNavigate()
+  const { rowTo } = tab
+
   // `TableView` draws a header and nothing else for an empty list, which reads
   // as a table that has not loaded rather than one with nothing in it.
   if (rows.length === 0) {
@@ -28,6 +39,14 @@ function TabTable({ tab, rows }: { tab: DetailTab; rows: Row[] }) {
       columns={toTableColumns(tab.columns)}
       rows={rows}
       rowKey={(row) => row.id}
+      onRowClick={
+        rowTo
+          ? (row) => {
+              const { to, search } = rowTo(recordId, row)
+              void navigate({ to, search })
+            }
+          : undefined
+      }
     />
   )
 }
@@ -47,7 +66,7 @@ function LiveTab({
     queryKey: ['detail-tab', tab.label, recordId],
     queryFn: () => source(recordId),
   })
-  return <TabTable tab={tab} rows={data} />
+  return <TabTable tab={tab} rows={data} recordId={recordId} />
 }
 
 /**
@@ -105,7 +124,7 @@ export function DetailTabPanel({
             {tab.source ? (
               <LiveTab tab={tab} recordId={recordId} source={tab.source} />
             ) : (
-              <TabTable tab={tab} rows={tab.rows ?? []} />
+              <TabTable tab={tab} rows={tab.rows ?? []} recordId={recordId} />
             )}
           </div>
         </Suspense>

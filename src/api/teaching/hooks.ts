@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { resultKeys } from '../results/keys'
+import { mySchoolingKeys } from '../my-schooling/keys'
 import type { Id, PageParams } from '../types'
 import { teachingKeys } from './keys'
 import { teachingService } from './service'
@@ -88,8 +90,10 @@ export function useUploadResults() {
     mutationFn: (body: UploadResultsBody) => teachingService.uploadResults(body),
     meta: { success: 'Results uploaded' },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: teachingKeys.uploads() })
+      // `uploads()` is under `all`, so the root covers it. The office reads
+      // what was uploaded through the results controller, which is not.
       queryClient.invalidateQueries({ queryKey: teachingKeys.all })
+      queryClient.invalidateQueries({ queryKey: resultKeys.all })
     },
   })
 }
@@ -131,7 +135,13 @@ export function useEnterScores() {
       return rows.length
     },
     meta: { success: 'Scores saved' },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: teachingKeys.all }),
+    // Settled rather than success: a sheet that stopped half way through has
+    // still moved the marks it got to, and must be re-read either way.
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: teachingKeys.all })
+      // The same marks are the office's results register and its approval queue.
+      queryClient.invalidateQueries({ queryKey: resultKeys.all })
+    },
   })
 }
 
@@ -141,7 +151,10 @@ export function useEnterScore() {
   return useMutation({
     mutationFn: (body: EnterScoreBody) => teachingService.enterScore(body),
     meta: { success: 'Score saved' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.all }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: teachingKeys.all })
+      queryClient.invalidateQueries({ queryKey: resultKeys.all })
+    },
   })
 }
 
@@ -157,7 +170,11 @@ export function useAddTopic() {
   return useMutation({
     mutationFn: (body: CreateTopicBody) => teachingService.addTopic(body),
     meta: { success: 'Topic added' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.topics() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: teachingKeys.topics() })
+      // A topic is a material in the pupils' portal.
+      queryClient.invalidateQueries({ queryKey: mySchoolingKeys.all })
+    },
   })
 }
 
@@ -166,6 +183,9 @@ export function useUpdateTopic(id: Id) {
   return useMutation({
     mutationFn: (body: UpdateTopicBody) => teachingService.updateTopic(id, body),
     meta: { success: 'Topic updated' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.topics() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: teachingKeys.topics() })
+      queryClient.invalidateQueries({ queryKey: mySchoolingKeys.all })
+    },
   })
 }

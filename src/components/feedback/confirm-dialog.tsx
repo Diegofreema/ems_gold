@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, HelpCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -7,6 +7,10 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
+import type { ConfirmTone } from './confirm-tone'
+
+export type { ConfirmTone }
 
 export type ConfirmRequest = {
   title: string
@@ -17,6 +21,8 @@ export type ConfirmRequest = {
   cta: string
   /** Label of the cancel button — "Keep it", "Go back", "Keep working". */
   cancel?: string
+  /** Defaults to `danger`, which is what most of these dialogs are for. */
+  tone?: ConfirmTone
   /**
    * Returning the write's promise holds the dialog open until the API answers,
    * with the button spinning. A caller that returns nothing closes at once, as
@@ -26,8 +32,9 @@ export type ConfirmRequest = {
 }
 
 /**
- * The design's destructive confirm: a 2px accent frame over a 58% scrim.
- * Escape and scrim click cancel, both handled by the underlying Dialog.
+ * The design's confirm: an accent frame over a 58% scrim, in danger unless the
+ * caller says otherwise. Escape and scrim click cancel, both handled by the
+ * underlying Dialog.
  */
 export function ConfirmDialog({
   request,
@@ -37,6 +44,8 @@ export function ConfirmDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [pending, setPending] = useState(false)
+  const brand = request?.tone === 'brand'
+  const Icon = brand ? HelpCircle : AlertCircle
 
   const run = async () => {
     setPending(true)
@@ -56,14 +65,22 @@ export function ConfirmDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className="w-[min(460px,100%)] gap-0 border border-danger bg-raised p-0 shadow-float sm:max-w-[460px]"
+        className={cn(
+          'w-[min(460px,100%)] gap-0 border bg-raised p-0 shadow-float sm:max-w-[460px]',
+          brand ? 'border-primary' : 'border-danger',
+        )}
       >
         {request && (
           <>
             <div className="p-5.5 pb-0">
               <div className="flex items-center gap-2.5">
-                <div className="grid size-[22px] flex-none place-items-center rounded-sm bg-danger text-white">
-                  <AlertCircle className="size-3.5" strokeWidth={2.6} />
+                <div
+                  className={cn(
+                    'grid size-[22px] flex-none place-items-center rounded-sm text-white',
+                    brand ? 'bg-primary' : 'bg-danger',
+                  )}
+                >
+                  <Icon className="size-3.5" strokeWidth={2.6} />
                 </div>
                 <DialogTitle className="font-heading text-xl font-extrabold">
                   {request.title}
@@ -88,10 +105,15 @@ export function ConfirmDialog({
               >
                 {request.cancel ?? 'Keep it'}
               </Button>
+              {/* The brand tone takes the button's own default fill, which is
+                  already the brand — only the danger one is dressed here. */}
               <Button
                 pending={pending}
                 onClick={() => void run()}
-                className="bg-danger text-white hover:bg-danger/85 focus-visible:border-danger focus-visible:ring-danger/40"
+                className={cn(
+                  !brand &&
+                    'bg-danger text-white hover:bg-danger/85 focus-visible:border-danger focus-visible:ring-danger/40',
+                )}
               >
                 {request.cta}
               </Button>

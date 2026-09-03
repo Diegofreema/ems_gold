@@ -16,7 +16,7 @@ import { periodRows } from '../features/timetable/timetable';
  */
 const registered = () =>
   queryClient
-    .ensureQueryData(studentCoursesQuery)
+    .query(studentCoursesQuery)
     .then((all) => courseRows(all));
 
 export const courses: CollectionDef = {
@@ -66,7 +66,7 @@ export const courses: CollectionDef = {
  */
 const shared = () =>
   queryClient
-    .ensureQueryData(studentMaterialsQuery)
+    .query(studentMaterialsQuery)
     .then((all) => materialRows(all));
 
 export const materials: CollectionDef = {
@@ -119,8 +119,8 @@ export const materials: CollectionDef = {
  */
 const week = () =>
   Promise.all([
-    queryClient.ensureQueryData(studentTimetableQuery),
-    queryClient.ensureQueryData(studentCoursesQuery),
+    queryClient.query(studentTimetableQuery),
+    queryClient.query(studentCoursesQuery),
   ]).then(([grid, courses]) => periodRows(grid, courses));
 
 /**

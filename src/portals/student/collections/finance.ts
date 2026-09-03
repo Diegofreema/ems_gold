@@ -13,7 +13,7 @@ import { feeCounts, invoiceRows, paidTotal, paymentRows } from '../features/fees
  * opens, the payments tab beside it and all three tiles want the same answer
  * on the same render, and react-query collapses them into one call.
  */
-const ledger = () => queryClient.ensureQueryData(studentInvoicesQuery)
+const ledger = () => queryClient.query(studentInvoicesQuery)
 
 const rows = () => ledger().then((data) => invoiceRows(data.invoices, data.transactions))
 

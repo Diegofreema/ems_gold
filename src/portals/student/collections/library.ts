@@ -16,12 +16,12 @@ import { myLoanRow } from './my-loan-row'
 
 const myLoans = () =>
   queryClient
-    .ensureQueryData(studentLoansQuery)
+    .query(studentLoansQuery)
     .then((loans) => loans.map((loan) => myLoanRow(loan)))
 
 /** What is owed across every borrowing, for the tile. */
 const finesOwing = async () => {
-  const loans = await queryClient.ensureQueryData(studentLoansQuery)
+  const loans = await queryClient.query(studentLoansQuery)
   return loans
     .filter((loan) => loanPaid(loan) === 'Owing')
     .reduce((sum, loan) => sum + loanFine(loan), 0)

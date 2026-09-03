@@ -25,7 +25,7 @@ const ALL = 200
 
 const board = (): Promise<Notice[]> =>
   queryClient
-    .ensureQueryData({
+    .query({
       queryKey: ['notices', 'board'],
       queryFn: () => noticesService.all({ limit: ALL }),
     })

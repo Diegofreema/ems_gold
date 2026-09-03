@@ -20,7 +20,7 @@ import {
   choiceCount,
   chosenOption,
   correctOption,
-  isTheory,
+  isChoice,
   maxTotal,
   needsHand,
   openingScores,
@@ -34,16 +34,23 @@ import {
  *
  * Every answer is shown, not only the ones to mark: a teacher deciding what a
  * written answer is worth reads the whole assignment, and hiding the multiple
- * choice would hide the half the school has already decided. Only the theory
- * answers carry a box.
+ * choice would hide the half the school has already decided. Every answer
+ * carries a box — the multiple-choice ones already filled in from the answer
+ * key — because the school scores nothing itself and a mark nobody typed is a
+ * mark nobody sent.
  */
 
 export type MarkingValues = { scores: Record<string, string>; comment: string };
 
-/** What each answer may be given, so a mark over the question's own worth is refused. */
+/**
+ * What each answer may be given, so a mark over the question's own worth is
+ * refused. Every answer, not the written ones alone: a multiple-choice box is
+ * filled in but still typeable, and 50 on a question worth 2 is a total the
+ * school will keep.
+ */
 function schemaFor(answers: MarkingAnswer[]) {
   const caps = new Map(
-    needsHand(answers).map((answer) => [answerKey(answer), answer.points ?? 0]),
+    answers.map((answer) => [answerKey(answer), answer.points ?? 0]),
   );
 
   return z
@@ -168,7 +175,9 @@ function AnswerCard({
   position: number;
 }) {
   const points = answer.points ?? 0;
-  const theory = isTheory(answer);
+  // Marked against the key, or read by hand — the same rule the opening marks
+  // are filled in by, so what the card says matches what the box holds.
+  const theory = !isChoice(answer);
   const chose = chosenOption(answer);
   const right = correctOption(answer);
   const correct = wasRight(answer);

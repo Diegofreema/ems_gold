@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useConfirm } from '@/hooks/use-confirm'
 import { cn } from '@/lib/utils'
+import { clearAttempt, type StoredAttempt, writeAttempt } from './attempt'
 import { formatClock, isRunningOut } from './clock'
 import { OptionList } from './option-list'
 import {
@@ -16,7 +17,6 @@ import {
   type Draft,
   isAnswered,
   isTheory,
-  limitSeconds,
   assignmentMeta,
   questionsOf,
   submitBody,
@@ -27,18 +27,21 @@ import { useCountdown } from './use-countdown'
 /**
  * The assignment itself, one question at a time.
  *
- * `openedAt` is passed in rather than taken here: the endpoint wants when the
- * student actually started, and that is the moment they pressed the button on
- * the brief, not the moment this component happened to mount.
+ * The attempt is passed in rather than begun here: when the student started and
+ * when their time runs out both belong to the sitting, which outlives this
+ * component — it is remounted by every reload, and neither the clock nor the
+ * answers may start again with it. See `attempt.ts`.
  */
 export function AssignmentSitting({
   assignment,
   assignmentId,
-  openedAt,
+  attempt,
+  owner,
 }: {
   assignment: AssignmentDetail
   assignmentId: string
-  openedAt: Date
+  attempt: StoredAttempt
+  owner: string
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
@@ -46,17 +49,31 @@ export function AssignmentSitting({
   const questions = questionsOf(assignment)
   const total = questions.length
 
-  const [draft, setDraft] = useState<Draft>({})
+  const [draft, setDraft] = useState<Draft>(() => attempt.draft)
   const [questionParam, setQuestion] = useQueryState('q', parseAsInteger.withDefault(1))
 
   const index = Math.min(Math.max(1, questionParam), Math.max(1, total)) - 1
   const question = questions[index]
   const answered = answeredCount(draft, questions)
 
+  // Every answer is kept as it is given. A student who loses the page mid-way
+  // comes back to what they had written, on the clock they already had.
+  useEffect(() => {
+    writeAttempt(owner, { ...attempt, draft })
+  }, [owner, attempt, draft])
+
   const send = () =>
     submit
-      .mutateAsync(submitBody(draft, questions, openedAt))
-      .then(() => navigate({ to: '/student/assignments/$assignmentId/result', params: { assignmentId } }))
+      .mutateAsync(submitBody(draft, questions, new Date(attempt.startedAt)))
+      .then(() => {
+        // The sitting is over: anything left in the browser would be resumed
+        // against an assignment that can no longer be answered.
+        clearAttempt(owner, assignmentId)
+        return navigate({
+          to: '/student/assignments/$assignmentId/result',
+          params: { assignmentId },
+        })
+      })
       // The toast has already said what went wrong; the assignment stays put so the
       // answers are not lost with it.
       .catch(() => undefined)
@@ -73,7 +90,7 @@ export function AssignmentSitting({
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">{assignmentMeta(assignment)}</p>
         </div>
-        <AssignmentClock assignment={assignment} onExpired={send} />
+        <AssignmentClock deadline={attempt.expiresAt} onExpired={send} />
       </div>
       <Rule />
 
@@ -171,30 +188,30 @@ export function AssignmentSitting({
 /**
  * The clock, on an assignment that sets a limit.
  *
- * An assignment without one shows its closing time instead of a countdown: a timer
- * running down to a deadline the school never set would be inventing one.
+ * An assignment without one shows no countdown: a timer running down to a
+ * deadline the school never set would be inventing one.
  */
 function AssignmentClock({
-  assignment,
+  deadline,
   onExpired,
 }: {
-  assignment: AssignmentDetail
+  deadline: number | null
   onExpired: () => void
 }) {
-  const allowed = limitSeconds(assignment)
-  const { seconds } = useCountdown(allowed ?? 0)
+  const { seconds } = useCountdown(deadline)
   // Once, on the tick that reaches zero. The assignment goes in as it stands, which
   // is what "time allowed" means — the alternative is a student holding answers
-  // the school will not accept.
+  // the school will not accept. A sitting whose time ran out while the student
+  // was away reaches zero on its first read, and goes in there and then.
   const sent = useRef(false)
 
   useEffect(() => {
-    if (allowed === null || seconds > 0 || sent.current) return
+    if (deadline === null || seconds > 0 || sent.current) return
     sent.current = true
     onExpired()
-  }, [allowed, seconds, onExpired])
+  }, [deadline, seconds, onExpired])
 
-  if (allowed === null) return null
+  if (deadline === null) return null
 
   return (
     <div className="text-right">

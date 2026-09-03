@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { invoiceKeys } from '../invoices/keys'
+import { dropMoneyReads } from '../money'
+import { studentKeys } from '../students/keys'
 import type { Id } from '../types'
 import { feeKeys } from './keys'
 import { feesService } from './service'
@@ -33,7 +34,9 @@ export function useCreateFee() {
   return useMutation({
     mutationFn: (body: FeeBody) => feesService.create(body),
     meta: { success: 'Fee created' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: feeKeys.lists() }),
+    // The root: `options()` is a sibling of `lists()` and cached for ever, so
+    // the new fee could not be picked for an invoice until the tab reloaded.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: feeKeys.all }),
   })
 }
 
@@ -64,15 +67,21 @@ export function useActivateFee() {
   })
 }
 
-/** Allocating raises invoices, so the invoice lists go stale too. */
+/**
+ * Allocating raises an invoice against every student in a cohort, so it moves
+ * more than any other write in the app — see `dropMoneyReads`. The fee's own
+ * register goes too: allocation counts are shown on it, and `detail(id)` alone
+ * left them reading what they were before.
+ */
 export function useAllocateFee(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: AllocateFeeBody) => feesService.allocate(id, body),
     meta: { success: 'Fee allocated — invoices raised' },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: feeKeys.detail(id) })
-      queryClient.invalidateQueries({ queryKey: invoiceKeys.all })
+      dropMoneyReads(queryClient)
+      // Whose invoices were raised is a whole cohort, so every student's ledger.
+      queryClient.invalidateQueries({ queryKey: studentKeys.details() })
     },
   })
 }

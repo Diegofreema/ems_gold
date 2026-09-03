@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { saveBlob } from '@/lib/download'
+import { adminKeys } from '../admins/keys'
+import { authKeys } from '../auth/keys'
 import type { Id } from '../types'
 import { userKeys } from './keys'
 import { usersService } from './service'
@@ -56,10 +58,9 @@ export function useSetUserStatus() {
   return useMutation({
     mutationFn: (body: SetUserStatusBody) => usersService.setStatus(body),
     meta: { success: 'Account status changed' },
-    onSuccess: (_data, body) => {
-      queryClient.invalidateQueries({ queryKey: userKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: userKeys.detail(body.id) })
-    },
+    // The root rather than the register and the record: `dashboard()` is the
+    // active-and-inactive tally this write moves, and it is a sibling of both.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.all }),
   })
 }
 
@@ -68,7 +69,8 @@ export function useFreeEmail() {
   return useMutation({
     mutationFn: (email: string) => usersService.freeEmail(email),
     meta: { success: 'Email address freed' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
+    // The freed account's own row and the tally sit outside `lists()`.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.all }),
   })
 }
 
@@ -84,7 +86,12 @@ export function useUpdateMyProfile() {
   return useMutation({
     mutationFn: (body: UpdateProfileBody) => usersService.updateProfile(body),
     meta: { success: 'Your profile was saved' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() })
+      // The name in the sidebar and the greeting come from the signed-in
+      // account, which is this same record read through a different endpoint.
+      queryClient.invalidateQueries({ queryKey: authKeys.me() })
+    },
   })
 }
 
@@ -109,8 +116,12 @@ export function useUpdateAdmin(id: Id) {
     mutationFn: (body: UpdateAdminBody) => usersService.updateAdmin(id, body),
     meta: { success: 'Administrator updated' },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userKeys.admin(id) })
+      // `admin(id)` is a descendant of `admins()`, so the one call covers both.
       queryClient.invalidateQueries({ queryKey: userKeys.admins() })
+      // The same office record is fetched from `users/admins/{id}` by the
+      // admins domain as well, and cached under a key of its own. One row, two
+      // addresses: dropping only this one leaves the other reading the old name.
+      queryClient.invalidateQueries({ queryKey: adminKeys.all })
     },
   })
 }
@@ -121,8 +132,11 @@ export function useCreateAdmin() {
     mutationFn: (body: CreateUserBody) => usersService.createAdmin(body),
     meta: { success: 'Administrator created' },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userKeys.admins() })
-      queryClient.invalidateQueries({ queryKey: userKeys.lists() })
+      // The whole root: a new administrator is a new login, so the account
+      // register and the tally above it both move, and neither is under
+      // `admins()`. The admins domain keeps its own copy of the register.
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+      queryClient.invalidateQueries({ queryKey: adminKeys.all })
     },
   })
 }

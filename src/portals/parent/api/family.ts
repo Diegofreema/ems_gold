@@ -40,7 +40,7 @@ export const INVOICE_SCAN = 200
  * two requests for one answer.
  */
 export const familyLedger = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: myFamilyKeys.invoices({ limit: INVOICE_SCAN }),
     queryFn: () => myFamilyService.invoices({ limit: INVOICE_SCAN }),
   })

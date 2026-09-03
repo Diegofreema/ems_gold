@@ -85,7 +85,10 @@ export function SettingsForm() {
       description="Who the school is on every invoice, receipt and result sheet, and the dates the term runs to."
       submitLabel="Save settings"
       onSubmit={async (values) => {
-        await update.mutateAsync(settingsBody(values))
+        // Caught here: react-hook-form re-throws whatever the submit handler
+        // rejects with, and the mutation cache has already said what went
+        // wrong. Without this a refused save is an unhandled rejection.
+        await update.mutateAsync(settingsBody(values)).catch(() => undefined)
       }}
       onCancel={() => reset(settingsValues(data))}
     >

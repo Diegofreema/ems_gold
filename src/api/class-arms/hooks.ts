@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { departmentKeys } from '../departments/keys'
 import { studentKeys } from '../students/keys'
 import type { Id } from '../types'
 import { classArmKeys } from './keys'
@@ -69,8 +70,12 @@ export function useAssignStudentsToArm(id: Id) {
     mutationFn: (body: AssignStudentsBody) => classArmsService.assignStudents(id, body),
     meta: { success: 'Students moved into the arm' },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: classArmKeys.detail(id) })
-      queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
+      // The arm's headcount is on the register beside its roster, and each
+      // moved student's own record says which arm they are in — neither is
+      // under the two keys this used to drop.
+      queryClient.invalidateQueries({ queryKey: classArmKeys.all })
+      queryClient.invalidateQueries({ queryKey: studentKeys.all })
+      queryClient.invalidateQueries({ queryKey: departmentKeys.all })
     },
   })
 }
@@ -81,8 +86,9 @@ export function useRemoveStudentFromArm(id: Id) {
     mutationFn: (classArmStudentId: Id) => classArmsService.removeStudent(id, classArmStudentId),
     meta: { success: 'Student removed from the arm' },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: classArmKeys.detail(id) })
-      queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: classArmKeys.all })
+      queryClient.invalidateQueries({ queryKey: studentKeys.all })
+      queryClient.invalidateQueries({ queryKey: departmentKeys.all })
     },
   })
 }

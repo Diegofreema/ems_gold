@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dropCurriculumReads } from '../curriculum'
 import type { Id } from '../types'
 import { teacherKeys } from './keys'
 import { teachersService } from './service'
@@ -60,7 +61,8 @@ export function useAssignSubjects(id: Id) {
   return useMutation({
     mutationFn: (body: AssignSubjectsBody) => teachersService.assignSubjects(id, body),
     meta: { success: 'Subjects assigned' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: teacherKeys.detail(id) }),
+    // The subject's own record and the teacher's "my subjects" hold this too.
+    onSuccess: () => dropCurriculumReads(queryClient),
   })
 }
 

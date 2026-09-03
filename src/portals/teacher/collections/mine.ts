@@ -22,37 +22,37 @@ import { queryClient } from '@/lib/query-client'
 export const ALL = 500
 
 export const mySubjects = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: teachingKeys.subjects(),
     queryFn: () => teachingService.subjects(),
   })
 
 export const myRoll = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: teachingKeys.students({ limit: ALL }),
     queryFn: () => teachingService.students({ limit: ALL }),
   })
 
 export const myMarks = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: teachingKeys.results({ limit: ALL }),
     queryFn: () => teachingService.results({ limit: ALL }),
   })
 
 export const myTopics = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: teachingKeys.topics(),
     queryFn: () => teachingService.topics(),
   })
 
 export const myEClasses = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: teachingKeys.eclasses(),
     queryFn: () => teachingService.eclasses(),
   })
 
 export const myBatches = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: teachingKeys.uploads(),
     queryFn: () => teachingService.uploadBatches(),
   })

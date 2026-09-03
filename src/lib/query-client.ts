@@ -1,5 +1,6 @@
 import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { dropDerivedReads } from '@/features/collections/invalidate'
 import { errorMessage, OFFLINE_MESSAGE } from './errors'
 
 /**
@@ -31,6 +32,13 @@ export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onSuccess: (_data, _variables, _context, mutation) => {
       if (mutation.meta) toast.success(mutation.meta.success)
+      // And drops what every write makes stale wherever it happened. A hook
+      // still declares its own domain — that part is local knowledge and stays
+      // where it is — but the registers, records, pickers and dashboards built
+      // on top of a dozen endpoints are nobody's local knowledge, and asking
+      // each write site to remember them is what left half the app needing a
+      // browser reload to show what had just been saved. See `dropDerivedReads`.
+      void dropDerivedReads(queryClient)
     },
     onError: (error, _variables, _context, mutation) => {
       if (!mutation.meta?.ownsError) toast.error(errorMessage(error, OFFLINE_MESSAGE))

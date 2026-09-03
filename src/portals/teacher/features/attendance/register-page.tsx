@@ -131,7 +131,11 @@ export function RegisterPage() {
       // A refusal has already been announced by the mutation cache; what was
       // filed before it stays filed, and the register is re-read either way.
       .catch(() => undefined);
-    if (answer) setSaved(answer);
+    // Only once the school has them: clearing regardless emptied a half-taken
+    // register on a refusal, which is exactly the work this page promises is
+    // safe to leave.
+    if (!answer) return;
+    setSaved(answer);
     setEdits({});
   };
 

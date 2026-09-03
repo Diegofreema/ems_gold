@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dropMoneyReads } from '../money'
 import { analyticsKeys } from './keys'
 import { analyticsService } from './service'
 import type {
@@ -56,10 +57,10 @@ function useSettle<TBody>(
   return useMutation({
     mutationFn: run,
     meta: { success },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: analyticsKeys.all })
-      queryClient.invalidateQueries({ queryKey: ['collection'] })
-    },
+    // Settling a stranded reference is money arriving late; it reaches
+    // everywhere money reaches. The registers built on top go with every other
+    // mutation's, in `dropDerivedReads`.
+    onSuccess: () => dropMoneyReads(queryClient),
   })
 }
 

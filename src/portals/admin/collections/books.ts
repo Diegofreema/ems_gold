@@ -12,11 +12,12 @@ import { queryClient } from '@/lib/query-client'
  * the Lending page (`./loans`).
  *
  * The endpoint answers whole and ignores paging, so the catalogue is fetched
- * once and searched here. It shares the `['library']` cache prefix with the
- * register, which every lending and title flow drops after a write.
+ * once and searched here, sharing the `['library']` cache prefix with the
+ * lending register. Read through `queryClient.query`, which refetches what a
+ * write has invalidated — `ensureQueryData` would hand back the old shelf.
  */
 const allBooks = (): Promise<Book[]> =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: ['library', 'books'],
     queryFn: () => libraryService.books(),
   })

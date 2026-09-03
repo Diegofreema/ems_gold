@@ -1,3 +1,4 @@
+import type { ConfirmTone } from '@/components/feedback/confirm-tone.ts'
 import type { Paginated } from '../../api/types.ts'
 import type { Choice, OptionsKey , SearchKey } from './options.ts'
 import type { Align, CardRole } from '@/lib/table.ts'
@@ -208,9 +209,14 @@ export type RowActionSpec = {
   label: (row: Row) => string | undefined
   /**
    * The confirm's body. Without one the action runs on the first click, which
-   * is right for putting a state back and wrong for taking it away.
+   * is right where nothing about the row changes for the person it belongs to.
    */
   confirm?: (row: Row) => string | undefined
+  /**
+   * How that confirm is dressed. Defaults to danger; a row action that gives
+   * something back rather than taking it away asks in the brand colour.
+   */
+  tone?: (row: Row) => ConfirmTone
   /** What the toast says once the API has taken it. */
   done: (row: Row) => string
   /**
@@ -398,6 +404,20 @@ export type DetailTab = {
     /** Preset filters, read straight off the URL by the list it lands on. */
     search?: Record<string, string>
   }
+  /**
+   * Where one row of the tab leads. A tab whose rows are worked on rather than
+   * read — a submission is marked — sends the teacher to the row they picked
+   * instead of to the list it is in, which is the same page reached two clicks
+   * later after finding the row again.
+   *
+   * The record's own id is passed as well as the row: what a sub-table's row
+   * means is usually a pair, and a submission is only reachable through the
+   * assignment it was sent against.
+   */
+  rowTo?: (
+    recordId: string,
+    row: Row,
+  ) => { to: ListPath; search?: Record<string, string> }
 }
 
 /**

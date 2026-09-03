@@ -441,10 +441,13 @@ function lend(): ActionDef {
 }
 
 /**
- * The catalogue cache is read imperatively (`ensureQueryData`), which returns
- * stale data without refetching — so a flow that changes a copy's standing
- * drops it outright, the same way the collection's own save does, and the
- * refetch after the flow pulls the truth.
+ * Drops the catalogue outright rather than marking it stale.
+ *
+ * Invalidating would now be enough — the shelf reads through
+ * `queryClient.query`, which refetches what a write has invalidated — but a
+ * title's standing is the one thing a librarian checks immediately after
+ * changing it, and removing the entry means the next read waits for the API
+ * rather than painting the old answer first.
  */
 function dropCatalogue() {
   queryClient.removeQueries({ queryKey: ['library'] })

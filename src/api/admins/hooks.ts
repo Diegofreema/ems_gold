@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Id } from '../types'
+import { userKeys } from '../users/keys'
 import { adminKeys } from './keys'
 import { adminsService } from './service'
 import type {
@@ -36,7 +37,12 @@ export function useCreateAdminRecord() {
   return useMutation({
     mutationFn: (body: CreateAdminBody) => adminsService.create(body),
     meta: { success: 'Administrator added' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.lists() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.all })
+      // The same people are read a second time through the users controller,
+      // under a key of their own. One register, two addresses.
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+    },
   })
 }
 
@@ -48,6 +54,8 @@ export function useUpdateAdminRecord(id: Id) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() })
+      // The users controller's copy of the same row. See `useCreateAdminRecord`.
+      queryClient.invalidateQueries({ queryKey: userKeys.admins() })
     },
   })
 }
@@ -57,7 +65,10 @@ export function useDeleteAdminRecord() {
   return useMutation({
     mutationFn: (id: Id) => adminsService.remove(id),
     meta: { success: 'Administrator deleted' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.all })
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+    },
   })
 }
 

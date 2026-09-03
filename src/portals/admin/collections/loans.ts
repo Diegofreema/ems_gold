@@ -12,12 +12,13 @@ import { loanRow } from './loan-row'
  * added and edited.
  *
  * The endpoint is not known to page or search, so the register is fetched
- * whole and searched here. The cache sits under `['library']`, which every
- * lending flow drops after a write — the cache is read imperatively, and an
- * invalidation alone would hand back the stale page.
+ * whole and searched here, under the `['library']` cache prefix. Read through
+ * `queryClient.query` rather than `ensureQueryData`: the second returns what is
+ * cached however stale it is, so a lending flow's invalidation would be handed
+ * straight back the page it had just dropped.
  */
 const allLoans = (): Promise<Loan[]> =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: ['library', 'loans'],
     queryFn: () => libraryService.loans(),
   })

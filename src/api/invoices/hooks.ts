@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dropMoneyReads } from '../money'
 import { studentKeys } from '../students/keys'
 import type { Id } from '../types'
 import { invoiceKeys } from './keys'
@@ -26,7 +27,7 @@ export function useCreateInvoice() {
     mutationFn: (body: InvoiceBody) => invoicesService.create(body),
     meta: { success: 'Invoice created' },
     onSuccess: (_data, body) => {
-      queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() })
+      dropMoneyReads(queryClient)
       // The student's own invoice list is a different endpoint holding the same row.
       queryClient.invalidateQueries({ queryKey: studentKeys.invoices(body.student_id) })
     },
@@ -38,7 +39,10 @@ export function useUpdateInvoice(id: Id) {
   return useMutation({
     mutationFn: (body: InvoiceBody) => invoicesService.update(id, body),
     meta: { success: 'Invoice updated' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: invoiceKeys.all }),
+    onSuccess: (_data, body) => {
+      dropMoneyReads(queryClient)
+      queryClient.invalidateQueries({ queryKey: studentKeys.invoices(body.student_id) })
+    },
   })
 }
 
@@ -47,18 +51,23 @@ export function useDeleteInvoice() {
   return useMutation({
     mutationFn: (id: Id) => invoicesService.remove(id),
     meta: { success: 'Invoice deleted' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: invoiceKeys.all }),
+    // Whose invoice it was is not in the body, so the students' own ledgers go
+    // with everything else that reads a balance.
+    onSuccess: () => {
+      dropMoneyReads(queryClient)
+      queryClient.invalidateQueries({ queryKey: studentKeys.details() })
+    },
   })
 }
 
-/** Settling moves money, so both the invoice and the student's ledger go stale. */
+/** Settling moves money — see `dropMoneyReads` for how far that reaches. */
 export function useSettleInvoice(id: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SettleInvoiceBody) => invoicesService.settle(id, body),
     meta: { success: 'Invoice settled' },
     onSuccess: (_data, body) => {
-      queryClient.invalidateQueries({ queryKey: invoiceKeys.all })
+      dropMoneyReads(queryClient)
       queryClient.invalidateQueries({ queryKey: studentKeys.invoices(body.student_id) })
     },
   })

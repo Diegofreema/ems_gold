@@ -32,7 +32,7 @@ import {
  * and react-query collapses that into a single request.
  */
 const monthlySpend = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: ['spendings', 'summary'],
     queryFn: () => spendingsService.summary(),
   })
@@ -224,7 +224,7 @@ const settleRow: CollectionDef['rowAction'] = {
  */
 const collectStats = () =>
   queryClient
-    .ensureQueryData({
+    .query({
       queryKey: collectFeeKeys.stats(),
       queryFn: () => collectFeesService.outstanding({ limit: 1 }),
     })

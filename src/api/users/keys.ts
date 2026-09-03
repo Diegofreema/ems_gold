@@ -17,5 +17,7 @@ export const userKeys = {
   profile: () => [...userKeys.all, 'profile'] as const,
   admins: () => [...userKeys.all, 'admins'] as const,
   admin: (id: Id) => [...userKeys.admins(), String(id)] as const,
-  studentFees: (studentId: Id) => [...userKeys.all, 'fees', String(studentId)] as const,
+  /** Every student's fee standing, for a write that changes what one owes. */
+  fees: () => [...userKeys.all, 'fees'] as const,
+  studentFees: (studentId: Id) => [...userKeys.fees(), String(studentId)] as const,
 }

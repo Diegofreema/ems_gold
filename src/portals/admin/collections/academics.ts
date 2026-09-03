@@ -64,7 +64,7 @@ const countClasses = async () =>
  * longer loop.
  */
 const classCensus = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: ['departments', 'census'],
     queryFn: async () => {
       const { items } = await departmentsService.list({ limit: ALL_CLASSES })

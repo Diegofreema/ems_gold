@@ -165,9 +165,17 @@ export function ActionPage({
     // fixed string cannot say. A refusal is still announced by the cache.
     onSuccess: (outcome) => {
       toast.success(outcome.message)
-      // Every list, not just this one: admitting an applicant puts them on the
-      // student register, and promoting empties one arm to fill another.
-      queryClient.invalidateQueries({ queryKey: ['collection'] })
+      // Everything, without a filter — the one place in the app that does.
+      //
+      // A flow calls its service straight (`action.run`), so it never passes
+      // through the typed hook that would know `['invoices']` or `['results']`
+      // had moved. And these are the widest writes there are: collecting a fee
+      // settles an invoice, moves the analytics, changes what a family owes and
+      // what the counter has taken; approving a batch of results empties the
+      // queue and fills three registers. Naming those keys here would be
+      // guessing on behalf of thirteen different flows, and the guess that gets
+      // forgotten is the bug being fixed.
+      void queryClient.invalidateQueries()
     },
   })
 

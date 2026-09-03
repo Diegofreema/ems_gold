@@ -9,7 +9,7 @@ import {
   daysMarked,
 } from '../features/attendance/attendance';
 
-const register = () => queryClient.ensureQueryData(studentAttendanceQuery);
+const register = () => queryClient.query(studentAttendanceQuery);
 
 export const attendance: CollectionDef = {
   id: 'attendance',

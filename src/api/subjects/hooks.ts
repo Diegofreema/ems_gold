@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dropCurriculumReads } from '../curriculum'
 import type { Id } from '../types'
 import { subjectKeys } from './keys'
 import { subjectsService } from './service'
@@ -37,7 +38,9 @@ export function useCreateSubject() {
   return useMutation({
     mutationFn: (body: SubjectBody) => subjectsService.create(body),
     meta: { success: 'Subject created' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.lists() }),
+    // The root: `options()` is a sibling of `lists()` and cached for ever, so
+    // the new subject would not be offered by a form until the tab reloaded.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.all }),
   })
 }
 
@@ -73,7 +76,9 @@ export function useAssignTeachersToSubject(id: Id) {
   return useMutation({
     mutationFn: (body: AssignTeachersBody) => subjectsService.assignTeachers(id, body),
     meta: { success: 'Teachers assigned to the subject' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.detail(id) }),
+    // Written from the subject's end here and from the teacher's end in
+    // `useAssignSubjects`; both are the same fact. See `dropCurriculumReads`.
+    onSuccess: () => dropCurriculumReads(queryClient),
   })
 }
 
@@ -82,7 +87,7 @@ export function useSetSubjectClasses(id: Id) {
   return useMutation({
     mutationFn: (body: SetSubjectClassesBody) => subjectsService.setClasses(id, body),
     meta: { success: 'Classes set for the subject' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: subjectKeys.detail(id) }),
+    onSuccess: () => dropCurriculumReads(queryClient),
   })
 }
 

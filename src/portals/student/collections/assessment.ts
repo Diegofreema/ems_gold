@@ -13,7 +13,7 @@ import { marksOf, resultRows, termAverage } from '../features/results/results';
  * `/assignments/{id}` for the questions, which this list does not carry.
  */
 const mine = () =>
-  queryClient.ensureQueryData(studentAssignmentsQuery).then(assignmentRows);
+  queryClient.query(studentAssignmentsQuery).then(assignmentRows);
 const tally = () => mine().then(assignmentTally);
 
 export const assignments: CollectionDef = {
@@ -68,7 +68,7 @@ export const assignments: CollectionDef = {
   // the questions the list never asked for.
 };
 
-const sheet = () => queryClient.ensureQueryData(studentResultsQuery);
+const sheet = () => queryClient.query(studentResultsQuery);
 
 const marks = () => sheet().then((answer) => resultRows(marksOf(answer)));
 

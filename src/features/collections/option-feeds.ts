@@ -243,7 +243,7 @@ export async function optionLabels(
   dependsOn = '',
 ): Promise<ReadonlyMap<string, string>> {
   const options = await queryClient
-    .ensureQueryData(optionsQuery(key, dependsOn))
+    .query(optionsQuery(key, dependsOn))
     .catch(() => [])
   return new Map(options.map((option) => [option.value, option.label]))
 }

@@ -8,11 +8,13 @@ import type { CollectionsReportParams } from './types'
  * The school's payment methods, read once and shared.
  *
  * Not a hook: the row mappers need it to name a method on a transaction, and
- * they run outside React. `ensureQueryData` means the select on the payment
- * form and the history table beneath an invoice cost one request between them.
+ * they run outside React. Reading through the cache means the select on the
+ * payment form and the history table beneath an invoice cost one request
+ * between them — and through `query` rather than `ensureQueryData`, so that a
+ * write which invalidates it is actually honoured.
  */
 export const paymentMethods = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: collectFeeKeys.paymentMethods(),
     queryFn: () => collectFeesService.paymentMethods(),
     // The four ways a school takes money change when the school changes bank,

@@ -1,13 +1,13 @@
-import { setAssignmentKeys } from '@/api/set-assignments/keys'
-import { setAssignmentsService } from '@/api/set-assignments/service'
-import { pageRows } from '@/features/collections/api'
-import { BLANK } from '@/features/collections/blank'
-import type { CollectionDef, Row } from '@/features/collections/types'
-import { queryClient } from '@/lib/query-client'
-import { submissionRows } from '../features/assignments/marking'
-import { correctAnswer, typeLabel } from '../features/assignments/question'
-import { assignmentBody } from './assignment-body'
-import { assignmentRows, assignmentTally } from './assignment-row'
+import { setAssignmentKeys } from '@/api/set-assignments/keys';
+import { setAssignmentsService } from '@/api/set-assignments/service';
+import { pageRows } from '@/features/collections/api';
+import { BLANK } from '@/features/collections/blank';
+import type { CollectionDef, Row } from '@/features/collections/types';
+import { queryClient } from '@/lib/query-client';
+import { submissionRows } from '../features/assignments/marking';
+import { correctAnswer, typeLabel } from '../features/assignments/question';
+import { assignmentBody } from './assignment-body';
+import { assignmentRows, assignmentTally } from './assignment-row';
 
 /**
  * ponytail: the whole list at once.
@@ -18,24 +18,24 @@ import { assignmentRows, assignmentTally } from './assignment-row'
  * query parameter could narrow. A teacher with more assignments than this wants a
  * search term on the endpoint, which it does not have.
  */
-const ALL = 200
+const ALL = 200;
 
 const mine = () =>
   queryClient
-    .ensureQueryData({
+    .query({
       queryKey: setAssignmentKeys.list({ limit: ALL }),
       queryFn: () => setAssignmentsService.list({ limit: ALL }),
     })
-    .then((page) => assignmentRows(page.items))
+    .then((page) => assignmentRows(page.items));
 
-const tally = () => mine().then(assignmentTally)
+const tally = () => mine().then(assignmentTally);
 
 /** The assignment's questions, as the record panel's tab lists them. */
 const questionRows = async (assignmentId: string): Promise<Row[]> => {
-  const { questions } = await queryClient.ensureQueryData({
+  const { questions } = await queryClient.query({
     queryKey: setAssignmentKeys.questions(assignmentId),
     queryFn: () => setAssignmentsService.questions(assignmentId),
-  })
+  });
 
   return questions.map((question, index) => ({
     id: String(question.id),
@@ -44,8 +44,8 @@ const questionRows = async (assignmentId: string): Promise<Row[]> => {
     type: typeLabel(question.question_type),
     points: String(question.points ?? 0),
     answer: correctAnswer(question) ?? BLANK,
-  }))
-}
+  }));
+};
 
 export const assignments: CollectionDef = {
   id: 'assignments',
@@ -131,9 +131,16 @@ export const assignments: CollectionDef = {
       empty:
         'No student has submitted this assignment yet. Answers appear here as they send them in.',
       // The marking itself is its own page: a written answer is read and given
-      // a figure, which is not something a row of a table can be.
+      // a figure, which is not something a row of a table can be. The row still
+      // leads straight to that page with the script already open — the teacher
+      // has picked their student by clicking them, and making them pick the
+      // same student again on the next page was two clicks that decided nothing.
+      rowTo: (recordId, row) => ({
+        to: '/teacher/submissions',
+        search: { assignment: recordId, submission: row.id },
+      }),
       action: (recordId) => ({
-        label: 'Mark the submissions',
+        label: 'Mark them all',
         to: '/teacher/submissions',
         search: { assignment: recordId },
       }),
@@ -142,11 +149,14 @@ export const assignments: CollectionDef = {
   source: async (params) => pageRows(await mine(), params),
   record: async (recordId) => (await mine()).find((row) => row.id === recordId),
   save: async (values, recordId) => {
-    if (!recordId) return setAssignmentsService.create(assignmentBody(values))
+    if (!recordId) return setAssignmentsService.create(assignmentBody(values));
     // The update body carries a status, and nothing in this portal sets one:
     // the assignment's own is sent back rather than a guess at what it should be.
-    const current = (await mine()).find((row) => row.id === recordId)
-    return setAssignmentsService.update(recordId, assignmentBody(values, current?.status))
+    const current = (await mine()).find((row) => row.id === recordId);
+    return setAssignmentsService.update(
+      recordId,
+      assignmentBody(values, current?.status),
+    );
   },
   remove: (recordId) => setAssignmentsService.remove(recordId),
   removeBody: (row) =>
@@ -207,4 +217,4 @@ export const assignments: CollectionDef = {
       ],
     },
   ],
-}
+};

@@ -11,8 +11,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { cn } from '@/lib/utils'
 import {
+  correctIndex,
   MAX_OPTIONS,
   MIN_OPTIONS,
+  NO_ANSWER,
   type QuestionValues,
   TYPE_LABEL,
 } from './question'
@@ -55,10 +57,13 @@ const schema = z
         message: `Write at least ${MIN_OPTIONS} choices`,
       })
     }
-    // The marked choice must be one of the ones actually written: a blank
-    // option is dropped before it is sent, and an answer key pointing at a
-    // dropped option is a question the school can never mark right.
-    if (!values.options[Number(values.correct)]?.option_text.trim()) {
+    // A choice must be marked, and it must be one of the ones actually
+    // written: a blank option is dropped before it is sent, and an answer key
+    // pointing at a dropped option is a question the school can never mark
+    // right. Nothing marked at all is the same refusal — the form opens with
+    // no answer chosen, so this is what asks for one.
+    const chosen = correctIndex(values.correct)
+    if (chosen === null || !values.options[chosen]?.option_text.trim()) {
       context.addIssue({
         code: 'custom',
         path: ['correct'],
@@ -187,11 +192,15 @@ function OptionList() {
               onClick={() => {
                 remove(index)
                 // The answer is held as a position, so removing a choice above
-                // it would otherwise move the key onto its neighbour.
-                if (index < Number(correct)) {
-                  form.setValue('correct', String(Number(correct) - 1))
-                } else if (index === Number(correct)) {
-                  form.setValue('correct', '0')
+                // it would otherwise move the key onto its neighbour. Removing
+                // the marked choice itself leaves nothing marked, rather than
+                // handing the key to whichever choice is now first.
+                const chosen = correctIndex(correct)
+                if (chosen === null) return
+                if (index < chosen) {
+                  form.setValue('correct', String(chosen - 1))
+                } else if (index === chosen) {
+                  form.setValue('correct', NO_ANSWER)
                 }
               }}
               aria-label={`Remove choice ${index + 1}`}

@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { myFamilyKeys } from '../parents/keys'
+import { assignmentKeys } from '../assignments/keys'
 import type { Id } from '../types'
 import { setAssignmentKeys } from './keys'
 import { setAssignmentsService } from './service'
@@ -36,6 +38,9 @@ function useQuestionWrite(success: string) {
     meta: { success },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: setAssignmentKeys.all })
+      // The pupils read the same assignment through their own controller, and
+      // a question written here is a question they are about to be asked.
+      void queryClient.invalidateQueries({ queryKey: assignmentKeys.all })
     },
   }
 }
@@ -97,6 +102,9 @@ export function useGradeSubmission(submissionId: Id) {
     meta: { success: 'Marks saved' },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: setAssignmentKeys.all })
+      // The mark is the pupil's result and the guardian's copy of it.
+      void queryClient.invalidateQueries({ queryKey: assignmentKeys.all })
+      void queryClient.invalidateQueries({ queryKey: myFamilyKeys.all })
     },
   })
 }

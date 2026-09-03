@@ -155,6 +155,36 @@ test('the sheet proposes the multiple-choice marks and asks for the rest', () =>
   assert.equal(openingScore({ ...WRONG, score: 1 }), '1')
 })
 
+test('a choice the student never answered is filled in as nought, not left blank', () => {
+  // It is not a wrong answer — no icon marks it as one — but it earns nothing,
+  // and a blank box was a mark the teacher had to type before the total meant
+  // anything.
+  const skipped = {
+    ...RIGHT,
+    options: RIGHT.options?.map((option) => ({ ...option, chosen: false })),
+  }
+  assert.equal(wasRight(skipped), null)
+  assert.equal(openingScore(skipped), '0')
+  assert.equal(runningTotal([skipped], openingScores([skipped])), 0)
+})
+
+test('an answer with no kind and no choices is still the teacher’s to mark', () => {
+  // Read off `question_type` alone, an answer that came back without one would
+  // be scored nought for having no options to be right about.
+  const untyped: MarkingAnswer = {
+    answer_id: 44,
+    question_id: 41,
+    question: 'Say why.',
+    points: 5,
+    score: null,
+    theory_answer: 'Because it does.',
+  }
+  assert.equal(openingScore(untyped), '')
+  assert.deepEqual(needsHand([untyped]), [untyped])
+  assert.equal(choiceCount([untyped]), 0)
+  assert.equal(wasRight(untyped), null)
+})
+
 test('the totals count every answer, and the tiles count the choices', () => {
   const answers = [RIGHT, WRONG, WRITTEN]
   assert.equal(maxTotal(answers), 12)

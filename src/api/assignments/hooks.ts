@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { setAssignmentKeys } from '../set-assignments/keys'
 import type { Id } from '../types'
 import { assignmentKeys } from './keys'
 import { assignmentsService } from './service'
@@ -31,7 +32,12 @@ export function useSubmitAssignment(setassignmentId: Id) {
     mutationFn: (body: SubmitAssignmentBody) =>
       assignmentsService.submit(setassignmentId, body),
     meta: { success: 'Your answers were submitted' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: assignmentKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: assignmentKeys.all })
+      // The teacher's submissions list is this same attempt, read through the
+      // controller that set the assignment.
+      queryClient.invalidateQueries({ queryKey: setAssignmentKeys.all })
+    },
   })
 }
 

@@ -4,6 +4,8 @@ import type { AssignmentQuestion } from '../../../../api/set-assignments/types.t
 import {
   blankQuestion,
   correctAnswer,
+  correctIndex,
+  NO_ANSWER,
   questionBody,
   questionValues,
   totalMarks,
@@ -51,7 +53,34 @@ test('a question opens for editing on the option that was right', () => {
 test('a multiple-choice question with no options still opens on a pair of boxes', () => {
   const values = questionValues({ ...QUESTION, options: [] })
   assert.equal(values.options.length, 2)
-  assert.equal(values.correct, '0')
+  // And on no answer: the school marked none, so neither does the form.
+  assert.equal(values.correct, NO_ANSWER)
+})
+
+test('a new question opens with no choice marked as the answer', () => {
+  // The first choice used to be marked before the teacher had typed one, so a
+  // question written without touching the radio was filed with an answer key
+  // nobody chose.
+  assert.equal(blankQuestion().correct, NO_ANSWER)
+  assert.equal(correctIndex(NO_ANSWER), null)
+  assert.equal(correctIndex('   '), null)
+  assert.equal(correctIndex('0'), 0)
+  assert.equal(correctIndex('2'), 2)
+  // Anything that is not a position is nothing marked, never position nought.
+  assert.equal(correctIndex('first'), null)
+  assert.equal(correctIndex('-1'), null)
+})
+
+test('with nothing marked, no option is sent as the right one', () => {
+  // The form refuses to submit before a choice is marked, so this is the
+  // belt-and-braces: `Number('')` is 0, and the first choice must not become
+  // the answer key by arithmetic.
+  const body = questionBody({
+    ...blankQuestion(),
+    question_text: 'Pick one',
+    options: [{ option_text: 'a' }, { option_text: 'b' }],
+  })
+  assert.deepEqual(body.options, [{ option_text: 'a' }, { option_text: 'b' }])
 })
 
 test('what is sent back marks the right option and only that one', () => {

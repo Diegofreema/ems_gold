@@ -194,6 +194,26 @@ test('the suspend button offers the state the student is not in', () => {
   assert.equal(suspended.done, 'reinstated')
 })
 
+test('both ways round are asked about before they are taken', () => {
+  // The confirm's body is what the dialog opens on: an empty one runs the
+  // write on the first click, which is what this guards against.
+  for (const status of ['Active', 'Suspended', 'Admitted', '—']) {
+    assert.ok(suspendAction(status).body.length > 0, status)
+  }
+})
+
+test('reinstating asks in the brand colour, suspending in danger', () => {
+  const reinstate = suspendAction('Suspended')
+  assert.equal(reinstate.tone, 'brand')
+  assert.equal(reinstate.title, 'Reinstate this student?')
+  assert.equal(reinstate.cta, 'Reinstate the student')
+
+  const suspend = suspendAction('Active')
+  assert.equal(suspend.tone, 'danger')
+  assert.equal(suspend.title, 'Suspend this student?')
+  assert.equal(suspend.cta, 'Suspend the student')
+})
+
 test('a student with no enrolment word on them can still be suspended', () => {
   // The list endpoint leaves `studentstatus` null on some records, so the row
   // falls back to the admission word. Only "Suspended" reverses the button.

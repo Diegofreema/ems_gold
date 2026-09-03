@@ -56,8 +56,22 @@ export function submissionRows(submissions: AssignmentSubmission[]): Row[] {
     }))
 }
 
-export function isTheory(answer: MarkingAnswer): boolean {
+function isTheory(answer: MarkingAnswer): boolean {
   return answer.question_type === 'theory'
+}
+
+/**
+ * Whether this answer can be marked against the answer key.
+ *
+ * Not simply "not theory": an answer that arrives with no `question_type` at
+ * all — the marking view has sent one — would be read as multiple choice by
+ * that rule and scored nought for having no options to be right about. It
+ * counts as a choice when the school says it is one, or when it carries the
+ * choices that make it one.
+ */
+export function isChoice(answer: MarkingAnswer): boolean {
+  if (isTheory(answer)) return false
+  return answer.question_type === 'multiple_choice' || (answer.options?.length ?? 0) > 0
 }
 
 /**
@@ -87,7 +101,7 @@ export function correctOption(answer: MarkingAnswer): string {
  * of the question.
  */
 export function wasRight(answer: MarkingAnswer): boolean | null {
-  if (isTheory(answer)) return null
+  if (!isChoice(answer)) return null
   const chosen = answer.options?.find((option) => option.chosen)
   return chosen ? Boolean(chosen.is_correct) : null
 }
@@ -95,12 +109,14 @@ export function wasRight(answer: MarkingAnswer): boolean | null {
 /** What the sheet opens on for one answer: the mark given, or the one proposed. */
 export function openingScore(answer: MarkingAnswer): string {
   if (answer.score != null) return String(answer.score)
-  // A theory answer is nobody's to propose. A multiple-choice one has a right
-  // answer the school already told us, so the sheet fills the mark in and the
-  // teacher overrules it or leaves it.
-  const right = wasRight(answer)
-  if (right === null) return ''
-  return right ? String(answer.points ?? 0) : '0'
+  // A written answer is nobody's to propose. A multiple-choice one is decided
+  // by the key the school already sent: the question's own points where the
+  // student picked the right option, and nought where they did not — which
+  // includes the ones they left alone, since an unanswered question earns
+  // nothing whatever the reason it was skipped. The teacher can still overrule
+  // any of it; what they should not have to do is work it out by eye.
+  if (!isChoice(answer)) return ''
+  return wasRight(answer) === true ? String(answer.points ?? 0) : '0'
 }
 
 export function openingScores(answers: MarkingAnswer[]): Record<string, string> {
@@ -109,9 +125,13 @@ export function openingScores(answers: MarkingAnswer[]): Record<string, string> 
   return scores
 }
 
-/** The answers a teacher has to read rather than confirm. */
+/**
+ * The answers a teacher has to read rather than confirm — everything the
+ * answer key cannot settle, which is the written ones and anything that came
+ * back without the choices to be marked against.
+ */
 export function needsHand(answers: MarkingAnswer[]): MarkingAnswer[] {
-  return answers.filter(isTheory)
+  return answers.filter((answer) => !isChoice(answer))
 }
 
 /** How many of the multiple-choice answers match the key. */
@@ -121,7 +141,7 @@ export function rightCount(answers: MarkingAnswer[]): number {
 
 /** How many of them there were to get right. */
 export function choiceCount(answers: MarkingAnswer[]): number {
-  return answers.filter((answer) => !isTheory(answer)).length
+  return answers.filter(isChoice).length
 }
 
 /** What the whole assignment was worth. */

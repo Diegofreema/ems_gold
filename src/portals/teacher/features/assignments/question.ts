@@ -45,8 +45,24 @@ export type QuestionValues = {
   points: string
   /** Ignored on a theory question, and kept so switching back does not lose it. */
   options: { option_text: string }[]
-  /** Which option is the right one, as its index. */
+  /** Which option is the right one, as its index. Empty until one is marked. */
   correct: string
+}
+
+/** No choice marked yet. The radio group's value is a string, so this is one. */
+export const NO_ANSWER = ''
+
+/**
+ * Which choice is marked as the answer, or null where none is.
+ *
+ * Read through this rather than with `Number`, which turns the unanswered
+ * empty string into 0 — the first choice, silently, in every place that asks.
+ */
+export function correctIndex(correct: string): number | null {
+  const typed = correct.trim()
+  if (!typed) return null
+  const index = Number(typed)
+  return Number.isInteger(index) && index >= 0 ? index : null
 }
 
 /** How many choices a multiple-choice question must offer, and may. */
@@ -58,7 +74,11 @@ export const blankQuestion = (): QuestionValues => ({
   question_type: 'multiple_choice',
   points: '1',
   options: [{ option_text: '' }, { option_text: '' }],
-  correct: '0',
+  // Nothing marked. Starting on the first choice is a preselected answer key:
+  // a teacher who writes four choices and forgets the radio has still filed a
+  // question, and the one it marks right is whichever they happened to type
+  // first — which the form never told them it had decided.
+  correct: NO_ANSWER,
 })
 
 /** A question opened for editing, back in the shape the form fills in. */
@@ -75,7 +95,9 @@ export function questionValues(question: AssignmentQuestion): QuestionValues {
     // A multiple-choice question saved with no options at all would open with
     // nothing to type into, so the form starts from the blank pair instead.
     options: options.length ? options : blankQuestion().options,
-    correct: String(right === -1 ? 0 : right),
+    // A question the school holds with no option marked opens with none marked
+    // here either, so the teacher is asked for the key rather than handed one.
+    correct: right === -1 ? NO_ANSWER : String(right),
   }
 }
 
@@ -98,7 +120,10 @@ export function questionBody(values: QuestionValues): QuestionBody {
     }
   }
 
-  const correct = Number(values.correct)
+  // Null cannot reach here through the form, which refuses to submit until a
+  // choice is marked — and if it ever did, no option carries the key rather
+  // than the first one carrying it by accident.
+  const correct = correctIndex(values.correct)
   return {
     question_text: values.question_text.trim(),
     question_type: 'multiple_choice',

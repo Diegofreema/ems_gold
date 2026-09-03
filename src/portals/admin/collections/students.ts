@@ -235,10 +235,12 @@ export const students: CollectionDef = {
   // offered where the office is already looking at the register.
   rowAction: {
     label: (row) => suspendAction(row.status).label,
-    confirm: (row) =>
-      row.status === 'Suspended'
-        ? undefined
-        : 'They stay on the register and keep their record. They cannot sign in, and their arm keeps the place until they are reinstated.',
+    // Asked about both ways: see `suspendAction`, which holds what each of the
+    // two dialogs says.
+    title: (row) => suspendAction(row.status).title,
+    cta: (row) => suspendAction(row.status).cta,
+    confirm: (row) => suspendAction(row.status).body,
+    tone: (row) => suspendAction(row.status).tone,
     done: (row) => `${row.name} ${suspendAction(row.status).done}`,
     run: (row) =>
       studentsService.setStatus(row.id, { status: suspendAction(row.status).next }),

@@ -14,7 +14,7 @@ const LOG_TYPES: readonly LogType[] = ['Add', 'Edit', 'Delete', 'Login']
  * single request rather than counting the log four times over.
  */
 const typeCounts = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: ['logs', 'types'],
     queryFn: () => logsService.types(),
     staleTime: 60_000,

@@ -1,3 +1,4 @@
+import { noteServerTime } from '../lib/server-clock.ts'
 import { getToken } from './token.ts'
 import { buildUrl, type QueryValue } from './url.ts'
 import type { ApiEnvelope, ApiFieldErrors } from './types.ts'
@@ -60,6 +61,10 @@ export async function request<TData>(
     signal: options.signal,
   })
 
+  // Every answer re-anchors the school's clock, which is what an assignment's
+  // countdown is measured against. See `lib/server-clock`.
+  noteServerTime(response.headers.get('Date'))
+
   const payload = (await response.json().catch(() => null)) as ApiEnvelope<TData> | null
 
   if (!payload) {
@@ -84,6 +89,9 @@ export async function requestBlob(
     headers: buildHeaders(options),
     signal: options.signal,
   })
+
+  noteServerTime(response.headers.get('Date'))
+
   if (!response.ok) {
     // A refusal comes back as the ordinary envelope even here, so the reason
     // the API gave is what the toast says — not the bare HTTP status line.

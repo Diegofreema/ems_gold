@@ -49,7 +49,7 @@ function asId(value: string | undefined) {
  * once and the three tiles read it between them.
  */
 const week = () =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: ['timetables', 'census'],
     queryFn: () => timetablesService.periods({ limit: ALL_PERIODS }),
   })

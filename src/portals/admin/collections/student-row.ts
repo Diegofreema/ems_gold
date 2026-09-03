@@ -1,3 +1,4 @@
+import type { ConfirmTone } from '../../../components/feedback/confirm-tone.ts'
 import type { Invoice } from '../../../api/invoices/types.ts'
 import type { Student, StudentResult } from '../../../api/students/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
@@ -32,15 +33,41 @@ function asDate(value: string | null | undefined): string {
  * Suspending is a switch, not an edit: the button offers whichever of the two
  * states the student is not currently in, and says so in the past tense once the
  * API has taken it.
+ *
+ * Both ways are asked about first. Taking the enrolment away is the obvious
+ * one, but handing it back is a decision too — it lets a student the school
+ * suspended sign in and sit in class again — and the two buttons sit in the
+ * same place on the row, so a misread status would otherwise undo a suspension
+ * with one click and nothing on screen in between.
  */
 export function suspendAction(status: string): {
   label: string
   next: 'Active' | 'Suspended'
   done: string
+  title: string
+  cta: string
+  body: string
+  tone: ConfirmTone
 } {
   return status === 'Suspended'
-    ? { label: 'Reinstate', next: 'Active', done: 'reinstated' }
-    : { label: 'Suspend', next: 'Suspended', done: 'suspended' }
+    ? {
+        label: 'Reinstate',
+        next: 'Active',
+        done: 'reinstated',
+        title: 'Reinstate this student?',
+        cta: 'Reinstate the student',
+        body: 'Their enrolment goes back to active: they can sign in again and take their place in the arm the school kept for them. They can be suspended again from the same button.',
+        tone: 'brand',
+      }
+    : {
+        label: 'Suspend',
+        next: 'Suspended',
+        done: 'suspended',
+        title: 'Suspend this student?',
+        cta: 'Suspend the student',
+        body: 'They stay on the register and keep their record. They cannot sign in, and their arm keeps the place until they are reinstated.',
+        tone: 'danger',
+      }
 }
 
 /**

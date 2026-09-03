@@ -156,14 +156,20 @@ export function useChildAssignment(childId: Id | undefined, setassignmentId: Id 
   })
 }
 
-/** Submitting closes it, so the child's list of assignments goes stale. */
+/**
+ * Submitting closes it, so the child's list of assignments goes stale — and so
+ * does the assignment itself, which is keyed `['my-family','child',id,
+ * 'assignment',id]`: a sibling of `assignments()`, not a descendant of it, so
+ * dropping that one alone left the assignment just submitted still reading as
+ * open. The whole guardian root goes instead.
+ */
 export function useSubmitChildAssignment(childId: Id, setassignmentId: Id) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: SubmitAnswersBody) =>
       myFamilyService.submitAssignment(childId, setassignmentId, body),
     meta: { success: 'Assignment submitted' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: myFamilyKeys.assignments() }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: myFamilyKeys.all }),
   })
 }
 

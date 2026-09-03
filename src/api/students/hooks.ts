@@ -46,10 +46,10 @@ export function useUpdateStudent(id: Id) {
   return useMutation({
     mutationFn: (body: StudentBody) => studentsService.update(id, body),
     meta: { success: 'Student updated' },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studentKeys.detail(id) })
-      queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
-    },
+    // The whole root rather than the record and the register: `applicants`
+    // hangs off `all` rather than off `lists()`, and an edit that moves a
+    // student between the two tables would otherwise leave them on both.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: studentKeys.all }),
   })
 }
 
@@ -58,10 +58,9 @@ export function useSetStudentStatus(id: Id) {
   return useMutation({
     mutationFn: (body: SetStudentStatusBody) => studentsService.setStatus(id, body),
     meta: { success: 'Student status changed' },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studentKeys.detail(id) })
-      queryClient.invalidateQueries({ queryKey: studentKeys.lists() })
-    },
+    // Status is exactly what moves a row between the applicant and student
+    // tables, and the applicant one is not under `lists()`. See above.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: studentKeys.all }),
   })
 }
 

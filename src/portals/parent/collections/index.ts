@@ -125,7 +125,7 @@ export function invoicesFor(child: Child, family: Child[]): CollectionDef {
  * collapses them into one call. Nothing is held between visits.
  */
 const allAssignments = (): Promise<ChildAssignments[]> =>
-  queryClient.ensureQueryData({
+  queryClient.query({
     queryKey: myFamilyKeys.assignments(),
     queryFn: () => myFamilyService.assignments(),
   })
