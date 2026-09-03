@@ -41,7 +41,7 @@ function ParentDashboard() {
         </div>
         <Button asChild disabled={!queue.total}>
           <Link to="/parent/pay">
-            <CreditCard className="size-[15px]" strokeWidth={2} />
+            <CreditCard className="size-3.75" strokeWidth={2} />
             Pay fees
           </Link>
         </Button>
@@ -54,7 +54,7 @@ function ParentDashboard() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         <section>
           <h4 className="mb-0.5 text-xl">What needs you</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Every invoice still owing, largest first.
           </p>
           <ActionQueue items={queue.items} empty="Nothing is owed on any child right now." />
@@ -62,7 +62,7 @@ function ParentDashboard() {
 
         <section>
           <h4 className="mb-0.5 text-xl">Attendance, last 6 weeks</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {child.full}, days present out of days marked.
           </p>
           <BarChart key={child.id} bars={attendance.bars} peak={attendance.peak} />

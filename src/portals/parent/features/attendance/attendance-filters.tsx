@@ -36,7 +36,7 @@ export function AttendanceFilters({
   return (
     <FormProvider {...form}>
       <form
-        className="mb-[26px] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[18px]"
+        className="mb-6.5 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4.5"
         onSubmit={(event) => event.preventDefault()}
       >
         <DateField<Filters>

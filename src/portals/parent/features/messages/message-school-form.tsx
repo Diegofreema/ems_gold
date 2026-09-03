@@ -66,7 +66,7 @@ export function MessageSchoolForm() {
             <SelectField<Values> name="about" label="About" options={toOptions(ABOUT)} />
 
             <div>
-              <Label className="mb-[5px] block text-xs font-normal text-foreground/70">
+              <Label className="mb-1.25 block text-xs font-normal text-foreground/70">
                 Which child
               </Label>
               <SegmentedControl
@@ -112,7 +112,7 @@ export function MessageSchoolForm() {
       </FormProvider>
       <Rule />
 
-      <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+      <p className="text-xs leading-relaxed text-muted-foreground">
         The office answers most messages within a working day. For an urgent
         matter about a child on the premises, telephone 0803 000 0000.
       </p>

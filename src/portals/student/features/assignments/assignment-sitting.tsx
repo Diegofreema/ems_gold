@@ -65,7 +65,7 @@ export function AssignmentSitting({
     <div className="max-w-[820px]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
+          <div className="text-2xs uppercase tracking-kicker text-brand-700">
             Assignment
           </div>
           <h2 className="mt-2 text-page-title">
@@ -92,11 +92,11 @@ export function AssignmentSitting({
 
       {question && (
         <div key={question.id} className="animate-ems-up">
-          <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="text-2xs uppercase tracking-label text-muted-foreground">
             Question {index + 1} of {total}
             {question.points ? ` · ${question.points} marks` : ''}
           </div>
-          <h3 className="my-2.5 mb-[22px] text-2xl leading-[1.25] text-pretty">
+          <h3 className="my-2.5 mb-5.5 text-2xl leading-[1.25] text-pretty">
             {question.question_text?.trim() || `Question ${index + 1}`}
           </h3>
 
@@ -125,7 +125,7 @@ export function AssignmentSitting({
         </div>
       )}
 
-      <div className="mt-[26px] flex flex-wrap items-center gap-2.5">
+      <div className="mt-6.5 flex flex-wrap items-center gap-2.5">
         <Button
           variant="outline"
           disabled={index === 0}
@@ -198,15 +198,15 @@ function AssignmentClock({
 
   return (
     <div className="text-right">
-      <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+      <div className="text-2xs uppercase tracking-label text-muted-foreground">
         Time left
       </div>
       <div
         role="timer"
         aria-live="off"
         className={cn(
-          'font-heading text-[30px] font-extrabold tabular-nums',
-          isRunningOut(seconds) && 'text-brand',
+          'font-heading text-3xl font-extrabold tabular-nums',
+          isRunningOut(seconds) && 'text-danger-ink',
         )}
       >
         {formatClock(seconds)}

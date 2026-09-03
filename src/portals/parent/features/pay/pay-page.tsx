@@ -69,19 +69,19 @@ export function PayPage() {
       <Rule />
 
       {warning && (
-        <div className="mb-5 border-2 border-brand px-4 py-3.5 text-[13px]">
+        <div className="mb-5 rounded-lg border border-divider bg-brand/6 px-4 py-3.5 text-sm">
           {warning}
         </div>
       )}
 
       <div className="mb-5">
-        <Label className="mb-[5px] block text-xs font-normal text-foreground/70">
+        <Label className="mb-1.25 block text-xs font-normal text-foreground/70">
           Invoice
         </Label>
         <div
           role="radiogroup"
           aria-label="Invoice"
-          className="flex flex-col overflow-hidden border-2 border-divider bg-background"
+          className="flex flex-col overflow-hidden rounded-lg border border-divider bg-background"
         >
           {outstanding.map((entry) => (
             <button
@@ -91,13 +91,13 @@ export function PayPage() {
               aria-checked={entry.id === chosen?.id}
               onClick={() => void setInvoiceId(entry.id)}
               className={cn(
-                'flex cursor-pointer items-center gap-3.5 border-b-2 border-divider px-4 py-3.5 text-left text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
+                'flex cursor-pointer items-center gap-3.5 border-b border-divider px-4 py-3.5 text-left text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
                 entry.id === chosen?.id ? 'bg-brand/10' : 'bg-background',
               )}
             >
               <span
                 className={cn(
-                  'size-[18px] flex-none rounded-full border-2',
+                  'size-4.5 flex-none rounded-full border-2',
                   entry.id === chosen?.id
                     ? 'border-brand bg-brand'
                     : 'border-divider bg-transparent',
@@ -105,7 +105,7 @@ export function PayPage() {
               />
               <span className="flex-1">
                 <span className="font-semibold">{entry.fee}</span>
-                <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+                <span className="mt-0.5 block text-2xs text-muted-foreground">
                   {entry.child} · {entry.invoice}
                 </span>
               </span>
@@ -117,10 +117,10 @@ export function PayPage() {
 
           {outstanding.length === 0 && (
             <div className="px-6 py-12 text-center">
-              <div className="font-heading text-[17px] font-extrabold">
+              <div className="font-heading text-lg font-extrabold">
                 Nothing outstanding
               </div>
-              <p className="mt-1.5 text-[13px] text-muted-foreground">
+              <p className="mt-1.5 text-sm text-muted-foreground">
                 Every invoice raised against your children has been settled.
               </p>
             </div>

@@ -29,7 +29,7 @@ export function StudentContext() {
       <div className="font-heading text-sm font-extrabold">
         {[student.fname, student.lname].filter(Boolean).join(' ')}
       </div>
-      {line && <div className="mt-0.5 text-[11.5px] text-muted-foreground">{line}</div>}
+      {line && <div className="mt-0.5 text-2xs text-muted-foreground">{line}</div>}
       {fees && (
         <Tag variant={fees.owing ? 'accent' : 'neutral'} className="mt-2">
           {fees.label}

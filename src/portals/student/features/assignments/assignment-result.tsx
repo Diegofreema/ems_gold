@@ -57,8 +57,8 @@ function Marked({
 
   return (
     <div className="max-w-[720px]">
-      <div className="grid size-10 place-items-center bg-brand text-white">
-        <Check className="size-[22px]" strokeWidth={2.4} />
+      <div className="grid size-10 place-items-center rounded-lg bg-brand text-white">
+        <Check className="size-5.5" strokeWidth={2.4} />
       </div>
       <h2 className="mt-5 text-detail-title">Your assignment reached the school</h2>
       <p className="mt-2.5 text-sm text-muted-foreground">
@@ -67,8 +67,8 @@ function Marked({
       <Rule />
 
       <div className="border-2 border-foreground">
-        <div className="flex flex-wrap items-baseline gap-3 border-b-2 border-divider px-5 py-[18px]">
-          <div className="flex-1 font-heading text-[30px] font-extrabold tracking-[-0.01em] tabular-nums">
+        <div className="flex flex-wrap items-baseline gap-3 border-b-2 border-divider px-5 py-4.5">
+          <div className="flex-1 font-heading text-3xl font-extrabold tracking-[-0.01em] tabular-nums">
             {scoreHeadline(result)}
           </div>
           <Tag variant={toneForStatus(result?.assignment?.is_graded ? 'Marked' : 'Not marked')}>
@@ -81,7 +81,7 @@ function Marked({
             style={{ animationDelay: `${index * 30}ms` }}
             className="flex animate-ems-row gap-4 border-b border-divider px-5 py-3 last:border-b-0"
           >
-            <div className="w-[44%] text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="w-[44%] text-2xs uppercase tracking-label text-muted-foreground">
               {field.label}
             </div>
             <div className="flex-1 text-sm tabular-nums">{field.value}</div>
@@ -89,12 +89,12 @@ function Marked({
         ))}
       </div>
 
-      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
         {scoreNote(result)}
       </p>
 
       <h4 className="mb-0.5 mt-8 text-xl">Your answers</h4>
-      <p className="text-[12.5px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         What you put down, question by question. The school never sends the
         right answer, so a wrong one is a question to take to your teacher.
       </p>
@@ -104,14 +104,14 @@ function Marked({
           {answers.map((answer) => (
             <div key={answer.id} className="border-b border-divider py-3.5">
               <div className="flex flex-wrap items-baseline gap-3">
-                <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+                <div className="text-2xs uppercase tracking-label text-muted-foreground">
                   Question {answer.number}
                   {answer.worth === '—' ? '' : ` · ${answer.worth} marks`}
                 </div>
                 <div className="flex-1" />
                 <Tag variant={toneForStatus(answer.verdict)}>{answer.verdict}</Tag>
               </div>
-              <p className="mt-1.5 text-[15px] leading-snug text-pretty">{answer.question}</p>
+              <p className="mt-1.5 text-base leading-snug text-pretty">{answer.question}</p>
               <p className="mt-1.5 text-sm text-muted-foreground text-pretty">
                 You answered: {answer.answer}
               </p>

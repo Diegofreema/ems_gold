@@ -114,7 +114,7 @@ export function AttendancePage({ child }: { child: Child }) {
       {header}
       <TileStrip tiles={attendanceTiles(data.stats)} className="mb-3" />
       {covered && (
-        <p className="mb-[22px] text-[12.5px] text-muted-foreground">
+        <p className="mb-5.5 text-xs text-muted-foreground">
           Marks {covered}.
         </p>
       )}

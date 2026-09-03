@@ -86,11 +86,11 @@ export function PayDonePage() {
     return (
       <div className="max-w-[680px]">
         {header}
-        <div className="border-2 border-divider p-6">
-          <div className="font-heading text-[17px] font-extrabold">
+        <div className="rounded-lg border border-divider p-6 shadow-card">
+          <div className="font-heading text-lg font-extrabold">
             Confirming your payment
           </div>
-          <p className="mt-1.5 mb-4 text-[13px] text-muted-foreground">
+          <p className="mt-1.5 mb-4 text-sm text-muted-foreground">
             Checking with Credo. This takes a moment and does not need the page
             kept open — the bursary is told either way.
           </p>
@@ -103,14 +103,14 @@ export function PayDonePage() {
   return (
     <div className="max-w-[680px]">
       {header}
-      <div className="border-2 border-divider p-6">
-        <div className="font-heading text-[21px] font-extrabold">{copy.title}</div>
-        <p className="mt-2 text-[13.5px] text-muted-foreground">{copy.body}</p>
+      <div className="rounded-lg border border-divider p-6 shadow-card">
+        <div className="font-heading text-xl font-extrabold">{copy.title}</div>
+        <p className="mt-2 text-sm text-muted-foreground">{copy.body}</p>
 
-        <dl className="mt-5 border-t-2 border-divider pt-4 text-[13px]">
+        <dl className="mt-5 border-t border-divider pt-4 text-sm">
           <div className="flex justify-between gap-4 border-b border-divider py-2">
             <dt className="text-muted-foreground">Reference</dt>
-            <dd className="truncate font-mono text-[12px]">{reference}</dd>
+            <dd className="truncate font-mono text-xs">{reference}</dd>
           </div>
           {payment?.amount !== undefined && (
             <div className="flex justify-between gap-4 border-b border-divider py-2">

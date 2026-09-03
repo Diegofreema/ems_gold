@@ -28,7 +28,7 @@ export function ActionQueue({
 }) {
   if (!items.length) {
     return (
-      <div className="mt-3.5 border-t-2 border-divider px-1 py-[13px] text-sm text-muted-foreground">
+      <div className="mt-3.5 border-t-2 border-divider px-1 py-3.25 text-sm text-muted-foreground">
         {empty}
       </div>
     )
@@ -40,7 +40,7 @@ export function ActionQueue({
         <div
           key={item.id}
           style={{ animationDelay: `${index * 50}ms` }}
-          className="flex animate-ems-row items-baseline gap-3.5 border-b border-divider px-1 py-[13px]"
+          className="flex animate-ems-row items-baseline gap-3.5 border-b border-divider px-1 py-3.25"
         >
           <div
             className={cn(
@@ -50,7 +50,7 @@ export function ActionQueue({
           />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold">{item.title}</div>
-            <div className="mt-0.5 text-[11.5px] text-muted-foreground">
+            <div className="mt-0.5 text-2xs text-muted-foreground">
               {item.detail}
             </div>
           </div>

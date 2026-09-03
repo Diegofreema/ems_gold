@@ -22,7 +22,7 @@ export function OptionList({
   disabled?: boolean
 }) {
   return (
-    <div className="flex flex-col overflow-hidden border-2 border-divider bg-background">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-divider bg-background">
       {options.map((option, index) => (
         <button
           key={option.id}
@@ -31,17 +31,17 @@ export function OptionList({
           onClick={() => onChoose(option.id)}
           aria-pressed={option.id === chosen}
           className={cn(
-            'flex items-center gap-3.5 border-b-2 border-divider px-[18px] py-4 text-left text-[15px] last:border-b-0',
+            'flex items-center gap-3.5 border-b border-divider px-4.5 py-4 text-left text-base last:border-b-0',
             'transition-[background-color,padding-left] duration-150',
             disabled
               ? 'cursor-default'
-              : 'cursor-pointer hover:bg-neutral-200 hover:pl-[22px]',
+              : 'cursor-pointer hover:bg-neutral-200 hover:pl-5.5',
             option.id === chosen ? 'bg-brand/12' : 'bg-background',
           )}
         >
           <span
             className={cn(
-              'grid size-[26px] flex-none place-items-center border-2 font-heading text-xs font-extrabold',
+              'grid size-6.5 flex-none place-items-center rounded-md border font-heading text-xs font-extrabold',
               option.id === chosen
                 ? 'border-brand bg-brand text-white'
                 : 'border-divider bg-transparent text-foreground',

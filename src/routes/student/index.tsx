@@ -40,7 +40,7 @@ function StudentDashboard() {
         <Button asChild>
           <Link to={home.action.to}>
             {home.action.label}
-            <ArrowRight className="size-[15px]" strokeWidth={2} />
+            <ArrowRight className="size-3.75" strokeWidth={2} />
           </Link>
         </Button>
       </div>
@@ -51,7 +51,7 @@ function StudentDashboard() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         <section>
           <h4 className="mb-0.5 text-xl">Your bills</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             What the school has raised for you, newest first.
           </p>
           {home.bills.length ? (
@@ -68,13 +68,13 @@ function StudentDashboard() {
 
         <section>
           <h4 className="mb-0.5 text-xl">Where it went</h4>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Each fee you have settled this session.
           </p>
           {home.fees.bars.length ? (
             <BarChart bars={home.fees.bars} peak={home.fees.peak} />
           ) : (
-            <p className="mt-3.5 border-t-2 border-divider py-3 text-[13px] text-muted-foreground">
+            <p className="mt-3.5 border-t-2 border-divider py-3 text-sm text-muted-foreground">
               Nothing has been paid on your record yet.
             </p>
           )}

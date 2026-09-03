@@ -19,8 +19,8 @@ export function ChildBar() {
   const selected = family.find((child) => child.id === childId) ?? family[0]
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 border-b-2 border-divider bg-neutral-100 px-6 py-3">
-      <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-divider bg-neutral-100 px-6 py-3">
+      <div className="text-2xs uppercase tracking-kicker text-muted-foreground">
         Viewing
       </div>
       <div className="flex flex-wrap gap-2">
@@ -31,7 +31,7 @@ export function ChildBar() {
             aria-pressed={child.id === selected.id}
             onClick={() => selectChild(child.id)}
             className={cn(
-              'flex cursor-pointer items-center gap-2.5 border-2 px-3.5 py-[7px] text-[13px] transition-colors hover:border-foreground',
+              'flex cursor-pointer items-center gap-2.5 rounded-md border px-3.5 py-1.75 text-sm transition-colors hover:border-foreground',
               child.id === selected.id
                 ? 'border-brand bg-brand/10'
                 : 'border-divider bg-background',

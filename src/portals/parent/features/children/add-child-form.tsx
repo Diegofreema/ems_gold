@@ -73,7 +73,7 @@ export function AddChildForm() {
         >
           <FormErrorBanner count={Object.keys(form.formState.errors).length} />
 
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px]">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4.5">
             <TextField<Values>
               name="adm"
               label="Admission number"
@@ -127,7 +127,7 @@ export function AddChildForm() {
         </form>
       </FormProvider>
 
-      <p className="mt-[18px] text-[12.5px] leading-relaxed text-muted-foreground">
+      <p className="mt-4.5 text-xs leading-relaxed text-muted-foreground">
         Requests are reviewed by the school office, usually within a working
         day. You will get an email either way.
       </p>

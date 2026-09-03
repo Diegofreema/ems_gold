@@ -44,7 +44,7 @@ export function AssignmentBrief({
 
   return (
     <div className="max-w-[720px]">
-      <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
+      <div className="text-2xs uppercase tracking-kicker text-brand-700">
         Assignment
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -55,7 +55,7 @@ export function AssignmentBrief({
       <Rule />
 
       {details && (
-        <div className="mb-6 border-l-2 border-brand pl-4 text-[15px] leading-relaxed">
+        <div className="mb-6 border-l-2 border-brand pl-4 text-base leading-relaxed">
           {isRichText(details) ? (
             <Suspense fallback={<div className="h-6 animate-ems-fade" />}>
               <RichTextView html={details} />
@@ -73,7 +73,7 @@ export function AssignmentBrief({
             style={{ animationDelay: `${index * 30}ms` }}
             className="flex animate-ems-row gap-4 border-b border-divider px-5 py-3 last:border-b-0"
           >
-            <div className="w-[44%] text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="w-[44%] text-2xs uppercase tracking-label text-muted-foreground">
               {field.label}
             </div>
             <div className="flex-1 text-sm tabular-nums">{field.value}</div>
@@ -81,7 +81,7 @@ export function AssignmentBrief({
         ))}
       </div>
 
-      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">{note}</p>
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{note}</p>
       <Rule />
 
       <div className="flex flex-wrap gap-2.5">
