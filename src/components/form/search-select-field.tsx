@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CheckIcon, SearchIcon } from 'lucide-react'
-import { useState } from 'react'
+import { type KeyboardEvent, useEffect, useId, useState } from 'react'
 import { type FieldValues, type Path, useController, useFormContext } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -39,6 +39,12 @@ const WORDING: Record<
  * waits for the typing to settle (`useDebounced`) and then asks the endpoint
  * with `q`, so a search costs one request rather than one per keystroke. The
  * value it submits is the record's id, the same as the ordinary select.
+ *
+ * Worked from the keyboard alone: the arrows walk the results and Enter takes
+ * the highlighted one, so issuing a book to the student standing at the
+ * counter is type-a-name-and-press-Enter rather than type, stop, reach for the
+ * mouse, click. Enter is swallowed here whatever happens — it chooses a
+ * student, and must never reach the form and submit it.
  *
  * On an edit the id is already set but its name is not in any loaded page, so
  * the label the record carried is shown until the office picks another.
@@ -83,11 +89,76 @@ export function SearchSelectField<TValues extends FieldValues>({
 
   const wording = WORDING[from]
 
+  /*
+   * Which result the keyboard is on. The office is standing at a counter with
+   * the student in front of them: they type a name and press Enter, and the
+   * top match is the one they meant. Reaching for the mouse to click a row
+   * that is already under the cursor of the keyboard is the step this saves.
+   *
+   * Held as a position rather than an id so it survives the list changing
+   * under it — every keystroke replaces the results, and the highlight going
+   * back to the top of the new list is right.
+   */
+  const [active, setActive] = useState(0)
+  const listId = useId()
+  const optionId = (index: number) => `${listId}-option-${index}`
+
+  // Back to the top whenever a search answers, adjusted during the render that
+  // brings the new results rather than in an effect after it — an effect would
+  // paint the old highlight on the new list first, and on a list this short
+  // that flicker is visible.
+  const [shown, setShown] = useState(data)
+  if (data !== shown) {
+    setShown(data)
+    setActive(0)
+  }
+
+  // Kept in view when the arrows walk past the bottom of the scroller. Read off
+  // the document rather than a ref for each row: the list is rebuilt on every
+  // search, and the ids are this field's own.
+  useEffect(() => {
+    if (!open) return
+    document
+      .getElementById(`${listId}-option-${active}`)
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [active, open, listId])
+
   const pick = (value: string, optionLabel: string) => {
     field.onChange(value)
     setChosen(optionLabel)
     setOpen(false)
     setTerm('')
+  }
+
+  /*
+   * Escape and the tab ring are the popover's own; these five are the keys it
+   * has no opinion about. The arrows wrap, because a list of twenty is short
+   * enough that going off the end and round is quicker than turning back.
+   */
+  const onKeys = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Swallowed even with nothing to pick — the box is being typed into to
+      // find a student, and an Enter that reached the form would file the
+      // record with the field still empty.
+      event.preventDefault()
+      const one = results[active]
+      if (one) pick(one.value, one.label)
+      return
+    }
+    if (results.length === 0) return
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActive((index) => (index + 1) % results.length)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActive((index) => (index - 1 + results.length) % results.length)
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      setActive(0)
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      setActive(results.length - 1)
+    }
   }
 
   return (
@@ -105,6 +176,8 @@ export function SearchSelectField<TValues extends FieldValues>({
             type="button"
             id={name}
             aria-invalid={Boolean(error)}
+            aria-haspopup="listbox"
+            aria-expanded={open}
             onBlur={field.onBlur}
             className={cn(TRIGGER, !chosen && 'text-muted-foreground')}
           >
@@ -123,10 +196,21 @@ export function SearchSelectField<TValues extends FieldValues>({
               autoFocus
               value={term}
               onChange={(event) => setTerm(event.target.value)}
+              onKeyDown={onKeys}
               placeholder={wording.input}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded
+              aria-controls={listId}
+              aria-activedescendant={results.length > 0 ? optionId(active) : undefined}
             />
           </div>
-          <div className="max-h-64 overflow-y-auto p-1">
+          <div
+            id={listId}
+            role="listbox"
+            aria-label={wording.trigger}
+            className="max-h-64 overflow-y-auto p-1"
+          >
             {loading ? (
               <p className="px-2.5 py-2 text-sm text-muted-foreground">Searching…</p>
             ) : isError ? (
@@ -138,20 +222,28 @@ export function SearchSelectField<TValues extends FieldValues>({
                 {settled ? wording.empty : 'Type a name to search.'}
               </p>
             ) : (
-              results.map((option) => {
-                const active = option.value === field.value
+              results.map((option, index) => {
+                const picked = option.value === field.value
                 return (
                   <button
                     key={option.value}
+                    id={optionId(index)}
+                    role="option"
+                    aria-selected={picked}
+                    // Never focused itself: focus stays in the search box so
+                    // typing carries on, and the highlight is what moves.
+                    tabIndex={-1}
                     type="button"
+                    onMouseEnter={() => setActive(index)}
                     onClick={() => pick(option.value, option.label)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.75 text-left text-sm transition-colors hover:bg-neutral-100',
-                      active && 'font-medium',
+                      'flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.75 text-left text-sm transition-colors',
+                      index === active && 'bg-neutral-100',
+                      picked && 'font-medium',
                     )}
                   >
                     <span className="line-clamp-1">{option.label}</span>
-                    {active && <CheckIcon className="size-4 shrink-0 text-brand" />}
+                    {picked && <CheckIcon className="size-4 shrink-0 text-brand" />}
                   </button>
                 )
               })
