@@ -2,17 +2,16 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { studentPortal } from '@/portals/student/config'
 import { CollectionDetail } from '@/portals/student/components/collection-detail'
-import { loadRecord } from '@/portals/student/collections/resolve'
-import { studentCollections } from '@/portals/student/collections'
+import { loadCollection, loadRecord } from '@/portals/student/collections/resolve'
 
 export const Route = createFileRoute('/student/$collection/$recordId')({
   loader: async ({ params }) => {
     // A thin record lives in a modal over its register now; the page URL it
     // used to have carries the reader there instead of going dead.
-    const definition = studentCollections[params.collection]
-    if (definition?.modal) {
+    const found = loadCollection(params.collection)
+    if (found?.definition.modal) {
       throw redirect({
-        to: definition.path,
+        to: found.definition.path,
         search: { record: params.recordId },
       })
     }

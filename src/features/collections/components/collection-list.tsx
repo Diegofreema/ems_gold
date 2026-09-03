@@ -113,6 +113,10 @@ export function CollectionList({
     (one) => one.fromList && (one.allowed?.() ?? true),
   )
   const listFlow = listFlows[0]
+  // Held as a `const` rather than read off `routes` at each use: a property
+  // narrowed by the guard below goes back to "or undefined" inside the `.map`
+  // callback that draws the rest of the flows, and `to` may not be undefined.
+  const flowRoute = routes.flow
   // One decision, taken in `primaryActionKind`. A second `readonly` gate here
   // used to overrule the destination such a collection had named.
   //
@@ -132,10 +136,10 @@ export function CollectionList({
   //     {definition.action}
   //   </Button>
   const primaryAction =
-    primary === 'flow' && routes.flow && listFlow ? (
+    primary === 'flow' && flowRoute && listFlow ? (
       <Button asChild>
         <Link
-          to={routes.flow}
+          to={flowRoute}
           params={{ collection: definition.id }}
           search={{ flow: listFlow.name }}
         >
@@ -160,11 +164,11 @@ export function CollectionList({
   const editRoute = definition.readonly ? undefined : routes.edit
 
   const moreFlows =
-    primary === 'flow' && routes.flow
+    primary === 'flow' && flowRoute
       ? listFlows.slice(1).map((one) => (
           <Button key={one.name} asChild variant="outline">
             <Link
-              to={routes.flow}
+              to={flowRoute}
               params={{ collection: definition.id }}
               search={{ flow: one.name }}
             >
