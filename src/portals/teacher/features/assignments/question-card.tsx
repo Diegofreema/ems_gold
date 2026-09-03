@@ -25,7 +25,7 @@ export function QuestionCard({
   const points = question.points ?? 0
 
   return (
-    <li className="animate-ems-up rounded-lg border border-divider p-4">
+    <li className="animate-ems-up rounded-lg border border-divider bg-raised p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex gap-3">
           <span className="font-heading text-sm font-extrabold tabular-nums text-muted-foreground">

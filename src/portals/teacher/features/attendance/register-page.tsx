@@ -179,7 +179,7 @@ export function RegisterPage() {
       )}
 
       {ignored && (
-        <div className="mb-5 rounded-lg border border-divider px-4 py-3.5 text-sm">
+        <div className="mb-5 rounded-lg border border-divider bg-raised px-4 py-3.5 text-sm">
           {ignored}
         </div>
       )}

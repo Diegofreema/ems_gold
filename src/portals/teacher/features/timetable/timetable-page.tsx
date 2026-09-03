@@ -70,7 +70,7 @@ function ClassSection({ week }: { week: ClassWeek }) {
 
       <div className="mt-3">
         {week.total === 0 ? (
-          <p className="rounded-lg border border-divider px-4 py-5 text-sm text-muted-foreground">
+          <p className="rounded-lg border border-divider bg-raised px-4 py-5 text-sm text-muted-foreground">
             {/* Not the API's own sentence. Where the periods on file sit under
                 a term the school is no longer in, it explains the school's
                 session settings to whoever is reading — which is the office's

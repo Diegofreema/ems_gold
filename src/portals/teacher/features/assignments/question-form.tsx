@@ -88,7 +88,7 @@ export function QuestionForm({
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
-        className="animate-ems-up mb-6 rounded-lg border border-divider p-5"
+        className="animate-ems-up mb-6 rounded-lg border border-divider bg-raised p-5 shadow-card"
       >
         <FormErrorBanner count={Object.keys(form.formState.errors).length} />
 

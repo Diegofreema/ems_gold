@@ -34,7 +34,7 @@ export function ChildBar() {
               'flex cursor-pointer items-center gap-2.5 rounded-md border px-3.5 py-1.75 text-sm transition-colors hover:border-foreground',
               child.id === selected.id
                 ? 'border-brand bg-brand/10'
-                : 'border-divider bg-background',
+                : 'border-divider bg-raised',
             )}
           >
             <span className="font-heading font-extrabold">{child.name}</span>

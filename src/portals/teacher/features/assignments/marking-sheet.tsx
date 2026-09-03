@@ -129,7 +129,7 @@ export function MarkingSheet({
         </ol>
 
         {answers.length === 0 && (
-          <p className="rounded-xl border border-divider px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="rounded-xl border border-divider bg-raised px-6 py-10 text-center text-sm text-muted-foreground">
             This submission came back with no answers on it.
           </p>
         )}
@@ -174,7 +174,7 @@ function AnswerCard({
   const correct = wasRight(answer);
 
   return (
-    <li className="rounded-lg border border-divider p-4">
+    <li className="rounded-lg border border-divider bg-raised p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex gap-3">
           <span className="font-heading text-sm font-extrabold tabular-nums text-muted-foreground">

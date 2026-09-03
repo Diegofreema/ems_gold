@@ -1,3 +1,4 @@
+import { Banknote, CalendarCheck, HeartHandshake, Hourglass } from 'lucide-react'
 import { formatNaira, parseNaira } from '../../../../lib/format.ts'
 import { familyOwing, SCHOOL_WEEK, type Child } from '../../family.ts'
 
@@ -25,25 +26,37 @@ export function figuresFor(child: Child, family: Child[]) {
   const settled = child.invoices.filter((invoice) => invoice.state === 'Paid').length
 
   return [
-    moneyTile(
-      `Owing for ${child.name}`,
-      child.owing,
-      child.owing > 0
-        ? counted(child.invoices.length - settled, 'invoice', 'invoices') + ' unpaid'
-        : 'Nothing outstanding',
-      child.owing > 0,
-    ),
-    moneyTile(
-      'Family total owing',
-      familyOwing(family),
-      counted(owing, 'child owes', 'children owe'),
-      owing > 0,
-    ),
-    moneyTile(
-      `Paid for ${child.name}`,
-      child.paid,
-      counted(settled, 'invoice', 'invoices') + ' settled',
-    ),
+    {
+      ...moneyTile(
+        `Owing for ${child.name}`,
+        child.owing,
+        child.owing > 0
+          ? counted(child.invoices.length - settled, 'invoice', 'invoices') + ' unpaid'
+          : 'Nothing outstanding',
+        child.owing > 0,
+      ),
+      icon: Hourglass,
+      to: '/parent/invoices',
+    },
+    {
+      ...moneyTile(
+        'Family total owing',
+        familyOwing(family),
+        counted(owing, 'child owes', 'children owe'),
+        owing > 0,
+      ),
+      icon: HeartHandshake,
+      to: '/parent/pay',
+    },
+    {
+      ...moneyTile(
+        `Paid for ${child.name}`,
+        child.paid,
+        counted(settled, 'invoice', 'invoices') + ' settled',
+      ),
+      icon: Banknote,
+      to: '/parent/invoices',
+    },
     {
       label: 'Days present',
       amount: child.present,
@@ -52,6 +65,8 @@ export function figuresFor(child: Child, family: Child[]) {
         ? `of ${counted(child.marked, 'day', 'days')} marked`
         : 'No register taken yet',
       hot: child.marked > 0 && child.present < child.marked,
+      icon: CalendarCheck,
+      to: '/parent/attendance',
     },
   ]
 }

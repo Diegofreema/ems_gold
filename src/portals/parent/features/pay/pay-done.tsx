@@ -86,7 +86,7 @@ export function PayDonePage() {
     return (
       <div className="max-w-[680px]">
         {header}
-        <div className="rounded-lg border border-divider p-6 shadow-card">
+        <div className="rounded-lg border border-divider bg-raised p-6 shadow-card">
           <div className="font-heading text-lg font-extrabold">
             Confirming your payment
           </div>
@@ -103,7 +103,7 @@ export function PayDonePage() {
   return (
     <div className="max-w-[680px]">
       {header}
-      <div className="rounded-lg border border-divider p-6 shadow-card">
+      <div className="rounded-lg border border-divider bg-raised p-6 shadow-card">
         <div className="font-heading text-xl font-extrabold">{copy.title}</div>
         <p className="mt-2 text-sm text-muted-foreground">{copy.body}</p>
 

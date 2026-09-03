@@ -96,7 +96,7 @@ function ChildWeekPanel({ week }: { week: ChildWeek }) {
 
       <div className="mt-3">
         {week.total === 0 ? (
-          <p className="rounded-lg border border-divider px-4 py-5 text-sm text-muted-foreground">
+          <p className="rounded-lg border border-divider bg-raised px-4 py-5 text-sm text-muted-foreground">
             {/* The school's own sentence where it sent one. */}
             {week.message ?? 'No timetable yet for this class.'}
           </p>

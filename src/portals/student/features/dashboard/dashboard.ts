@@ -1,3 +1,4 @@
+import { Award, Banknote, BookOpen, Hourglass } from 'lucide-react'
 import type { Invoice } from '../../../../api/invoices/types.ts'
 import type { StudentDashboard } from '../../../../api/my-schooling/types.ts'
 import { money, named, SETTLED } from '../../../../features/collections/invoice.ts'
@@ -53,23 +54,37 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
       delta: counted(fees.settled, 'invoice', 'invoices') + ' settled',
       // Never flagged: money already taken is not something a pupil can act on.
       hot: false,
+      icon: Banknote,
+      to: '/student/invoices',
     },
-    count(
-      'Invoices unpaid',
-      fees.unpaid,
-      fees.unpaid ? `Of ${counted(fees.total, 'invoice', 'invoices')} raised for you` : 'Nothing owing',
-      fees.unpaid > 0,
-    ),
-    count(
-      'Results published',
-      stats.results_available,
-      stats.results_available ? 'Approved by the office' : 'None approved yet',
-    ),
-    count(
-      'Course materials',
-      stats.materials_available,
-      stats.materials_available ? 'Shared by your teachers' : 'Nothing shared yet',
-    ),
+    {
+      ...count(
+        'Invoices unpaid',
+        fees.unpaid,
+        fees.unpaid ? `Of ${counted(fees.total, 'invoice', 'invoices')} raised for you` : 'Nothing owing',
+        fees.unpaid > 0,
+      ),
+      icon: Hourglass,
+      to: '/student/invoices',
+    },
+    {
+      ...count(
+        'Results published',
+        stats.results_available,
+        stats.results_available ? 'Approved by the office' : 'None approved yet',
+      ),
+      icon: Award,
+      to: '/student/results',
+    },
+    {
+      ...count(
+        'Course materials',
+        stats.materials_available,
+        stats.materials_available ? 'Shared by your teachers' : 'Nothing shared yet',
+      ),
+      icon: BookOpen,
+      to: '/student/materials',
+    },
   ]
 }
 

@@ -81,13 +81,13 @@ export function RecipientPicker({
       </FilterBar>
 
       {shown.length === 0 ? (
-        <p className="rounded-lg border border-divider px-4 py-5 text-sm text-muted-foreground">
+        <p className="rounded-lg border border-divider bg-raised px-4 py-5 text-sm text-muted-foreground">
           {pupils.length === 0
             ? 'No pupil sits in this arm yet. The office places pupils in arms.'
             : 'No pupil in this arm matches that search.'}
         </p>
       ) : (
-        <ul className="max-h-76 overflow-y-auto rounded-lg border border-divider">
+        <ul className="max-h-76 overflow-y-auto rounded-lg border border-divider bg-raised">
           {shown.map((pupil) => (
             <li key={pupil.id} className="border-b border-divider last:border-b-0">
               <label className="flex cursor-pointer items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-foreground/5">
