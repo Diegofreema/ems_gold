@@ -1,5 +1,6 @@
 import {
   Bell,
+  BookMarked,
   BookOpen,
   CalendarCheck,
   CalendarDays,
@@ -23,6 +24,7 @@ export const studentNav: NavGroup[] = [
     items: [
       { to: '/student/courses', label: 'My subjects', icon: BookOpen },
       { to: '/student/materials', label: 'Subject materials', icon: FileText },
+      { to: '/student/library', label: 'My books', icon: BookMarked },
       { to: '/student/timetable', label: 'My timetable', icon: CalendarDays },
       { to: '/student/attendance', label: 'My attendance', icon: CalendarCheck },
     ],

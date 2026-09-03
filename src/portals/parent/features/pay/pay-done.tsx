@@ -65,7 +65,7 @@ export function PayDonePage() {
 
   if (!reference) {
     return (
-      <div className="max-w-[680px]">
+      <div className="mx-auto w-full max-w-[680px]">
         {header}
         <EmptyState
           title="There is no payment to confirm"
@@ -84,7 +84,7 @@ export function PayDonePage() {
   // the request is still out would be a claim about somebody's money.
   if (verify.isPending && !payment) {
     return (
-      <div className="max-w-[680px]">
+      <div className="mx-auto w-full max-w-[680px]">
         {header}
         <div className="rounded-lg border border-divider bg-raised p-6 shadow-card">
           <div className="font-heading text-lg font-extrabold">
@@ -101,7 +101,7 @@ export function PayDonePage() {
   }
 
   return (
-    <div className="max-w-[680px]">
+    <div className="mx-auto w-full max-w-[680px]">
       {header}
       <div className="rounded-lg border border-divider bg-raised p-6 shadow-card">
         <div className="font-heading text-xl font-extrabold">{copy.title}</div>

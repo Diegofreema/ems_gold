@@ -22,6 +22,8 @@ const registered = () =>
 export const courses: CollectionDef = {
   id: 'courses',
   path: '/student/courses',
+  // Six fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Learning',
   title: 'My subjects',
   description:
@@ -70,6 +72,8 @@ const shared = () =>
 export const materials: CollectionDef = {
   id: 'materials',
   path: '/student/materials',
+  // Four fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Learning',
   title: 'Course materials',
   description:

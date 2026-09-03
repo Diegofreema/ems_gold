@@ -18,9 +18,11 @@ function asId(value: unknown): number | undefined {
  * The enrol/edit form as `POST /students` wants it.
  *
  * Fields the form left empty are dropped rather than sent blank, so editing
- * one section of a student never clears another. `department_id` is the only
- * number the endpoint insists on; the arm and guardian go as the strings the
- * selects hold, which is what the API accepts for them.
+ * one section of a student never clears another. The two nobody has to answer
+ * — `mname` and `previousschool` — are the exceptions: they go as null, so an
+ * empty box means the student has none rather than "leave what is on file".
+ * `department_id` is the only number the endpoint insists on; the arm and
+ * guardian go as the strings the selects hold, which is what the API accepts.
  *
  * Admission and enrolment are not in here: the form does not ask for them, and
  * each caller says for itself what a record it is creating starts out as.
@@ -31,13 +33,17 @@ export function studentBody(values: FormValues, sessionId?: number): StudentBody
   return {
     fname: text(values.fname) ?? '',
     lname: text(values.lname) ?? '',
-    mname: text(values.mname),
+    // Dropped, an edit that cleared the middle name would read back with the
+    // old one still on it. See the note above.
+    mname: text(values.mname) ?? null,
     dob: isoDate(values.dob),
     email: text(values.email),
     gender: text(values.gender),
     phone: text(values.phone),
     address: text(values.address),
     religion: text(values.religion),
+    // Optional like the middle name, and cleared the same way.
+    previousschool: text(values.previousschool) ?? null,
     department_id: Number.isFinite(department) && department > 0 ? department : undefined,
     class_arm_id: text(values.class_arm_id),
     sparent_id: text(values.sparent_id),

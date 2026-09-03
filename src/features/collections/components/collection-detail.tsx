@@ -60,17 +60,24 @@ export function CollectionDetail({
   record,
   routes,
   flows,
+  inModal,
 }: {
   definition: CollectionDef
   /** Undefined where the record was asked for and did not come back. */
   record?: Row
   routes: CollectionRoutes
   flows?: readonly FlowSpec[]
+  /**
+   * Drawn inside the record modal rather than as a page: the dialog is its
+   * own way back, so no back link, no page-width column, and no sub-tables —
+   * a register thin enough for the modal has no real ones to show.
+   */
+  inModal?: boolean
 }) {
   const navigate = useNavigate()
   const confirm = useConfirm()
   const rowAction = useRowAction(definition, confirm)
-  const back = (
+  const back = inModal ? null : (
     <BackLink
       to={definition.path}
       label={`Back to ${definition.title.toLowerCase()}`}
@@ -115,9 +122,11 @@ export function CollectionDetail({
         {linkLabel}
       </Button>
     ) : null
-  const tabs = (definition.tabs ?? (definition.source ? [] : [ACTIVITY])).filter(
-    (tab) => tab.when?.(record.id) ?? true,
-  )
+  const tabs = inModal
+    ? []
+    : (definition.tabs ?? (definition.source ? [] : [ACTIVITY])).filter(
+        (tab) => tab.when?.(record.id) ?? true,
+      )
   const flowRoute = routes.flow
 
   // Where a flow is the only thing the page offers, it is the page's main
@@ -154,10 +163,25 @@ export function CollectionDetail({
   const fields: DetailFieldSpec[] = definition.detail ?? definition.columns
 
   return (
-    <div>
+    // A record with no sub-tables reads as one centred column — header, tiles
+    // and fields together — instead of hugging the left edge of a page it
+    // cannot fill. With tabs it spreads to the shell's full width; in the
+    // modal, the dialog is already the column.
+    <div
+      className={cn(
+        !inModal && tabs.length === 0 && 'mx-auto w-full max-w-[720px]',
+      )}
+    >
       {back}
 
-      <div className="flex flex-wrap items-start justify-between gap-4.5">
+      {/* In the modal the dialog's X owns the top-right corner, so the header
+          stops short of it rather than wrapping a button underneath. */}
+      <div
+        className={cn(
+          'flex flex-wrap items-start justify-between gap-4.5',
+          inModal && 'pr-9',
+        )}
+      >
         <div className="max-w-[60ch]">
           <div className="text-2xs uppercase tracking-kicker text-brand-700">
             {definition.kicker} · {definition.title}
@@ -243,8 +267,8 @@ export function CollectionDetail({
         />
       )}
 
-      {/* The record reads alone where there are no sub-tables beside it,
-          rather than in a narrow column with the space they would have used. */}
+      {/* The record reads alone where there are no sub-tables beside it —
+          filling the centred column above rather than a narrower one inside it. */}
       <div
         className={cn(
           'grid gap-8.5',
@@ -253,7 +277,7 @@ export function CollectionDetail({
       >
         <DetailTabPanel tabs={tabs} recordId={record.id} />
 
-        <aside className={tabs.length > 0 ? undefined : 'max-w-[46ch]'}>
+        <aside>
           <SectionHeading className="mb-3.5">Record</SectionHeading>
           <div className="border-t border-divider-strong">
             {fields.map((field) =>

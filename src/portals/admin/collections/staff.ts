@@ -2,6 +2,7 @@ import { adminsService } from '@/api/admins/service'
 import { teachersService } from '@/api/teachers/service'
 import type {
   CollectionDef,
+  FieldSpec,
   FormSectionSpec,
   ListPath,
   Row,
@@ -132,9 +133,20 @@ const IDENTITY: FormSectionSpec = {
     { key: 'firstname', label: 'First name', required: true, placeholder: 'Chukwuma' },
     { key: 'lastname', label: 'Surname', required: true, placeholder: 'Nnaji' },
     { key: 'middlename', label: 'Middle name', placeholder: 'Obinna' },
-    { key: 'gender', label: 'Gender', options: ['Female', 'Male'] },
-    { key: 'phone', label: 'Phone', numeric: true, placeholder: '0803 441 2280' },
-    { key: 'department_id', label: 'Class', optionsFrom: 'classes' },
+    // Required for everyone: `POST /admins/new-admin` refuses a record without
+    // all three, and every teaching record on file carries them too — so the
+    // form asks before the server does rather than after.
+    { key: 'gender', label: 'Gender', required: true, options: ['Female', 'Male'] },
+    {
+      key: 'dob',
+      label: 'Date of birth',
+      date: true,
+      // A birthday is behind us, so the picker opens on the years going back
+      // rather than making the office scroll through eighteen of them.
+      past: true,
+      hint: 'The birthday on their staff record.',
+    },
+    { key: 'phone', label: 'Phone', required: true, numeric: true, placeholder: '0803 441 2280' },
   ],
 }
 
@@ -150,7 +162,7 @@ const ACCOUNT: FormSectionSpec = {
       hint: 'The address they sign in with.',
       placeholder: 'c.nnaji@school.ng',
     },
-    { key: 'address', label: 'Home address', multiline: true, wide: true, placeholder: '2 Aba Road, Enugu' },
+    { key: 'address', label: 'Home address', required: true, multiline: true, wide: true, placeholder: '2 Aba Road, Enugu' },
   ],
 }
 
@@ -187,27 +199,43 @@ const PLACE: FormSectionSpec = {
   ],
 }
 
+/** The class field, shared by every register — an office record has one too. */
+const CLASS_FIELD: FieldSpec = { key: 'department_id', label: 'Class', optionsFrom: 'classes' }
+
 /**
- * What only the office record keeps.
+ * Class and the arm the teacher takes, in one place.
  *
- * `POST /teachers` has no birthday field and the teaching record comes back
- * without one, so the teaching half of the form does not ask — a date typed
- * there would be dropped on save and read back empty.
+ * The arm sits beside the class because that is where the office looks for it,
+ * though the two are not tied: a teacher's arm is any arm in the school, not
+ * one of the class they teach, so the feed is every arm and does not depend on
+ * the class chosen above it.
  */
-const OFFICE: FormSectionSpec = {
-  title: 'Office record',
-  when: (values) => values.kind !== TEACHERS,
+const TEACHER_CLASS: FormSectionSpec = {
+  title: 'Class',
+  when: isTeaching,
   fields: [
+    CLASS_FIELD,
     {
-      key: 'dob',
-      label: 'Date of birth',
-      date: true,
-      // A birthday is behind us, so the picker opens on the years going back
-      // rather than making the office scroll through eighteen of them.
-      past: true,
-      hint: 'Held on the office record only.',
+      key: 'class_arm_id',
+      label: 'Class arm',
+      optionsFrom: 'all-arms',
+      hint: 'The arm they are class teacher of, if any. Leave empty for a subject teacher who takes no arm.',
     },
   ],
+}
+
+/**
+ * An office record's class, with no arm — an administrator is not a class
+ * teacher. Ungated for the pinned office registers, which are only ever office
+ * records; the mixed register uses the gated one below instead.
+ */
+const OFFICE_CLASS: FormSectionSpec = { title: 'Class', fields: [CLASS_FIELD] }
+
+/** The same, gated to the office half of the mixed register. */
+const OFFICE_CLASS_MIXED: FormSectionSpec = {
+  title: 'Class',
+  when: (values) => values.kind === ADMINISTRATORS,
+  fields: [CLASS_FIELD],
 }
 
 const TEACHING: FormSectionSpec = {
@@ -360,8 +388,9 @@ export const staff: CollectionDef = {
       ],
     },
     IDENTITY,
+    TEACHER_CLASS,
+    OFFICE_CLASS_MIXED,
     ACCOUNT,
-    OFFICE,
     PLACE,
     TEACHING,
   ],
@@ -485,7 +514,7 @@ export const staffAdmin = staffSlice(
       },
       ...(ACTIVITY_TAB ?? []),
     ],
-    form: [IDENTITY, ACCOUNT, OFFICE],
+    form: [IDENTITY, OFFICE_CLASS, ACCOUNT],
   },
 )
 
@@ -500,6 +529,7 @@ const TEACHER_DETAIL = [
   { key: 'username', label: 'Signs in with' },
   { key: 'phone', label: 'Phone' },
   { key: 'gender', label: 'Gender' },
+  { key: 'born', label: 'Date of birth' },
   { key: 'qualification', label: 'Qualification' },
   { key: 'adviser', label: 'Form arm' },
   { key: 'department', label: 'Class' },
@@ -526,7 +556,7 @@ export const staffTeachers = staffSlice(
     tabs: [SUBJECTS_TAB],
     source: ({ page, q }) => listTeachers(page, q),
     save: saveStaff('teacher'),
-    form: [IDENTITY, ACCOUNT, PLACE, TEACHING],
+    form: [IDENTITY, TEACHER_CLASS, ACCOUNT, PLACE, TEACHING],
   },
 )
 
@@ -551,7 +581,7 @@ export const staffOther = staffSlice(
     counts: undefined,
     // Adding one here writes the office record the empty state points at, so
     // the button does what the page says rather than nothing.
-    form: [IDENTITY, ACCOUNT, OFFICE],
+    form: [IDENTITY, OFFICE_CLASS, ACCOUNT],
     save: saveStaff('admin'),
   },
 )

@@ -56,7 +56,7 @@ function Marked({
   const answers = answerRows(result, assignmentQuestions)
 
   return (
-    <div className="max-w-[720px]">
+    <div className="mx-auto w-full max-w-[720px]">
       <div className="grid size-10 place-items-center rounded-lg bg-brand text-white">
         <Check className="size-5.5" strokeWidth={2.4} />
       </div>

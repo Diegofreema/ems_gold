@@ -19,6 +19,7 @@ const filled = {
   // state, which is what a live student's record reads back as: Imo is 2663.
   country: 'NG',
   state: '2663',
+  previousschool: 'Holy Ghost Primary School, Enugu',
 }
 
 test('the form goes out exactly as the endpoint asks for it', () => {
@@ -36,6 +37,7 @@ test('the form goes out exactly as the endpoint asks for it', () => {
     class_arm_id: '4',
     sparent_id: '2',
     religion: 'traditionalist',
+    previousschool: 'Holy Ghost Primary School, Enugu',
     country_id: 160,
     state_id: 2663,
   })
@@ -65,7 +67,6 @@ test('a date is written the way the API reads it, whatever the clock says', () =
 test('a field left empty is left out, so editing one section clears nothing', () => {
   const sparse = { fname: 'New', lname: 'Student', department_id: '1' }
   const body = studentBody(sparse, 1)
-  assert.equal(body.mname, undefined)
   assert.equal(body.address, undefined)
   assert.equal(body.class_arm_id, undefined)
   assert.equal(body.sparent_id, undefined)
@@ -84,4 +85,30 @@ test('the body says nothing about admission or enrolment', () => {
   const body = studentBody({ ...filled, admission: 'Applied', studentstatus: 'Suspended' }, 1)
   assert.equal('status' in body, false)
   assert.equal('studentstatus' in body, false)
+})
+
+test('a student with no middle name is enrolled without one', () => {
+  // Nobody has to answer this box, so every way of leaving it alone reads the
+  // same: the record is stored with the column empty, not refused.
+  for (const empty of [undefined, '', '   ']) {
+    assert.equal(studentBody({ ...filled, mname: empty }, 1).mname, null)
+  }
+})
+
+test('clearing the middle name on an edit actually clears it', () => {
+  // Dropped rather than sent, the key never reaches the endpoint and the name
+  // the office just deleted is still on the record when the page reloads.
+  const body = studentBody({ ...filled, mname: '' })
+  assert.equal('mname' in body, true)
+  assert.equal(body.mname, null)
+})
+
+test('a student with no school before this one is enrolled without one', () => {
+  // Optional, and on screen on every edit, so an empty box is an answer: null
+  // clears what is there rather than leaving the old school on the record.
+  for (const empty of [undefined, '', '   ']) {
+    assert.equal(studentBody({ ...filled, previousschool: empty }, 1).previousschool, null)
+  }
+  const cleared = studentBody({ ...filled, previousschool: '' })
+  assert.equal('previousschool' in cleared, true)
 })

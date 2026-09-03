@@ -14,6 +14,8 @@ const register = () => queryClient.ensureQueryData(studentAttendanceQuery);
 export const attendance: CollectionDef = {
   id: 'attendance',
   path: '/student/attendance',
+  // Four fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Learning',
   title: 'My attendance',
   description:

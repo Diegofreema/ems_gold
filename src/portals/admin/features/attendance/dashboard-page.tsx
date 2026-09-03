@@ -70,7 +70,7 @@ export function AttendanceDashboard() {
   const paused = fetchStatus === 'paused'
   if (error || (paused && !data)) {
     return (
-      <div className="max-w-[900px]">
+      <div className="mx-auto w-full max-w-[900px]">
         {header}
         <EmptyState
           title="Attendance could not load"
@@ -83,7 +83,7 @@ export function AttendanceDashboard() {
 
   if (isPending) {
     return (
-      <div className="max-w-[900px]">
+      <div className="mx-auto w-full max-w-[900px]">
         {header}
         <TableSkeleton rows={6} />
       </div>
@@ -93,7 +93,7 @@ export function AttendanceDashboard() {
   const rows = data.today.map(classCountRow)
 
   return (
-    <div className="max-w-[900px]">
+    <div className="mx-auto w-full max-w-[900px]">
       {header}
 
       <div className="mb-2 text-xs text-muted-foreground">{day(answered)}</div>

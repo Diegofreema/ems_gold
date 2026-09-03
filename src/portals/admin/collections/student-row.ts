@@ -57,10 +57,33 @@ export function suspendAction(status: string): {
  * record carries `sparent_id` but no name to go with it, so without the
  * lookup the column falls back to whichever parent was typed onto the student.
  */
+/**
+ * The four the form offers. Typed free, the same faith reached this register
+ * as "Chistian", "Chritian", "Chritstian" and "Christian" — four spellings of
+ * one word across eight students — so the office picks from a list now.
+ */
+export const RELIGIONS = ['Christian', 'Muslim', 'Traditionalist', 'Others'] as const
+
+/**
+ * A stored religion as one of the four, where it is one of the four.
+ *
+ * Only the case is reconciled: "TRADITIONALIST" is the option shouted, and
+ * matching it means an edit opens on the answer already on file. A spelling
+ * the list does not hold is left exactly as the school typed it — the panel
+ * shows what is really there, and the select, finding no such option, opens
+ * empty so the required field has to be answered properly before it saves.
+ */
+function religionOf(value: string | null | undefined): string {
+  const said = value?.trim()
+  if (!said) return BLANK
+  return RELIGIONS.find((one) => one.toLowerCase() === said.toLowerCase()) ?? said
+}
+
 export function studentRow(
   student: Student,
   guardians?: ReadonlyMap<string, string>,
 ): Row {
+  const guardian = student.sparent
   return {
     id: String(student.id),
     adm: text(student.regno ?? student.application_no),
@@ -84,14 +107,28 @@ export function studentRow(
     // enrolled here is shown "10 Nov 1986" like every other record rather than
     // the raw YYYY-MM-DD this form stored them as.
     born: birthday(student.dob),
-    religion: text(student.religion),
+    religion: religionOf(student.religion),
     email: text(student.email),
     phone: text(student.phone),
     address: text(student.address),
     origin: joined(student.community, student.state?.name, student.country?.name),
     school: text(student.previousschool),
-    father: joined(student.fathersname, student.fatherphone),
-    mother: joined(student.mothersname, student.motherphone),
+    // The linked household, expanded on the detail call. Each parent reads as
+    // name, phone and job; the student's own typed fields are the fallback for
+    // a record entered before a household was linked, and are usually empty.
+    father: joined(
+      guardian?.fathersname ?? student.fathersname,
+      guardian?.fatherphone ?? student.fatherphone,
+      guardian?.fathersjob,
+    ),
+    mother: joined(
+      guardian?.mothersname ?? student.mothersname,
+      guardian?.motherphone ?? student.motherphone,
+      guardian?.mothersjob,
+    ),
+    // The household's own, which the student record does not otherwise carry.
+    guardianEmail: text(guardian?.pemailaddress),
+    guardianHome: text(guardian?.address),
     admitted: text(student.admissiondate),
 
     // The edit form is keyed as the endpoint is, and prefills from here. Ids
@@ -100,6 +137,7 @@ export function studentRow(
     fname: student.fname ?? '',
     lname: student.lname ?? '',
     mname: student.mname ?? '',
+    previousschool: student.previousschool ?? '',
     // The API writes a birthday DD/MM/YYYY; the picker reads YYYY-MM-DD, so
     // the row carries both — `born` to read, this one to edit from.
     dob: isoBirthday(student.dob),

@@ -62,7 +62,7 @@ export function AssignmentSitting({
       .catch(() => undefined)
 
   return (
-    <div className="max-w-[820px]">
+    <div className="mx-auto w-full max-w-[820px]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-2xs uppercase tracking-kicker text-brand-700">

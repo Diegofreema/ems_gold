@@ -79,8 +79,14 @@ export type Notice = {
  * prefetch, or anything react-query might retry — opening it is a deliberate
  * act by somebody who is looking at the notice.
  */
-export type NoticeDetail = {
-  notification: Notice
+/**
+ * What `POST /notifications/{id}/read` answers with — the notice marked read
+ * without fetching it, so no view is counted, and the badge number that is
+ * left, so it moves without a second call.
+ */
+export type NoticeReadResult = {
+  id: number
+  is_read: boolean
   unread_count: number
 }
 

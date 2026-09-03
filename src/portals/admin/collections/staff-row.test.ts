@@ -44,9 +44,42 @@ test('a teacher’s status is the login behind the record, not the record', () =
   assert.equal(adminRow(admin).status, 'Active')
 })
 
-test('isadviser is read as what it means rather than Yes or No', () => {
-  assert.equal(teacherRow(teacher).adviser, 'Takes an arm')
-  assert.equal(teacherRow({ ...teacher, isadviser: 'No' }).adviser, 'No arm')
+test('a teacher birthday is read off the login, shown and opened from', () => {
+  // It lives on `user.dob`, not the teaching row. Read twice: once to show as
+  // a date, once as YYYY-MM-DD to open the picker on.
+  const born = teacherRow({ ...teacher, user: { ...teacher.user, dob: '25/12/1990' } as never })
+  assert.equal(born.born, '25 Dec 1990')
+  assert.equal(born.dob, '1990-12-25')
+
+  // A teacher whose login carries none shows the dash and opens the picker empty.
+  assert.equal(teacherRow(teacher).born, '\u2014')
+  assert.equal(teacherRow(teacher).dob, '')
+})
+
+const ARMS = [
+  { id: 3, arm_name: 'JSS1 A', class: 'JSS 1', department_id: 1, label: 'JSS 1 JSS1 A', status: 'active' },
+  { id: 4, arm_name: 'A', class: 'SSS I', department_id: 2, label: 'SSS I A', status: 'active' },
+]
+
+test('the form arm is named, not just counted, and prefills the picker', () => {
+  // The record expands the arm(s) a teacher is class teacher of, so the panel
+  // says which — and the edit form opens on the first, which is the one the
+  // single-arm picker can hold.
+  const one = teacherRow({ ...teacher, class_arms: [ARMS[0]] })
+  assert.equal(one.adviser, 'JSS 1 JSS1 A')
+  assert.equal(one.class_arm_id, '3')
+})
+
+test('a teacher of several arms reads them all and opens on the first', () => {
+  const many = teacherRow({ ...teacher, class_arms: ARMS })
+  assert.equal(many.adviser, 'JSS 1 JSS1 A, SSS I A')
+  assert.equal(many.class_arm_id, '3')
+})
+
+test('a subject teacher of no arm says so and opens the picker empty', () => {
+  const none = teacherRow({ ...teacher, class_arms: [] })
+  assert.equal(none.adviser, 'No arm')
+  assert.equal(none.class_arm_id, '')
 })
 
 test('an office record without an expanded login is still an administrator', () => {
@@ -353,4 +386,18 @@ test('an edit opens on the country and state the record holds', () => {
   assert.equal(row.profile, 'About this teacher')
   // A country the school numbers but this app has no id for reads blank.
   assert.equal(teacherRow({ ...TEACHING, country_id: 7, state_id: 0 }).country, '')
+})
+
+test('an office record opens its edit form on the middle name it actually holds', () => {
+  // The Admins row has no middle name column: `POST /admins/new-admin` writes
+  // it onto the login. Read from the wrong place, the box opened blank on a
+  // record that has one, and saving the form would have deleted it.
+  const held = adminRow({ ...admin, user: { ...admin.user, mname: 'Emma' } } as Admin)
+  assert.equal(held.middlename, 'Emma')
+
+  // A login with none leaves the box empty rather than undefined, which is
+  // what the form needs to open a controlled input on.
+  for (const none of [null, '', undefined]) {
+    assert.equal(adminRow({ ...admin, user: { ...admin.user, mname: none } } as Admin).middlename, '')
+  }
 })

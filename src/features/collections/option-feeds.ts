@@ -4,6 +4,7 @@ import { classArmsService } from '@/api/class-arms/service'
 import { paymentMethods } from '@/api/collect-fees/hooks'
 import { departmentsService } from '@/api/departments/service'
 import { feesService } from '@/api/fees/service'
+import { libraryService } from '@/api/library/service'
 import { noticesService } from '@/api/notifications/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
@@ -15,7 +16,7 @@ import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
 import { guardianOption } from './guardian-option'
 import { audienceOptions } from '@/portals/admin/collections/notice-row'
-import { distinct, type Option, type OptionsKey } from './options'
+import { distinct, type Option, type OptionsKey, type SearchKey } from './options'
 
 /** Everything on one page — a school has classes and arms in the dozens. */
 const ALL = 200
@@ -61,19 +62,52 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     return arms.map((arm) => ({ value: String(arm.id), label: arm.label }))
   }
 
+  if (key === 'all-arms') {
+    // Unlike `arms`, this is not narrowed by a class: a teacher's arm has
+    // nothing to do with the department they teach, so the whole school's arms
+    // are offered, each labelled with its class to keep an "A" from every "A".
+    const { items } = await classArmsService.list({ limit: ALL })
+    return items.map((arm) => ({
+      value: String(arm.id),
+      label: [arm.department, arm.arm_name].filter(Boolean).join(' \u00b7 ') || arm.arm_name,
+    }))
+  }
+
   if (key === 'students') {
     const { items } = await studentsService.list({ limit: ALL, status: 'Admitted' })
-    return items.map((student) => ({
-      value: String(student.id),
-      // The admission number is what an office bills against, so it is offered
-      // beside the name rather than instead of it.
-      label: [
-        [student.fname, student.mname, student.lname].filter(Boolean).join(' ').trim(),
-        student.regno,
-      ]
-        .filter(Boolean)
-        .join(' · ') || `Student ${student.id}`,
-    }))
+    return items.map(studentOption)
+  }
+
+  if (key === 'all-books') {
+    // Every title, for the edit flow — a retired one is exactly the title an
+    // office may need to fix or put back on lending, so nothing is filtered.
+    const books = await libraryService.books()
+    return distinct(
+      books.map((book) => ({
+        value: String(book.id),
+        label:
+          book.isavailable === 'Unavailable' ? `${book.title} · retired` : book.title,
+        meta: book.author ?? '',
+      })),
+    )
+  }
+
+  if (key === 'books') {
+    // Only titles the office has left lendable are offered; whether a copy is
+    // actually on the shelf is the lend endpoint's own 409 to give. The
+    // catalogue comes back whole — it ignores paging — so no limit is sent.
+    const books = await libraryService.books()
+    return distinct(
+      books
+        .filter((book) => book.isavailable === 'Available')
+        .map((book) => ({
+          value: String(book.id),
+          label: book.title,
+          // Two copies of a set text can be two rows; the author tells the
+          // reader which row is which before the id has to.
+          meta: book.author ?? '',
+        })),
+    )
   }
 
   if (key === 'fees') {
@@ -212,4 +246,63 @@ export async function optionLabels(
     .ensureQueryData(optionsQuery(key, dependsOn))
     .catch(() => [])
   return new Map(options.map((option) => [option.value, option.label]))
+}
+
+/**
+ * A searchable feed, asked with the term the office has typed so far. Guardians
+ * run to the hundreds, so the whole list is never loaded — an empty term shows
+ * the first page, and each keystroke (once settled) narrows it server-side.
+ */
+export function searchOptionsQuery(key: SearchKey, term: string) {
+  return queryOptions({
+    queryKey: ['search', key, term],
+    queryFn: () => searchFeed(key, term),
+    // A name searched once is likely searched again as the office corrects a
+    // typo; a minute is long enough to spare the round trip, short enough that
+    // a guardian added meanwhile still turns up.
+    staleTime: 60_000,
+  })
+}
+
+async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
+  if (key === 'guardians') {
+    const { items } = await parentsService.list({ q: term || undefined, limit: 20 })
+    return items.map(guardianOption)
+  }
+  if (key === 'students') {
+    // The same register the `students` feed loads whole, narrowed server-side
+    // by the name typed instead — for the flows where scrolling every admitted
+    // student is worse than asking for the one being served.
+    const { items } = await studentsService.list({
+      q: term || undefined,
+      limit: 20,
+      status: 'Admitted',
+    })
+    return items.map(studentOption)
+  }
+  return []
+}
+
+/**
+ * One student as a select offers them. The admission number is what an office
+ * bills and lends against, so it is offered beside the name rather than
+ * instead of it.
+ */
+function studentOption(student: {
+  id: number
+  fname?: string | null
+  mname?: string | null
+  lname?: string | null
+  regno?: string | null
+}): Option {
+  return {
+    value: String(student.id),
+    label:
+      [
+        [student.fname, student.mname, student.lname].filter(Boolean).join(' ').trim(),
+        student.regno,
+      ]
+        .filter(Boolean)
+        .join(' · ') || `Student ${student.id}`,
+  }
 }

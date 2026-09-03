@@ -94,7 +94,7 @@ export function StudentsMessageForm() {
   const chosen = form.watch('student_ids')
 
   return (
-    <div className="max-w-[720px]">
+    <div className="mx-auto w-full max-w-[720px]">
       <Header />
 
       <FormProvider {...form}>

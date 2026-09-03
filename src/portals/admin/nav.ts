@@ -3,6 +3,7 @@ import {
   Bell,
   Book,
   BookOpen,
+  BookUp,
   Briefcase,
   Building2,
   CalendarCheck,
@@ -77,6 +78,7 @@ export const adminNav: NavGroup[] = [
     items: [
       { to: '/admin/notices', label: 'Notice board', icon: Megaphone },
       { to: '/admin/library', label: 'Library', icon: Book },
+      { to: '/admin/lending', label: 'Lending', icon: BookUp },
       { to: '/admin/logs', label: 'Activity log', icon: List },
       { to: '/admin/settings', label: 'Settings', icon: SlidersHorizontal },
     ],

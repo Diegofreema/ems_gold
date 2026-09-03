@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
+import { SearchSelectField } from '@/components/form/search-select-field'
 import { SelectField } from '@/components/form/select-field'
 import { toOptions } from '@/features/collections/options'
 import { TextField } from '@/components/form/text-field'
@@ -101,6 +102,15 @@ function renderField(field: ActionField) {
   if (field.money)
     return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.date) return <DateField<Values> key={field.key} {...shared} />
+  if (field.searchFrom)
+    return (
+      <SearchSelectField<Values>
+        key={field.key}
+        {...shared}
+        from={field.searchFrom}
+        placeholder={field.placeholder}
+      />
+    )
   if (field.optionsFrom)
     return (
       <RemoteSelectField<Values>
@@ -118,6 +128,9 @@ function renderField(field: ActionField) {
       {...shared}
       placeholder={field.placeholder}
       multiline={field.multiline}
+      type={field.number ? 'number' : 'text'}
+      min={field.min}
+      max={field.max}
     />
   )
 }
@@ -195,7 +208,7 @@ export function ActionPage({
   ]
 
   return (
-    <div className="max-w-[760px]">
+    <div className="mx-auto w-full max-w-[760px]">
       <BackLink
         to={definition.path}
         label="Cancel and go back"

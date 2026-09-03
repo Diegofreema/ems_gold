@@ -64,7 +64,7 @@ export function SettingsForm() {
 
   if (isPending) {
     return (
-      <div className="max-w-[780px]">
+      <div className="mx-auto w-full max-w-[780px]">
         <Shimmer className="h-3 w-24" />
         <Shimmer className="mt-3.5 h-8.5 w-56" />
         <Rule />

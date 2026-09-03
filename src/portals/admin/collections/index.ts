@@ -3,7 +3,8 @@ import { arms, classes, subjects } from './academics'
 import { sessions, terms } from './calendar'
 import { timetable } from './timetable'
 import { parents, parentsDeactivated } from './parents'
-import { library } from './library'
+import { books } from './books'
+import { library } from './loans'
 import { notices } from './notices'
 import { results, resultQueue } from './results'
 import { logs } from './school'
@@ -31,6 +32,7 @@ export const adminCollections = {
   calendar: sessions,
   terms,
   timetable,
+  books,
   library,
   notices,
   results,

@@ -47,7 +47,7 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
 
   if (error || (fetchStatus === 'paused' && !data)) {
     return (
-      <div className="max-w-[640px]">
+      <div className="mx-auto w-full max-w-[640px]">
         {header}
         {/* The API's own words: it distinguishes an invoice that does not
             exist from one settled before the counter recorded transactions,
@@ -63,7 +63,7 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
 
   if (isPending) {
     return (
-      <div className="max-w-[640px]">
+      <div className="mx-auto w-full max-w-[640px]">
         {header}
         <TableSkeleton rows={6} />
       </div>
@@ -74,7 +74,7 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
   const { receipt } = issued
 
   return (
-    <div className="max-w-[640px]">
+    <div className="mx-auto w-full max-w-[640px]">
       {header}
 
       <div data-slot="receipt" className="overflow-hidden rounded-xl border border-foreground/60 bg-raised">

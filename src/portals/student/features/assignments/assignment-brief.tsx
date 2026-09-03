@@ -43,7 +43,7 @@ export function AssignmentBrief({
   const details = assignment.assignment?.details?.trim()
 
   return (
-    <div className="max-w-[720px]">
+    <div className="mx-auto w-full max-w-[720px]">
       <div className="text-2xs uppercase tracking-kicker text-brand-700">
         Assignment
       </div>

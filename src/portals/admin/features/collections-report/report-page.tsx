@@ -90,7 +90,7 @@ export function CollectionsReportPage() {
   const paused = fetchStatus === 'paused'
   if (error || (paused && !data)) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <EmptyState
           title="This report could not load"
@@ -103,7 +103,7 @@ export function CollectionsReportPage() {
 
   if (isPending) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <TableSkeleton rows={6} />
       </div>
@@ -115,7 +115,7 @@ export function CollectionsReportPage() {
   const byMethod = methodRows(report, methods)
 
   return (
-    <div className="max-w-[980px]">
+    <div className="mx-auto w-full max-w-[980px]">
       {header}
 
       <div className="mb-2 text-xs text-muted-foreground">

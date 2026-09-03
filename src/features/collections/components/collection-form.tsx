@@ -9,6 +9,7 @@ import { FileField } from '@/components/form/file-field'
 import { fromApiDate } from '../date-range'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
+import { SearchSelectField } from '@/components/form/search-select-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
 import { toOptions } from '@/features/collections/options'
@@ -43,7 +44,7 @@ const RichTextField = lazy(() =>
   })),
 )
 
-function renderField(field: FieldSpec) {
+function renderField(field: FieldSpec, record?: Row) {
   const shared = {
     name: field.key,
     label: field.label,
@@ -72,6 +73,18 @@ function renderField(field: FieldSpec) {
           placeholder={field.placeholder}
         />
       </Suspense>
+    )
+  if (field.searchFrom)
+    return (
+      <SearchSelectField<Values>
+        key={field.key}
+        {...shared}
+        from={field.searchFrom}
+        placeholder={field.placeholder}
+        initialLabel={
+          field.searchLabelKey ? (record?.[field.searchLabelKey] ?? undefined) : undefined
+        }
+      />
     )
   if (field.optionsFrom)
     return (
@@ -244,7 +257,7 @@ export function CollectionForm({
       >
         {shown.map((section) => (
           <FormSection key={section.title} title={section.title}>
-            {section.fields.map(renderField)}
+            {section.fields.map((field) => renderField(field, record))}
           </FormSection>
         ))}
       </RecordForm>

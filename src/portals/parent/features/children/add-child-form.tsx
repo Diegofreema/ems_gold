@@ -57,7 +57,7 @@ export function AddChildForm() {
   })
 
   return (
-    <div className="max-w-[680px]">
+    <div className="mx-auto w-full max-w-[680px]">
       <BackLink
         to="/parent/children"
         label="Back to my children"

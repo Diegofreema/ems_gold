@@ -56,6 +56,7 @@ export function periodRow(period: Period): Row {
     end_time: period.end_time?.trim() ?? '',
     day_of_week: text(period.day_of_week),
     department_id: id(period.department_id),
+    classarm_id: id(period.classarm_id),
     subject_id: id(period.subject_id),
     session_id: id(period.session_id),
     semester_id: id(period.semester_id),
@@ -106,6 +107,7 @@ function asId(input: unknown): number | undefined {
 export function periodBody(values: Record<string, unknown>): PeriodBody {
   return {
     department_id: asId(values.department_id) as number,
+    classarm_id: asId(values.classarm_id) as number,
     day_of_week: value(values.day_of_week) as PeriodBody['day_of_week'],
     start_time: value(values.start_time) ?? '',
     end_time: value(values.end_time) ?? '',

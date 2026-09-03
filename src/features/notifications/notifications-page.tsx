@@ -33,19 +33,22 @@ export function NotificationsPage({
 
   /**
    * One call to `read-all`, and the browser's own marks alongside it so the
-   * wash lifts before the refetch confirms. Nothing is sent where nothing is
-   * unread — an empty call would still raise a toast claiming it did
-   * something.
+   * wash lifts before the refetch confirms. Fired whenever there is a board to
+   * clear rather than only when this browser still counts something unread: a
+   * notice read on another device leaves the server unread while this tab shows
+   * none, and the button has to reach the server either way. Only a truly empty
+   * board holds the call back, so the toast never claims to clear nothing.
    */
   const clearAll = () => {
+    if (notifications.length === 0) return
     markAllRead(notifications.map((item) => item.id))
-    if (unread.length > 0) markBoardRead.mutate()
+    markBoardRead.mutate()
   }
 
   const visible = filter === 'unread' ? unread : notifications
 
   return (
-    <div className="max-w-[780px]">
+    <div className="mx-auto w-full max-w-[780px]">
       <PageHeader
         kicker="School"
         title="Notifications"

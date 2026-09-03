@@ -106,9 +106,13 @@ export function CollectionList({
   // One decision, shared with the create route so a list that does not create
   // records has no create page to reach by URL either.
   const primary = primaryActionKind(definition, routes, flows)
-  // At most one flow opens without a record, and it is the one the button on
-  // this page is for.
-  const listFlow = flows?.find((one) => one.fromList)
+  // Every flow that opens without a record gets a button: the first is the
+  // page's primary action and wears its label, the rest stand beside it in
+  // outline — the library issues a book and adds a title from the same strip.
+  const listFlows = (flows ?? []).filter(
+    (one) => one.fromList && (one.allowed?.() ?? true),
+  )
+  const listFlow = listFlows[0]
   // One decision, taken in `primaryActionKind`. A second `readonly` gate here
   // used to overrule the destination such a collection had named.
   //
@@ -155,16 +159,35 @@ export function CollectionList({
   // neither pencil nor bin.
   const editRoute = definition.readonly ? undefined : routes.edit
 
-  const actions = definition.secondaryTo ? (
-    <div className="flex flex-wrap gap-2.5">
-      {primaryAction}
-      <Button asChild variant="outline">
-        <Link to={definition.secondaryTo.to}>{definition.secondaryTo.label}</Link>
-      </Button>
-    </div>
-  ) : (
-    primaryAction
-  )
+  const moreFlows =
+    primary === 'flow' && routes.flow
+      ? listFlows.slice(1).map((one) => (
+          <Button key={one.name} asChild variant="outline">
+            <Link
+              to={routes.flow}
+              params={{ collection: definition.id }}
+              search={{ flow: one.name }}
+            >
+              {one.label}
+            </Link>
+          </Button>
+        ))
+      : []
+
+  const actions =
+    definition.secondaryTo || moreFlows.length > 0 ? (
+      <div className="flex flex-wrap gap-2.5">
+        {primaryAction}
+        {moreFlows}
+        {definition.secondaryTo && (
+          <Button asChild variant="outline">
+            <Link to={definition.secondaryTo.to}>{definition.secondaryTo.label}</Link>
+          </Button>
+        )}
+      </div>
+    ) : (
+      primaryAction
+    )
 
   return (
     <>
@@ -231,7 +254,11 @@ export function CollectionList({
               rows={paged.rows}
               rowKey={(row) => row.id}
               onRowClick={(row) =>
-                navigate({ to: routes.record, params: params(row) })
+                // A thin record opens over this list rather than as a page;
+                // the search param is the modal's whole state.
+                definition.modal
+                  ? navigate({ to: definition.path, search: { record: row.id } })
+                  : navigate({ to: routes.record, params: params(row) })
               }
               onEdit={
                 editRoute

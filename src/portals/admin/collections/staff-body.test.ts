@@ -16,7 +16,6 @@ const values = {
 
 test('empty fields are dropped rather than sent blank', () => {
   const body = teacherBody(values)
-  assert.equal('middlename' in body && body.middlename, undefined)
   assert.equal(body.address, undefined)
   assert.equal(body.phone, '08034412280')
 })
@@ -63,6 +62,8 @@ const TEACHING_FORM = {
   department_id: '1',
   qualification: 'BSc',
   profile: 'About this teacher',
+  class_arm_id: '4',
+  dob: new Date(2004, 9, 11),
 }
 
 test('the teacher body is exactly what POST /teachers documents', () => {
@@ -79,6 +80,8 @@ test('the teacher body is exactly what POST /teachers documents', () => {
     department_id: 1,
     qualification: 'BSc',
     profile: 'About this teacher',
+    class_arm_id: '4',
+    dob: '2004-10-11',
   })
 })
 
@@ -113,7 +116,7 @@ test('the admin body is exactly what POST /admins/new-admin documents', () => {
       username: 'newadmin@school.ng',
       surname: 'Surname',
       lastname: 'Firstname',
-      middlename: undefined,
+      middlename: null,
       gender: 'Male',
       department_id: 1,
       phone: '08000000000',
@@ -149,4 +152,43 @@ test('an update sends everything the create does', () => {
   assert.equal(teacherUpdate(TEACHING_FORM).username, 'newteachingstaff@school.ng')
   assert.equal(teacherUpdate(TEACHING_FORM).country_id, 160)
   assert.equal(adminUpdate(TEACHING_FORM).username, 'newteachingstaff@school.ng')
+})
+
+test('a staff member with no middle name is filed without one', () => {
+  // The only part of a name nobody has to have, so an empty box is an answer
+  // and not a refusal to answer: it goes as null on both endpoints.
+  for (const empty of [undefined, '', '   ']) {
+    assert.equal(teacherBody({ ...values, middlename: empty }).middlename, null)
+    assert.equal(adminBody({ ...values, middlename: empty }).middlename, null)
+  }
+})
+
+test('clearing the middle name on an edit actually clears it', () => {
+  // Dropped, the key never reaches either endpoint and the name the office
+  // just deleted is still on the record when the page reloads.
+  for (const body of [teacherUpdate({ ...values, middlename: '' }), adminUpdate({ ...values, middlename: '' })]) {
+    assert.equal('middlename' in body, true)
+    assert.equal(body.middlename, null)
+  }
+})
+
+test('a subject teacher who takes no arm is saved without one', () => {
+  // The arm is the one teaching field nobody has to answer: dropped when empty
+  // rather than sent, so an edit that touched another field leaves whatever arm
+  // the teacher already holds exactly where it was.
+  for (const empty of [undefined, '', '   ']) {
+    // Undefined, so it drops off the moment the body is serialised — the same
+    // way qualification and address do when the office leaves them blank.
+    assert.equal(teacherBody({ ...TEACHING_FORM, class_arm_id: empty }).class_arm_id, undefined)
+  }
+  assert.equal(teacherUpdate({ ...TEACHING_FORM, class_arm_id: '9' }).class_arm_id, '9')
+})
+
+test('a teacher birthday goes onto the login as ISO, and drops when empty', () => {
+  // The teaching record keeps no birthday; the endpoint files it on the login.
+  assert.equal(teacherBody({ ...TEACHING_FORM, dob: new Date(1990, 11, 25) }).dob, '1990-12-25')
+  assert.equal(teacherUpdate({ ...TEACHING_FORM, dob: new Date(1990, 11, 25) }).dob, '1990-12-25')
+  for (const empty of [undefined, '', 'not a date']) {
+    assert.equal(teacherBody({ ...TEACHING_FORM, dob: empty }).dob, undefined)
+  }
 })

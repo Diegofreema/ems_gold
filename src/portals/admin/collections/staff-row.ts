@@ -88,6 +88,7 @@ function asDate(value: string | null | undefined): string {
  */
 export function teacherRow(teacher: Teacher): Row {
   const subjects = teacher.subjects ?? []
+  const arms = teacher.class_arms ?? []
   return {
     id: staffKey('teacher', teacher.id),
     name: text(fullName(teacher.firstname, teacher.middlename, teacher.lastname)),
@@ -100,15 +101,19 @@ export function teacherRow(teacher: Teacher): Row {
 
     // Read by the record panel rather than the table.
     qualification: text(teacher.qualification),
-    // The API spells this Yes/No; the panel says what it means.
-    adviser: teacher.isadviser === 'Yes' ? 'Takes an arm' : 'No arm',
+    // The arm(s) they are class teacher of, named. The record expands them,
+    // so the panel says which rather than only that there is one; a teacher
+    // who takes none reads "No arm".
+    adviser: arms.length ? arms.map((arm) => arm.label).join(', ') : 'No arm',
     // Two different things under two keys on purpose. `place` is for reading —
     // the street with the state and country after it — and `address` is the
     // API's own field, which the edit form writes straight back: prefilling
     // the composed line there would have saved the country into the street.
     place: text(placeOf(teacher)),
     address: text(teacher.address),
-    born: BLANK,
+    // The birthday lives on the login, not the teaching row. Read twice —
+    // once to show, once to open the picker — like every other date field.
+    born: birthday(teacher.user?.dob),
     about: text(teacher.profile),
     joined: asDate(teacher.date_created),
     username: text(teacher.user?.username),
@@ -129,6 +134,10 @@ export function teacherRow(teacher: Teacher): Row {
     lastname: teacher.lastname ?? '',
     middlename: teacher.middlename ?? '',
     department_id: id(teacher.department_id),
+    // The form assigns one arm; a teacher who takes several opens on the
+    // first, and the rest stay on the record untouched unless re-saved.
+    class_arm_id: id(arms[0]?.id),
+    dob: isoBirthday(teacher.user?.dob),
     profile: teacher.profile ?? '',
     // The form picks a country by ISO code and a state by the school's own id,
     // so an edit opens on what the record holds. A country the school's table
@@ -226,6 +235,10 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     // field blank on an edit, and saving that would have cleared the name.
     firstname: admin.surname ?? '',
     lastname: admin.lastname ?? '',
+    // The Admins row has no middle name of its own — `POST /admins/new-admin`
+    // puts it on the login beside it. Read from there, or the edit form opens
+    // blank on a record that has one and saving would wipe it.
+    middlename: admin.user?.mname ?? '',
     department: text(admin.department?.name),
     department_id: id(admin.department_id),
     born: birthday(admin.dob),

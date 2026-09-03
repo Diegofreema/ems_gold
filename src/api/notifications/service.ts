@@ -5,9 +5,9 @@ import type {
   MyNoticeParams,
   MyNoticesEnvelope,
   NoticeBody,
-  NoticeDetail,
   NoticeEditBody,
   NoticeListParams,
+  NoticeReadResult,
 } from './types'
 
 /**
@@ -24,8 +24,8 @@ export const noticesService = {
    * Notices addressed to the caller, newest first, each carrying `is_read`.
    *
    * The envelope also holds `unread_count` and the audience the caller was
-   * matched under; neither is handed on, because the badge counts the feed it
-   * opens rather than a second number that could disagree with it.
+   * matched under; neither is handed on. The badge reads `unread-count`, the
+   * endpoint made to be polled, rather than a copy that ages with this page.
    */
   mine: (params: MyNoticeParams = {}) =>
     request<MyNoticesEnvelope>('notifications/mine', { query: { ...params } }).then(
@@ -39,15 +39,12 @@ export const noticesService = {
     ),
 
   /**
-   * Reads one notice — and writes while it does. It marks the notice read and
-   * counts a view, and the view is a hit rather than a reader: asking twice
-   * from one account counts two. Never prefetch it, never put it in a loader,
-   * and never let anything retry it.
-   *
-   * The badge number that is left comes back beside the notice, so a reader
-   * who opens one does not have to ask for the count again.
+   * Marks one notice read without opening it, so it costs no view — the list
+   * already shows the notice, and a reader ticking it off has not asked to be
+   * counted as a fresh reader. The badge number that is left comes back with it.
    */
-  open: (id: Id) => request<NoticeDetail>(`notifications/${id}`),
+  readOne: (id: Id) =>
+    request<NoticeReadResult>(`notifications/${id}/read`, { method: 'POST' }),
 
   /**
    * Clears the caller's whole board in one call, without opening anything —

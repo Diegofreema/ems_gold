@@ -16,7 +16,7 @@ export function NotFoundState({
   audience: string
 }) {
   return (
-    <div className="max-w-[620px] py-10">
+    <div className="mx-auto w-full max-w-[620px] py-10">
       <div className="font-heading text-numeral leading-[0.9] font-extrabold tracking-[-0.04em] text-brand">
         404
       </div>

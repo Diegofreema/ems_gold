@@ -11,7 +11,7 @@ import type {
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { studentBody } from './student-body'
 import { applicantDocuments, applicantRow } from './applicant-row'
-import { invoiceRow, resultRow, studentRow, suspendAction } from './student-row'
+import { invoiceRow, RELIGIONS, resultRow, studentRow, suspendAction } from './student-row'
 
 /** The API accepts exactly these words for the two status fields. */
 const ADMISSION = ['Applied', 'Admitted', 'Declined'] as const
@@ -52,7 +52,7 @@ const IDENTITY: FormSectionSpec = {
     { key: 'mname', label: 'Middle name', placeholder: 'Chiamaka' },
     { key: 'dob', label: 'Date of birth', required: true, date: true, past: true },
     { key: 'gender', label: 'Gender', required: true, options: ['Female', 'Male'] },
-    { key: 'religion', label: 'Religion', required: true, placeholder: 'Christian' },
+    { key: 'religion', label: 'Religion', required: true, options: [...RELIGIONS] },
     // The student's own, not the household's — that one is on the guardian
     // record, and this is the address the student signs in with.
     {
@@ -99,6 +99,13 @@ const ORIGIN: FormSectionSpec = {
       dependsOn: 'country',
       hint: 'Only Nigeria’s states carry numbers this school can store.',
     },
+    {
+      key: 'previousschool',
+      label: 'Previous school',
+      wide: true,
+      placeholder: 'Holy Ghost Primary School, Enugu',
+      hint: 'Where they were before this one. Leave empty if this is their first.',
+    },
   ],
 }
 
@@ -115,8 +122,12 @@ const CONTACT: FormSectionSpec = {
       label: 'Guardian on record',
       required: true,
       wide: true,
-      optionsFrom: 'guardians',
-      hint: 'Their email, phone and address come with the household. Add it under Parents first if it is not listed.',
+      // Guardians run to the hundreds, so the office searches by father or
+      // mother's name rather than scrolling a dropdown of all of them. The
+      // linked household's name is on the row, so an edit opens showing it.
+      searchFrom: 'guardians',
+      searchLabelKey: 'parent',
+      hint: 'Search by the father or mother’s name. Their email, phone and address come with the household — add it under Parents first if it is not listed.',
     },
   ],
 }
@@ -140,6 +151,8 @@ const PERSON_DETAIL = [
   { key: 'school', label: 'Previous school' },
   { key: 'father', label: 'Father' },
   { key: 'mother', label: 'Mother' },
+  { key: 'guardianEmail', label: 'Guardian email' },
+  { key: 'guardianHome', label: 'Guardian address' },
 ]
 
 export const students: CollectionDef = {

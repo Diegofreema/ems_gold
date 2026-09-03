@@ -72,7 +72,7 @@ export function StudentLookupPage() {
   )
 
   return (
-    <div className="max-w-[900px]">
+    <div className="mx-auto w-full max-w-[900px]">
       {header}
       {student ? (
         <>

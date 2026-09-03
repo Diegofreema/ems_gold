@@ -34,6 +34,8 @@ export type Period = {
    * period has no subject. The server resolves it, so nothing here has to.
    */
   label?: string | null
+  /** The arm the period is for, where it is one arm's rather than the class's. */
+  classarm_id?: number | null
   day_of_week?: DayName | null
   /** `"08:56"` — the school's wall clock, no zone and no seconds. */
   start_time?: string | null
@@ -164,6 +166,8 @@ export type PeriodList = {
  */
 export type PeriodBody = {
   department_id: number
+  /** The arm of the class that sits the period. */
+  classarm_id: number
   day_of_week: DayName
   /** `"09:00"`. */
   start_time: string

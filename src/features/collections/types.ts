@@ -1,5 +1,5 @@
 import type { Paginated } from '../../api/types.ts'
-import type { Choice, OptionsKey } from './options.ts'
+import type { Choice, OptionsKey , SearchKey } from './options.ts'
 import type { Align, CardRole } from '@/lib/table.ts'
 
 /**
@@ -30,6 +30,7 @@ export type ListPath =
   | '/admin/results'
   | '/admin/result-queue'
   | '/admin/library'
+  | '/admin/lending'
   | '/admin/notices'
   | '/admin/logs'
   | '/teacher/subjects'
@@ -41,6 +42,7 @@ export type ListPath =
   | '/teacher/assignments'
   | '/teacher/submissions'
   | '/student/courses'
+  | '/student/library'
   | '/student/materials'
   | '/student/timetable'
   | '/student/assignments'
@@ -297,6 +299,17 @@ export type FieldSpec = {
   optionsFrom?: OptionsKey
   dependsOn?: string
   /**
+   * Like `optionsFrom`, but the feed is searched with a `q` rather than opened
+   * whole — for a list too long to scroll, e.g. every guardian. The field
+   * submits the record's id all the same.
+   */
+  searchFrom?: SearchKey
+  /**
+   * The row key holding the chosen record's name, so an edit shows it before a
+   * search that would find it has been run. Only meaningful with `searchFrom`.
+   */
+  searchLabelKey?: string
+  /**
    * Many of the feed at once, held as an array of ids — the fees a class is
    * charged. Only meaningful with `optionsFrom`.
    */
@@ -413,6 +426,14 @@ export type CollectionDef = {
   emptyBody: string
   /** Singular noun used in delete confirms, e.g. "fee". */
   noun: string
+  /**
+   * A record too thin for a page of its own — a handful of fields, no
+   * sub-tables. The register opens it in a modal over the list instead,
+   * carried as `?record=` so it still deep-links and the back button closes
+   * it; the old record URL redirects there. Only a collection whose list is a
+   * `CollectionPage` can say this — a bespoke list has nowhere to hang it.
+   */
+  modal?: boolean
   /**
    * The collection's records are not written from here. The portal publishes
    * create and edit routes for every collection, and two kinds of list must

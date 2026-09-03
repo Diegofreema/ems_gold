@@ -70,7 +70,7 @@ export function ResultsPage({ child }: { child: Child }) {
   // under My children, and each of them has to say so.
   if (!child.id) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <EmptyState
           title="No child is linked to your account"
@@ -85,7 +85,7 @@ export function ResultsPage({ child }: { child: Child }) {
   const paused = fetchStatus === 'paused'
   if (error || (paused && !data)) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <EmptyState
           title="These results could not load"
@@ -98,7 +98,7 @@ export function ResultsPage({ child }: { child: Child }) {
 
   if (isPending) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <TableSkeleton rows={6} />
       </div>
@@ -108,7 +108,7 @@ export function ResultsPage({ child }: { child: Child }) {
   const rows = data.results.map(resultRow)
 
   return (
-    <div className="max-w-[980px]">
+    <div className="mx-auto w-full max-w-[980px]">
       {header}
       <TileStrip tiles={resultTiles(data.summary)} className="mb-6.5" />
       {rows.length ? (

@@ -20,18 +20,3 @@ export const useNotificationsStore = create<NotificationsState>()((set) => ({
   // otherwise find notices they have never opened already dimmed.
   clear: () => set({ read: {} }),
 }))
-
-/**
- * Convenience selector — the bell badge and the page both need this.
- *
- * Two sources of read, and either one settles it: a notice off the board
- * carries the server's own `is_read`, and everything else is remembered here
- * because no endpoint hears about it. Marking a notice read locally is what
- * moves the badge before the refetch confirms it.
- */
-export function useUnread(notifications: { id: string; read?: boolean }[]) {
-  const read = useNotificationsStore((state) => state.read)
-  return notifications.filter(
-    (notification) => !notification.read && !read[notification.id],
-  )
-}

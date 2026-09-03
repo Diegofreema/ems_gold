@@ -103,7 +103,10 @@ export function AppShell({ config }: { config: PortalConfig }) {
         {config.contextBar}
 
         {/* Keyed on the route so the entrance animation replays on navigation. */}
-        <div key={pathname} className="flex-1 animate-ems-in p-content">
+        <div
+          key={pathname}
+          className="mx-auto w-full max-w-[1280px] flex-1 animate-ems-in p-content"
+        >
           <Outlet />
         </div>
       </main>

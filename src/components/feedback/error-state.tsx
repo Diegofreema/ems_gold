@@ -23,7 +23,7 @@ export function ErrorState({
   onRetry: () => void
 }) {
   return (
-    <div className="max-w-[560px] py-10">
+    <div className="mx-auto w-full max-w-[560px] py-10">
       <div className="grid size-10 place-items-center rounded-lg bg-danger text-white">
         <TriangleAlert className="size-5.5" strokeWidth={2.2} />
       </div>

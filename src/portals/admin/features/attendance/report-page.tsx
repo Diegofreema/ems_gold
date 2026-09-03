@@ -96,7 +96,7 @@ export function AttendanceReportPage() {
   const paused = fetchStatus === 'paused'
   if (error || (paused && !data)) {
     return (
-      <div className="max-w-[1040px]">
+      <div className="mx-auto w-full max-w-[1040px]">
         {header}
         <EmptyState
           title="This report could not load"
@@ -109,7 +109,7 @@ export function AttendanceReportPage() {
 
   if (isPending) {
     return (
-      <div className="max-w-[1040px]">
+      <div className="mx-auto w-full max-w-[1040px]">
         {header}
         <TableSkeleton rows={PAGE_SIZE} />
       </div>
@@ -121,7 +121,7 @@ export function AttendanceReportPage() {
   const start = (page - 1) * PAGE_SIZE
 
   return (
-    <div className="max-w-[1040px]">
+    <div className="mx-auto w-full max-w-[1040px]">
       {header}
 
       <div className="mb-2 text-xs text-muted-foreground">

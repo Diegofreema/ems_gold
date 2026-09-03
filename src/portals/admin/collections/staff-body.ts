@@ -21,7 +21,11 @@ function asId(value: unknown): number | undefined {
  */
 function common(values: FormValues) {
   return {
-    middlename: text(values.middlename),
+    // The rule above, and its one exception: a middle name is the only part
+    // of a name nobody has to have, so an empty box here means the staff
+    // member has none rather than "leave what is on file". Dropped, the name
+    // the office just deleted would still be there on the next read.
+    middlename: text(values.middlename) ?? null,
     gender: text(values.gender),
     address: text(values.address),
     phone: text(values.phone),
@@ -41,6 +45,13 @@ export function teacherBody(values: FormValues): CreateStaffBody {
     lastname: text(values.lastname) ?? '',
     qualification: text(values.qualification),
     profile: text(values.profile),
+    // The arm to make them class teacher of, as the select holds it. Dropped
+    // when empty rather than sent null: a teacher may take no arm, and an
+    // edit that touched another field should not unseat them from theirs.
+    class_arm_id: text(values.class_arm_id),
+    // Onto the login behind the record — the teaching row has no birthday of
+    // its own — as the date the office picked, not the one the browser read.
+    dob: isoDate(values.dob),
     // The form holds the ISO code, which is the one thing about a country that
     // does not depend on whose list you are reading. The number the API wants
     // is the school's own, and is looked up here — a country it has no id for

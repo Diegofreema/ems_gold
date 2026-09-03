@@ -1,4 +1,5 @@
 import type { Notice } from '../../api/notifications/types.ts'
+import { plainText } from '../collections/rich-text.ts'
 import { schoolMillis } from '../collections/when.ts'
 import type { Notification } from './types.ts'
 
@@ -101,7 +102,10 @@ function feedItem(notice: Notice, now: Date): Notification | null {
     // Its own tag, so the board is told apart from the events around it.
     kicker: 'Notice',
     title: notice.title?.trim() || 'Untitled notice',
-    body: notice.message?.trim() || 'The office posted this with no message.',
+    // The message is tiptap HTML. The feed is a one-line excerpt, not a
+    // document, so the markup is stripped to the words rather than shown as
+    // tags or rendered as headings inside a list row.
+    body: plainText(notice.message ?? '') || 'The office posted this with no message.',
     meta: noticeMeta(notice),
     when: noticeWhen(at, now),
     group: noticeGroup(at, now),

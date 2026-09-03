@@ -6,9 +6,22 @@ export type Option = { value: string; label: string }
  * than listing choices, so every form offers the same classes, arms and
  * guardians the API knows about.
  */
+/**
+ * A feed too long to open as a dropdown — searched with a `q` a keystroke at a
+ * time rather than loaded whole. Its own union so a field cannot ask to search
+ * a feed there is no search for.
+ */
+export type SearchKey = 'guardians' | 'students'
+
 export type OptionsKey =
   | 'classes'
+  /** Titles the library lends, off the catalogue endpoint. */
+  | 'books'
+  /** Every title, retired ones included — what the edit flow picks from. */
+  | 'all-books'
   | 'arms'
+  /** Every arm in the school, class-qualified — not narrowed to one class. */
+  | 'all-arms'
   | 'guardians'
   | 'teachers'
   | 'students'

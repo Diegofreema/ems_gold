@@ -25,7 +25,7 @@ export function DeniedState({
   onRequestAccess: () => void
 }) {
   return (
-    <div className="max-w-[580px] py-10">
+    <div className="mx-auto w-full max-w-[580px] py-10">
       <div className="grid size-10 place-items-center rounded-lg bg-brand text-white">
         <Lock className="size-5.25" strokeWidth={2.1} />
       </div>

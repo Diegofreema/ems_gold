@@ -25,6 +25,35 @@ export function loadCollection(registry: Registry, id: string) {
 }
 
 /**
+ * The `?record=` a thin collection opens its record modal with. Validated on
+ * each portal's root route, so every list page can carry it — a page with no
+ * modal simply never reads it.
+ */
+export function recordSearch(search: Record<string, unknown>): { record?: string } {
+  const value = search.record
+  // A hand-typed `?record=1` reaches here as the number 1 — the router parses
+  // search values as JSON — and names the same record the quoted string does.
+  if (typeof value === 'number') return { record: String(value) }
+  return typeof value === 'string' && value ? { record: value } : {}
+}
+
+/**
+ * One record off its definition — asked for live, or found among the rows the
+ * definition wrote down. The record modal reads this directly, since the list
+ * it opens over already holds the definition.
+ */
+export async function resolveRecord(definition: CollectionDef, recordId: string) {
+  return definition.record
+    // A record the API does not have is a missing record, not a failure —
+    // anything else that went wrong is left to throw and reach the boundary.
+    ? await definition.record(recordId).catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 404) return undefined
+        throw error
+      })
+    : definition.rows?.find((row) => row.id === recordId)
+}
+
+/**
  * One record, by URL. A live collection is asked for it directly — the row may
  * be on a page this browser never loaded, so there is nothing local to search.
  *
@@ -37,14 +66,7 @@ export async function loadRecord(registry: Registry, id: string, recordId: strin
   const definition = registry[id]
   if (!definition) return undefined
 
-  const record = definition.record
-    // A record the API does not have is a missing record, not a failure —
-    // anything else that went wrong is left to throw and reach the boundary.
-    ? await definition.record(recordId).catch((error: unknown) => {
-        if (error instanceof ApiError && error.status === 404) return undefined
-        throw error
-      })
-    : definition.rows?.find((row) => row.id === recordId)
+  const record = await resolveRecord(definition, recordId)
 
   return {
     definition,

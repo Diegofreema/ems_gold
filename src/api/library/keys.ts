@@ -1,7 +1,7 @@
-import type { BookSearchParams } from './types'
-
 export const libraryKeys = {
   all: ['library'] as const,
-  books: (params: BookSearchParams) => [...libraryKeys.all, 'books', params] as const,
-  borrowed: () => [...libraryKeys.all, 'borrowed'] as const,
+  loans: () => [...libraryKeys.all, 'loans'] as const,
+  loan: (id: string) => [...libraryKeys.loans(), id] as const,
+  /** The signed-in pupil's own borrowings — scoped by the token, so no id. */
+  mine: () => [...libraryKeys.all, 'mine'] as const,
 }

@@ -24,7 +24,13 @@ export type CreateAdminBody = {
   username: string
   surname: string
   lastname: string
-  middlename?: string
+  /**
+   * Null where they have none; sent rather than dropped so an edit can clear
+   * it. Unlike the teaching record, the Admins row holds no middle name — the
+   * endpoint writes this one onto the login beside it, and `adminRow` reads it
+   * back from `user.mname`.
+   */
+  middlename?: string | null
   gender?: string
   /**
    * `YYYY-MM-DD`. The Admins row has held a `dob` column all along — it comes

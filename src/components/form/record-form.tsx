@@ -42,7 +42,7 @@ export function RecordForm<TValues extends FieldValues>({
   const errorCount = Object.keys(form.formState.errors).length
 
   return (
-    <div className="max-w-[780px]">
+    <div className="mx-auto w-full max-w-[780px]">
       {back}
       <PageHeader kicker={kicker} title={title} description={description} />
       <Rule />

@@ -31,7 +31,7 @@ export function ReceiptView({
     .join(' · ')
 
   return (
-    <div className="max-w-[640px]">
+    <div className="mx-auto w-full max-w-[640px]">
       <article className="overflow-hidden rounded-xl border border-foreground/60 bg-raised">
         <header className="border-b border-foreground/60 px-6 py-5.5">
           <div className="flex items-start gap-4">

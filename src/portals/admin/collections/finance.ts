@@ -437,6 +437,8 @@ export const invoices: CollectionDef = {
 export const spendings: CollectionDef = {
   id: 'spendings',
   path: '/admin/spendings',
+  // Five fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Finance',
   title: 'Spendings',
   description:

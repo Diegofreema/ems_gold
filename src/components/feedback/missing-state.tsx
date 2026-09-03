@@ -20,7 +20,7 @@ export function MissingState({
   action?: ReactNode
 }) {
   return (
-    <div className="max-w-[580px] py-2">
+    <div className="mx-auto w-full max-w-[580px] py-2">
       <div className="grid size-10 place-items-center rounded-lg bg-brand text-white">
         <SearchX className="size-5.25" strokeWidth={2.1} />
       </div>

@@ -16,6 +16,8 @@ export function childrenFor(family: Child[]): CollectionDef {
   return {
     id: 'children',
     path: '/parent/children',
+    // Six fields and no sub-tables: the record opens over the register.
+    modal: true,
     kicker: 'My children',
     title: 'My children',
     description: 'Every child on your record, with what they owe and how they are being marked.',
@@ -138,6 +140,8 @@ export function assignmentsFor(child: Child): CollectionDef {
   return {
     id: 'assignments',
     path: '/parent/assignments',
+    // Six fields and no sub-tables: the record opens over the register.
+    modal: true,
     scope: child.adm,
     kicker: 'Assignments',
     title: `Assignments for ${child.name}`,

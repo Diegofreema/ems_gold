@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { useSessionStore } from '@/stores/session.store'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { parentPortal } from '@/portals/parent/config'
@@ -27,6 +27,14 @@ export const Route = createFileRoute('/parent/$collection/$recordId')({
         params.collection,
         params.recordId,
       )
+      // A thin record lives in a modal over its register now; the page URL it
+      // used to have carries the reader there instead of going dead.
+      if (loaded?.definition.modal) {
+        throw redirect({
+          to: loaded.definition.path,
+          search: { record: params.recordId },
+        })
+      }
       if (loaded?.record) return loaded
       looked ??= loaded
     }

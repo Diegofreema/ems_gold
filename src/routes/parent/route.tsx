@@ -2,12 +2,15 @@ import { createFileRoute } from '@tanstack/react-router'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { AppShell } from '@/components/layout/app-shell'
 import { requirePortal } from '@/features/auth/guard'
+import { recordSearch } from '@/features/collections/resolve'
 import { familyQuery, parentIdOf } from '@/portals/parent/api/family'
 import { parentPortal } from '@/portals/parent/config'
 import { useSessionStore } from '@/stores/session.store'
 
 export const Route = createFileRoute('/parent')({
   beforeLoad: ({ context }) => requirePortal(context.queryClient, 'Parent'),
+  // `?record=` opens a thin collection's record modal over its list page.
+  validateSearch: recordSearch,
   /**
    * Every page under here reads the household, and so does the switcher in the
    * shell around them — loading it once at the top means none of them waits on

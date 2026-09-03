@@ -30,6 +30,8 @@ const studentRows = async (): Promise<Row[]> =>
 export const subjects: CollectionDef = {
   id: 'subjects',
   path: '/teacher/subjects',
+  // Five fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Teaching',
   title: 'My subjects',
   description:
@@ -146,6 +148,8 @@ export const students: CollectionDef = {
 export const topics: CollectionDef = {
   id: 'topics',
   path: '/teacher/topics',
+  // Three fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Teaching',
   title: 'Topics taught',
   description:
@@ -212,6 +216,8 @@ export const topics: CollectionDef = {
 export const eclasses: CollectionDef = {
   id: 'eclasses',
   path: '/teacher/eclasses',
+  // Three fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Teaching',
   title: 'E-classes',
   description:

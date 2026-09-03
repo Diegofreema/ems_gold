@@ -109,6 +109,8 @@ export const sessions: CollectionDef = {
 export const terms: CollectionDef = {
   id: 'terms',
   path: '/admin/terms',
+  // Six fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Academics',
   title: 'Terms',
   description:

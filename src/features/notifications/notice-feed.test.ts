@@ -79,6 +79,19 @@ test('the meta line says who posted it and how far it reached', () => {
   assert.equal(noticeMeta({ ...RESUMPTION, posted_by: '  ' }), 'Whole school')
 })
 
+test('a notice written in the editor reads as words, not as tags', () => {
+  // The message comes back as tiptap HTML; the feed row is a one-line excerpt,
+  // so the markup is stripped rather than shown to the reader as "<p>".
+  const [item] = noticeFeed(
+    [{ ...RESUMPTION, message: '<p>School resumes on <strong>Monday</strong></p><p>Fees first</p>' }],
+    NOW,
+  )
+  // No tags survive, and the two paragraphs read as one line rather than
+  // running into each other — each tag becomes a space, per `plainText`.
+  assert.equal(item.body, 'School resumes on Monday Fees first')
+  assert.equal(item.body.includes('<'), false)
+})
+
 test('an empty title or message still reads as something', () => {
   const [item] = noticeFeed([{ ...RESUMPTION, title: '   ', message: null }], NOW)
   assert.equal(item.title, 'Untitled notice')

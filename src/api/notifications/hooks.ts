@@ -37,22 +37,18 @@ export function useUnreadNoticeCount() {
 }
 
 /**
- * Opens one notice — a read that writes, since fetching it is what marks it
- * read and counts the view. A mutation rather than a query for that reason: a
- * route loader or a cache refetch would clear somebody's badge, and every
- * refetch would count another view on top.
+ * Marks one notice read from the list, via `/read` rather than by opening it —
+ * so the view count is left alone. Silent: the reader ticked a row off, they
+ * do not need to be told they did.
  *
- * Silent. The reader asked for the notice and is looking at it; a toast saying
- * so is noise on top of an answer they can already see.
+ * The badge number comes back with the answer, so it moves without a second
+ * call; the lists still refetch, since `is_read` has changed for this reader.
  */
-export function useOpenNotice() {
+export function useMarkNoticeRead() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: Id) => noticesService.open(id),
+    mutationFn: (id: Id) => noticesService.readOne(id),
     onSuccess: (answer) => {
-      queryClient.setQueryData(noticeKeys.detail(String(answer.notification.id)), answer.notification)
-      // The badge number comes back beside the notice, so it moves without a
-      // second call; the lists still refetch, since `is_read` has changed.
       queryClient.setQueryData(noticeKeys.unread(), answer.unread_count)
       void queryClient.invalidateQueries({ queryKey: noticeKeys.everyMine() })
     },
@@ -71,7 +67,13 @@ export function useMarkAllNoticesRead() {
   return useMutation({
     mutationFn: () => noticesService.readAll(),
     meta: { success: 'All notices marked read' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: noticeKeys.all }),
+    onSuccess: () => {
+      // The badge answers for itself: everything is read now, so it is zero —
+      // written straight away rather than left to the poll, then confirmed by
+      // the refetch the invalidation triggers.
+      queryClient.setQueryData(noticeKeys.unread(), 0)
+      return queryClient.invalidateQueries({ queryKey: noticeKeys.all })
+    },
   })
 }
 

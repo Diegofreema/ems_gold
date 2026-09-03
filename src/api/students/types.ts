@@ -1,5 +1,6 @@
 import type { ClassArm } from '../class-arms/types.ts'
 import type { Department } from '../departments/types.ts'
+import type { Parent } from '../parents/types.ts'
 import type { PageParams } from '../types.ts'
 import type { User } from '../users/types.ts'
 
@@ -17,6 +18,29 @@ export type Lga = { id: number; name: string }
 
 /** The year of study, as the API's university template names it. */
 export type Level = { id: number; name: string }
+
+/**
+ * The linked household, expanded on `GET /students/{id}` alone — the same
+ * `sparents` row the guardian register holds, minus its children. The father
+ * and mother each arrive with a phone and a job, and the household with one
+ * email and one address. The student's own `fathersname`/`fatherphone` fields
+ * are a separate, usually-empty copy typed onto the enrolment, so a linked
+ * student reads their guardian off here rather than off those.
+ */
+export type StudentGuardian = Pick<
+  Parent,
+  | 'id'
+  | 'user_id'
+  | 'fathersname'
+  | 'mothersname'
+  | 'fatherphone'
+  | 'motherphone'
+  | 'fathersjob'
+  | 'mothersjob'
+  | 'pemailaddress'
+  | 'address'
+  | 'status'
+>
 
 /** A student record. Applicants are the same row with `status: 'Applied'`. */
 export type Student = {
@@ -59,6 +83,8 @@ export type Student = {
   class_arm_id: number | null
   /** The guardian record, when one has been linked. No name comes with it. */
   sparent_id: number | null
+  /** The linked household itself, expanded on `GET /students/{id}` only. */
+  sparent?: StudentGuardian | null
   session_id: number | null
   level_id: number | null
   religion: string | null
@@ -89,7 +115,12 @@ export type StudentListParams = PageParams & {
 export type StudentBody = {
   fname: string
   lname: string
-  mname?: string
+  /**
+   * Null where the student has none. Sent rather than dropped, because it
+   * is the only field on the enrol form that may be left empty, and a key
+   * the edit leaves out is one the record keeps — see `studentBody`.
+   */
+  mname?: string | null
   /** YYYY-MM-DD. */
   dob?: string
   email?: string
@@ -103,6 +134,8 @@ export type StudentBody = {
   class_arm_id?: number | string
   sparent_id?: number | string
   religion?: string
+  /** Where they were before this one. Null where this is their first school. */
+  previousschool?: string | null
   /**
    * The school's own numbering, not any package's — see `country-ids.ts`.
    * Every live student is country 160 with a state in the 2646+ range.

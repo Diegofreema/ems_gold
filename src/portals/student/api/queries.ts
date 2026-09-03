@@ -1,6 +1,8 @@
 import { queryOptions } from '@tanstack/react-query'
 import { assignmentKeys } from '@/api/assignments/keys'
 import { assignmentsService } from '@/api/assignments/service'
+import { libraryKeys } from '@/api/library/keys'
+import { libraryService } from '@/api/library/service'
 import { registerKeys } from '@/api/attendance/keys'
 import { registerService } from '@/api/attendance/service'
 import { mySchoolingKeys } from '@/api/my-schooling/keys'
@@ -80,6 +82,16 @@ export const studentMaterialsQuery = queryOptions({
 export const studentCoursesQuery = queryOptions({
   queryKey: mySchoolingKeys.courses(),
   queryFn: () => mySchoolingService.courses(),
+})
+
+/**
+ * `GET /loanedbooks/mine` — the pupil's own borrowings, resolved off the
+ * bearer token. No live answer has been read yet; the service unwraps
+ * whichever envelope it turns out to wear.
+ */
+export const studentLoansQuery = queryOptions({
+  queryKey: libraryKeys.mine(),
+  queryFn: () => libraryService.myLoans(),
 })
 
 /**

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { invoiceRow, resultRow, studentRow, suspendAction } from './student-row.ts'
+import { invoiceRow, RELIGIONS, resultRow, studentRow, suspendAction } from './student-row.ts'
 
 /** Straight from GET /students/{id}, trimmed to what the page reads. */
 const student = {
@@ -58,6 +58,38 @@ test('where the student came from is however much of it the school holds', () =>
   assert.equal(studentRow(student).origin, 'Abuja Federal Capital Territor · Nigeria')
   const placed = { ...(student as object), community: 'Obinze' } as never
   assert.equal(studentRow(placed).origin, 'Obinze · Abuja Federal Capital Territor · Nigeria')
+})
+
+test('the linked household is read off the expanded sparent, jobs and all', () => {
+  // `GET /students/{id}` expands the guardian record; each parent reads as name,
+  // phone and job, and the household's email and address come with it.
+  const linked = studentRow({
+    ...(student as object),
+    sparent: {
+      id: 50, user_id: 811,
+      fathersname: 'Juliet Julie', mothersname: 'Ugochi',
+      fatherphone: '09093423758', motherphone: '070847364732',
+      fathersjob: 'Business', mothersjob: 'Trader',
+      pemailaddress: 'julietchigozirim47@gmail.com',
+      address: 'Wilfred okereke street Obinze', status: 'active',
+    },
+  } as never)
+  assert.equal(linked.father, 'Juliet Julie · 09093423758 · Business')
+  assert.equal(linked.mother, 'Ugochi · 070847364732 · Trader')
+  assert.equal(linked.guardianEmail, 'julietchigozirim47@gmail.com')
+  assert.equal(linked.guardianHome, 'Wilfred okereke street Obinze')
+})
+
+test('the student\u2019s own typed parent is the fallback when none is linked', () => {
+  // A record entered before a household was linked carries the parent on the
+  // student itself; with no sparent expanded, that is what shows.
+  const typed = studentRow({
+    ...(student as object),
+    sparent: null,
+    fathersname: 'Mr O. Udoye', fatherphone: '0803 441 2280',
+  } as never)
+  assert.equal(typed.father, 'Mr O. Udoye · 0803 441 2280')
+  assert.equal(typed.guardianEmail, '\u2014')
 })
 
 test('a guardian is shown with the number to reach them on', () => {
@@ -208,4 +240,41 @@ test('a settled invoice reads Paid on the fees tab, as it does everywhere else',
   // Anything the API has not taught us is shown as it sent it.
   const owing = invoiceRow({ id: 1, invoiceid: 'X/1', amount: '100', paystatus: 'Unpaid', fee: { name: 'BUS' } } as never)
   assert.equal(owing.state, 'Unpaid')
+})
+
+const with_ = (over: object) => studentRow({ ...(student as object), ...over } as never)
+
+test('a religion the school shouted opens the select on the option it means', () => {
+  // Four of the eight students on record read "TRADITIONALIST". Left as it is
+  // stored, it matches no option, and every edit of those four would open on
+  // a blank required field.
+  assert.equal(with_({ religion: 'TRADITIONALIST' }).religion, 'Traditionalist')
+  assert.equal(with_({ religion: '  muslim ' }).religion, 'Muslim')
+})
+
+test('a religion nobody can spell is shown as it really is, not guessed at', () => {
+  // "Chistian", "Chritian" and "Chritstian" are all on the register. Reading
+  // any of them as Christian would be this app inventing a fact about a child;
+  // the panel shows what is there and the select opens empty, so the office
+  // has to answer the required field before the record saves.
+  assert.equal(with_({ religion: 'Chritstian' }).religion, 'Chritstian')
+  assert.equal(RELIGIONS.includes('Chritstian' as never), false)
+})
+
+test('a student with no religion on file reads as the dash, not as an option', () => {
+  for (const none of [null, '', '   ']) {
+    assert.equal(with_({ religion: none }).religion, '\u2014')
+  }
+})
+
+test('the previous school is read twice: once to show and once to edit from', () => {
+  const row = with_({ previousschool: 'Holy Ghost Primary School' })
+  assert.equal(row.school, 'Holy Ghost Primary School')
+  assert.equal(row.previousschool, 'Holy Ghost Primary School')
+
+  // The panel says so in words; the form opens on an empty box rather than on
+  // the dash, which is what a controlled input needs.
+  const first = with_({ previousschool: null })
+  assert.equal(first.school, '\u2014')
+  assert.equal(first.previousschool, '')
 })

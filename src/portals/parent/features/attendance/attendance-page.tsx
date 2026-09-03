@@ -69,7 +69,7 @@ export function AttendancePage({ child }: { child: Child }) {
   // under My children, and each of them has to say so.
   if (!child.id) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <EmptyState
           title="No child is linked to your account"
@@ -84,7 +84,7 @@ export function AttendancePage({ child }: { child: Child }) {
   const paused = fetchStatus === 'paused'
   if (error || (paused && !data)) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <EmptyState
           title="This register could not load"
@@ -97,7 +97,7 @@ export function AttendancePage({ child }: { child: Child }) {
 
   if (isPending) {
     return (
-      <div className="max-w-[980px]">
+      <div className="mx-auto w-full max-w-[980px]">
         {header}
         <TableSkeleton rows={6} />
       </div>
@@ -110,7 +110,7 @@ export function AttendancePage({ child }: { child: Child }) {
   const covered = rangeLabel(data.range?.from ?? '', data.range?.to ?? '')
 
   return (
-    <div className="max-w-[980px]">
+    <div className="mx-auto w-full max-w-[980px]">
       {header}
       <TileStrip tiles={attendanceTiles(data.stats)} className="mb-3" />
       {covered && (

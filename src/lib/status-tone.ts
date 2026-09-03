@@ -3,7 +3,7 @@ import type { TagProps } from '@/components/common/tag'
 // 'Not current' is settled, not good news: four sessions out of five are not
 // the current one, and painting every last one of them green would read as
 // four endorsements. It stays quiet.
-const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Present', 'Excused', 'Enabled', 'Available', 'Completed', 'Admitted', 'In this arm', 'Submitted', 'Correct']
+const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Present', 'Excused', 'Enabled', 'Available', 'Completed', 'Admitted', 'In this arm', 'Submitted', 'Correct', 'Returned']
 const QUIET = ['Not current']
 const BAD = ['Overdue', 'Unpaid', 'Suspended', 'Not marked', 'All out', 'Rejected', 'Sent back', 'Declined', 'Owing', 'Not placed', 'Absent', 'Disabled', 'Deactivated', 'Missed', 'Wrong']
 

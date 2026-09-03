@@ -2,10 +2,13 @@ import { createFileRoute } from '@tanstack/react-router'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { AppShell } from '@/components/layout/app-shell'
 import { requirePortal } from '@/features/auth/guard'
+import { recordSearch } from '@/features/collections/resolve'
 import { teacherPortal } from '@/portals/teacher/config'
 
 export const Route = createFileRoute('/teacher')({
   beforeLoad: ({ context }) => requirePortal(context.queryClient, 'Teacher'),
+  // `?record=` opens a thin collection's record modal over its list page.
+  validateSearch: recordSearch,
   component: () => <AppShell config={teacherPortal} />,
   // A path that matched no route: the shell renders and this goes in its
   // outlet, so it is the page content rather than a second shell — nesting one

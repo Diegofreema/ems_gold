@@ -25,6 +25,8 @@ const countLogs = (type: LogType) => async () => (await typeCounts())[type] ?? 0
 export const logs: CollectionDef = {
   id: 'logs',
   path: '/admin/logs',
+  // Six fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'School',
   title: 'Activity log',
   description:

@@ -28,6 +28,9 @@ export default defineConfig({
   // same thing through the `/api` rewrite in vercel.json. Both must point at
   // the same host, or dev and production talk to different schools.
   server: {
+    // Honour an assigned port (tooling sets PORT to run a second dev server
+    // beside the usual one); Vite's own default stands otherwise.
+    port: Number(process.env.PORT) || undefined,
     proxy: {
       '/api': {
         target: 'https://bronze.uaes.education',

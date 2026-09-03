@@ -26,7 +26,9 @@ import {
   type MoveValues,
   studentMove,
 } from '@/portals/admin/collections/student-move'
-import { formatNaira, parseNaira } from '@/lib/format'
+import { optionLabels } from '@/features/collections/option-feeds'
+import { formatDate, formatNaira, parseNaira } from '@/lib/format'
+import { queryClient } from '@/lib/query-client'
 import type { ActionDef } from './types'
 
 export type AdminFlow = {
@@ -345,48 +347,415 @@ function dueDate(days = LOAN_DAYS): Date {
   return due
 }
 
+/** The picked title's own name, off the same feed the select showed. */
+async function bookLabel(values?: Record<string, unknown>): Promise<string> {
+  const books = await optionLabels('books')
+  return books.get(String(values?.book_id ?? '')) ?? 'The book'
+}
+
 /**
- * Lending a copy to a student.
+ * Lending a copy to a student, via `POST /loanedbooks`.
  *
- * The student is picked from the admitted register rather than typed, because
- * `POST /admins/books/{id}/lend` is keyed on the student's own id and a name
- * would have to be guessed back into one. There is no field for how many
- * copies: the body takes one student and one return date, so a loan is a copy.
+ * Runs from the register's own button — the library page is the loans now, so
+ * the title is picked here rather than opened first. The student is searched
+ * by name because the admitted register runs long and the pupil is standing at
+ * the counter; what is submitted is still both ids. A loan is one copy of one
+ * book, and the endpoint refuses with its own reason where the pupil already
+ * has a book out, owes a fine, or no copy is on the shelf — none of that is
+ * re-checked here.
  */
-function lend(row?: Row): ActionDef {
+function lend(): ActionDef {
   return {
     kicker: 'School · Library',
-    title: `Issue ${row?.title ?? 'book'}`,
+    title: 'Issue a book',
     description:
       'Lend a copy to a student. Two weeks is the standard loan, and the date can be moved.',
-    summary: [
-      { label: 'Title', value: row?.title ?? DASH },
-      { label: 'Author', value: row?.author ?? DASH },
-      { label: 'Copies held', value: row?.copies ?? DASH },
-    ],
+    summary: [],
     fields: [
+      {
+        key: 'book_id',
+        label: 'Book',
+        required: true,
+        wide: true,
+        optionsFrom: 'books',
+        hint: 'Titles the library currently lends. Whether a copy is on the shelf is checked when you press the button.',
+      },
       {
         key: 'student_id',
         label: 'Student',
         required: true,
         wide: true,
-        optionsFrom: 'students',
-        hint: 'Admitted students, listed with their admission number.',
+        searchFrom: 'students',
+        hint: 'Type a name to search the admitted register; students are listed with their admission number.',
       },
       { key: 'datetoreturn', label: 'Due back', required: true, date: true, value: dueDate() },
     ],
     cta: 'Issue book',
     footnote: 'The copy counts against the library until it is brought back.',
     done: () => 'Book issued',
+    // Asked before the copy goes out: the loan is written against a named
+    // student, and the dialog is the last chance to notice the wrong one. The
+    // name is fetched rather than trusted from the form, so what the dialog
+    // says is what the register holds — and the pupil's own history is asked
+    // for its `may_borrow`, which is exactly what the contract publishes it
+    // for, so a refusal is heard here rather than after the button.
+    confirm: async (_total, values) => {
+      const studentId = String(values?.student_id ?? '')
+      const [student, history] = await Promise.all([
+        studentsService.get(studentId).catch(() => null),
+        libraryService.studentLoans(studentId).catch(() => null),
+      ])
+      const name = student
+        ? [student.fname, student.mname, student.lname].filter(Boolean).join(' ').trim() ||
+          `Student ${student.id}`
+        : 'the student picked'
+      const due = values?.datetoreturn instanceof Date ? formatDate(values.datetoreturn) : null
+      // Only a flat "false" warns: an answer without the flag, or no answer at
+      // all, proves nothing, and the lend endpoint has its own refusal.
+      const blocked = history?.may_borrow === false
+      return {
+        title: blocked ? 'The library would refuse this' : 'Issue this book?',
+        body: blocked
+          ? 'Their borrowing record says they may not take a book right now — one is still out against them, or a fine is owing. You can press on, and the library will answer with its own reason.'
+          : 'The copy is written out against their name and counts against the library until it is brought back.',
+        subject: [await bookLabel(values), name, due ? `due ${due}` : undefined]
+          .filter(Boolean)
+          .join(' · '),
+        cta: blocked ? 'Try anyway' : 'Issue the book',
+        cancel: 'Go back',
+      }
+    },
     run: async (values) => {
-      if (!row) throw new Error('That title could not be loaded.')
       const due = toApiDate(values.datetoreturn as Date | undefined)
       if (!due) throw new Error('Pick the date the book is due back.')
-      await libraryService.lend(row.id, {
-        student_id: Number(values.student_id),
-        datetoreturn: due,
+      await libraryService.lend({
+        studentId: Number(values.student_id),
+        bookId: Number(values.book_id),
+        toreturn: due,
       })
-      return { message: `${row.title} is out on loan.` }
+      const title = await bookLabel(values)
+      dropCatalogue()
+      return { message: `${title} is out on loan.` }
+    },
+  }
+}
+
+/**
+ * The catalogue cache is read imperatively (`ensureQueryData`), which returns
+ * stale data without refetching — so a flow that changes a copy's standing
+ * drops it outright, the same way the collection's own save does, and the
+ * refetch after the flow pulls the truth.
+ */
+function dropCatalogue() {
+  queryClient.removeQueries({ queryKey: ['library'] })
+}
+
+/**
+ * A new title on the shelf, via `POST /admins/books`.
+ *
+ * The catalogue lost its page when the register became the Library, so this
+ * flow is what is left of it: the fields the endpoint takes, minus the cover
+ * upload — nothing in the portal displays covers, and no title on record has
+ * one. `isavailable` is not asked: a title being added is being added to lend,
+ * and the endpoint's own default stands.
+ */
+function addTitle(): ActionDef {
+  return {
+    kicker: 'School · Library',
+    title: 'Add a title',
+    description:
+      'Put a new title in the catalogue so copies of it can be issued. How many the school holds is what the shelf count runs on.',
+    summary: [],
+    fields: [
+      { key: 'title', label: 'Title', required: true, wide: true, placeholder: 'Things Fall Apart' },
+      { key: 'author', label: 'Author', required: true, wide: true, placeholder: 'Chinua Achebe' },
+      {
+        key: 'copies',
+        label: 'Copies held',
+        required: true,
+        number: true,
+        min: 1,
+        placeholder: '40',
+      },
+      { key: 'isbn', label: 'ISBN', placeholder: '978-0435925' },
+      {
+        key: 'pubdate',
+        label: 'Published',
+        placeholder: '2011',
+        hint: 'A year, or a full date where the school holds one.',
+      },
+      { key: 'section', label: 'Section', placeholder: 'Computer science' },
+      { key: 'callno', label: 'Call number', placeholder: '45' },
+      { key: 'department_id', label: 'Class', optionsFrom: 'classes' },
+    ],
+    cta: 'Add the title',
+    footnote: 'The title can be issued the moment it is added.',
+    done: () => 'Title added',
+    run: async (values) => {
+      const field = (key: string) => String(values[key] ?? '').trim() || undefined
+      const title = field('title')
+      await libraryService.addBook({
+        title,
+        author: field('author'),
+        copies: Number(values.copies) || undefined,
+        isbn: field('isbn'),
+        pubdate: field('pubdate'),
+        section: field('section'),
+        callno: field('callno'),
+        department_id: Number(values.department_id) || undefined,
+      })
+      // The shelf page reads its cache imperatively, and the issue flow's book
+      // picker caches the catalogue for five minutes; a title added to be
+      // issued should not wait either of them out.
+      dropCatalogue()
+      queryClient.removeQueries({ queryKey: ['options', 'books'] })
+      return { message: `${title ?? 'The title'} is in the catalogue.` }
+    },
+  }
+}
+
+/**
+ * Changing a title already on the shelf, via `POST /admins/books/{id}`.
+ *
+ * There is no book record page to open the old edit form on, so the flow
+ * carries its own picker and the fields work as corrections: only what is
+ * typed changes, and an empty field keeps what is written. That rule is kept
+ * here rather than trusted to the endpoint — whether it updates partially has
+ * never been proved, so the record is fetched, what was typed is merged over
+ * it, and the whole body is sent.
+ *
+ * Retiring a title from lending is this flow too: Availability set to
+ * Unavailable takes it out of the issue picker without removing the book.
+ *
+ * Opened from a title's own record, the picker arrives already on it; from
+ * the list's button it opens blank, and either way the pick can be changed.
+ */
+function editTitle(row?: Row): ActionDef {
+  return {
+    kicker: 'School · Library',
+    title: 'Edit a title',
+    description:
+      'Pick the title, then fill only what changes — anything left empty keeps what is written. Setting it Unavailable retires it from lending without removing it.',
+    summary: row ? [{ label: 'Editing', value: row.title }] : [],
+    fields: [
+      {
+        key: 'book_id',
+        label: 'Book',
+        required: true,
+        wide: true,
+        optionsFrom: 'all-books',
+        value: row?.id,
+        hint: 'Every title the school holds, retired ones included.',
+      },
+      { key: 'title', label: 'Title', wide: true, placeholder: 'Keep as written' },
+      { key: 'author', label: 'Author', wide: true, placeholder: 'Keep as written' },
+      { key: 'copies', label: 'Copies held', number: true, min: 1, placeholder: 'Keep as written' },
+      { key: 'isbn', label: 'ISBN', placeholder: 'Keep as written' },
+      { key: 'pubdate', label: 'Published', placeholder: 'Keep as written' },
+      { key: 'section', label: 'Section', placeholder: 'Keep as written' },
+      { key: 'callno', label: 'Call number', placeholder: 'Keep as written' },
+      { key: 'department_id', label: 'Class', optionsFrom: 'classes' },
+      {
+        key: 'isavailable',
+        label: 'Availability',
+        // A word, not an empty value: the select control refuses "" items.
+        value: 'Keep',
+        options: [
+          { value: 'Keep', label: 'Keep as it is' },
+          { value: 'Available', label: 'Available' },
+          { value: 'Unavailable', label: 'Unavailable — retire from lending' },
+        ],
+      },
+    ],
+    cta: 'Save the changes',
+    footnote: 'Only what you filled in changes; the rest stands as written.',
+    done: () => 'Title updated',
+    run: async (values) => {
+      const picked = String(values.book_id ?? '')
+      const books = await libraryService.books()
+      const book = books.find((one) => String(one.id) === picked)
+      if (!book) throw new Error('That title could not be loaded.')
+
+      const typed = (key: string) => String(values[key] ?? '').trim()
+      await libraryService.updateBook(book.id, {
+        title: typed('title') || book.title,
+        author: typed('author') || book.author,
+        copies: Number(values.copies) || book.copies,
+        isbn: typed('isbn') || book.isbn || undefined,
+        pubdate: typed('pubdate') || book.pubdate || undefined,
+        section: typed('section') || book.section || undefined,
+        callno: typed('callno') || book.callno || undefined,
+        department_id: Number(values.department_id) || book.department_id || undefined,
+        isavailable:
+          typed('isavailable') === 'Available' || typed('isavailable') === 'Unavailable'
+            ? (typed('isavailable') as 'Available' | 'Unavailable')
+            : book.isavailable,
+      })
+      // The shelf page and both pickers read the catalogue; a rename or a
+      // retirement should not wait out their caches.
+      dropCatalogue()
+      queryClient.removeQueries({ queryKey: ['options', 'books'] })
+      queryClient.removeQueries({ queryKey: ['options', 'all-books'] })
+      return { message: `${typed('title') || book.title} now reads as corrected.` }
+    },
+  }
+}
+
+/** The loan's tiles, shared by every flow that runs against one. */
+function loanSummary(row?: Row) {
+  return [
+    { label: 'Student', value: row?.student ?? DASH },
+    { label: 'Book', value: row?.book ?? DASH },
+    { label: 'Due back', value: row?.due ?? DASH },
+  ]
+}
+
+/**
+ * Taking an issued copy back, via `POST /loanedbooks/{loanId}/return`.
+ *
+ * Keyed on the loan, not the book — the register's record is the one thing
+ * that says which copy and which pupil. Returning settles the book only: a
+ * fine that accrued stays owing until the pay flow takes it, which is the
+ * API's own split and is said out loud in the dialog rather than smoothed
+ * over.
+ */
+function takeBack(row?: Row): ActionDef {
+  return {
+    kicker: 'School · Lending',
+    title: `Return ${row?.book ?? 'book'}`,
+    description: 'Mark the copy returned and put it back on the shelf, ready to lend again.',
+    summary: [
+      ...loanSummary(row),
+      { label: 'Fine if returned today', value: row?.penalty_today ?? DASH },
+    ],
+    fields: [
+      {
+        key: 'status',
+        label: 'Condition',
+        required: true,
+        wide: true,
+        value: 'Good',
+        hint: 'The state the book came back in — Good, Damaged, Lost — kept on the loan record.',
+      },
+    ],
+    cta: 'Return book',
+    footnote: 'The copy stays against the student until you press this.',
+    done: () => 'Book returned',
+    confirm: () => ({
+      title: 'Return this book?',
+      body:
+        row?.paid === 'Owing'
+          ? 'The copy goes back on the shelf. The fine is not taken by this — collect it with its own button, before or after.'
+          : 'The loan is closed and the copy goes back on the shelf, ready to be issued again.',
+      subject: [row?.book ?? 'This title', row?.student].filter(Boolean).join(' · '),
+      cta: 'Return the book',
+      cancel: 'Go back',
+    }),
+    run: async (values) => {
+      if (!row) throw new Error('That loan could not be loaded.')
+      await libraryService.returnLoan(row.id, { status: String(values.status ?? '').trim() })
+      dropCatalogue()
+      return { message: `${row.book} is back on the shelf.` }
+    },
+  }
+}
+
+/**
+ * Collecting the fine, via `POST /loanedbooks/{loanId}/pay`.
+ *
+ * The money only — the endpoint does not mark the book returned, and neither
+ * does this. The amount is optional on purpose: left empty, the API takes the
+ * full fine as it stands at the server, which cannot go stale the way a figure
+ * copied into the form could.
+ */
+function collectFine(row?: Row): ActionDef {
+  return {
+    kicker: 'School · Lending',
+    title: 'Collect the fine',
+    description:
+      'Take the money owed on this loan. Paying does not return the book — that is its own step.',
+    summary: [...loanSummary(row), { label: 'Fine', value: row?.fine ?? DASH }],
+    fields: [
+      {
+        key: 'amount',
+        label: 'Amount',
+        money: true,
+        wide: true,
+        hint: 'Leave empty to take the full fine as it stands. A smaller figure is a part payment.',
+      },
+    ],
+    cta: 'Collect fine',
+    footnote: 'Nothing is collected until you press this.',
+    done: () => 'Fine collected',
+    confirm: (_total, values) => {
+      const typed = parseNaira(String(values?.amount ?? ''))
+      return {
+        title: 'Collect this fine?',
+        body: 'The payment is written against the loan. The book itself stays out until it is returned with its own button.',
+        subject: [
+          row?.student,
+          row?.book,
+          typed ? formatNaira(typed) : `the full fine (${row?.fine ?? 'as it stands'})`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        cta: 'Collect the fine',
+        cancel: 'Go back',
+      }
+    },
+    run: async (values) => {
+      if (!row) throw new Error('That loan could not be loaded.')
+      const typed = parseNaira(String(values.amount ?? ''))
+      await libraryService.payFine(row.id, typed ? { amount: typed } : {})
+      dropCatalogue()
+      return { message: typed ? `${formatNaira(typed)} collected.` : 'Fine collected in full.' }
+    },
+  }
+}
+
+/**
+ * Correcting a loan record, via `POST /loanedbooks/{loanId}`.
+ *
+ * Only the due date and the condition are settable here — `returned` and
+ * `paid` belong to their own endpoints — so those are the only fields offered.
+ * No confirm: a correction commits no money and closes nothing.
+ */
+function correctLoan(row?: Row): ActionDef {
+  const held = row?.due_raw ? new Date(row.due_raw) : undefined
+  return {
+    kicker: 'School · Lending',
+    title: 'Correct the record',
+    description:
+      'Move the due date or reword the condition. Returns and fines are not changed here — each has its own button.',
+    summary: loanSummary(row),
+    fields: [
+      {
+        key: 'due_date',
+        label: 'Due back',
+        required: true,
+        date: true,
+        value: held && !Number.isNaN(held.getTime()) ? held : dueDate(),
+      },
+      {
+        key: 'condition',
+        label: 'Condition',
+        value: row?.condition && row.condition !== DASH ? row.condition : '',
+        hint: 'Leave empty to keep what is written.',
+      },
+    ],
+    cta: 'Save the correction',
+    footnote: 'Only the due date and condition change; the loan itself stands.',
+    done: () => 'Loan corrected',
+    run: async (values) => {
+      if (!row) throw new Error('That loan could not be loaded.')
+      const due = toApiDate(values.due_date as Date | undefined)
+      const condition = String(values.condition ?? '').trim()
+      await libraryService.correctLoan(row.id, {
+        due_date: due,
+        condition: condition || undefined,
+      })
+      dropCatalogue()
+      return { message: 'The record now reads as corrected.' }
     },
   }
 }
@@ -862,14 +1231,47 @@ export const adminFlows: Record<string, AdminFlow[]> = {
     { name: 'release', label: 'Release the batch', build: releaseBatch },
     { name: 'send-back', label: 'Send it back', build: sendBatchBack },
   ],
+  // The shelf's own flows, on the Library page's first tab. Adding is
+  // list-level only; editing is offered from the list and from a title's
+  // record alike, and opened on a record it arrives with that title picked.
+  books: [
+    {
+      name: 'add',
+      label: 'Add a title',
+      fromList: true,
+      when: () => false,
+      build: addTitle,
+    },
+    {
+      name: 'edit-title',
+      label: 'Edit a title',
+      fromList: true,
+      build: editTitle,
+    },
+  ],
   library: [
     {
       name: 'lend',
-      label: 'Issue this book',
-      // A title the catalogue has taken off lending is not offered; the
-      // endpoint would refuse it, and the button should not ask.
-      when: (record) => record.isavailable === 'Available',
+      label: 'Issue a book',
+      // The list's primary button, not a record's: `when` is only consulted on
+      // records, so refusing every one of them keeps "issue" off a loan that
+      // already exists while the register itself still offers it.
+      fromList: true,
+      when: () => false,
       build: lend,
     },
+    {
+      name: 'return',
+      label: 'Return this book',
+      when: (record) => record.standing !== 'Returned',
+      build: takeBack,
+    },
+    {
+      name: 'pay',
+      label: 'Collect the fine',
+      when: (record) => record.paid === 'Owing',
+      build: collectFine,
+    },
+    { name: 'correct', label: 'Correct the record', build: correctLoan },
   ],
 }

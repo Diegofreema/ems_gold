@@ -42,12 +42,16 @@ export function primaryActionKind(
   // the counter queue cannot be written to and still owes its report a button.
   // The rules below are inferences from a label or a route; this one is not.
   if (definition.actionTo) return 'link'
+  // A flow the collection offers from its own list stands whether or not the
+  // records themselves can be edited: `readonly` says nothing arrives through
+  // the create form, and a guided flow is not that form — the lending register
+  // cannot be typed into and still issues the books that fill it.
+  if (routes.flow && flows?.some((flow) => flow.fromList && (flow.allowed?.() ?? true)))
+    return 'flow'
   // A collection nobody can add to has no primary action, whatever its label
   // would otherwise have done.
   if (definition.readonly) return 'none'
   if (isFileAction(definition.action)) return 'file'
-  if (routes.flow && flows?.some((flow) => flow.fromList && (flow.allowed?.() ?? true)))
-    return 'flow'
   if (routes.create) return 'create'
   return 'placeholder'
 }

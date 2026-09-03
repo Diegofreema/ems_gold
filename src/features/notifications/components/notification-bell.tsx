@@ -1,14 +1,22 @@
 import { Link } from '@tanstack/react-router'
 import { Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useMarkAllNoticesRead, useUnreadNoticeCount } from '@/api/notifications/hooks'
 import { Button } from '@/components/ui/button'
-import { useNotificationsStore, useUnread } from '../notifications.store'
+import { useNotificationsStore } from '../notifications.store'
 import type { Notification } from '../types'
 import { NotificationRow } from './notification-row'
 
 const PEEK_COUNT = 4
 
-/** Header bell with an unread badge and a 380px panel anchored under it. */
+/**
+ * Header bell with an unread badge and a 380px panel anchored under it.
+ *
+ * The badge is the server's own number, off `/notifications/unread-count` —
+ * the endpoint made for it, polled by its hook — rather than a count of the
+ * few rows the panel holds, which top out at the page size and go stale the
+ * moment another device reads something.
+ */
 export function NotificationBell({
   notifications,
   allPath,
@@ -17,8 +25,19 @@ export function NotificationBell({
   allPath: string
 }) {
   const [open, setOpen] = useState(false)
-  const unread = useUnread(notifications)
+  const unread = useUnreadNoticeCount().data ?? 0
   const markAllRead = useNotificationsStore((state) => state.markAllRead)
+  const markBoardRead = useMarkAllNoticesRead()
+
+  /**
+   * One call to `read-all`, and the browser's own marks alongside it so the
+   * rows dim before the refetch confirms — the same pair the notifications
+   * page fires, so the two buttons cannot disagree about what "all" means.
+   */
+  const clearAll = () => {
+    markAllRead(notifications.map((item) => item.id))
+    markBoardRead.mutate()
+  }
 
   useEffect(() => {
     if (!open) return
@@ -41,9 +60,9 @@ export function NotificationBell({
         className="size-9"
       >
         <Bell className="size-4" strokeWidth={1.9} />
-        {unread.length > 0 && (
+        {unread > 0 && (
           <span className="absolute -top-1.5 -right-1.5 grid h-4.25 min-w-4.25 place-items-center rounded-full bg-brand px-1 font-heading text-2xs font-extrabold tabular-nums text-white">
-            {unread.length}
+            {unread}
           </span>
         )}
       </Button>
@@ -63,7 +82,8 @@ export function NotificationBell({
               <Button
                 variant="ghost"
                 className="px-1.5 py-0.5 text-xs text-brand"
-                onClick={() => markAllRead(notifications.map((item) => item.id))}
+                pending={markBoardRead.isPending}
+                onClick={clearAll}
               >
                 Mark all read
               </Button>

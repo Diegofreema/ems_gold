@@ -47,6 +47,8 @@ test('the register reads the names the endpoint already resolved', () => {
 test('the row carries the ids the edit form opens on', () => {
   const row = periodRow(PERIOD)
   assert.equal(row.department_id, '1')
+  // No arm on this period — the row says so with an empty choice, not "null".
+  assert.equal(row.classarm_id, '')
   assert.equal(row.subject_id, '1')
   assert.equal(row.session_id, '8')
   assert.equal(row.semester_id, '1')
@@ -72,6 +74,7 @@ test('half a slot still reads; neither does not', () => {
 test('the form sends both of the pair the endpoint refuses without', () => {
   const body = periodBody({
     department_id: '1',
+    classarm_id: '4',
     day_of_week: 'Monday',
     start_time: '08:00',
     end_time: '09:00',
@@ -81,6 +84,7 @@ test('the form sends both of the pair the endpoint refuses without', () => {
   })
   assert.deepEqual(body, {
     department_id: 1,
+    classarm_id: 4,
     day_of_week: 'Monday',
     start_time: '08:00',
     end_time: '09:00',
@@ -96,6 +100,7 @@ test('the form sends both of the pair the endpoint refuses without', () => {
 test('an unset term is left out, so the endpoint falls back to the current one', () => {
   const body = periodBody({
     department_id: '1',
+    classarm_id: '4',
     day_of_week: 'Friday',
     start_time: '10:00',
     end_time: '10:40',
@@ -103,6 +108,7 @@ test('an unset term is left out, so the endpoint falls back to the current one',
   })
   assert.equal(body.session_id, undefined)
   assert.equal(body.semester_id, undefined)
+  assert.equal(body.classarm_id, 4)
   assert.equal(body.subject_id, 2)
   assert.equal(body.title, null)
 })

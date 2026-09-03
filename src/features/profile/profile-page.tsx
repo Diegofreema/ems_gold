@@ -50,7 +50,7 @@ export function ProfilePage({
     typeof edited === 'string' && edited ? edited : config.values.fullname
 
   return (
-    <div className="max-w-[940px]">
+    <div className="mx-auto w-full max-w-[940px]">
       <ProfileIdentity
         initials={config.initials}
         name={name}

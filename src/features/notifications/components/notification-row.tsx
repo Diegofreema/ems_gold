@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useOpenNotice } from '@/api/notifications/hooks'
+import { useMarkNoticeRead } from '@/api/notifications/hooks'
 import { Tag } from '@/components/common/tag'
 import { cn } from '@/lib/utils'
 import { useNotificationsStore } from '../notifications.store'
@@ -27,15 +27,16 @@ export function NotificationRow({
 }) {
   const stored = useNotificationsStore((state) => state.read[notification.id])
   const markRead = useNotificationsStore((state) => state.markRead)
-  const openNotice = useOpenNotice()
+  const markNoticeRead = useMarkNoticeRead()
   const read = notification.read || stored
 
   const open = () => {
     markRead(notification.id)
-    // Opening a notice is also what counts the view, so it is asked for
-    // once and only for one the reader has not already opened.
+    // Marked read through `/read`, not by opening the notice — the list is
+    // already showing it, so ticking a row off should not count a fresh view.
+    // Asked once, and only for one the reader has not already read.
     if (notification.noticeId !== undefined && !read) {
-      openNotice.mutate(notification.noticeId)
+      markNoticeRead.mutate(notification.noticeId)
     }
     onOpen?.()
   }

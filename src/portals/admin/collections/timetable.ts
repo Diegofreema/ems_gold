@@ -60,6 +60,8 @@ const distinct = (values: (number | null | undefined)[]) =>
 export const timetable: CollectionDef = {
   id: 'timetable',
   path: '/admin/timetable',
+  // Six fields and no sub-tables: the record opens over the register.
+  modal: true,
   kicker: 'Academics',
   title: 'Timetable',
   description:
@@ -136,6 +138,14 @@ export const timetable: CollectionDef = {
           required: true,
           optionsFrom: 'classes',
           hint: 'The whole class sits the period. Two classes on this school share a name, so pick by the one the register shows.',
+        },
+        {
+          key: 'classarm_id',
+          label: 'Arm',
+          required: true,
+          optionsFrom: 'arms',
+          dependsOn: 'department_id',
+          hint: 'Arms belong to a class, so pick the class first.',
         },
         { key: 'day_of_week', label: 'Day', required: true, options: DAYS },
         {

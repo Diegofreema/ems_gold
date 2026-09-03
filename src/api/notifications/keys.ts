@@ -13,5 +13,4 @@ export const noticeKeys = {
   mine: (params: MyNoticeParams) => [...noticeKeys.everyMine(), params] as const,
   unread: () => [...noticeKeys.all, 'unread'] as const,
   list: (params: NoticeListParams) => [...noticeKeys.all, 'list', params] as const,
-  detail: (id: string) => [...noticeKeys.all, 'detail', id] as const,
 }

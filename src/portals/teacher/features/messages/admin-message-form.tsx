@@ -39,7 +39,7 @@ export function AdminMessageForm() {
   })
 
   return (
-    <div className="max-w-[640px]">
+    <div className="mx-auto w-full max-w-[640px]">
       <PageHeader
         kicker="Messages"
         title="Message the admin"
