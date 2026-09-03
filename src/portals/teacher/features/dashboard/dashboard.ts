@@ -42,30 +42,46 @@ export function teacherFigures(dashboard: TeacherDashboard) {
   const arms = dashboard.class_arms;
 
   return [
-    countTile(
-      'Pupils I teach',
-      stats.my_students,
-      `Of ${stats.total_students} in the school`,
-    ),
-    countTile(
-      'My subjects',
-      stats.my_subjects,
-      stats.my_subjects ? 'Set by the school office' : 'None assigned yet',
-    ),
-    countTile(
-      'Classes I take',
-      arms.length,
-      armNames(arms) || 'Not a class teacher this session',
-    ),
-    countTile(
-      'Assignments open',
-      stats.pending_assignments,
-      stats.pending_assignments
-        ? 'Still taking submissions'
-        : 'Nothing open just now',
-      // Worth flagging only while something is actually open.
-      stats.pending_assignments > 0,
-    ),
+    {
+      ...countTile(
+        'Pupils I teach',
+        stats.my_students,
+        `Of ${stats.total_students} in the school`,
+      ),
+      icon: GraduationCap,
+      to: '/teacher/students',
+    },
+    {
+      ...countTile(
+        'My subjects',
+        stats.my_subjects,
+        stats.my_subjects ? 'Set by the school office' : 'None assigned yet',
+      ),
+      icon: BookOpen,
+      to: '/teacher/subjects',
+    },
+    {
+      ...countTile(
+        'Classes I take',
+        arms.length,
+        armNames(arms) || 'Not a class teacher this session',
+      ),
+      icon: Users,
+      to: '/teacher/attendance',
+    },
+    {
+      ...countTile(
+        'Assignments open',
+        stats.pending_assignments,
+        stats.pending_assignments
+          ? 'Still taking submissions'
+          : 'Nothing open just now',
+        // Worth flagging only while something is actually open.
+        stats.pending_assignments > 0,
+      ),
+      icon: ClipboardList,
+      to: '/teacher/assignments',
+    },
   ];
 }
 
