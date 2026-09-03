@@ -94,7 +94,7 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-[18px]"
+          className="flex flex-col gap-4.5"
         >
           {first && (
             <PasswordInput<ResetPasswordValues>

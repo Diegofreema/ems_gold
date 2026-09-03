@@ -24,10 +24,10 @@ export function FeaturesSection() {
             <div className="mt-3 font-heading text-[clamp(16.5px,1.7vw,19px)] font-extrabold tracking-[-.015em]">
               {feature.name}
             </div>
-            <div className="text-[13px] leading-[1.5] text-neutral-800">
+            <div className="text-sm leading-[1.5] text-neutral-800">
               {feature.body}
             </div>
-            <div className="mt-auto border-t-2 border-divider pt-3 text-[11px] font-bold tracking-[.08em] text-neutral-600 uppercase">
+            <div className="mt-auto border-t-2 border-divider pt-3 text-2xs font-bold tracking-[.08em] text-neutral-600 uppercase">
               Solves: {feature.solves}
             </div>
           </div>

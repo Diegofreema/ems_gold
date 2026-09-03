@@ -8,7 +8,7 @@ export function Marquee() {
         {[...MARQUEE, ...MARQUEE].map((item, index) => (
           <div
             key={`${item}-${index}`}
-            className="flex items-center gap-[22px] px-[22px] py-[11px] text-[11px] font-bold tracking-[.13em] whitespace-nowrap text-neutral-600 uppercase"
+            className="flex items-center gap-5.5 px-5.5 py-2.75 text-2xs font-bold tracking-[.13em] whitespace-nowrap text-neutral-600 uppercase"
           >
             <span className="size-[5px] flex-none bg-brand" />
             {item}

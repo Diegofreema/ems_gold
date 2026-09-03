@@ -22,23 +22,23 @@ export function SolutionsSection() {
           >
             <div>
               <div className="flex items-baseline gap-3">
-                <div className="font-heading text-[11px] font-extrabold tracking-[.14em] text-neutral-500">
+                <div className="font-heading text-2xs font-extrabold tracking-[.14em] text-neutral-500">
                   {solution.num}
                 </div>
-                <div className="text-[11px] font-bold tracking-[.12em] text-neutral-600 uppercase">
+                <div className="text-2xs font-bold tracking-[.12em] text-neutral-600 uppercase">
                   The problem
                 </div>
               </div>
               <div className="mt-3 font-heading text-[clamp(19px,2.2vw,27px)] font-extrabold tracking-[-.02em]">
                 {solution.problem}
               </div>
-              <div className="mt-2 max-w-[42ch] text-[13.5px] leading-[1.5] text-neutral-700">
+              <div className="mt-2 max-w-[42ch] text-sm leading-[1.5] text-neutral-700">
                 {solution.pain}
               </div>
             </div>
 
             <div className="border-l-2 border-brand pl-[clamp(14px,2vw,22px)]">
-              <div className="text-[11px] font-bold tracking-[.12em] text-brand-700 uppercase">
+              <div className="text-2xs font-bold tracking-[.12em] text-brand-700 uppercase">
                 What NETPRO does
               </div>
               <div className="mt-3 max-w-[46ch] text-[clamp(14.5px,1.4vw,17px)] leading-[1.5]">
@@ -46,7 +46,7 @@ export function SolutionsSection() {
               </div>
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {solution.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-[10.5px]">
+                  <Badge key={tag} variant="outline" className="text-2xs">
                     {tag}
                   </Badge>
                 ))}

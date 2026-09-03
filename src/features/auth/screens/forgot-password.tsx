@@ -66,7 +66,7 @@ export function ForgotPasswordScreen() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-[18px]"
+          className="flex flex-col gap-4.5"
         >
           <TextField<ForgotPasswordValues>
             name="email"
@@ -87,7 +87,7 @@ export function ForgotPasswordScreen() {
       </FormProvider>
 
       <Rule />
-      <div className="text-[12.5px] leading-relaxed text-muted-foreground">
+      <div className="text-xs leading-relaxed text-muted-foreground">
         No email arrives if the address is not on an account. The school office
         can tell you which address is registered.
       </div>

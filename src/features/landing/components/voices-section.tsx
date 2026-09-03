@@ -23,7 +23,7 @@ export function VoicesSection() {
             <blockquote className="m-0 font-heading text-[clamp(17px,1.8vw,21px)] leading-[1.26] font-extrabold tracking-[-.015em]">
               {voice.text}
             </blockquote>
-            <figcaption className="mt-auto border-t-2 border-divider pt-3.5 text-[12px] leading-[1.45] text-neutral-700">
+            <figcaption className="mt-auto border-t-2 border-divider pt-3.5 text-xs leading-[1.45] text-neutral-700">
               <div className="font-bold text-ink">{voice.who}</div>
               <div>{voice.where}</div>
             </figcaption>

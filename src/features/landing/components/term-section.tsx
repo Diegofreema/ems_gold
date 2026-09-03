@@ -43,7 +43,7 @@ export function TermSection() {
               <div className="flex items-center justify-between gap-2">
                 <div
                   className={cn(
-                    'font-heading text-[11px] font-extrabold tracking-[.14em]',
+                    'font-heading text-2xs font-extrabold tracking-[.14em]',
                     lit ? 'text-brand' : 'text-neutral-500',
                   )}
                 >
@@ -60,10 +60,10 @@ export function TermSection() {
               <div className="mt-6.5 font-heading text-[clamp(17px,1.7vw,21px)] font-extrabold tracking-[-.015em]">
                 {step.title}
               </div>
-              <div className="mt-2 text-[12.5px] leading-[1.45] text-neutral-700">
+              <div className="mt-2 text-xs leading-[1.45] text-neutral-700">
                 {step.body}
               </div>
-              <div className="mt-3.5 text-[10.5px] font-bold tracking-[.1em] text-neutral-600 uppercase">
+              <div className="mt-3.5 text-2xs font-bold tracking-[.1em] text-neutral-600 uppercase">
                 {step.who}
               </div>
             </div>

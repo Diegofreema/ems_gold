@@ -29,10 +29,10 @@ export function FrictionSection() {
                 key={friction.head}
                 className="border-b-2 border-divider py-4.5 pr-4"
               >
-                <div className="font-heading text-[13px] font-extrabold tracking-[.02em]">
+                <div className="font-heading text-sm font-extrabold tracking-[.02em]">
                   {friction.head}
                 </div>
-                <div className="mt-1.5 text-[12.5px] leading-[1.45] text-neutral-700">
+                <div className="mt-1.5 text-xs leading-[1.45] text-neutral-700">
                   {friction.body}
                 </div>
               </div>

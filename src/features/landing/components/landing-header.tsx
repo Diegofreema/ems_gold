@@ -20,7 +20,7 @@ export function LandingHeader() {
       <div className="mx-auto flex max-w-[1320px] items-center gap-[clamp(16px,3vw,40px)] px-[clamp(20px,4vw,48px)] py-3.5">
         <a href="#top" className="flex items-center gap-2.5 text-ink no-underline">
           <div className="size-5 flex-none bg-brand" />
-          <div className="font-heading text-[15px] font-extrabold tracking-[-.01em] whitespace-nowrap">
+          <div className="font-heading text-base font-extrabold tracking-[-.01em] whitespace-nowrap">
             NETPRO EMS
           </div>
         </a>
@@ -30,7 +30,7 @@ export function LandingHeader() {
             <a
               key={link.href}
               href={link.href}
-              className="hidden text-[12.5px] font-semibold text-neutral-700 no-underline min-[721px]:block"
+              className="hidden text-xs font-semibold text-neutral-700 no-underline min-[721px]:block"
             >
               {link.label}
             </a>

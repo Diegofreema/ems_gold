@@ -18,7 +18,7 @@ export function TrustSection() {
               room, and stay on the line through the first set of reports.
             </Lede>
           </SectionHeading>
-          <Button asChild className="mt-5.5 h-12 px-[22px] text-[15px]">
+          <Button asChild className="mt-5.5 h-12 px-5.5 text-base">
             <a href="#quote">Book a walkthrough</a>
           </Button>
         </div>
@@ -31,10 +31,10 @@ export function TrustSection() {
             >
               <div className="mt-[5px] size-2.5 bg-brand" />
               <div>
-                <div className="font-heading text-[14.5px] font-extrabold">
+                <div className="font-heading text-base font-extrabold">
                   {item.head}
                 </div>
-                <div className="mt-1 max-w-[52ch] text-[13px] leading-[1.5] text-neutral-700">
+                <div className="mt-1 max-w-[52ch] text-sm leading-[1.5] text-neutral-700">
                   {item.body}
                 </div>
               </div>

@@ -5,15 +5,15 @@ export function AuthAlert({ title, body }: { title: string; body: string }) {
   return (
     <div
       role="alert"
-      className="mb-[22px] flex animate-ems-shake gap-3 border-2 border-brand px-4 py-3.5"
+      className="mb-5.5 flex animate-ems-shake gap-3 rounded-lg border border-danger/50 bg-danger-subtle px-4 py-3.5"
     >
       <CircleAlert
-        className="mt-px size-[18px] flex-none text-brand"
+        className="mt-px size-4.5 flex-none text-danger-ink"
         strokeWidth={2.2}
       />
       <div>
         <div className="font-heading text-sm font-extrabold">{title}</div>
-        <div className="mt-[3px] text-[13px] text-muted-foreground">{body}</div>
+        <div className="mt-0.75 text-sm text-muted-foreground">{body}</div>
       </div>
     </div>
   )

@@ -20,7 +20,7 @@ export function Hero() {
         <div className="pointer-events-auto">
           <div className="mb-5.5 flex items-center gap-2.5">
             <div className="size-2 animate-ems-blink bg-brand" />
-            <div className="text-[10.5px] font-bold tracking-[.16em] text-brand-700 uppercase">
+            <div className="text-2xs font-bold tracking-[.16em] text-brand-700 uppercase">
               AI-powered educational management, one record
             </div>
           </div>
@@ -38,10 +38,10 @@ export function Hero() {
           </p>
 
           <div className="mt-8.5 flex flex-wrap gap-3">
-            <Button asChild className="h-12 px-[22px] text-[15px]">
+            <Button asChild className="h-12 px-5.5 text-base">
               <Link to="/sign-in">Sign in to your portal</Link>
             </Button>
-            <Button asChild variant="outline" className="h-12 px-[22px] text-[15px]">
+            <Button asChild variant="outline" className="h-12 px-5.5 text-base">
               <a href="#term">See a term move through it</a>
             </Button>
           </div>
@@ -54,7 +54,7 @@ export function Hero() {
               <div className="font-heading text-[clamp(16px,1.8vw,20px)] font-extrabold tracking-[-.015em]">
                 {fact.name}
               </div>
-              <div className="mt-[3px] text-[12.5px] leading-[1.4] text-neutral-700">
+              <div className="mt-0.75 text-xs leading-[1.4] text-neutral-700">
                 {fact.label}
               </div>
             </div>

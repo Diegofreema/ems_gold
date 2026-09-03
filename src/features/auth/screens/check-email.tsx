@@ -64,7 +64,7 @@ export function CheckEmailScreen() {
         title="Check your email"
         description="If an account uses that address, a six-digit code is on its way. It expires in fifteen minutes and can only be used once."
       />
-      <div className="mt-[18px] border-2 border-divider px-4 py-3.5 font-heading text-[13px] font-extrabold">
+      <div className="mt-4.5 rounded-lg border border-divider px-4 py-3.5 font-heading text-sm font-extrabold">
         {email || 'the address on your account'}
       </div>
       <Rule />
@@ -80,7 +80,7 @@ export function CheckEmailScreen() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-[18px]"
+          className="flex flex-col gap-4.5"
         >
           <TextField<VerifyOtpValues>
             name="otp"
@@ -106,7 +106,7 @@ export function CheckEmailScreen() {
         </form>
       </FormProvider>
 
-      <div className="mt-[18px] text-[12.5px] leading-relaxed text-muted-foreground">
+      <div className="mt-4.5 text-xs leading-relaxed text-muted-foreground">
         Nothing after a few minutes? Look in spam, then check the address with the
         school office.
       </div>

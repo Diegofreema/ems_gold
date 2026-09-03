@@ -127,7 +127,7 @@ export function SignInScreen() {
           />
 
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <label className="flex cursor-pointer items-center gap-2.5 text-[13.5px]">
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm">
               <Checkbox
                 checked={form.watch('remember')}
                 onCheckedChange={(checked) =>
@@ -152,7 +152,7 @@ export function SignInScreen() {
       </FormProvider>
 
       <Rule />
-      <div className="text-[12.5px] leading-relaxed text-muted-foreground">
+      <div className="text-xs leading-relaxed text-muted-foreground">
         Accounts are created by the school office. If you are new and have no
         password yet, open the invitation email and use the link in it, or ask
         the office to send it again.

@@ -13,7 +13,7 @@ export function PasswordStrength({ password }: { password: string }) {
           <div
             key={index}
             className={cn(
-              'h-1 flex-1 transition-colors duration-200',
+              'h-1 flex-1 rounded-full transition-colors duration-200',
               index < score
                 ? acceptable
                   ? 'bg-foreground'
@@ -25,7 +25,7 @@ export function PasswordStrength({ password }: { password: string }) {
       </div>
       <div
         className={cn(
-          'mt-1.5 text-[11px]',
+          'mt-1.5 text-2xs',
           password && !acceptable ? 'text-brand-700' : 'text-neutral-600',
         )}
       >

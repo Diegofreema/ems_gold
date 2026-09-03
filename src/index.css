@@ -571,3 +571,16 @@
     display: none !important;
   }
 }
+
+/* The JS multiplier already zeroes the ems keyframes for reduced motion;
+   this catches what it cannot reach — the primitive open/close animations
+   and hover transitions. Near-zero rather than zero so `both`-filled
+   keyframes still land on their end state. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

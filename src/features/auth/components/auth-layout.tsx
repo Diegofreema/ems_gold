@@ -28,7 +28,7 @@ export function AuthLayout() {
             </div>
           </div>
           <div className="flex-1" />
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+          <div className="text-2xs uppercase tracking-kicker text-muted-foreground">
             {stepLabel}
           </div>
           <ThemeToggle />
@@ -44,7 +44,7 @@ export function AuthLayout() {
         </div>
 
         <footer className="flex flex-wrap items-center gap-4.5 border-t-2 border-divider px-7 py-4">
-          <div className="text-[11.5px] text-muted-foreground">
+          <div className="text-2xs text-muted-foreground">
             NETPRO EMS · Bronze · 2025/2026 session
           </div>
           <div className="flex-1" />

@@ -14,7 +14,7 @@ export function PortalLinks() {
         >
           <span className="flex-1">{portal.label}</span>
           <span className="text-xs text-muted-foreground">{portal.hint}</span>
-          <ChevronRight className="size-[15px]" strokeWidth={2} />
+          <ChevronRight className="size-3.75" strokeWidth={2} />
         </Link>
       ))}
     </div>

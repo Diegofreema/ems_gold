@@ -40,7 +40,7 @@ export function Section({
 /** The numbered line above every heading. */
 export function Kicker({ children }: { children: ReactNode }) {
   return (
-    <div className="text-[10.5px] font-bold tracking-[.16em] text-brand-700 uppercase">
+    <div className="text-2xs font-bold tracking-[.16em] text-brand-700 uppercase">
       {children}
     </div>
   )

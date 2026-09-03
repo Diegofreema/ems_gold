@@ -22,7 +22,7 @@ export function FaqSection() {
     >
       <Reveal>
         <SectionHeading kicker="08 — Questions" title="Before you commit.">
-          <p className="mt-3.5 max-w-[34ch] text-[13.5px] leading-[1.55] text-neutral-700">
+          <p className="mt-3.5 max-w-[34ch] text-sm leading-[1.55] text-neutral-700">
             Anything not covered here, ask on the walkthrough.
           </p>
         </SectionHeading>
@@ -54,7 +54,7 @@ export function FaqSection() {
               <div
                 id={`${id}-${index}`}
                 hidden={!expanded}
-                className="max-w-[58ch] pb-5 text-[13.5px] leading-[1.6] text-neutral-800"
+                className="max-w-[58ch] pb-5 text-sm leading-[1.6] text-neutral-800"
               >
                 {faq.answer}
               </div>

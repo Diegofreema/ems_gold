@@ -10,19 +10,19 @@ export function AuthPoster() {
       </div>
 
       <div>
-        <div className="text-[10px] uppercase tracking-[0.14em] opacity-85">
+        <div className="text-2xs uppercase tracking-kicker opacity-85">
           Bronze edition
         </div>
         <div className="mt-3.5 font-heading text-[46px] leading-[1.02] font-extrabold tracking-[-0.03em] text-pretty">
           One school, one record.
         </div>
-        <p className="mt-4 max-w-[34ch] text-[14.5px] leading-normal opacity-90">
+        <p className="mt-4 max-w-[34ch] text-base leading-normal opacity-90">
           Fees, results, attendance and admissions in a single system the
           office, the staff room and the home all read from.
         </p>
       </div>
 
-      <div className="border-t-2 border-white/50 pt-4 text-[11.5px] leading-normal opacity-90">
+      <div className="border-t-2 border-white/50 pt-4 text-2xs leading-normal opacity-90">
         Trouble signing in? Call the school office on 0803 000 0000, Monday to
         Friday, 8am–4pm.
       </div>

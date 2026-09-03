@@ -56,7 +56,7 @@ export function WalkthroughSection() {
             <div className="font-heading text-[clamp(19px,2vw,24px)] font-extrabold tracking-[-.02em]">
               Request received.
             </div>
-            <p className="m-0 text-[13.5px] leading-[1.55] text-neutral-700">
+            <p className="m-0 text-sm leading-[1.55] text-neutral-700">
               We will reply to {sentTo} within one working day with two times to
               choose from.
             </p>
@@ -88,14 +88,14 @@ export function WalkthroughSection() {
                 options={SIZE_OPTIONS}
               />
 
-              <div className="text-[11.5px] text-neutral-600">
+              <div className="text-2xs text-neutral-600">
                 We use this once, to arrange the call.
               </div>
 
               <Button
                 type="submit"
                 pending={form.formState.isSubmitting}
-                className="h-12 w-full justify-start text-[15px]"
+                className="h-12 w-full justify-start text-base"
               >
                 Request the walkthrough
               </Button>

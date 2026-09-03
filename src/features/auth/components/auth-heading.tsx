@@ -11,11 +11,11 @@ export function AuthHeading({
   return (
     <>
       {kicker && (
-        <div className="text-[10px] uppercase tracking-[0.12em] text-brand-700">
+        <div className="text-2xs uppercase tracking-kicker text-brand-700">
           {kicker}
         </div>
       )}
-      <h2 className="mt-2.5 text-[34px] tracking-[-0.02em]">{title}</h2>
+      <h2 className="mt-2.5 text-detail-title">{title}</h2>
       {description && (
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       )}

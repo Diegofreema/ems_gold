@@ -39,7 +39,7 @@ export function SignedInScreen() {
         )}
       </Button>
 
-      <div className="mt-[22px] flex flex-wrap gap-4 text-xs">
+      <div className="mt-5.5 flex flex-wrap gap-4 text-xs">
         {PORTALS.map((entry) => (
           <Link key={entry.to} to={entry.to}>
             {entry.label}
