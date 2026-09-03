@@ -124,10 +124,10 @@ export function ClassSheetPage() {
 
       {/* The sheet is as wide as the class has subjects, so it scrolls inside
           its own frame rather than pushing the page sideways. */}
-      <div className="overflow-x-auto border-2 border-divider">
+      <div className="overflow-x-auto rounded-xl border border-foreground/60 bg-raised">
         <table className="w-full min-w-max border-collapse text-sm">
           <thead>
-            <tr className="border-b-2 border-divider bg-neutral-100 text-left">
+            <tr className="border-b border-divider-strong bg-neutral-100 text-left">
               <th className="sticky left-0 z-10 bg-neutral-100 px-3 py-2.5 font-heading text-2xs uppercase tracking-label">
                 Pupil
               </th>

@@ -81,7 +81,7 @@ export function PayPage() {
         <div
           role="radiogroup"
           aria-label="Invoice"
-          className="flex flex-col overflow-hidden rounded-lg border border-divider bg-background"
+          className="flex flex-col overflow-hidden rounded-lg border border-divider bg-raised"
         >
           {outstanding.map((entry) => (
             <button
@@ -92,12 +92,12 @@ export function PayPage() {
               onClick={() => void setInvoiceId(entry.id)}
               className={cn(
                 'flex cursor-pointer items-center gap-3.5 border-b border-divider px-4 py-3.5 text-left text-sm transition-colors last:border-b-0 hover:bg-neutral-200',
-                entry.id === chosen?.id ? 'bg-brand/10' : 'bg-background',
+                entry.id === chosen?.id ? 'bg-brand/10' : 'bg-raised',
               )}
             >
               <span
                 className={cn(
-                  'size-4.5 flex-none rounded-full border-2',
+                  'size-4.5 flex-none rounded-full border',
                   entry.id === chosen?.id
                     ? 'border-brand bg-brand'
                     : 'border-divider bg-transparent',

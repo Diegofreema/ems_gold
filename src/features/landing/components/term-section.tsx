@@ -28,7 +28,7 @@ export function TermSection() {
         </SectionHeading>
       </Reveal>
 
-      <Reveal className="mt-[clamp(32px,5vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] border-t-2 border-ink">
+      <Reveal className="mt-[clamp(32px,5vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] border-t border-ink">
         {STEPS.map((step, index) => {
           const lit = index === active
           return (
@@ -36,7 +36,7 @@ export function TermSection() {
               key={step.num}
               onMouseEnter={() => setActive(index)}
               className={cn(
-                'min-h-[168px] border-b-2 border-l-2 border-divider px-4.5 pt-5 pb-6.5 transition-colors duration-250 ease-out',
+                'min-h-[168px] border-b border-l border-divider-strong px-4.5 pt-5 pb-6.5 transition-colors duration-250 ease-out',
                 lit && 'bg-brand-100',
               )}
             >

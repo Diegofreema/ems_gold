@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import { CountUp } from '@/components/common/count-up'
 import { TileStrip } from '@/components/page/tile-strip'
 import { formatNaira } from '@/lib/format'
@@ -9,6 +10,12 @@ export type DashboardFigure = {
   delta: string
   /** Renders the delta in accent — the figure needs attention. */
   hot?: boolean
+  /** The card's icon chip. */
+  icon?: LucideIcon
+  /** The page this figure summarises; the card lifts and opens it. */
+  to?: string
+  /** A real monthly series to pulse under the figure. */
+  spark?: number[]
 }
 
 const FORMATTERS = {
@@ -27,7 +34,10 @@ export function FigureTiles({ figures }: { figures: DashboardFigure[] }) {
         label: figure.label,
         value: <CountUp to={figure.amount} format={FORMATTERS[figure.format]} />,
         delta: figure.delta,
-        deltaTone: figure.hot ? 'brand' : 'muted',
+        deltaTone: figure.hot ? 'alert' : 'muted',
+        icon: figure.icon,
+        to: figure.to,
+        spark: figure.spark,
       }))}
     />
   )

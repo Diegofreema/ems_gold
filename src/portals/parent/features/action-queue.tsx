@@ -28,14 +28,14 @@ export function ActionQueue({
 }) {
   if (!items.length) {
     return (
-      <div className="mt-3.5 border-t-2 border-divider px-1 py-3.25 text-sm text-muted-foreground">
+      <div className="mt-3.5 border-t border-divider-strong px-1 py-3.25 text-sm text-muted-foreground">
         {empty}
       </div>
     )
   }
 
   return (
-    <div className="mt-3.5 border-t-2 border-divider">
+    <div className="mt-3.5 border-t border-divider-strong">
       {items.map((item, index) => (
         <div
           key={item.id}

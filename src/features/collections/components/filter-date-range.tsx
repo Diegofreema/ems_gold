@@ -86,7 +86,7 @@ export function FilterDateRange({
         />
         {/* Clearing has to be its own control: unpicking a range by clicking
             the same two days back off is not something anyone will find. */}
-        <div className="flex justify-end border-t-2 border-divider p-2">
+        <div className="flex justify-end border-t border-divider-strong p-2">
           <Button
             variant="ghost"
             size="sm"

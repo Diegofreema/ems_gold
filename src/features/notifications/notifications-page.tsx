@@ -81,7 +81,7 @@ export function NotificationsPage({
       />
 
       {visible.length === 0 ? (
-        <div className="rounded-xl border border-divider px-6 py-14 text-center">
+        <div className="rounded-xl border border-divider bg-raised px-6 py-14 text-center shadow-card">
           <div className="font-heading text-lg font-extrabold">
             Nothing to read
           </div>
@@ -96,7 +96,7 @@ export function NotificationsPage({
           return (
             <div key={group} className="mb-6">
               <SectionHeading className="mb-2.5">{group}</SectionHeading>
-              <div className="border-t-2 border-divider">
+              <div className="border-t border-divider-strong">
                 {items.map((notification, index) => (
                   <NotificationRow
                     key={notification.id}

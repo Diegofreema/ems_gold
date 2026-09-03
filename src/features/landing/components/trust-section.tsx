@@ -23,11 +23,11 @@ export function TrustSection() {
           </Button>
         </div>
 
-        <div className="grid border-t-2 border-ink">
+        <div className="grid border-t border-ink">
           {TRUST.map((item) => (
             <div
               key={item.head}
-              className="grid grid-cols-[24px_minmax(0,1fr)] items-start gap-3.5 border-b-2 border-divider py-4"
+              className="grid grid-cols-[24px_minmax(0,1fr)] items-start gap-3.5 border-b border-divider-strong py-4"
             >
               <div className="mt-[5px] size-2.5 bg-brand" />
               <div>

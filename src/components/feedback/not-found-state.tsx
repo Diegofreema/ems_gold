@@ -26,7 +26,7 @@ export function NotFoundState({
         places {audience} usually want:
       </p>
 
-      <div className="mt-5 border-t-2 border-divider">
+      <div className="mt-5 border-t border-divider-strong">
         {links.map((link) => (
           <Link
             key={link.to}

@@ -28,11 +28,11 @@ export function FaqSection() {
         </SectionHeading>
       </Reveal>
 
-      <Reveal className="border-t-2 border-ink">
+      <Reveal className="border-t border-ink">
         {FAQS.map((faq, index) => {
           const expanded = open === index
           return (
-            <div key={faq.question} className="border-b-2 border-divider">
+            <div key={faq.question} className="border-b border-divider-strong">
               <button
                 type="button"
                 aria-expanded={expanded}

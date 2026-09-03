@@ -255,7 +255,7 @@ export function CollectionDetail({
 
         <aside className={tabs.length > 0 ? undefined : 'max-w-[46ch]'}>
           <SectionHeading className="mb-3.5">Record</SectionHeading>
-          <div className="border-t-2 border-divider">
+          <div className="border-t border-divider-strong">
             {fields.map((field) =>
               /* A written body is read down the panel rather than across it:
                  a scheme of work in the right-hand half of a label row is a

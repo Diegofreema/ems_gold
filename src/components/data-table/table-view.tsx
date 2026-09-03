@@ -32,15 +32,15 @@ export function TableView<TRow>({
             <th
               key={column.key}
               className={cn(
-                'border-b-2 border-divider p-2 text-2xs font-normal uppercase tracking-label whitespace-nowrap text-muted-foreground',
+                'border-b border-divider-strong p-2 text-2xs font-normal uppercase tracking-label whitespace-nowrap text-muted-foreground',
                 column.align === 'right' ? 'text-right' : 'text-left',
               )}
             >
               {column.label}
             </th>
           ))}
-          {action && <th className="border-b-2 border-divider" />}
-          {onRowClick && <th className="w-11 border-b-2 border-divider" />}
+          {action && <th className="border-b border-divider-strong" />}
+          {onRowClick && <th className="w-11 border-b border-divider-strong" />}
         </tr>
       </thead>
       <tbody>

@@ -9,6 +9,8 @@ const tagVariants = cva(
         accent: 'bg-brand-100 text-brand-800',
         neutral: 'bg-neutral-100 text-neutral-800',
         outline: 'border border-brand text-brand',
+        good: 'bg-success-subtle text-success-ink',
+        bad: 'bg-danger-subtle text-danger-ink',
       },
     },
     defaultVariants: { variant: 'neutral' },

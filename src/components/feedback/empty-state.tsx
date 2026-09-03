@@ -12,7 +12,7 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="animate-ems-up rounded-xl border border-divider px-6 py-16 text-center">
+    <div className="animate-ems-up rounded-xl border border-divider bg-raised px-6 py-16 text-center shadow-card">
       <div className="mx-auto grid size-9.5 place-items-center rounded-lg border border-divider text-neutral-600">
         <Table2 className="size-5" strokeWidth={1.8} />
       </div>

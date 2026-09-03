@@ -1,3 +1,13 @@
+import {
+  Banknote,
+  GraduationCap,
+  HeartHandshake,
+  Hourglass,
+  Presentation,
+  ReceiptText,
+  UserPlus,
+  Wallet,
+} from 'lucide-react'
 import type { Invoice } from '../../../../api/invoices/types.ts'
 import type { ActivityLog } from '../../../../api/logs/types.ts'
 import type { SpendingMonth } from '../../../../api/spendings/types.ts'
@@ -101,55 +111,87 @@ export function financeFigures(ledger: Ledger, months: SpendingMonth[], today: D
   const whole = ledger.raised >= ledger.total
 
   return [
-    moneyTile(
-      'Billed to date',
-      ledger.billed,
-      whole
-        ? `${counted(ledger.total, 'invoice', 'invoices')} raised`
-        : `The newest ${formatCount(ledger.raised)} of ${formatCount(ledger.total)} invoices`,
-    ),
-    moneyTile(
-      'Collected',
-      ledger.collected,
-      whole ? `${rate}% of everything billed` : `${rate}% of those`,
-    ),
-    moneyTile(
-      'Outstanding',
-      ledger.outstanding,
-      whole
-        ? `${counted(ledger.owing, 'invoice', 'invoices')} still owing`
-        : `${counted(ledger.owing, 'invoice', 'invoices')} of those still owing`,
-      // Money owed is only worth flagging while some is owed.
-      ledger.owing > 0,
-    ),
-    moneyTile(
-      'Spent this month',
-      month.total,
-      month.entries ? counted(month.entries, 'entry', 'entries') : 'Nothing recorded yet',
-    ),
+    {
+      ...moneyTile(
+        'Billed to date',
+        ledger.billed,
+        whole
+          ? `${counted(ledger.total, 'invoice', 'invoices')} raised`
+          : `The newest ${formatCount(ledger.raised)} of ${formatCount(ledger.total)} invoices`,
+      ),
+      icon: ReceiptText,
+      to: '/admin/invoices',
+    },
+    {
+      ...moneyTile(
+        'Collected',
+        ledger.collected,
+        whole ? `${rate}% of everything billed` : `${rate}% of those`,
+      ),
+      icon: Banknote,
+      to: '/admin/collect',
+    },
+    {
+      ...moneyTile(
+        'Outstanding',
+        ledger.outstanding,
+        whole
+          ? `${counted(ledger.owing, 'invoice', 'invoices')} still owing`
+          : `${counted(ledger.owing, 'invoice', 'invoices')} of those still owing`,
+        // Money owed is only worth flagging while some is owed.
+        ledger.owing > 0,
+      ),
+      icon: Hourglass,
+      to: '/admin/invoices',
+    },
+    {
+      ...moneyTile(
+        'Spent this month',
+        month.total,
+        month.entries ? counted(month.entries, 'entry', 'entries') : 'Nothing recorded yet',
+      ),
+      icon: Wallet,
+      to: '/admin/spendings',
+    },
   ]
 }
 
 /** The four counts a head teacher looks at, from the dashboard endpoint. */
 export function peopleFigures(stats: DashboardStats) {
   return [
-    countTile(
-      'Pupils enrolled',
-      stats.students,
-      `Across ${counted(stats.classes, 'class', 'classes')}`,
-    ),
-    countTile(
-      'Applicants',
-      stats.applied,
-      stats.applied ? 'Awaiting a decision' : 'None waiting on a decision',
-      stats.applied > 0,
-    ),
-    countTile(
-      'Teachers',
-      stats.teachers,
-      `${counted(stats.subjects, 'subject', 'subjects')} on the timetable`,
-    ),
-    countTile('Parents', stats.parents, 'Guardian logins'),
+    {
+      ...countTile(
+        'Pupils enrolled',
+        stats.students,
+        `Across ${counted(stats.classes, 'class', 'classes')}`,
+      ),
+      icon: GraduationCap,
+      to: '/admin/students',
+    },
+    {
+      ...countTile(
+        'Applicants',
+        stats.applied,
+        stats.applied ? 'Awaiting a decision' : 'None waiting on a decision',
+        stats.applied > 0,
+      ),
+      icon: UserPlus,
+      to: '/admin/applicants',
+    },
+    {
+      ...countTile(
+        'Teachers',
+        stats.teachers,
+        `${counted(stats.subjects, 'subject', 'subjects')} on the timetable`,
+      ),
+      icon: Presentation,
+      to: '/admin/staff-teachers',
+    },
+    {
+      ...countTile('Parents', stats.parents, 'Guardian logins'),
+      icon: HeartHandshake,
+      to: '/admin/parents',
+    },
   ]
 }
 
@@ -159,10 +201,10 @@ export function peopleFigures(stats: DashboardStats) {
  */
 export function schoolTiles(stats: DashboardStats) {
   return [
-    { label: 'Classes', value: formatCount(stats.classes) },
-    { label: 'Subjects', value: formatCount(stats.subjects) },
+    { label: 'Classes', value: formatCount(stats.classes), to: '/admin/classes' },
+    { label: 'Subjects', value: formatCount(stats.subjects), to: '/admin/subjects' },
     { label: 'Hostels', value: formatCount(stats.hostels) },
-    { label: 'Administrators', value: formatCount(stats.admins) },
+    { label: 'Administrators', value: formatCount(stats.admins), to: '/admin/staff-admin' },
   ]
 }
 

@@ -32,8 +32,8 @@ export function ReceiptView({
 
   return (
     <div className="max-w-[640px]">
-      <article className="border-2 border-foreground">
-        <header className="border-b-2 border-foreground px-6 py-5.5">
+      <article className="overflow-hidden rounded-xl border border-foreground/60 bg-raised">
+        <header className="border-b border-foreground/60 px-6 py-5.5">
           <div className="flex items-start gap-4">
             <div className="size-6.5 flex-none bg-brand" aria-hidden />
             <div className="flex-1">
@@ -58,7 +58,7 @@ export function ReceiptView({
           </h2>
         </header>
 
-        <div className="border-b-2 border-divider p-6">
+        <div className="border-b border-divider-strong p-6">
           <div className="text-2xs uppercase tracking-label text-muted-foreground">
             Amount received
           </div>

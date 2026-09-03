@@ -12,7 +12,7 @@ export type ActivityEntry = {
 /** The audit-log style list used on dashboards and detail pages. */
 export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
   return (
-    <div className="mt-3.5 border-t-2 border-divider">
+    <div className="mt-3.5 border-t border-divider-strong">
       {entries.map((entry, index) => (
         <div
           key={entry.id}

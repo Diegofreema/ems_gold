@@ -13,7 +13,7 @@ export type Bar = {
 export function BarChart({ bars, peak }: { bars: Bar[]; peak: number }) {
   return (
     <>
-      <div className="mt-4.5 flex h-[190px] items-end gap-0.5 border-b-2 border-divider">
+      <div className="mt-4.5 flex h-[190px] items-end gap-0.5 border-b border-divider-strong">
         {bars.map((bar, index) => (
           <div
             key={bar.label}

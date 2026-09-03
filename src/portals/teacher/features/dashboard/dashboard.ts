@@ -1,3 +1,4 @@
+import { BookOpen, ClipboardList, GraduationCap, Users } from 'lucide-react';
 import type {
   SetAssignment,
   TeacherClassArm,

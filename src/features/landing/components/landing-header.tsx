@@ -16,7 +16,7 @@ const LINKS = [
  */
 export function LandingHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b-2 border-divider bg-[color-mix(in_srgb,var(--ems-ground)_88%,transparent)] backdrop-blur-[10px]">
+    <header className="sticky top-0 z-40 border-b border-divider-strong bg-[color-mix(in_srgb,var(--ems-ground)_88%,transparent)] backdrop-blur-[10px]">
       <div className="mx-auto flex max-w-[1320px] items-center gap-[clamp(16px,3vw,40px)] px-[clamp(20px,4vw,48px)] py-3.5">
         <a href="#top" className="flex items-center gap-2.5 text-ink no-underline">
           <div className="size-5 flex-none bg-brand" />

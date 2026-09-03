@@ -88,11 +88,22 @@ async function fetchDashboard(): Promise<AdminDashboard> {
   ])
 
   const today = new Date()
+  const collections = collectionBars(ledger.items, today)
+  const money: DashboardFigure[] = financeFigures(
+    ledgerTotals(ledger.items, ledger.total),
+    spending,
+    today,
+  )
+  // The Collected card pulses with the same six months the chart below draws —
+  // the one series this dashboard genuinely has, so the one sparkline it gets.
+  const collected = money.find((figure) => figure.label === 'Collected')
+  if (collected) collected.spark = collections.bars.map((bar) => bar.value)
+
   return {
-    money: financeFigures(ledgerTotals(ledger.items, ledger.total), spending, today),
+    money,
     people: peopleFigures(counters.stats),
     school: schoolTiles(counters.stats),
-    collections: collectionBars(ledger.items, today),
+    collections,
     activity: activityEntries(logs.items, today),
   }
 }

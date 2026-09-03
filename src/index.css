@@ -20,7 +20,13 @@
   --ems-surface: #e9e9ec;
   --ems-ink: #1c1d20;
   --ems-brand: #156fb4;
-  --ems-divider: color-mix(in srgb, #1c1d20 40%, transparent);
+  /* Softened in the "alive" pass: hairlines carry structure, they no longer
+     shout it. `strong` keeps the old weight for table-header rules. */
+  --ems-divider: color-mix(in srgb, #1c1d20 22%, transparent);
+  --ems-divider-strong: color-mix(in srgb, #1c1d20 42%, transparent);
+  /* Card surfaces sit above the ground now — white in light, a lifted grey
+     in dark — which is most of what makes the soft cards read as cards. */
+  --ems-raised: #ffffff;
 
   --ems-neutral-100: #f4f5f8;
   --ems-neutral-200: #e6e8ec;
@@ -52,6 +58,12 @@
   --ems-danger-ink: #a63429;
   --ems-danger-subtle: color-mix(in srgb, #b23b31 9%, transparent);
 
+  /* Success is the second and last colour added to the palette: directional
+     deltas and positive statuses. Same split roles as danger. */
+  --ems-success: #15803d;
+  --ems-success-ink: #166534;
+  --ems-success-subtle: color-mix(in srgb, #15803d 10%, transparent);
+
   /* Shadows are reserved for card surfaces and floating layers; structure
      still uses borders. Dark theme swaps these for deeper black shadows. */
   --ems-shadow-card:
@@ -68,7 +80,9 @@
   --ems-ground: #15161a;
   --ems-surface: #1f2126;
   --ems-ink: #f2f2f4;
-  --ems-divider: color-mix(in srgb, #f2f2f4 34%, transparent);
+  --ems-divider: color-mix(in srgb, #f2f2f4 20%, transparent);
+  --ems-divider-strong: color-mix(in srgb, #f2f2f4 36%, transparent);
+  --ems-raised: #22252b;
 
   --ems-neutral-100: #232529;
   --ems-neutral-200: #2e3036;
@@ -90,6 +104,10 @@
   --ems-danger-ink: #f08a7d;
   --ems-danger-subtle: color-mix(in srgb, #f08a7d 12%, transparent);
 
+  --ems-success: #2f8f55;
+  --ems-success-ink: #7fd8a4;
+  --ems-success-subtle: color-mix(in srgb, #7fd8a4 12%, transparent);
+
   --ems-shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 8px rgb(0 0 0 / 0.3);
   --ems-shadow-float:
     0 6px 16px rgb(0 0 0 / 0.45), 0 18px 44px rgb(0 0 0 / 0.5);
@@ -100,9 +118,9 @@
 [data-ems-theme='dark'] {
   --background: var(--ems-ground);
   --foreground: var(--ems-ink);
-  --card: var(--ems-surface);
+  --card: var(--ems-raised);
   --card-foreground: var(--ems-ink);
-  --popover: var(--ems-ground);
+  --popover: var(--ems-raised);
   --popover-foreground: var(--ems-ink);
   --primary: var(--ems-brand);
   /* The brand blue is dark enough in both themes that its text is white in
@@ -128,8 +146,10 @@
 
   --color-ground: var(--ems-ground);
   --color-surface: var(--ems-surface);
+  --color-raised: var(--ems-raised);
   --color-ink: var(--ems-ink);
   --color-divider: var(--ems-divider);
+  --color-divider-strong: var(--ems-divider-strong);
 
   --color-brand: var(--ems-brand);
   --color-brand-100: var(--ems-brand-100);
@@ -172,20 +192,23 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Hybrid surface rule: radii soften what you touch (controls, cards,
-     floating layers); tables, tile strips and page rules stay sharp by
-     simply not using rounded-* classes. */
+  /* The "alive" pass retired the sharp language: everything soft now.
+     Controls stay at md; cards, tables and floating layers sit at lg+. */
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 10px;
-  --radius-2xl: 14px;
-  --radius-3xl: 18px;
-  --radius-4xl: 22px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+  --radius-4xl: 24px;
 
   --color-danger: var(--ems-danger);
   --color-danger-ink: var(--ems-danger-ink);
   --color-danger-subtle: var(--ems-danger-subtle);
+
+  --color-success: var(--ems-success);
+  --color-success-ink: var(--ems-success-ink);
+  --color-success-subtle: var(--ems-success-subtle);
 
   --shadow-card: var(--ems-shadow-card);
   --shadow-float: var(--ems-shadow-float);
@@ -239,6 +262,8 @@
   --animate-ems-spin: emsSpin 800ms linear infinite;
 
   /* The narrow-viewport sidebar drawer sliding in from its own edge. */
+  --animate-ems-draw: emsDraw calc(700ms * var(--ems-motion))
+    cubic-bezier(0.2, 0.7, 0.3, 1) both;
   --animate-ems-drawer: emsDrawer calc(280ms * var(--ems-motion))
     cubic-bezier(0.2, 0.7, 0.3, 1) both;
 
@@ -349,6 +374,18 @@
     transform: rotate(360deg);
   }
 }
+/* Draws a stroked path in, using pathLength={1} on the element. */
+@keyframes emsDraw {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
 @keyframes emsDrawer {
   from {
     transform: translateX(-100%);

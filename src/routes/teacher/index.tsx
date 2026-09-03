@@ -73,7 +73,7 @@ function TeacherDashboard() {
           {data.arms.length ? (
             <DetailRows rows={data.arms} />
           ) : (
-            <p className="mt-3.5 border-t-2 border-divider py-3 text-sm text-muted-foreground">
+            <p className="mt-3.5 border-t border-divider-strong py-3 text-sm text-muted-foreground">
               You are not class teacher this session.
             </p>
           )}

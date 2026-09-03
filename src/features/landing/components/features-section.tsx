@@ -27,7 +27,7 @@ export function FeaturesSection() {
             <div className="text-sm leading-[1.5] text-neutral-800">
               {feature.body}
             </div>
-            <div className="mt-auto border-t-2 border-divider pt-3 text-2xs font-bold tracking-[.08em] text-neutral-600 uppercase">
+            <div className="mt-auto border-t border-divider-strong pt-3 text-2xs font-bold tracking-[.08em] text-neutral-600 uppercase">
               Solves: {feature.solves}
             </div>
           </div>

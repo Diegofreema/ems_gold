@@ -32,12 +32,12 @@ export function WeekCalendar({
   onOpen?: (period: PeriodBlock) => void
 }) {
   return (
-    <div className="flex flex-wrap overflow-hidden border-2 border-divider bg-background">
+    <div className="flex flex-wrap overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
       {columns.map((column, index) => (
         <div
           key={column.day}
           style={{ animationDelay: `${index * 40}ms` }}
-          className="flex min-w-0 flex-[1_1_200px] animate-ems-up flex-col shadow-[inset_-2px_0_0_var(--ems-divider),inset_0_-2px_0_var(--ems-divider)]"
+          className="flex min-w-0 flex-[1_1_200px] animate-ems-up flex-col shadow-[inset_-1px_0_0_var(--ems-divider),inset_0_-1px_0_var(--ems-divider)]"
         >
           <DayHeading column={column} />
 
@@ -66,7 +66,7 @@ function DayHeading({ column }: { column: WeekColumn }) {
   return (
     <div
       className={cn(
-        'px-3 py-2.5 shadow-[inset_0_-2px_0_var(--ems-divider)]',
+        'px-3 py-2.5 shadow-[inset_0_-1px_0_var(--ems-divider)]',
         column.today && 'bg-brand-100',
       )}
     >

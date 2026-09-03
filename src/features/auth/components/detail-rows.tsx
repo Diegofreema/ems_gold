@@ -9,7 +9,7 @@ export function DetailRows({
   className?: string
 }) {
   return (
-    <div className={cn('mt-4.5 border-t-2 border-divider', className)}>
+    <div className={cn('mt-4.5 border-t border-divider-strong', className)}>
       {rows.map((row) => (
         <div
           key={row.label}

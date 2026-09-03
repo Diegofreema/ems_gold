@@ -17,10 +17,10 @@ export function ScoreSheet({
   onMarkChange: (studentId: number, field: 'ca' | 'exam', value: string) => void
 }) {
   return (
-    <div className="overflow-x-auto border-2 border-divider">
+    <div className="overflow-x-auto rounded-xl border border-foreground/60 bg-raised">
       <table className="w-full min-w-140 border-collapse text-sm">
         <thead>
-          <tr className="border-b-2 border-divider text-left">
+          <tr className="border-b border-divider-strong text-left">
             <Th>Pupil</Th>
             <Th className="w-30 text-right">CA ({CA_MAX})</Th>
             <Th className="w-30 text-right">Exam ({EXAM_MAX})</Th>

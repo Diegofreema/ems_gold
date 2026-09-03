@@ -53,7 +53,7 @@ function SettleCard<TValues extends RetryValues | RrrValues>({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-divider p-5 shadow-card">
+    <section className="rounded-lg border border-divider bg-raised p-5 shadow-card">
       <h5 className="font-heading text-base font-extrabold">{title}</h5>
       <p className="mt-1 mb-4 text-xs text-muted-foreground">{description}</p>
       <FormProvider {...form}>

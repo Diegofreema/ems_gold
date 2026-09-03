@@ -55,7 +55,7 @@ export function NotificationBell({
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute top-[calc(100%+10px)] right-0 z-50 max-h-[70vh] w-[min(380px,88vw)] animate-ems-pop overflow-y-auto rounded-lg bg-background shadow-float ring-1 ring-foreground/10">
+          <div className="absolute top-[calc(100%+10px)] right-0 z-50 max-h-[70vh] w-[min(380px,88vw)] animate-ems-pop overflow-y-auto rounded-lg bg-raised shadow-float ring-1 ring-foreground/10">
             <div className="flex items-center gap-2.5 border-b border-divider px-4 py-3.5">
               <div className="flex-1 font-heading text-base font-extrabold">
                 Notifications

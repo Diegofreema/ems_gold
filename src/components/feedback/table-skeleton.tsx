@@ -6,7 +6,7 @@ const CELL_WEIGHTS = [3, 2, 2, 1]
 /** The bordered frame a table loads into, shimmering a row at a time. */
 export function TableSkeleton({ rows }: { rows: number }) {
   return (
-    <div className="border-2 border-divider">
+    <div className="rounded-xl border border-divider bg-raised shadow-card">
       {Array.from({ length: rows }, (_, rowIndex) => (
         <div
           key={rowIndex}

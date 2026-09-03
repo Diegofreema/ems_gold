@@ -231,6 +231,33 @@ export function AdminAnalyticsPage() {
             : undefined
         }
       >
+        {/* The one honest directional delta on this page: both totals are the
+            API's own, so the arrow compares two real figures. */}
+        <TileStrip
+          className="mb-6"
+          tiles={(() => {
+            const current = seriesTotal(financial.data?.current)
+            const previous = seriesTotal(financial.data?.previous)
+            const level = current === previous
+            return [
+              {
+                label: 'Collected this session',
+                value: formatNaira(current),
+                delta: level
+                  ? 'Level with the session before'
+                  : `${formatNaira(Math.abs(current - previous))} ${
+                      current > previous ? 'more' : 'less'
+                    } than the session before`,
+                deltaTone: level ? 'muted' : current > previous ? 'up' : 'down',
+              } as const,
+              {
+                label: 'The session before',
+                value: formatNaira(previous),
+              },
+            ]
+          })()}
+        />
+
         <div className="grid gap-8 lg:grid-cols-2">
           <section>
             <h4 className="mb-0.5 text-xl">This session</h4>

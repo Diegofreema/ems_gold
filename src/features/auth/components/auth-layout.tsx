@@ -20,7 +20,7 @@ export function AuthLayout() {
       <AuthPoster />
 
       <main className="flex min-w-0 flex-col">
-        <header className="flex items-center gap-3.5 border-b-2 border-divider px-7 py-4.5">
+        <header className="flex items-center gap-3.5 border-b border-divider-strong px-7 py-4.5">
           <div className="flex items-center gap-2.5 lg:hidden">
             <div className="size-5.5 flex-none bg-brand" />
             <div className="font-heading text-sm font-extrabold">
@@ -43,7 +43,7 @@ export function AuthLayout() {
           </div>
         </div>
 
-        <footer className="flex flex-wrap items-center gap-4.5 border-t-2 border-divider px-7 py-4">
+        <footer className="flex flex-wrap items-center gap-4.5 border-t border-divider-strong px-7 py-4">
           <div className="text-2xs text-muted-foreground">
             NETPRO EMS · Bronze · 2025/2026 session
           </div>

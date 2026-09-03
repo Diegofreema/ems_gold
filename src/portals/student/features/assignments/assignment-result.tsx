@@ -66,8 +66,8 @@ function Marked({
       </p>
       <Rule />
 
-      <div className="border-2 border-foreground">
-        <div className="flex flex-wrap items-baseline gap-3 border-b-2 border-divider px-5 py-4.5">
+      <div className="overflow-hidden rounded-xl border border-foreground/60 bg-raised">
+        <div className="flex flex-wrap items-baseline gap-3 border-b border-divider-strong px-5 py-4.5">
           <div className="flex-1 font-heading text-3xl font-extrabold tracking-[-0.01em] tabular-nums">
             {scoreHeadline(result)}
           </div>
@@ -100,7 +100,7 @@ function Marked({
       </p>
 
       {answers.length ? (
-        <div className="mt-3.5 border-t-2 border-divider">
+        <div className="mt-3.5 border-t border-divider-strong">
           {answers.map((answer) => (
             <div key={answer.id} className="border-b border-divider py-3.5">
               <div className="flex flex-wrap items-baseline gap-3">

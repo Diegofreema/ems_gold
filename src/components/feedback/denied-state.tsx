@@ -32,7 +32,7 @@ export function DeniedState({
       <h2 className="mt-5 text-page-title">You cannot open this page</h2>
       <p className="mt-2.5 text-sm text-muted-foreground">{body}</p>
 
-      <div className="mt-4.5 border-t-2 border-divider">
+      <div className="mt-4.5 border-t border-divider-strong">
         {ROWS(pageName).map((row) => (
           <div
             key={row.label}

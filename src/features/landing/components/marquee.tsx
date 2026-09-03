@@ -3,7 +3,7 @@ import { MARQUEE } from '../landing.content'
 /** The list is drawn twice and the row slides half its width, so there is no seam. */
 export function Marquee() {
   return (
-    <div className="overflow-hidden border-b-2 border-divider bg-neutral-100">
+    <div className="overflow-hidden border-b border-divider-strong bg-neutral-100">
       <div className="flex w-max animate-ems-marquee">
         {[...MARQUEE, ...MARQUEE].map((item, index) => (
           <div

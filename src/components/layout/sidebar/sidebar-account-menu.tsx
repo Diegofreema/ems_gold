@@ -38,7 +38,7 @@ export function SidebarAccountMenu({
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute inset-x-3 bottom-[calc(100%-6px)] z-50 animate-ems-pop overflow-hidden rounded-lg bg-background shadow-float ring-1 ring-foreground/10">
+          <div className="absolute inset-x-3 bottom-[calc(100%-6px)] z-50 animate-ems-pop overflow-hidden rounded-lg bg-raised shadow-float ring-1 ring-foreground/10">
             <Link
               to={profilePath}
               onClick={() => setOpen(false)}

@@ -77,8 +77,8 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
     <div className="max-w-[640px]">
       {header}
 
-      <div data-slot="receipt" className="border-2 border-divider bg-background">
-        <div className="border-b-2 border-divider px-5 py-4.5">
+      <div data-slot="receipt" className="overflow-hidden rounded-xl border border-foreground/60 bg-raised">
+        <div className="border-b border-divider-strong px-5 py-4.5">
           <div className="text-2xs uppercase tracking-kicker text-brand-700">
             {receipt.school ?? 'Fee receipt'}
           </div>
@@ -106,7 +106,7 @@ export function ReceiptPage({ invoiceId }: { invoiceId: string }) {
           ))}
         </div>
 
-        <div className="border-t-2 border-divider px-5 py-3.5 text-2xs text-muted-foreground">
+        <div className="border-t border-divider-strong px-5 py-3.5 text-2xs text-muted-foreground">
           Issued by {receipt.school ?? 'the school'}. Keep this slip — it is the
           school's record of the payment as well as yours.
         </div>

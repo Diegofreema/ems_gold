@@ -74,7 +74,7 @@ function StudentDashboard() {
           {home.fees.bars.length ? (
             <BarChart bars={home.fees.bars} peak={home.fees.peak} />
           ) : (
-            <p className="mt-3.5 border-t-2 border-divider py-3 text-sm text-muted-foreground">
+            <p className="mt-3.5 border-t border-divider-strong py-3 text-sm text-muted-foreground">
               Nothing has been paid on your record yet.
             </p>
           )}

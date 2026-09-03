@@ -66,7 +66,7 @@ export function AssignmentBrief({
         </div>
       )}
 
-      <div className="border-2 border-foreground">
+      <div className="overflow-hidden rounded-xl border border-foreground/60 bg-raised">
         {assignmentFields(assignment).map((field, index) => (
           <div
             key={field.label}

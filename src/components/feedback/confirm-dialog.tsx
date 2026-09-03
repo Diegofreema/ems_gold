@@ -56,7 +56,7 @@ export function ConfirmDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className="w-[min(460px,100%)] gap-0 border-2 border-danger bg-background p-0 shadow-float sm:max-w-[460px]"
+        className="w-[min(460px,100%)] gap-0 border border-danger bg-raised p-0 shadow-float sm:max-w-[460px]"
       >
         {request && (
           <>

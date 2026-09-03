@@ -119,7 +119,7 @@ export function AttendancePage({ child }: { child: Child }) {
         </p>
       )}
       {rows.length ? (
-        <div className="overflow-x-auto border-2 border-divider">
+        <div className="overflow-x-auto rounded-xl border border-divider bg-raised shadow-card">
           <DataTable columns={COLUMNS} rows={rows} rowKey={rowKey} />
         </div>
       ) : (

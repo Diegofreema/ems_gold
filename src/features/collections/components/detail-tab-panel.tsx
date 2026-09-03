@@ -101,7 +101,7 @@ export function DetailTabPanel({
 
       <div key={active} className="animate-ems-up overflow-x-auto">
         <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>
-          <div className="border-2 border-divider">
+          <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
             {tab.source ? (
               <LiveTab tab={tab} recordId={recordId} source={tab.source} />
             ) : (

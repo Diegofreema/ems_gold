@@ -52,7 +52,7 @@ export function PickerList<TValues extends FieldValues>({
         {picker.title}
       </SectionHeading>
 
-      <div className="border-2 border-divider">
+      <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
         {picker.items.map((item, index) => {
           const on = picked.includes(item.key)
           return (

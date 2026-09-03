@@ -23,7 +23,7 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn('border-b-2 border-divider', lifted && 'bg-neutral-100')}
+      className={cn('border-b border-divider-strong', lifted && 'bg-neutral-100')}
     >
       <div
         className={cn(

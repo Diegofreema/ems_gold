@@ -26,7 +26,7 @@ export function FamilyContext() {
   const owed = familyOwing(family)
 
   return (
-    <div className="border-b-2 border-divider px-4 pt-3.5 pb-3">
+    <div className="border-b border-divider-strong px-4 pt-3.5 pb-3">
       <div className="font-heading text-sm font-extrabold">{name}</div>
       <div className="mt-0.5 text-2xs text-muted-foreground">
         {[phone, `${family.length} ${family.length === 1 ? 'child' : 'children'}`]

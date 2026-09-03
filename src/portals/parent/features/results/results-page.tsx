@@ -112,7 +112,7 @@ export function ResultsPage({ child }: { child: Child }) {
       {header}
       <TileStrip tiles={resultTiles(data.summary)} className="mb-6.5" />
       {rows.length ? (
-        <div className="overflow-x-auto border-2 border-divider">
+        <div className="overflow-x-auto rounded-xl border border-divider bg-raised shadow-card">
           <DataTable columns={COLUMNS} rows={rows} rowKey={rowKey} />
         </div>
       ) : (

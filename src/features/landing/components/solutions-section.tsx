@@ -14,11 +14,11 @@ export function SolutionsSection() {
         />
       </Reveal>
 
-      <div className="mt-[clamp(30px,4vw,52px)] border-t-2 border-ink">
+      <div className="mt-[clamp(30px,4vw,52px)] border-t border-ink">
         {SOLUTIONS.map((solution) => (
           <Reveal
             key={solution.num}
-            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] items-start gap-[clamp(16px,3vw,48px)] border-b-2 border-divider py-[clamp(22px,3vw,34px)]"
+            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] items-start gap-[clamp(16px,3vw,48px)] border-b border-divider-strong py-[clamp(22px,3vw,34px)]"
           >
             <div>
               <div className="flex items-baseline gap-3">

@@ -178,7 +178,7 @@ function CurrentlyIn() {
   const calendar = data?.calendar
 
   return (
-    <div className="col-[1/-1] rounded-lg border border-divider px-4 py-3.5">
+    <div className="col-[1/-1] rounded-lg border border-divider bg-raised px-4 py-3.5">
       <div className="text-2xs uppercase tracking-label text-muted-foreground">
         The school is in
       </div>

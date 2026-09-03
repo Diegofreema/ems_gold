@@ -22,7 +22,7 @@ export function OptionList({
   disabled?: boolean
 }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-divider bg-background">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-divider bg-raised">
       {options.map((option, index) => (
         <button
           key={option.id}
@@ -36,7 +36,7 @@ export function OptionList({
             disabled
               ? 'cursor-default'
               : 'cursor-pointer hover:bg-neutral-200 hover:pl-5.5',
-            option.id === chosen ? 'bg-brand/12' : 'bg-background',
+            option.id === chosen ? 'bg-brand/12' : 'bg-raised',
           )}
         >
           <span

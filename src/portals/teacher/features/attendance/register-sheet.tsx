@@ -23,10 +23,10 @@ export function RegisterSheet({
   onNote: (studentId: number, notes: string) => void
 }) {
   return (
-    <div className="overflow-x-auto border-2 border-divider">
+    <div className="overflow-x-auto rounded-xl border border-foreground/60 bg-raised">
       <table className="w-full min-w-170 border-collapse text-sm">
         <thead>
-          <tr className="border-b-2 border-divider text-left">
+          <tr className="border-b border-divider-strong text-left">
             <Th>Pupil</Th>
             <Th>Mark</Th>
             <Th className="w-60">Note</Th>

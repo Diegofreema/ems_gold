@@ -1,7 +1,7 @@
 /** The full-height accent panel; dropped under 900px. */
 export function AuthPoster() {
   return (
-    <aside className="hidden flex-col justify-between border-r-2 border-foreground bg-brand p-10 text-white lg:flex">
+    <aside className="hidden flex-col justify-between border-r border-foreground/60 bg-brand p-10 text-white lg:flex">
       <div className="flex items-center gap-3">
         <div className="size-6.5 flex-none bg-white" />
         <div className="font-heading text-base font-extrabold tracking-[-0.01em]">
@@ -22,7 +22,7 @@ export function AuthPoster() {
         </p>
       </div>
 
-      <div className="border-t-2 border-white/50 pt-4 text-2xs leading-normal opacity-90">
+      <div className="border-t border-white/50 pt-4 text-2xs leading-normal opacity-90">
         Trouble signing in? Call the school office on 0803 000 0000, Monday to
         Friday, 8am–4pm.
       </div>

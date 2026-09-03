@@ -22,7 +22,7 @@ export function QuestionPips({
           aria-label={`Question ${index + 1}${answered(index) ? ', answered' : ''}`}
           aria-current={index === current ? 'true' : undefined}
           className={cn(
-            'size-8.5 flex-none rounded-md border-2 font-heading text-xs font-extrabold transition-colors',
+            'size-8.5 flex-none rounded-md border font-heading text-xs font-extrabold transition-colors',
             index === current ? 'border-foreground' : 'border-divider',
             answered(index)
               ? 'bg-brand text-white'

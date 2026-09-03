@@ -23,11 +23,11 @@ export function FrictionSection() {
             The work is not missing. The connection between the pieces is.
           </Lede>
 
-          <div className="mt-8.5 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-[2px] border-t-2 border-divider">
+          <div className="mt-8.5 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-[2px] border-t border-divider-strong">
             {FRICTIONS.map((friction) => (
               <div
                 key={friction.head}
-                className="border-b-2 border-divider py-4.5 pr-4"
+                className="border-b border-divider-strong py-4.5 pr-4"
               >
                 <div className="font-heading text-sm font-extrabold tracking-[.02em]">
                   {friction.head}

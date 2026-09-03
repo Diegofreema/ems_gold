@@ -12,7 +12,7 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative overflow-hidden border-b-2 border-divider"
+      className="relative overflow-hidden border-b border-divider-strong"
     >
       <HeroLattice />
 
@@ -50,7 +50,7 @@ export function Hero() {
         {/* Opaque on its own ground: the lattice must not cross the text. */}
         <div className="pointer-events-auto grid w-[min(100%,380px)] justify-self-end gap-[2px] self-end border-l-2 border-ink bg-ground pb-1 pl-4">
           {HERO_FACTS.map((fact) => (
-            <div key={fact.name} className="border-t-2 border-divider pt-[13px] pb-[11px]">
+            <div key={fact.name} className="border-t border-divider-strong pt-[13px] pb-[11px]">
               <div className="font-heading text-[clamp(16px,1.8vw,20px)] font-extrabold tracking-[-.015em]">
                 {fact.name}
               </div>

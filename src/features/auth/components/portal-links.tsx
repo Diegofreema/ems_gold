@@ -5,7 +5,7 @@ import { PORTALS } from '../role'
 /** The four portals, listed when an account opened the wrong one. */
 export function PortalLinks() {
   return (
-    <div className="mt-5 border-t-2 border-divider">
+    <div className="mt-5 border-t border-divider-strong">
       {PORTALS.map((portal) => (
         <Link
           key={portal.to}

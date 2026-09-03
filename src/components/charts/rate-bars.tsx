@@ -20,7 +20,7 @@ export function RateBars({
   weakBelow?: number
 }) {
   return (
-    <div className="mt-4 border-t-2 border-divider">
+    <div className="mt-4 border-t border-divider-strong">
       {rates.map((rate, index) => (
         <div
           key={rate.label}

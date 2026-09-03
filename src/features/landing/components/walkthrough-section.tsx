@@ -49,7 +49,7 @@ export function WalkthroughSection() {
         </SectionHeading>
       </Reveal>
 
-      <Reveal className="border-2 border-ink p-[clamp(20px,3vw,28px)]">
+      <Reveal className="rounded-xl border border-ink p-[clamp(20px,3vw,28px)]">
         {sentTo ? (
           <div className="grid gap-3">
             <div className="size-5.5 bg-brand" />

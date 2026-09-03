@@ -36,7 +36,7 @@ export function AiSection() {
             <div className="text-sm leading-[1.5] text-neutral-800">
               {use.body}
             </div>
-            <div className="mt-auto border-t-2 border-divider pt-3 text-xs leading-[1.45] text-neutral-700">
+            <div className="mt-auto border-t border-divider-strong pt-3 text-xs leading-[1.45] text-neutral-700">
               <span className="font-bold text-ink">Instead of:</span> {use.instead}
             </div>
           </div>
