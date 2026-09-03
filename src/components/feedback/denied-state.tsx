@@ -26,7 +26,7 @@ export function DeniedState({
 }) {
   return (
     <div className="max-w-[580px] py-10">
-      <div className="grid size-10 place-items-center bg-brand text-background">
+      <div className="grid size-10 place-items-center bg-brand text-white">
         <Lock className="size-[21px]" strokeWidth={2.1} />
       </div>
       <h2 className="mt-5 text-page-title">You cannot open this page</h2>

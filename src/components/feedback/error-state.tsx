@@ -24,7 +24,7 @@ export function ErrorState({
 }) {
   return (
     <div className="max-w-[560px] py-10">
-      <div className="grid size-10 place-items-center bg-brand text-background">
+      <div className="grid size-10 place-items-center bg-brand text-white">
         <TriangleAlert className="size-[22px]" strokeWidth={2.2} />
       </div>
       <h2 className="mt-5 text-page-title">This page could not load</h2>

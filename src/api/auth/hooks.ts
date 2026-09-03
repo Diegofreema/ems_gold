@@ -12,6 +12,13 @@ import type {
 } from './types'
 
 /**
+ * What signing in takes: the credentials the API is sent, plus the choice
+ * about this device, which it is not — the server offers no way to ask for a
+ * longer session, so `remember` only decides where the token is kept.
+ */
+export type LoginInput = LoginBody & { remember: boolean }
+
+/**
  * Signing in stores the bearer token before anything else runs, so the `me`
  * request that follows — and every query a redirect kicks off — already
  * carries it.
@@ -25,11 +32,12 @@ import type {
 export function useLogin() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: LoginBody) => authService.login(body),
+    mutationFn: ({ username, password }: LoginInput) =>
+      authService.login({ username, password }),
     // The sign-in screen shows a refusal in the design's own alert.
     meta: { success: 'Signed in', ownsError: true },
-    onSuccess: (result) => {
-      setToken(result.token)
+    onSuccess: (result, { remember }) => {
+      setToken(result.token, { remember, expires: result.expires })
       useSessionStore.getState().setAccount({
         user: result.user,
         role: result.role,

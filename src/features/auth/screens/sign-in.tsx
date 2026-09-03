@@ -57,6 +57,7 @@ export function SignInScreen() {
       const signedIn = await login.mutateAsync({
         username: values.username,
         password: values.password,
+        remember: values.remember,
       })
 
       // The password was right, but the office has switched this sign-in off.
@@ -133,7 +134,7 @@ export function SignInScreen() {
                   form.setValue('remember', checked === true)
                 }
               />
-              <span>Remember this device for 30 days</span>
+              <span>Keep me signed in on this device</span>
             </label>
             <Button asChild variant="ghost" className="px-0 text-brand">
               <Link to="/forgot-password">Forgotten password?</Link>

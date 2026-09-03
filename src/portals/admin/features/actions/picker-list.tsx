@@ -80,7 +80,7 @@ export function PickerList<TValues extends FieldValues>({
                 >
                   {on && (
                     <Check
-                      className="size-3 text-background"
+                      className="size-3 text-white"
                       strokeWidth={3.4}
                     />
                   )}

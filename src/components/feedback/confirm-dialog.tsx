@@ -62,7 +62,7 @@ export function ConfirmDialog({
           <>
             <div className="p-[22px] pb-0">
               <div className="flex items-center gap-2.5">
-                <div className="grid size-[22px] flex-none place-items-center bg-brand text-background">
+                <div className="grid size-[22px] flex-none place-items-center bg-brand text-white">
                   <AlertCircle className="size-3.5" strokeWidth={2.6} />
                 </div>
                 <DialogTitle className="font-heading text-xl font-extrabold">

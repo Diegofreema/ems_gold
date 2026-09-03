@@ -43,7 +43,7 @@ export function OptionList({
             className={cn(
               'grid size-[26px] flex-none place-items-center border-2 font-heading text-xs font-extrabold',
               option.id === chosen
-                ? 'border-brand bg-brand text-background'
+                ? 'border-brand bg-brand text-white'
                 : 'border-divider bg-transparent text-foreground',
             )}
           >

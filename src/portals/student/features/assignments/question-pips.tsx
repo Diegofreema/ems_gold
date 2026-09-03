@@ -25,7 +25,7 @@ export function QuestionPips({
             'size-[34px] flex-none border-2 font-heading text-xs font-extrabold transition-colors',
             index === current ? 'border-foreground' : 'border-divider',
             answered(index)
-              ? 'bg-brand text-background'
+              ? 'bg-brand text-white'
               : 'bg-transparent text-foreground',
           )}
         >

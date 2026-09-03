@@ -34,7 +34,7 @@ export function SegmentedControl<TValue extends string>({
             'border-l border-divider first:border-l-0',
             'has-[:focus-visible]:outline has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-brand',
             option.value === value
-              ? 'bg-brand text-background'
+              ? 'bg-brand text-white'
               : 'hover:bg-foreground/7',
           )}
         >

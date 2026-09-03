@@ -80,7 +80,10 @@
   --popover: var(--ems-ground);
   --popover-foreground: var(--ems-ink);
   --primary: var(--ems-brand);
-  --primary-foreground: var(--ems-ground);
+  /* The brand blue is dark enough in both themes that its text is white in
+     both. Left as a literal rather than a --ems-* alias because every
+     ground token flips with the theme, and this must not. */
+  --primary-foreground: #fff;
   --secondary: var(--ems-neutral-200);
   --secondary-foreground: var(--ems-ink);
   --muted: var(--ems-neutral-100);
