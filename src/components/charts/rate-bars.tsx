@@ -25,14 +25,14 @@ export function RateBars({
         <div
           key={rate.label}
           style={{ animationDelay: `${index * 70}ms` }}
-          className="animate-ems-row border-b border-divider px-0.5 py-[13px]"
+          className="animate-ems-row border-b border-divider px-0.5 py-3.25"
         >
           <div className="flex items-baseline gap-3">
-            <div className="flex-1 text-[13.5px] font-semibold">{rate.label}</div>
+            <div className="flex-1 text-sm font-semibold">{rate.label}</div>
             <div className="text-xs tabular-nums text-muted-foreground">
               {rate.amount}
             </div>
-            <div className="w-[46px] text-right font-heading text-[13px] font-extrabold tabular-nums">
+            <div className="w-[46px] text-right font-heading text-sm font-extrabold tabular-nums">
               {rate.percent}%
             </div>
           </div>

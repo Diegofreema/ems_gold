@@ -47,8 +47,8 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        'z-40 flex h-screen w-62 flex-none flex-col border-r-2 border-divider bg-background',
-        asDrawer ? 'fixed inset-y-0 left-0' : 'sticky top-0',
+        'z-40 flex h-screen w-62 flex-none flex-col border-r border-divider bg-background',
+        asDrawer ? 'fixed inset-y-0 left-0 animate-ems-drawer' : 'sticky top-0',
       )}
     >
       <SidebarBrand roleLabel={config.roleLabel} />

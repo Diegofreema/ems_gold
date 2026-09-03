@@ -13,7 +13,7 @@ export function SidebarSearch() {
         onChange={(event) => setNavQuery(event.target.value)}
         placeholder="Search pages"
         aria-label="Search pages"
-        className="text-[13px]"
+        className="text-sm"
       />
     </div>
   )

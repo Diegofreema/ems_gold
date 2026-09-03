@@ -17,7 +17,7 @@ export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
         <div
           key={entry.id}
           style={{ animationDelay: `${index * 34}ms` }}
-          className="flex animate-ems-row gap-3 border-b border-divider px-1 py-[11px]"
+          className="flex animate-ems-row gap-3 border-b border-divider px-1 py-2.75"
         >
           <div
             className={cn(
@@ -26,8 +26,8 @@ export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
             )}
           />
           <div className="min-w-0 flex-1">
-            <div className="text-[13px]">{entry.text}</div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">
+            <div className="text-sm">{entry.text}</div>
+            <div className="mt-0.5 text-2xs text-muted-foreground">
               {entry.who} · {entry.when}
             </div>
           </div>

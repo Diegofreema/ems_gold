@@ -10,17 +10,17 @@ export function FormErrorBanner({ count }: { count: number }) {
   return (
     <div
       role="alert"
-      className="mb-6 flex animate-ems-up gap-3 border-2 border-brand px-4 py-3.5"
+      className="mb-6 flex animate-ems-up gap-3 rounded-lg border border-danger/50 bg-danger-subtle px-4 py-3.5"
     >
       <CircleAlert
-        className="mt-px size-[18px] flex-none text-brand"
+        className="mt-px size-[18px] flex-none text-danger-ink"
         strokeWidth={2.2}
       />
       <div>
         <div className="font-heading text-sm font-extrabold">
           {count === 1 ? 'One field needs attention' : `${count} fields need attention`}
         </div>
-        <div className="mt-[3px] text-[13px] text-muted-foreground">
+        <div className="mt-0.75 text-sm text-muted-foreground">
           Nothing has been saved. Fix the fields marked below and save again.
         </div>
       </div>

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useShellStore } from '@/stores/shell.store'
 import { ThemeToggle } from './theme-toggle'
 
-const CRUMB = 'truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground'
+const CRUMB = 'truncate text-2xs uppercase tracking-[0.12em] text-muted-foreground'
 
 /**
  * Sticky bar: breadcrumb over page title on the left, portal status and the
@@ -33,7 +33,7 @@ export function AppHeader({
   const openDrawer = useShellStore((state) => state.openDrawer)
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3.5 border-b-2 border-divider bg-background px-content py-3.5">
+    <header className="sticky top-0 z-20 flex items-center gap-3.5 border-b border-divider bg-background px-content py-3.5">
       {narrow && (
         <Button
           variant="outline"
@@ -61,7 +61,7 @@ export function AppHeader({
         ) : (
           <div className={CRUMB}>{crumb}</div>
         )}
-        <div className="truncate font-heading text-[17px] leading-[1.15] font-extrabold">
+        <div className="truncate font-heading text-lg leading-[1.15] font-extrabold">
           {title}
         </div>
       </div>
@@ -69,7 +69,7 @@ export function AppHeader({
       {/* Below the design's phone breakpoint there is no room for both, and
           the title is what tells you which page you are on. */}
       {status && (
-        <div className="hidden flex-none text-right text-[11px] leading-[1.35] text-muted-foreground sm:block">
+        <div className="hidden flex-none text-right text-2xs text-muted-foreground sm:block">
           {status}
         </div>
       )}

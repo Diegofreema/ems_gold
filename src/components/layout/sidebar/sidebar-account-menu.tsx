@@ -30,7 +30,7 @@ export function SidebarAccountMenu({
   }, [open])
 
   return (
-    <div className="relative border-t-2 border-divider px-4 py-3">
+    <div className="relative border-t border-divider px-4 py-3">
       {open && (
         <>
           <div
@@ -38,13 +38,13 @@ export function SidebarAccountMenu({
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute inset-x-3 bottom-[calc(100%-6px)] z-50 animate-ems-pop border-2 border-foreground bg-background shadow-lg">
+          <div className="absolute inset-x-3 bottom-[calc(100%-6px)] z-50 animate-ems-pop overflow-hidden rounded-lg bg-background shadow-float ring-1 ring-foreground/10">
             <Link
               to={profilePath}
               onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-3 border-b border-divider px-3.5 py-3 text-left text-[13.5px] !text-foreground transition-[background-color,padding-left] duration-150 hover:bg-neutral-100 hover:pl-[18px]"
+              className="flex w-full items-center gap-3 border-b border-divider px-3.5 py-3 text-left text-sm !text-foreground transition-[background-color,padding-left] duration-150 hover:bg-neutral-100 hover:pl-4.5"
             >
-              <User className="size-[15px] flex-none" strokeWidth={1.85} />
+              <User className="size-3.75 flex-none" strokeWidth={1.85} />
               <span className="flex-1">My profile</span>
             </Link>
             {/* The session ends on this device whether or not the server
@@ -57,9 +57,9 @@ export function SidebarAccountMenu({
                 await logout.mutateAsync().catch(() => undefined)
                 await navigate({ to: '/sign-in' })
               }}
-              className="flex w-full cursor-pointer items-center gap-3 px-3.5 py-3 text-left text-[13.5px] !text-brand-700 transition-[background-color,padding-left] duration-150 hover:bg-brand/10 hover:pl-[18px]"
+              className="flex w-full cursor-pointer items-center gap-3 px-3.5 py-3 text-left text-sm !text-brand-700 transition-[background-color,padding-left] duration-150 hover:bg-brand/10 hover:pl-4.5"
             >
-              <LogOut className="size-[15px] flex-none" strokeWidth={1.85} />
+              <LogOut className="size-3.75 flex-none" strokeWidth={1.85} />
               <span className="flex-1">
                 {logout.isPending ? 'Signing out…' : 'Sign out'}
               </span>
@@ -73,14 +73,14 @@ export function SidebarAccountMenu({
         onClick={() => setOpen((previous) => !previous)}
         aria-label="Account menu"
         aria-expanded={open}
-        className="-m-1 flex w-full cursor-pointer items-center gap-2.5 p-1 text-left transition-colors hover:bg-foreground/6"
+        className="-m-1 flex w-full cursor-pointer items-center gap-2.5 rounded-md p-1 text-left transition-colors hover:bg-foreground/6"
       >
-        <div className="grid size-8 flex-none place-items-center bg-neutral-300 font-heading text-xs font-extrabold">
+        <div className="grid size-8 flex-none place-items-center rounded-md bg-neutral-300 font-heading text-xs font-extrabold">
           {account.initials}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-semibold">{account.name}</div>
-          <div className="truncate text-[11px] text-muted-foreground">
+          <div className="truncate text-sm font-semibold">{account.name}</div>
+          <div className="truncate text-2xs text-muted-foreground">
             {account.line}
           </div>
         </div>

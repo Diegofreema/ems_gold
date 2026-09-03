@@ -61,12 +61,12 @@ export function CheckboxGroupField<TValues extends FieldValues>({
         aria-labelledby={name}
         aria-invalid={fieldState.error ? true : undefined}
         className={cn(
-          'max-h-[220px] overflow-y-auto border border-input bg-background',
-          fieldState.error && 'border-brand',
+          'max-h-[220px] overflow-y-auto rounded-md border border-input bg-background',
+          fieldState.error && 'border-danger',
         )}
       >
         {options.length === 0 ? (
-          <div className="px-3 py-2.5 text-[13px] text-muted-foreground">
+          <div className="px-3 py-2.5 text-sm text-muted-foreground">
             {isPending
               ? 'Loading…'
               : isError

@@ -62,12 +62,12 @@ export function DataTable<TRow>({
 
       {rows.length === 0 && (
         <div className="px-6 py-14 text-center">
-          <div className="font-heading text-[17px] font-extrabold">
+          <div className="font-heading text-lg font-extrabold">
             {searchQuery ? `Nothing matches “${searchQuery}”` : 'Nothing to show'}
           </div>
           {searchQuery && (
             <>
-              <p className="mt-1.5 text-[13px] text-muted-foreground">
+              <p className="mt-1.5 text-sm text-muted-foreground">
                 Clear the search to see the full register.
               </p>
               <Button variant="outline" className="mt-2" onClick={onClearSearch}>

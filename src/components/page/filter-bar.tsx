@@ -21,7 +21,7 @@ export function FilterBar({
   searchable?: boolean
 }) {
   return (
-    <div className="mb-[18px] flex flex-wrap items-center gap-2.5">
+    <div className="mb-4.5 flex flex-wrap items-center gap-2.5">
       {searchable && (
         <Input
           value={query}

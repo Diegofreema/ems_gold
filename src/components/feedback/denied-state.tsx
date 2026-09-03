@@ -26,19 +26,19 @@ export function DeniedState({
 }) {
   return (
     <div className="max-w-[580px] py-10">
-      <div className="grid size-10 place-items-center bg-brand text-white">
-        <Lock className="size-[21px]" strokeWidth={2.1} />
+      <div className="grid size-10 place-items-center rounded-lg bg-brand text-white">
+        <Lock className="size-5.25" strokeWidth={2.1} />
       </div>
       <h2 className="mt-5 text-page-title">You cannot open this page</h2>
       <p className="mt-2.5 text-sm text-muted-foreground">{body}</p>
 
-      <div className="mt-[18px] border-t-2 border-divider">
+      <div className="mt-4.5 border-t-2 border-divider">
         {ROWS(pageName).map((row) => (
           <div
             key={row.label}
             className="flex gap-4 border-b border-divider px-0.5 py-3"
           >
-            <div className="w-2/5 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="w-2/5 text-2xs uppercase tracking-[0.08em] text-muted-foreground">
               {row.label}
             </div>
             <div className="flex-1 text-sm">{row.value}</div>

@@ -40,13 +40,13 @@ export function TileStrip({
             size === 'lg' ? 'px-4 py-4.5' : 'px-4 py-3.5',
           )}
         >
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="text-2xs uppercase tracking-widest text-muted-foreground">
             {tile.label}
           </div>
           <div
             className={cn(
               'font-heading font-extrabold tabular-nums tracking-[-0.02em]',
-              size === 'lg' ? 'my-2 text-stat' : 'mt-1.5 text-[21px]',
+              size === 'lg' ? 'my-2 text-stat' : 'mt-1.5 text-xl',
             )}
           >
             {tile.value}
@@ -54,7 +54,7 @@ export function TileStrip({
           {tile.delta && (
             <div
               className={cn(
-                'text-[11.5px]',
+                'text-2xs',
                 tile.deltaTone === 'brand'
                   ? 'text-brand-700'
                   : 'text-muted-foreground',

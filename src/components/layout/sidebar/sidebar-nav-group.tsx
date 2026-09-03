@@ -22,10 +22,10 @@ export function SidebarNavGroup({
           type="button"
           onClick={onToggle}
           aria-expanded={!collapsed}
-          className="flex w-full cursor-pointer items-center justify-between px-2 pt-3 pb-2 font-heading text-[10px] font-extrabold uppercase tracking-[0.12em] text-neutral-600 transition-colors hover:text-foreground"
+          className="flex w-full cursor-pointer items-center justify-between px-2 pt-3 pb-2 font-heading text-2xs font-extrabold uppercase tracking-[0.12em] text-neutral-600 transition-colors hover:text-foreground"
         >
           <span>{group.heading}</span>
-          <Chevron className="size-[13px]" strokeWidth={2.5} />
+          <Chevron className="size-3.25" strokeWidth={2.5} />
         </button>
       )}
 

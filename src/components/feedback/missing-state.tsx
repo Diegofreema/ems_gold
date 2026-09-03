@@ -21,8 +21,8 @@ export function MissingState({
 }) {
   return (
     <div className="max-w-[580px] py-2">
-      <div className="grid size-10 place-items-center bg-brand text-white">
-        <SearchX className="size-[21px]" strokeWidth={2.1} />
+      <div className="grid size-10 place-items-center rounded-lg bg-brand text-white">
+        <SearchX className="size-5.25" strokeWidth={2.1} />
       </div>
       <h2 className="mt-5 text-page-title">{title}</h2>
       <p className="mt-2.5 max-w-[60ch] text-sm text-muted-foreground">{body}</p>

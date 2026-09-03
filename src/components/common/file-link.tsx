@@ -37,9 +37,9 @@ export function FileLink({
       )}
     >
       {download.isPending ? (
-        <Loader2 className="size-[13px] animate-spin" strokeWidth={2.2} />
+        <Loader2 className="size-3.25 animate-spin" strokeWidth={2.2} />
       ) : (
-        <Download className="size-[13px]" strokeWidth={2.2} />
+        <Download className="size-3.25" strokeWidth={2.2} />
       )}
       {name}
     </button>

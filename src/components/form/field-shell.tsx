@@ -36,7 +36,7 @@ export function FieldShell({
     >
       <Label
         htmlFor={name}
-        className="mb-[5px] block text-xs font-normal text-foreground/70"
+        className="mb-1.25 block text-xs font-normal text-foreground/70"
       >
         {label}
         {required && <span className="text-brand">*</span>}
@@ -47,8 +47,8 @@ export function FieldShell({
       {(error ?? hint) && (
         <div
           className={cn(
-            'mt-1 text-[11px]',
-            error ? 'text-brand-700' : 'text-muted-foreground',
+            'mt-1 text-2xs',
+            error ? 'text-danger-ink' : 'text-muted-foreground',
           )}
         >
           {error ?? hint}

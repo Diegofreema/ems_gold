@@ -13,13 +13,13 @@ export type Bar = {
 export function BarChart({ bars, peak }: { bars: Bar[]; peak: number }) {
   return (
     <>
-      <div className="mt-[18px] flex h-[190px] items-end gap-0.5 border-b-2 border-divider">
+      <div className="mt-4.5 flex h-[190px] items-end gap-0.5 border-b-2 border-divider">
         {bars.map((bar, index) => (
           <div
             key={bar.label}
             className="flex h-full flex-1 flex-col justify-end gap-1.5"
           >
-            <div className="text-center text-[10px] tabular-nums text-neutral-600">
+            <div className="text-center text-2xs tabular-nums text-neutral-600">
               {bar.display}
             </div>
             <div
@@ -39,7 +39,7 @@ export function BarChart({ bars, peak }: { bars: Bar[]; peak: number }) {
         {bars.map((bar) => (
           <div
             key={bar.label}
-            className="flex-1 text-center text-[11px] uppercase tracking-[0.04em] text-neutral-600"
+            className="flex-1 text-center text-2xs uppercase tracking-[0.04em] text-neutral-600"
           >
             {bar.label}
           </div>

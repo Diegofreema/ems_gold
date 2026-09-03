@@ -54,7 +54,7 @@ export function CardView<TRow>({
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-semibold text-pretty">
+              <div className="text-base font-semibold text-pretty">
                 {title.cell(row) as ReactNode}
               </div>
               {subtitle && (
@@ -70,10 +70,10 @@ export function CardView<TRow>({
             <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-x-3.5 gap-y-2.5">
               {fields.map((field) => (
                 <div key={field.key}>
-                  <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+                  <div className="text-2xs uppercase tracking-[0.08em] text-muted-foreground">
                     {field.label}
                   </div>
-                  <div className="mt-0.5 text-[13.5px] tabular-nums">
+                  <div className="mt-0.5 text-sm tabular-nums">
                     {field.cell(row)}
                   </div>
                 </div>
@@ -92,7 +92,7 @@ export function CardView<TRow>({
                 </Button>
               )}
               {onDelete && (canDelete?.(row) ?? true) && (
-                <Button variant="outline" onClick={() => onDelete(row)}>
+                <Button variant="destructive" onClick={() => onDelete(row)}>
                   Delete
                 </Button>
               )}

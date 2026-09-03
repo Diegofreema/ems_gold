@@ -17,7 +17,7 @@ function TabTable({ tab, rows }: { tab: DetailTab; rows: Row[] }) {
   // as a table that has not loaded rather than one with nothing in it.
   if (rows.length === 0) {
     return (
-      <div className="px-6 py-12 text-center text-[13px] text-muted-foreground">
+      <div className="px-6 py-12 text-center text-sm text-muted-foreground">
         {tab.empty ?? 'Nothing to show'}
       </div>
     )
@@ -79,7 +79,7 @@ export function DetailTabPanel({
         {tabs.length > 1 ? (
           <SegmentedControl
             name="detail-tab"
-            className="mb-[18px]"
+            className="mb-4.5"
             value={String(active)}
             onChange={(value) => setActive(Number(value))}
             options={tabs.map((entry, index) => ({

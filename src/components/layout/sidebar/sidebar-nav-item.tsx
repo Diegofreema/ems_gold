@@ -24,12 +24,12 @@ export function SidebarNavItem({
       onClick={onNavigate}
       activeOptions={{ exact: isPortalHome(item.to) }}
       style={{ animationDelay: `${index * 30}ms` }}
-      className="flex w-full animate-ems-row items-center gap-2.5 border-l-2 border-transparent px-2.5 py-2 text-left text-[13.5px] transition-[background-color,color,padding-left] duration-150 hover:bg-foreground/6 hover:pl-3.5 data-[status=active]:border-l-brand data-[status=active]:bg-brand/10 data-[status=active]:text-brand-700"
+      className="flex w-full animate-ems-row items-center gap-2.5 rounded-md border-l-2 border-transparent px-2.5 py-2 text-left text-sm transition-[background-color,color,padding-left] duration-150 hover:bg-foreground/6 hover:pl-3.5 data-[status=active]:rounded-l-none data-[status=active]:border-l-brand data-[status=active]:bg-brand/10 data-[status=active]:text-brand-700"
     >
-      <Icon className="size-[15px] flex-none opacity-85" strokeWidth={1.75} />
+      <Icon className="size-3.75 flex-none opacity-85" strokeWidth={1.75} />
       <span className="flex-1">{item.label}</span>
       {item.badge && (
-        <Tag variant="accent" className="px-1.5 py-px text-[10px]">
+        <Tag variant="accent" className="px-1.5 py-px text-2xs">
           {item.badge}
         </Tag>
       )}

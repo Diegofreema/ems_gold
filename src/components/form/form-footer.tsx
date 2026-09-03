@@ -29,10 +29,9 @@ export function FormFooter({
       {deleteLabel && onDelete && (
         <Button
           type="button"
-          variant="ghost"
+          variant="destructive"
           onClick={onDelete}
           disabled={pending}
-          className="text-brand hover:bg-brand/10 hover:text-brand"
         >
           {deleteLabel}
         </Button>

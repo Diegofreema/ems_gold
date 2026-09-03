@@ -24,13 +24,13 @@ export function SegmentedControl<TValue extends string>({
   className?: string
 }) {
   return (
-    <div className={cn('inline-flex overflow-hidden border border-divider', className)}>
+    <div className={cn('inline-flex overflow-hidden rounded-md border border-divider', className)}>
       {options.map((option) => (
         <label
           key={option.value}
           data-slot="seg-option"
           className={cn(
-            'relative inline-flex cursor-pointer items-center gap-1.5 px-3 py-[7px] text-[13px] transition-colors',
+            'relative inline-flex cursor-pointer items-center gap-1.5 px-3 py-1.75 text-sm transition-colors',
             'border-l border-divider first:border-l-0',
             'has-[:focus-visible]:outline has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-brand',
             option.value === value

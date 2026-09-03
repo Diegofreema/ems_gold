@@ -14,7 +14,7 @@ export function SectionHeading({
 }) {
   return (
     <div className={cn('flex items-baseline gap-2.5', className)}>
-      <h6 className="text-[13px] uppercase tracking-[0.08em] text-brand-700">
+      <h6 className="text-sm uppercase tracking-[0.08em] text-brand-700">
         {children}
       </h6>
       <div className="h-px flex-1 bg-divider" />

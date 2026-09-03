@@ -56,13 +56,13 @@ export function ConfirmDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className="w-[min(460px,100%)] gap-0 border-2 border-brand bg-background p-0 shadow-lg sm:max-w-[460px]"
+        className="w-[min(460px,100%)] gap-0 border-2 border-danger bg-background p-0 shadow-float sm:max-w-[460px]"
       >
         {request && (
           <>
-            <div className="p-[22px] pb-0">
+            <div className="p-5.5 pb-0">
               <div className="flex items-center gap-2.5">
-                <div className="grid size-[22px] flex-none place-items-center bg-brand text-white">
+                <div className="grid size-[22px] flex-none place-items-center rounded-sm bg-danger text-white">
                   <AlertCircle className="size-3.5" strokeWidth={2.6} />
                 </div>
                 <DialogTitle className="font-heading text-xl font-extrabold">
@@ -72,12 +72,12 @@ export function ConfirmDialog({
               <DialogDescription className="mt-3.5 text-sm text-muted-foreground">
                 {request.body}
               </DialogDescription>
-              <div className="mt-4 bg-neutral-100 px-3.5 py-3 text-[13px]">
+              <div className="mt-4 rounded-md bg-neutral-100 px-3.5 py-3 text-sm">
                 {request.subject}
               </div>
             </div>
 
-            <div className="flex justify-end gap-2.5 p-[22px]">
+            <div className="flex justify-end gap-2.5 p-5.5">
               {/* Closed here rather than with `DialogClose asChild`, which
                   overwrites the button's `data-slot` and so loses the design's
                   44px touch target on a phone. */}
@@ -88,7 +88,11 @@ export function ConfirmDialog({
               >
                 {request.cancel ?? 'Keep it'}
               </Button>
-              <Button pending={pending} onClick={() => void run()}>
+              <Button
+                pending={pending}
+                onClick={() => void run()}
+                className="bg-danger text-white hover:bg-danger/85 focus-visible:border-danger focus-visible:ring-danger/40"
+              >
                 {request.cta}
               </Button>
             </div>

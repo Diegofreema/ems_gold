@@ -20,8 +20,8 @@ export function DeclarationField<TValues extends FieldValues>({
   const error = fieldState.error?.message
 
   return (
-    <div className="mt-6 border-2 border-divider p-4">
-      <label className="flex cursor-pointer items-start gap-3 text-[13.5px] leading-normal">
+    <div className="mt-6 rounded-lg border border-divider p-4">
+      <label className="flex cursor-pointer items-start gap-3 text-sm leading-normal">
         <Checkbox
           id={name}
           checked={Boolean(field.value)}
@@ -34,8 +34,8 @@ export function DeclarationField<TValues extends FieldValues>({
       </label>
       <div
         className={cn(
-          'mt-2 text-[11px]',
-          error ? 'text-brand-700' : 'text-muted-foreground',
+          'mt-2 text-2xs',
+          error ? 'text-danger-ink' : 'text-muted-foreground',
         )}
       >
         {error ?? hint}

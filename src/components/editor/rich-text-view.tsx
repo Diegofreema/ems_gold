@@ -27,5 +27,5 @@ export function RichTextView({ html, className }: { html: string; className?: st
   )
 
   if (!editor) return null
-  return <EditorContent editor={editor} className={cn('text-[13.5px]', className)} />
+  return <EditorContent editor={editor} className={cn('text-sm', className)} />
 }

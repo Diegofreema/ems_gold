@@ -20,7 +20,7 @@ export function NotFoundState({
       <div className="font-heading text-numeral leading-[0.9] font-extrabold tracking-[-0.04em] text-brand">
         404
       </div>
-      <h2 className="mt-[18px] text-page-title">There is no page here</h2>
+      <h2 className="mt-4.5 text-page-title">There is no page here</h2>
       <p className="mt-2.5 text-sm text-muted-foreground">
         The link may be old, or the record may have been deleted. These are the
         places {audience} usually want:
@@ -35,7 +35,7 @@ export function NotFoundState({
           >
             <span className="flex-1">{link.label}</span>
             <span className="text-xs text-muted-foreground">{link.hint}</span>
-            <ChevronRight className="size-[15px]" strokeWidth={2} />
+            <ChevronRight className="size-3.75" strokeWidth={2} />
           </Link>
         ))}
       </div>

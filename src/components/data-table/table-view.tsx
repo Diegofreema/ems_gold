@@ -32,7 +32,7 @@ export function TableView<TRow>({
             <th
               key={column.key}
               className={cn(
-                'border-b-2 border-divider p-2 text-[11px] font-normal uppercase tracking-[0.08em] whitespace-nowrap text-muted-foreground',
+                'border-b-2 border-divider p-2 text-2xs font-normal uppercase tracking-[0.08em] whitespace-nowrap text-muted-foreground',
                 column.align === 'right' ? 'text-right' : 'text-left',
               )}
             >
@@ -59,7 +59,7 @@ export function TableView<TRow>({
                 key={column.key}
                 className={cn(
                   'border-b border-divider tabular-nums',
-                  compact ? 'px-2 py-[5px]' : 'px-2 py-[11px]',
+                  compact ? 'px-2 py-1.25' : 'px-2 py-2.75',
                   column.align === 'right' ? 'text-right' : 'text-left',
                   column.nowrap && 'whitespace-nowrap',
                   columnIndex === boldIndex && 'font-semibold',
@@ -74,7 +74,7 @@ export function TableView<TRow>({
               <td
                 className={cn(
                   'border-b border-divider text-right',
-                  compact ? 'px-2 py-[5px]' : 'px-2 py-[7px]',
+                  compact ? 'px-2 py-1.25' : 'px-2 py-1.75',
                 )}
                 onClick={(event) => event.stopPropagation()}
               >
@@ -85,11 +85,11 @@ export function TableView<TRow>({
               <td
                 className={cn(
                   'border-b border-divider text-right text-neutral-500',
-                  compact ? 'px-2 py-[5px]' : 'px-2 py-[11px]',
+                  compact ? 'px-2 py-1.25' : 'px-2 py-2.75',
                 )}
               >
                 <ChevronRight
-                  className="inline-block size-[15px]"
+                  className="inline-block size-3.75"
                   strokeWidth={2}
                 />
               </td>
