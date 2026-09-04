@@ -8,7 +8,7 @@ import {
   LayoutGrid,
   List,
   MessageSquare,
-  Monitor,
+  // Monitor,
   PenLine,
   SquareCheckBig,
   Upload,
@@ -46,7 +46,7 @@ export const teacherNav: NavGroup[] = [
         icon: CalendarClock,
       },
       { to: '/teacher/topics', label: 'Topics taught', icon: List },
-      { to: '/teacher/eclasses', label: 'E-classes', icon: Monitor },
+      // { to: '/teacher/eclasses', label: 'E-classes', icon: Monitor },
     ],
   },
   {
