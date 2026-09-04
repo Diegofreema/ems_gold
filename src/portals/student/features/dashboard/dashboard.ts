@@ -1,11 +1,15 @@
-import { Award, Banknote, BookOpen, Hourglass } from 'lucide-react'
-import type { Invoice } from '../../../../api/invoices/types.ts'
-import type { StudentDashboard } from '../../../../api/my-schooling/types.ts'
-import { money, named, SETTLED } from '../../../../features/collections/invoice.ts'
-import { newestFirst } from '../../../../features/collections/newest.ts'
-import { schoolTime, when } from '../../../../features/collections/when.ts'
-import { formatNaira } from '../../../../lib/format.ts'
-import { feeCounts, paidTotal, reference } from '../fees/fees.ts'
+import { Award, Banknote, BookOpen, Hourglass } from 'lucide-react';
+import type { Invoice } from '../../../../api/invoices/types.ts';
+import type { StudentDashboard } from '../../../../api/my-schooling/types.ts';
+import {
+  money,
+  named,
+  SETTLED,
+} from '../../../../features/collections/invoice.ts';
+import { newestFirst } from '../../../../features/collections/newest.ts';
+import { schoolTime, when } from '../../../../features/collections/when.ts';
+import { formatNaira } from '../../../../lib/format.ts';
+import { feeCounts, paidTotal, reference } from '../fees/fees.ts';
 
 /**
  * The student's home page, off `GET /students/me/dashboard` and
@@ -20,11 +24,11 @@ import { feeCounts, paidTotal, reference } from '../fees/fees.ts'
  * instead, and it is the one thing on it a student would check twice.
  */
 
-export type StudentStats = NonNullable<StudentDashboard['stats']>
+export type StudentStats = NonNullable<StudentDashboard['stats']>;
 
 /** "1 invoice", "3 invoices" — a delta line is prose, not a column. */
 function counted(amount: number, one: string, many: string): string {
-  return `${amount} ${amount === 1 ? one : many}`
+  return `${amount} ${amount === 1 ? one : many}`;
 }
 
 /**
@@ -42,9 +46,13 @@ function counted(amount: number, one: string, many: string): string {
  * list would be the one believed.
  */
 export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
-  const count = (label: string, amount: number, delta: string, hot = false) =>
-    ({ label, amount, format: 'number' as const, delta, hot })
-  const fees = feeCounts(invoices)
+  const count = (
+    label: string,
+    amount: number,
+    delta: string,
+    hot = false,
+  ) => ({ label, amount, format: 'number' as const, delta, hot });
+  const fees = feeCounts(invoices);
 
   return [
     {
@@ -61,7 +69,9 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
       ...count(
         'Invoices unpaid',
         fees.unpaid,
-        fees.unpaid ? `Of ${counted(fees.total, 'invoice', 'invoices')} raised for you` : 'Nothing owing',
+        fees.unpaid
+          ? `Of ${counted(fees.total, 'invoice', 'invoices')} raised for you`
+          : 'Nothing owing',
         fees.unpaid > 0,
       ),
       icon: Hourglass,
@@ -71,7 +81,9 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
       ...count(
         'Results published',
         stats.results_available,
-        stats.results_available ? 'Approved by the office' : 'None approved yet',
+        stats.results_available
+          ? 'Approved by the office'
+          : 'None approved yet',
       ),
       icon: Award,
       to: '/student/results',
@@ -80,12 +92,14 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
       ...count(
         'Course materials',
         stats.materials_available,
-        stats.materials_available ? 'Shared by your teachers' : 'Nothing shared yet',
+        stats.materials_available
+          ? 'Shared by your teachers'
+          : 'Nothing shared yet',
       ),
       icon: BookOpen,
       to: '/student/materials',
     },
-  ]
+  ];
 }
 
 /**
@@ -93,44 +107,50 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
  * this page that is a task rather than a figure.
  */
 export function studentNote(stats: StudentStats, invoices: Invoice[]): string {
-  const unpaid = feeCounts(invoices).unpaid
+  const unpaid = feeCounts(invoices).unpaid;
   const fees = unpaid
     ? `${counted(unpaid, 'invoice', 'invoices')} of yours ${unpaid === 1 ? 'is' : 'are'} still unpaid.`
-    : 'Every invoice raised for you has been paid.'
+    : 'Every invoice raised for you has been paid.';
   const results = stats.results_available
     ? `${counted(stats.results_available, 'result is', 'results are')} ready to read.`
-    : 'No result has been published to you yet.'
+    : 'No result has been published to you yet.';
 
-  return `${fees} ${results}`
+  return `${fees} ${results}`;
 }
 
 export type StudentAction = {
-  to: '/student/invoices' | '/student/results'
-  label: string
-}
+  to: '/student/invoices' | '/student/results';
+  label: string;
+};
 
 /** The button beside the greeting points at whatever is waiting. */
 export function studentAction(invoices: Invoice[]): StudentAction {
   return feeCounts(invoices).unpaid
     ? { to: '/student/invoices', label: 'My invoices' }
-    : { to: '/student/results', label: 'My results' }
+    : { to: '/student/results', label: 'My results' };
 }
 
 /** The bills the school has raised for this student, newest first. */
 export function billEntries(invoices: Invoice[]) {
   return newestFirst(invoices).map((invoice) => {
-    const settled = invoice.paystatus === SETTLED
+    const settled = invoice.paystatus === SETTLED;
 
     return {
       id: String(invoice.id),
       text: named(invoice.fee, 'name') || `Invoice ${invoice.id}`,
-      who: [formatNaira(money(invoice.amount)), reference(invoice), named(invoice.session, 'name')]
+      who: [
+        formatNaira(money(invoice.amount)),
+        reference(invoice),
+        named(invoice.session, 'name'),
+      ]
         .filter(Boolean)
         .join(' · '),
-      when: settled ? `Paid ${when(schoolTime(invoice.payday), true)}` : 'Not paid',
+      when: settled
+        ? `Paid ${when(schoolTime(invoice.payday), true)}`
+        : 'Not paid',
       flagged: !settled,
-    }
-  })
+    };
+  });
 }
 
 /** Each settled bill as a bar, so a student can see where the money went. */
@@ -138,15 +158,15 @@ export function feeBars(invoices: Invoice[]) {
   const bars = newestFirst(invoices)
     .filter((invoice) => invoice.paystatus === SETTLED)
     .map((invoice) => {
-      const amount = money(invoice.amount)
+      const amount = money(invoice.amount);
       return {
         label: shortFee(named(invoice.fee, 'name')) || reference(invoice),
         value: amount,
         display: formatNaira(amount),
-      }
-    })
+      };
+    });
 
-  return { bars, peak: Math.max(1, ...bars.map((bar) => bar.value)) }
+  return { bars, peak: Math.max(1, ...bars.map((bar) => bar.value)) };
 }
 
 /**
@@ -154,5 +174,8 @@ export function feeBars(invoices: Invoice[]) {
  * "BUS FEE", and the word they share is the one the chart is already about.
  */
 function shortFee(name: string): string {
-  return name.replace(/\s*fees?$/i, '').trim().toUpperCase()
+  return name
+    .replace(/\s*fees?$/i, '')
+    .trim()
+    .toUpperCase();
 }
