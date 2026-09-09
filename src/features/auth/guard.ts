@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { getToken } from '@/api/token'
+import { useSessionStore } from '@/stores/session.store'
 import { useAuthStore } from './auth.store'
 import { portalFor, type Role, roleForAccount } from './role'
 import { loadAccount } from './session'
@@ -10,9 +11,38 @@ import { loadAccount } from './session'
  * no token at all means sign in, a refused token means the session ended, and
  * a sign-in the office has switched off goes back to the form — being turned
  * away is not an expiry, and the form is where the reason is shown.
+ *
+ * Offline it answers from the copy the session store kept, because asking the
+ * school who you are is exactly what cannot be done in the classroom this app
+ * is for. That copy is not an authority — it never was — and the ceiling on it
+ * is the token's own twelve hours.
  */
 async function requireAccount(queryClient: QueryClient) {
+  // `getToken` drops a token that is past the expiry the school stamped on it,
+  // so reaching this line at all means there is a live one. That is what puts
+  // a ceiling on the offline path below, and it needed no new clock.
   if (getToken() === null) throw redirect({ to: '/sign-in' })
+
+  const cached = useSessionStore.getState().account
+
+  if (!navigator.onLine) {
+    // Nobody has signed in on this device, so there is no identity to open a
+    // portal on and nothing cached to open it over.
+    if (!cached) throw redirect({ to: '/sign-in' })
+
+    // Signed in, offline, inside the token's life: open on what we know. The
+    // token is still checked by the school on every request that leaves here,
+    // and every portal endpoint resolves its own caller, so this reaches only
+    // what is already on this device.
+    return cached
+  }
+
+  if (cached) {
+    // Don't hold the portal shut behind a slow or flaky connection. The check
+    // still runs; a refusal ends the session and the next navigation redirects.
+    void loadAccount(queryClient).catch(() => undefined)
+    return cached
+  }
 
   const account = await loadAccount(queryClient)
   if (!account) {
@@ -47,7 +77,12 @@ export async function requireSession(queryClient: QueryClient) {
 export async function redirectIfSignedIn(queryClient: QueryClient) {
   if (getToken() === null) return
 
-  const account = await loadAccount(queryClient)
+  // Offline the token cannot be checked, so the cached account decides. Nobody
+  // is served the form they cannot submit while their own portal is readable.
+  const account = navigator.onLine
+    ? await loadAccount(queryClient)
+    : useSessionStore.getState().account
+
   const role = account ? roleForAccount(account) : null
   if (role) throw redirect({ to: portalFor(role).to })
 }

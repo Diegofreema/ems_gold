@@ -1,8 +1,13 @@
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useLiveQuery } from '@tanstack/react-db'
 import { create } from 'zustand'
+import {
+  parentAttendance,
+  parentChildren,
+  parentInvoices,
+} from '@/db/collections/parent'
 import { useSessionStore } from '@/stores/session.store'
-import { familyQuery, parentIdOf } from './api/family'
-import type { Child } from './family'
+import { parentIdOf } from './api/family'
+import { composeFamily, type Child, type OwnedMark } from './family'
 
 type ParentStore = {
   /** The child most pages are scoped to. Null until the switcher is used. */
@@ -29,24 +34,45 @@ export function useParentId(): number | null {
 }
 
 /**
- * The household. Primed by the portal's own route loader, so every page and
- * the switcher above them read it without waiting or re-fetching.
+ * The household, read off the device.
+ *
+ * Three live queries over the three sets the portal keeps locally, composed on
+ * every render by a pure function. Nothing here waits on the school: the rows
+ * are already here, and when a sync brings new ones the queries recompute and
+ * the pages follow. That is the whole of what local-first buys this portal —
+ * a guardian in a village with no signal opens the app and their children,
+ * their bills and their attendance are simply there.
+ *
+ * No longer suspends. There is nothing to suspend on once the reading is
+ * local, so the callers that used to get a suspense boundary now get an empty
+ * household for the one frame before the collections are ready.
  */
 export function useFamily(): Child[] {
-  return useSuspenseQuery(familyQuery(useParentId())).data
+  const children = useLiveQuery({ query: (q) => q.from({ child: parentChildren }) })
+  const invoices = useLiveQuery({ query: (q) => q.from({ invoice: parentInvoices }) })
+  const marks = useLiveQuery({ query: (q) => q.from({ mark: parentAttendance }) })
+
+  // Recomposed rather than memoised: `familyChild` is a few filters and a sum
+  // over a household, which is a handful of children and a few dozen bills.
+  return composeFamily(
+    children.data ?? [],
+    invoices.data ?? [],
+    (marks.data ?? []) as OwnedMark[],
+    new Date(),
+  )
 }
 
 /**
- * The household as the shell around the pages reads it: empty while it is
- * loading, and empty if it never loads.
+ * The household as the shell around the pages reads it.
  *
- * The chrome must not suspend or throw on it. Both are drawn by this portal's
- * own route, and anything that throws there takes the whole shell down with
- * it — a switcher is not worth a blank page. The pages below use `useFamily`
- * and surface the failure where it belongs.
+ * Kept as its own name even though it now does exactly what `useFamily` does:
+ * the distinction it was drawing — one reader may suspend, the other may not —
+ * stopped existing when the reading became local, and collapsing the two at
+ * the call sites is a change for the chrome to make on its own terms rather
+ * than a side effect of this one.
  */
 export function useLoadedFamily(): Child[] {
-  return useQuery(familyQuery(useParentId())).data ?? []
+  return useFamily()
 }
 
 /**

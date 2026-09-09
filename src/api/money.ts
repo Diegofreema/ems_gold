@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
+import { resyncCollections } from '@/db/collection'
 import { analyticsKeys } from './analytics/keys'
 import { collectFeeKeys } from './collect-fees/keys'
 import { feeKeys } from './fees/keys'
@@ -18,6 +19,12 @@ import { userKeys } from './users/keys'
  *
  * Named here because every write that moves money has the same reach, and
  * asking each one to remember six keys is how they came to remember two.
+ *
+ * The guardian's ledger is no longer one of those keys — it is a collection on
+ * their own device now — so the sets are resynced alongside the invalidation.
+ * An invalidation does not reach a collection, and a settled invoice that
+ * still reads as owing is exactly the kind of quiet wrongness this function
+ * exists to prevent.
  */
 export function dropMoneyReads(queryClient: QueryClient): void {
   const roots = [
@@ -31,4 +38,6 @@ export function dropMoneyReads(queryClient: QueryClient): void {
     myFamilyKeys.all,
   ]
   for (const queryKey of roots) queryClient.invalidateQueries({ queryKey })
+
+  void resyncCollections()
 }

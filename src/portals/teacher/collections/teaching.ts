@@ -1,7 +1,15 @@
 import { teachingService } from '@/api/teaching/service';
+import {
+  teacherEClasses,
+  teacherRoll,
+  teacherSubjects,
+  teacherTopics,
+} from '@/db/collections/teaching';
 import { pageRows } from '@/features/collections/api';
+import { localFirst } from '@/features/collections/local-first';
 import type { CollectionDef, Row } from '@/features/collections/types';
-import { myEClasses, myMarks, myRoll, mySubjects, myTopics } from './mine';
+import { myArms, myEClasses, myMarks, myStudents, mySubjects, myTopics } from './mine';
+import { byId, newestFirst } from './order';
 import { topicBody, topicUpdate } from './teaching-body';
 import {
   eclassRow,
@@ -25,7 +33,7 @@ const eclassRows = async (): Promise<Row[]> =>
   (await myEClasses()).map(eclassRow);
 
 const studentRows = async (): Promise<Row[]> =>
-  (await myRoll()).items.map(studentRow);
+  (await myStudents()).map(studentRow);
 
 export const subjects: CollectionDef = {
   id: 'subjects',
@@ -60,8 +68,13 @@ export const subjects: CollectionDef = {
     { key: 'status', label: 'Status' },
     { key: 'added', label: 'Given to you' },
   ],
-  // The endpoint answers whole and takes no search term, so the page is paged
-  // and searched here — which also means the box matches every column.
+  // Read off the device. The endpoint answers whole and takes no search term,
+  // so the page is paged and searched here — which also means the box matches
+  // every column.
+  collection: localFirst({
+    entities: teacherSubjects,
+    rows: (given) => byId(given).map(mySubjectRow),
+  }),
   source: async (params) => pageRows(await subjectRows(), params),
   // There is no endpoint for one of these, so the record is found in the list
   // the register already asked for.
@@ -87,10 +100,10 @@ export const students: CollectionDef = {
   noun: 'student',
   nameKey: 'name',
   counts: [
-    { label: 'Students', count: async () => (await myRoll()).pagination.total },
+    { label: 'Students', count: async () => (await myStudents()).length },
     // The arms come back beside the roll rather than on it, which is the only
     // way an arm the teacher takes but which holds nobody is counted at all.
-    { label: 'Classes', count: async () => (await myRoll()).class_arms.length },
+    { label: 'Classes', count: async () => (await myArms()).length },
   ],
   columns: [
     { key: 'adm', label: 'Adm. no.', cardRole: 'subtitle' },
@@ -115,9 +128,13 @@ export const students: CollectionDef = {
     { key: 'enrolled', label: 'On the roll since' },
     { key: 'username', label: 'Signs in with' },
   ],
-  // The endpoint pages but ignores a search term, so the roll is read whole
-  // and searched here — on every column, not the one field a parameter would
-  // have narrowed.
+  // Read off the device. The endpoint pages but ignores a search term, so the
+  // roll is read whole and searched here — on every column, not the one field
+  // a parameter would have narrowed.
+  collection: localFirst({
+    entities: teacherRoll,
+    rows: (roll) => byId(roll).map(studentRow),
+  }),
   source: async (params) => pageRows(await studentRows(), params),
   record: async (recordId) =>
     (await studentRows()).find((student) => student.id === String(recordId)),
@@ -135,7 +152,7 @@ export const students: CollectionDef = {
       source: async (recordId) => {
         const [marks, subjects] = await Promise.all([myMarks(), mySubjects()]);
         const names = subjectNames(subjects);
-        return marks.items
+        return marks
           .filter((mark) => String(mark.student_id) === String(recordId))
           .map((mark) => scoreRow(mark, names));
       },
@@ -171,8 +188,18 @@ export const topics: CollectionDef = {
     { key: 'subject', label: 'Subject' },
     { key: 'contents', label: 'What was covered', rich: true },
   ],
-  // Whole, like the subject list beside it: the endpoint takes no page, no
-  // limit and no search term.
+  // Read off the device, joined to the subject list — a topic carries only the
+  // subject's id, and the teacher's own subjects are what name it. Whole, like
+  // the subject list beside it: the endpoint takes no page, no limit and no
+  // search term.
+  collection: localFirst({
+    entities: teacherTopics,
+    lookup: teacherSubjects,
+    rows: (recorded, subjects) => {
+      const names = subjectNames(subjects);
+      return byId(recorded).map((topic) => topicRow(topic, names));
+    },
+  }),
   source: async (params) => pageRows(await topicRows(), params),
   record: async (recordId) =>
     (await topicRows()).find((topic) => topic.id === String(recordId)),
@@ -243,6 +270,13 @@ export const eclasses: CollectionDef = {
     { key: 'link', label: 'Meeting link', link: true },
     { key: 'created', label: 'Opened' },
   ],
+  // Read off the device, newest first — which now has to be said out loud. A
+  // collection is keyed and hands its rows back in key order, so the order the
+  // endpoint sent them in does not survive being stored.
+  collection: localFirst({
+    entities: teacherEClasses,
+    rows: (rooms) => newestFirst(rooms, (room) => room.datecreated).map(eclassRow),
+  }),
   source: async (params) => pageRows(await eclassRows(), params),
   record: async (recordId) =>
     (await eclassRows()).find((eclass) => eclass.id === String(recordId)),

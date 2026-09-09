@@ -1,0 +1,63 @@
+import { ApiError } from '../api/client.ts'
+import { OfflineError } from './errors.ts'
+
+/**
+ * What to do about a write that did not land.
+ *
+ * - `retryable` — the school never heard it. Keep it and send it again.
+ * - `auth`      — the token was refused. Stop the whole queue rather than
+ *                 spending anybody's work on attempts that cannot succeed.
+ * - `terminal`  — the school heard it and said no. Sending it again would get
+ *                 the same answer, so it is the reader's to resolve.
+ */
+export type Verdict = 'retryable' | 'auth' | 'terminal'
+
+/** Refusals that mean "not now" rather than "not ever". */
+const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504])
+
+/**
+ * Reads a failure and says what the queue should do with it.
+ *
+ * The distinction that matters most is 401/403. A token that expires with
+ * thirty saved attendance marks still queued must not turn those marks into
+ * thirty permanent failures — the marks are fine, the session is not. So an
+ * auth refusal pauses the drain and burns no attempts, and the marks are still
+ * there when somebody signs in again.
+ */
+export function classify(error: unknown): Verdict {
+  if (error instanceof OfflineError) return 'retryable'
+
+  if (error instanceof ApiError) {
+    if (error.status === 401 || error.status === 403) return 'auth'
+    if (RETRYABLE_STATUS.has(error.status)) return 'retryable'
+    // A 4xx the server has explained. Asking again gets the same explanation.
+    if (error.status >= 400 && error.status < 500) return 'terminal'
+    return 'retryable'
+  }
+
+  // `fetch` rejects with a TypeError when the request never left the device —
+  // no DNS, no route, connection dropped mid-flight. `request()` lets that
+  // through untouched, so this is what a dead connection looks like here.
+  if (error instanceof TypeError) return 'retryable'
+
+  // An abort is the app's own doing — a navigation, a teardown — not a refusal.
+  if (error instanceof DOMException && error.name === 'AbortError') return 'retryable'
+
+  // Anything with no story to tell is treated as final rather than replayed
+  // forever against a server that may already have taken it.
+  return 'terminal'
+}
+
+/**
+ * How long to wait before attempt number `attempts + 1`, in milliseconds.
+ *
+ * Climbs to five minutes and stays there. A device that has been in a corridor
+ * all afternoon should not be asking every second, but it must still be asking
+ * when somebody walks back into range.
+ */
+const BACKOFF_MS = [1_000, 4_000, 15_000, 60_000, 300_000]
+
+export function backoffFor(attempts: number): number {
+  const index = Math.min(Math.max(attempts, 0), BACKOFF_MS.length - 1)
+  return BACKOFF_MS[index]
+}

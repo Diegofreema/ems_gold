@@ -1,14 +1,16 @@
+import { useLiveQuery } from '@tanstack/react-db'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { collectionError, refetchCollection } from '@/db/collection'
 import { useListQuery } from '@/hooks/use-list-query'
-import { collectionQuery } from './api'
+import { collectionQuery, pageRows } from './api'
 import type { CollectionDef } from './types'
 
 /**
  * One page of a collection, narrowed by the search box and the filters. Both
- * the paging and the narrowing happen wherever the rows come from — the server
- * for a live collection, `api.ts` for a fixture one — so this only reads the
- * answer.
+ * the paging and the narrowing happen wherever the rows come from — the device
+ * for a bound collection, the server for a live one, `api.ts` for a fixture
+ * one — so this only reads the answer.
  *
  * Deliberately not a suspending query. Every filter and every page turn changes
  * the query key, and a suspending one would throw the whole page — header,
@@ -17,6 +19,12 @@ import type { CollectionDef } from './types'
  * query itself) and reports `pending` while the next one is fetched, so only
  * the rows change. `paged` is undefined until the first answer arrives, which
  * is the one time there is nothing to keep showing.
+ *
+ * A definition carrying `collection` takes the local-first path instead: the
+ * rows are read off the device with a live query and never asked for over the
+ * network here. Both paths run on every render with the unused one switched
+ * off, because the number of hooks a render makes cannot depend on which kind
+ * of definition it was handed.
  */
 export function useCollectionRows(definition: CollectionDef) {
   const keys = useMemo(
@@ -28,9 +36,50 @@ export function useCollectionRows(definition: CollectionDef) {
   )
   const list = useListQuery(keys)
   const { query, filters } = list
-  const { data, error, refetch, fetchStatus, isPlaceholderData, isFetching } = useQuery(
-    collectionQuery(definition, { page: list.page, q: query, filters }),
+  const local = definition.collection
+
+  // Both live queries are declared unconditionally and disabled by handing
+  // back nothing from the query callback, which is how `useLiveQuery` is
+  // documented to switch off.
+  const entities = useLiveQuery({
+    query: (q) => (local ? q.from({ entity: local.entities }) : undefined),
+  })
+  const lookup = useLiveQuery({
+    query: (q) => (local?.lookup ? q.from({ entity: local.lookup }) : undefined),
+  })
+
+  const {
+    data: fetched,
+    error: fetchError,
+    refetch,
+    fetchStatus,
+    isPlaceholderData,
+    isFetching,
+  } = useQuery({
+    ...collectionQuery(definition, { page: list.page, q: query, filters }),
+    enabled: !local,
+  })
+
+  /**
+   * Everything the register holds, before the search box and the page cut it
+   * down — which is also what the count beside the search measures against.
+   *
+   * The ordering is the binding's own; a collection is keyed and hands its
+   * rows back in key order whatever order the endpoint sent them in.
+   */
+  const held = useMemo(
+    () => (local ? local.rows(entities.data ?? [], lookup.data ?? []) : undefined),
+    [local, entities.data, lookup.data],
   )
+
+  // Nothing is on screen until the collection has actually answered. An empty
+  // set that is merely still syncing must not be drawn as an empty register.
+  const localReady = entities.isReady && (!local?.lookup || lookup.isReady)
+  const data = local
+    ? held && localReady
+      ? pageRows(held, { page: list.page, q: query, filters })
+      : undefined
+    : fetched
   const pagination = data?.pagination
 
   // The count beside the search reads "matches of all", and only an unnarrowed
@@ -51,7 +100,7 @@ export function useCollectionRows(definition: CollectionDef) {
   )
   // Not while the shown rows are last question's answer: the total belongs to
   // the list that is on screen, and that one has not been counted yet.
-  if (!narrowed && !isPlaceholderData && pagination && all !== pagination.total) {
+  if (!local && !narrowed && !isPlaceholderData && pagination && all !== pagination.total) {
     setAll(pagination.total)
   }
 
@@ -63,35 +112,49 @@ export function useCollectionRows(definition: CollectionDef) {
     filters,
     page: list.page,
     /** The next set of rows is on its way; the ones on screen are the last set. */
-    pending: isPlaceholderData || isFetching,
+    pending: local ? !localReady : isPlaceholderData || isFetching,
     /**
      * Why there are no rows, when the reason is a refusal rather than an empty
      * register — an endpoint the deployment is missing, or a session that has
      * ended. Only worth showing while there is nothing on screen to keep.
+     *
+     * A bound collection refuses only when this device has never synced the set
+     * at all: one that has kept a copy answers from it, connection or no
+     * connection, and never reaches here.
      */
-    error,
+    error: local ? (entities.isError ? collectionError(local.entities.id) : undefined) : fetchError,
     /**
      * react-query is holding the request back because it believes the browser
      * is offline. It will go on its own once the connection returns, but with
      * nothing on screen the reader is owed the reason rather than a skeleton
      * that never resolves.
+     *
+     * Never true on the local-first path: there is no request to hold back,
+     * which is the entire point of it.
      */
-    paused: fetchStatus === 'paused',
-    retry: () => void refetch(),
+    paused: local ? false : fetchStatus === 'paused',
+    retry: local
+      ? () => void refetchCollection(local.entities.id)
+      : () => void refetch(),
     /**
      * The figure the endpoint worked out over everything the filters match,
      * where it sends one. Undefined while the last answer is still on screen
      * and the next is being fetched, so the tile never reads as the total of
      * a range nobody is looking at any more.
      */
-    tally: isPlaceholderData ? undefined : data?.tally,
+    tally: isPlaceholderData ? undefined : fetched?.tally,
     /** Whether the reader has set anything — a search or a filter. */
     filtered,
     setQuery: list.setQuery,
     setFilter: list.setFilter,
     clear: list.clear,
     setPage: list.setPage,
-    total: all,
+    /**
+     * How many the register holds unnarrowed. Known outright on the local path
+     * — the whole set is in hand — which is why the running total above is
+     * only kept for the paged one.
+     */
+    total: local ? (localReady ? held?.length : undefined) : all,
     paged:
       data && pagination
         ? {

@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
+import { adoptDevice } from '@/db/session'
 import { endSession, useSessionStore } from '@/stores/session.store'
 import { setToken } from '../token'
 import { authKeys } from './keys'
@@ -45,6 +46,12 @@ export function useLogin() {
         profile: result.profile,
       })
       queryClient.removeQueries({ queryKey: authKeys.me() })
+
+      // Open this account's own database, wiping first if the device was last
+      // used by somebody else. A signed-out session that was interrupted — a
+      // closed lid, a killed tab — is the case this catches, and it must be
+      // caught before a single collection starts syncing into it.
+      void adoptDevice(String(result.user.id))
     },
   })
 }

@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 import type { Account } from '@/api/auth/types'
 import { setToken } from '@/api/token'
 import { useAuthStore } from '@/features/auth/auth.store'
+import { wipeLocalDb } from '@/db/wipe'
 import { useNotificationsStore } from '@/features/notifications/notifications.store'
 
 type SessionState = {
@@ -47,6 +48,8 @@ export const useSessionStore = create<SessionState>()(
  * parent portal's chosen child — it is looked up in the household that is
  * fetched, so an id from somebody else's family simply is not found and the
  * switcher falls back to the first child on the record.
+ *
+ * The device's database is not among the things kept. See `wipeLocalDb`.
  */
 export function endSession(queryClient: QueryClient) {
   setToken(null)
@@ -54,4 +57,10 @@ export function endSession(queryClient: QueryClient) {
   useSessionStore.getState().clear()
   useNotificationsStore.getState().clear()
   useAuthStore.getState().reset()
+
+  // And the school's own records off the device. Local-first means real
+  // students, guardians and fee balances are in a file on this machine, and in
+  // most of these schools the machine is shared — the staff room, the bursar's
+  // desk. Signing out has to mean the next person finds nothing.
+  void wipeLocalDb()
 }

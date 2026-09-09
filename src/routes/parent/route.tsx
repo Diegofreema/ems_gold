@@ -3,9 +3,8 @@ import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { AppShell } from '@/components/layout/app-shell'
 import { requirePortal } from '@/features/auth/guard'
 import { recordSearch } from '@/features/collections/resolve'
-import { familyQuery, parentIdOf } from '@/portals/parent/api/family'
+import { parentCollections } from '@/db/collections/parent'
 import { parentPortal } from '@/portals/parent/config'
-import { useSessionStore } from '@/stores/session.store'
 
 export const Route = createFileRoute('/parent')({
   beforeLoad: ({ context }) => requirePortal(context.queryClient, 'Parent'),
@@ -22,14 +21,15 @@ export const Route = createFileRoute('/parent')({
    * household goes stale, and throwing replaces the sidebar, header and
    * switcher with an error page.
    *
-   * The pages below read the same query and suspend on it, so both land where
-   * they belong — a page still loading, or a page that could not load, inside
-   * a portal that works either way.
+   * The pages below read the same collections live, so both land where they
+   * belong — a page still loading, or a page that could not load, inside a
+   * portal that works either way. Offline this resolves off the device and
+   * the portal opens with the household already in it.
    */
-  loader: ({ context }) => {
-    void context.queryClient
-      .ensureQueryData(familyQuery(parentIdOf(useSessionStore.getState().account)))
-      .catch(() => undefined)
+  loader: () => {
+    for (const collection of parentCollections) {
+      void collection.preload().catch(() => undefined)
+    }
   },
   component: () => <AppShell config={parentPortal} />,
   // A path that matched no route: the shell renders and this goes in its

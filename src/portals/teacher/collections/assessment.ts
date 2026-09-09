@@ -1,15 +1,18 @@
 import { teachingService } from '@/api/teaching/service'
+import { teacherMarks } from '@/db/collections/teaching'
 import { pageRows } from '@/features/collections/api'
+import { localFirst } from '@/features/collections/local-first'
 import type { CollectionDef, Row } from '@/features/collections/types'
 import { termFromResults } from '../features/term/term'
 import { batchRow, lineRow, parseBatchKey } from './batch-row'
-import { myBatches, myMarks, myRoll } from './mine'
+import { myArms, myBatches, myMarks } from './mine'
+import { newestFirst } from './order'
 import { markRow } from './teaching-row'
 import { uploadBody } from './teaching-body'
 
 const batchRows = async (): Promise<Row[]> => (await myBatches()).map(batchRow)
 
-const markRows = async (): Promise<Row[]> => (await myMarks()).items.map(markRow)
+const markRows = async (): Promise<Row[]> => (await myMarks()).map(markRow)
 
 export const uploads: CollectionDef = {
   id: 'uploads',
@@ -47,12 +50,10 @@ export const uploads: CollectionDef = {
   record: async (recordId) =>
     (await batchRows()).find((batch) => batch.id === String(recordId)),
   save: async (values) => {
-    const [roll, marks] = await Promise.all([myRoll(), myMarks()])
-    const arm = roll.class_arms.find(
-      (one) => String(one.id) === String(values.class_arm_id),
-    )
+    const [arms, marks] = await Promise.all([myArms(), myMarks()])
+    const arm = arms.find((one) => String(one.id) === String(values.class_arm_id))
     return teachingService.uploadResults(
-      uploadBody(values, arm, termFromResults(marks.items)),
+      uploadBody(values, arm, termFromResults(marks)),
     )
   },
   // Nothing withdraws a batch once it is with the office; a corrected file is
@@ -126,16 +127,16 @@ export const results: CollectionDef = {
   noun: 'result',
   nameKey: 'name',
   counts: [
-    { label: 'Marks', count: async () => (await myMarks()).pagination.total },
+    { label: 'Marks', count: async () => (await myMarks()).length },
     {
       label: 'Students',
       count: async () =>
-        new Set((await myMarks()).items.map((mark) => mark.student_id)).size,
+        new Set((await myMarks()).map((mark) => mark.student_id)).size,
     },
     {
       label: 'Awaiting approval',
       count: async () =>
-        (await myMarks()).items.filter(
+        (await myMarks()).filter(
           (mark) => mark.approval_status?.trim().toLowerCase() !== 'approved',
         ).length,
     },
@@ -167,14 +168,23 @@ export const results: CollectionDef = {
     { key: 'by', label: 'Filed by' },
   ],
   /*
-   * Read whole and narrowed here.
+   * Read off the device, whole, and narrowed here.
    *
    * The endpoint pages and takes `subject_id`, `session_id` and `semester_id`,
    * but it ignores a search term — and finding one student is what this page is
    * for. Reading the register whole means the box matches the student, the
    * subject, the class, the term and the grade at once, which is every axis a
    * dropdown would have offered and one the API cannot narrow by at all.
+   *
+   * Newest first is stated rather than inherited. A collection is keyed, so the
+   * order the endpoint sent the register in is gone by the time it is drawn,
+   * and every stamp a mark carries is null across this deployment; see
+   * `order.ts`.
    */
+  collection: localFirst({
+    entities: teacherMarks,
+    rows: (marks) => newestFirst(marks, (mark) => mark.uploaddate).map(markRow),
+  }),
   source: async (params) => pageRows(await markRows(), params),
   record: async (recordId) =>
     (await markRows()).find((mark) => mark.id === String(recordId)),

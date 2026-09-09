@@ -2,6 +2,7 @@ import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { dropDerivedReads } from '@/features/collections/invalidate'
 import { errorMessage, OFFLINE_MESSAGE } from './errors'
+import type { MutationToast } from './mutation-toast'
 
 /**
  * What a mutation tells the toaster.
@@ -10,18 +11,23 @@ import { errorMessage, OFFLINE_MESSAGE } from './errors'
  * lives beside the endpoint it describes, one line instead of an `onSuccess`
  * block, and a mutation written without it is visibly missing its message
  * rather than quietly silent.
+ *
+ * Defined in `./mutation-toast` and re-exported here, because the local-first
+ * queue raises the same sentence for writes that never reach react-query.
  */
-export type MutationToast = {
-  /** Shown on success, written as the thing that just happened. */
-  success: string
-  /**
-   * Set when the screen reports the failure itself — the sign-in alert, say.
-   * Without it every failure also raises an error toast.
-   */
-  ownsError?: boolean
-}
+export type { MutationToast }
 
-declare module '@tanstack/react-query' {
+/**
+ * Augments `query-core` rather than `react-query`, which re-exports `Register`
+ * without declaring it.
+ *
+ * `@tanstack/query-db-collection` augments the same interface at its own home
+ * to add `queryMeta`, and once it does, an augmentation aimed at the
+ * re-exporting module is quietly dropped — every `meta.success` in the app
+ * goes back to `unknown` and the toasts stop type-checking. Aiming both at
+ * `query-core` is what keeps the two side by side.
+ */
+declare module '@tanstack/query-core' {
   interface Register {
     mutationMeta: MutationToast
   }

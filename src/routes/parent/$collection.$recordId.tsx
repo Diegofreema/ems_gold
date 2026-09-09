@@ -1,9 +1,13 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
-import { useSessionStore } from '@/stores/session.store'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { parentPortal } from '@/portals/parent/config'
 import { loadRecord } from '@/features/collections/resolve'
-import { familyQuery, parentIdOf } from '@/portals/parent/api/family'
+import {
+  parentAttendance,
+  parentChildren,
+  parentInvoices,
+} from '@/db/collections/parent'
+import { composeFamily, type OwnedMark } from '@/portals/parent/family'
 import { parentCollections } from '@/portals/parent/collections'
 import { CollectionDetail } from '@/portals/parent/components/collection-detail'
 
@@ -13,9 +17,29 @@ export const Route = createFileRoute('/parent/$collection/$recordId')({
    * shared link opens even when the switcher is on the other child. The
    * definition returned is the one the record actually belongs to.
    */
-  loader: async ({ context, params }) => {
-    const family = await context.queryClient.ensureQueryData(
-      familyQuery(parentIdOf(useSessionStore.getState().account)),
+  loader: async ({ params }) => {
+    /*
+     * `preload` is the documented way to make a collection ready from a route
+     * loader, and the only correct place to call it — never from a mutation
+     * handler or the outbox drain, where it deadlocks.
+     *
+     * A refusal is swallowed rather than thrown. A device that already holds
+     * the household must still open the record on it: the sync failing is not
+     * the same as the record being missing, and the search below decides that
+     * for itself. A device holding nothing falls through to `notFound`, which
+     * is the honest answer.
+     */
+    await Promise.all(
+      [parentChildren, parentInvoices, parentAttendance].map((collection) =>
+        collection.preload().catch(() => undefined),
+      ),
+    )
+
+    const family = composeFamily(
+      parentChildren.toArray,
+      parentInvoices.toArray,
+      parentAttendance.toArray as OwnedMark[],
+      new Date(),
     )
 
     // A collection that resolves without a record has looked and not found it;

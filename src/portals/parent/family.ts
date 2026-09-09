@@ -207,3 +207,30 @@ export function familyChild(
 export function familyOwing(children: Child[]): number {
   return children.reduce((total, child) => total + child.owing, 0)
 }
+
+/** A mark that knows whose it is, as the device's own register stores them. */
+export type OwnedMark = Mark & { childId: number }
+
+/**
+ * The household, put together from the three sets the device holds.
+ *
+ * The composing is here, and pure, so that the same reading serves a live
+ * query in a hook and a plain array in a route loader — and so it can be
+ * tested without a school. What is stored is what the school sent; a `Child`
+ * is made on demand.
+ */
+export function composeFamily(
+  enrolled: EnrolledChild[],
+  ledger: FamilyInvoice[],
+  marks: OwnedMark[],
+  today: Date,
+): Child[] {
+  return enrolled.map((child) =>
+    familyChild(
+      child,
+      ledger.filter((invoice) => invoice.student_id === child.id),
+      marks.filter((mark) => mark.childId === child.id),
+      today,
+    ),
+  )
+}

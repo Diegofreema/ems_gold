@@ -1,5 +1,6 @@
 import type { ConfirmTone } from '@/components/feedback/confirm-tone.ts'
 import type { Paginated } from '../../api/types.ts'
+import type { LocalFirstBinding } from './local-first.ts'
 import type { Choice, OptionsKey , SearchKey } from './options.ts'
 import type { Align, CardRole } from '@/lib/table.ts'
 
@@ -483,6 +484,25 @@ export type CollectionDef = {
   rows?: Row[]
   /** Dropdowns beside the search box. Only read by a collection with a `source`. */
   filters?: readonly FilterSpec[]
+  /**
+   * Reads this collection off the device instead of over the network.
+   *
+   * The local-first path. Present means the register is drawn from a TanStack
+   * DB collection with a live query, so it opens with no connection and
+   * redraws by itself when a sync — or a write coming off the outbox — changes
+   * what is stored. Absent means the query path below, unchanged.
+   *
+   * `source` and `record` are still read, by everything that is not the
+   * register itself: the record modal, the route loaders and the sub-tables.
+   * A definition that binds one of these should point both at the same
+   * collection, which is what `mine.ts` does for the teacher.
+   *
+   * Not yet compatible with `filters`. Searching and paging happen in
+   * `pageRows` for both paths, but a filter is a query parameter the endpoint
+   * narrows by, and nothing here narrows the live query — a bound definition
+   * carrying filters would draw dropdowns that quietly did nothing.
+   */
+  collection?: LocalFirstBinding
   /**
    * Reads this collection from the API instead of from `rows`, one page at a
    * time. `record` fetches a single row for the detail page, which cannot go
