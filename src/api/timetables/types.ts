@@ -91,7 +91,12 @@ export type ClassTimetable = {
    * The arm, e.g. "JSS 2 A". On `/timetables/mine` only — the class-scoped
    * endpoint answers for a class rather than a student and omits it.
    */
-  class_arm?: string | null
+  /**
+   * The arm, sent either as its name or as the whole record. Read through
+   * `nameOf` — a `.trim()` on the record form is a TypeError, and it took the
+   * student's timetable page down to its error boundary.
+   */
+  class_arm?: unknown
 }
 
 /**
@@ -117,7 +122,12 @@ export type ChildTimetable = {
   class_id?: number | null
   class_name?: string | null
   /** The arm, e.g. "JSS III A". The grid this sits beside has no arm on it. */
-  class_arm?: string | null
+  /**
+   * The arm, sent either as its name or as the whole record. Read through
+   * `nameOf` — a `.trim()` on the record form is a TypeError, and it took the
+   * student's timetable page down to its error boundary.
+   */
+  class_arm?: unknown
   /** Null where the child has no class yet; `message` says so. */
   timetable?: ClassTimetable | null
   /** The entry's own reason, against the grid's. Null on every live entry. */

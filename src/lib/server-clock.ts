@@ -16,8 +16,65 @@
  * `assignments/attempt.ts`.
  */
 
+/**
+ * Where the last anchor is kept between visits.
+ *
+ * Not in the device's database: this has to be readable the instant a module
+ * loads, before anything is opened, and it is one number. `localStorage` is
+ * synchronous and survives a reload, which is exactly the shape of the problem.
+ */
+const KEY = 'netpro.clock'
+
+/**
+ * Beyond this, a stored anchor is treated as rubbish rather than as a school
+ * two days out of step with the world. It would mean the device's own clock had
+ * been changed since the offset was measured, and a wrong correction is worse
+ * than none.
+ */
+const SANE_MS = 2 * 24 * 60 * 60 * 1000
+
 /** School time minus device time, in ms. Zero until a response has been seen. */
-let offset = 0
+let offset = restored()
+
+/**
+ * The last anchor this device took, so an offline reload does not go back to
+ * trusting the device's own clock.
+ *
+ * A pupil sitting an assignment on a laptop that is ten minutes fast keeps the
+ * correction through a reload with no signal, which is the one time nothing can
+ * re-measure it. Guarded on every side: there is no storage at all under
+ * `node --test`, a private window can throw on read, and what comes back is
+ * whatever was last written there by anybody.
+ */
+function restored(): number {
+  try {
+    return usableOffset(globalThis.localStorage?.getItem(KEY))
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * What a stored anchor is worth, which is nothing unless it is a plausible
+ * number of milliseconds.
+ *
+ * Separated out and tested because getting it wrong is quiet: whatever is under
+ * this key was written by whoever used this browser last, and a nonsense value
+ * read as a number would silently move every deadline a pupil is timed against.
+ */
+export function usableOffset(raw: unknown): number {
+  if (raw === null || raw === undefined || raw === '') return 0
+  const held = Number(raw)
+  return Number.isFinite(held) && Math.abs(held) < SANE_MS ? held : 0
+}
+
+function remember(value: number): void {
+  try {
+    globalThis.localStorage?.setItem(KEY, String(value))
+  } catch {
+    // A browser that refuses storage still gets the anchor for this visit.
+  }
+}
 
 /**
  * Reads a response's `Date` header. Anything missing or unparseable leaves the
@@ -33,6 +90,7 @@ export function noteServerTime(header: string | null | undefined): void {
   const server = Date.parse(header)
   if (Number.isNaN(server)) return
   offset = server - Date.now()
+  remember(offset)
 }
 
 /** Epoch ms on the school's clock, falling back to this device's until anchored. */

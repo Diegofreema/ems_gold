@@ -1,11 +1,12 @@
-import { pageRows } from '@/features/collections/api';
-import type { CollectionDef } from '@/features/collections/types';
-import { queryClient } from '@/lib/query-client';
+import { heldDocument, heldRows } from '@/db/collection';
 import {
-  studentCoursesQuery,
-  studentMaterialsQuery,
-  studentTimetableQuery,
-} from '../api/queries';
+  schoolingCourses,
+  schoolingMaterials,
+  schoolingTimetable,
+} from '@/db/collections/schooling';
+import { pageRows } from '@/features/collections/api';
+import { localFirst } from '@/features/collections/local-first';
+import type { CollectionDef } from '@/features/collections/types';
 import { courseRows } from '../features/courses/courses';
 import { materialRows } from '../features/materials/materials';
 import { periodRows } from '../features/timetable/timetable';
@@ -14,10 +15,16 @@ import { periodRows } from '../features/timetable/timetable';
  * The subjects the student is registered for, through the cache so the list and
  * the record it opens read one answer between them.
  */
-const registered = () =>
-  queryClient
-    .query(studentCoursesQuery)
-    .then((all) => courseRows(all));
+/*
+ * A set that synced and came back with nothing is an empty register, not a
+ * failure — the pupil is registered for no subject yet. A set that never
+ * synced refuses inside `heldDocument`, which is the case worth saying out
+ * loud, and it says it by throwing.
+ */
+const registered = async () => {
+  const held = await heldDocument(schoolingCourses);
+  return held ? courseRows(held) : [];
+};
 
 export const courses: CollectionDef = {
   id: 'courses',
@@ -55,6 +62,12 @@ export const courses: CollectionDef = {
     { key: 'session', label: 'Session' },
     { key: 'term', label: 'Term' },
   ],
+  // Read off the device. `courseRows` already sorts alphabetically, which is
+  // what the footer promises and what a keyed collection would otherwise undo.
+  collection: localFirst({
+    entities: schoolingCourses,
+    rows: (held) => (held[0] ? courseRows(held[0].doc) : []),
+  }),
   source: (params) => registered().then((all) => pageRows(all, params)),
   record: (recordId) =>
     registered().then((all) => all.find((row) => row.id === recordId)),
@@ -64,10 +77,7 @@ export const courses: CollectionDef = {
  * The notes and assignments shared with the student's class, through the cache so the
  * list and the record it opens read one answer between them.
  */
-const shared = () =>
-  queryClient
-    .query(studentMaterialsQuery)
-    .then((all) => materialRows(all));
+const shared = async () => materialRows(await heldRows(schoolingMaterials));
 
 export const materials: CollectionDef = {
   id: 'materials',
@@ -103,6 +113,11 @@ export const materials: CollectionDef = {
     { key: 'klass', label: 'Shared with' },
     { key: 'sharedOn', label: 'Shared on' },
   ],
+  // Read off the device. `materialRows` puts the newest first, as the copy says.
+  collection: localFirst({
+    entities: schoolingMaterials,
+    rows: (all) => materialRows(all),
+  }),
   source: (params) => shared().then((all) => pageRows(all, params)),
   record: (recordId) =>
     shared().then((all) => all.find((row) => row.id === recordId)),
@@ -117,11 +132,13 @@ export const materials: CollectionDef = {
  * the cache, so the calendar, the record a block opens and My subjects share
  * them.
  */
-const week = () =>
-  Promise.all([
-    queryClient.query(studentTimetableQuery),
-    queryClient.query(studentCoursesQuery),
-  ]).then(([grid, courses]) => periodRows(grid, courses));
+const week = async () => {
+  const [grid, courses] = await Promise.all([
+    heldDocument(schoolingTimetable),
+    heldDocument(schoolingCourses),
+  ]);
+  return grid && courses ? periodRows(grid, courses) : [];
+};
 
 /**
  * The record a period opens, and nothing else.

@@ -1,4 +1,3 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { BarChart } from '@/components/charts/bar-chart'
@@ -8,27 +7,32 @@ import { EmptyState } from '@/components/feedback/empty-state'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useFirstName } from '@/features/auth/session'
+import { schoolingInvoices, schoolingStats } from '@/db/collections/schooling'
+import { useHeldDocument } from '@/db/live'
 import { studentHome } from '@/portals/student/api/dashboard'
-import {
-  studentInvoicesQuery,
-  studentStatsQuery,
-} from '@/portals/student/api/queries'
 
 export const Route = createFileRoute('/student/')({
   staticData: { title: 'Dashboard', crumb: 'NETPRO EMS Bronze' },
-  loader: ({ context }) =>
-    Promise.all([
-      context.queryClient.ensureQueryData(studentStatsQuery),
-      context.queryClient.ensureQueryData(studentInvoicesQuery),
-    ]),
+  // Readied here rather than suspended on: the counters and the ledger arrive
+  // together or not at all, and a refusal is swallowed so a pupil with no
+  // connection lands on their own home page rather than an error boundary.
+  loader: () =>
+    Promise.all(
+      [schoolingStats, schoolingInvoices].map((collection) =>
+        collection.preload().catch(() => undefined),
+      ),
+    ),
   component: StudentDashboard,
 })
 
 function StudentDashboard() {
   const name = useFirstName('there')
-  const { data: stats } = useSuspenseQuery(studentStatsQuery)
-  const { data: ledger } = useSuspenseQuery(studentInvoicesQuery)
-  const home = studentHome(stats, ledger.invoices)
+  const { doc: stats } = useHeldDocument(schoolingStats)
+  const { doc: ledger } = useHeldDocument(schoolingInvoices)
+  // Both stand in empty where the device holds nothing: the home page's job is
+  // to say what the school holds, and "nothing yet" is an answer it already
+  // knows how to draw.
+  const home = studentHome(stats ?? ({} as never), ledger?.invoices ?? [])
 
   return (
     <>

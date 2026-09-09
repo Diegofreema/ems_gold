@@ -1,11 +1,15 @@
 /**
- * How a teacher's registers order themselves.
+ * How a register bound to a collection orders itself.
  *
- * They have to, now: a register read off the device is read out of a keyed
- * collection, which hands its rows back in key order however the endpoint sent
- * them. Whatever order a list arrived in is gone by the time it is drawn, so
- * every bound register states its own — and the two whose footers promise
- * "Newest first" say it here rather than hoping.
+ * It has to: a register read off the device is read out of a keyed collection,
+ * which hands its rows back in key order however the endpoint sent them.
+ * Whatever order a list arrived in is gone by the time it is drawn, so every
+ * binding states its own — and the ones whose footers promise "Newest first"
+ * say it here rather than hoping.
+ *
+ * Shared rather than per portal, because the problem is the collection's and
+ * not any one portal's: the teacher's e-classes and mark register and the
+ * pupil's borrowing record all lost the same order for the same reason.
  */
 
 /** When a row carries no usable stamp, so it sorts behind every row that does. */

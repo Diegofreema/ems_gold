@@ -60,6 +60,58 @@ export const allCollections = () => [...built.values()]
 export const collectionById = (id: string) => built.get(id)
 
 /**
+ * A set that holds one answer rather than a list of them.
+ *
+ * Several endpoints answer with a document, not a register — the student's fee
+ * ledger is the bills *and* the payments taken against them, the timetable is
+ * the grid *and* the class it was drawn for, the mark catalogue is the words
+ * *and* which of them mean the child was in school. The list is not the answer;
+ * it is one field of it, and storing the field alone throws away what the page
+ * beside it reads.
+ *
+ * So the whole answer is kept under one key. It is still an ordinary
+ * collection — persisted, live-queryable and refetched by exactly the same
+ * machinery — which is why this is a thin wrapper rather than a second kind of
+ * thing to learn.
+ */
+export type Document<T> = { id: string; doc: T }
+
+/** The one key a document set stores its answer under. */
+const THE = 'the'
+
+export function schoolDocument<T>(spec: {
+  id: string
+  fetch: (signal?: AbortSignal) => Promise<T>
+  schemaVersion: number
+  startSync?: boolean
+  refetchInterval?: number
+}) {
+  return schoolCollection<Document<T>, string>({
+    ...spec,
+    // Wrapped rather than spread, so an answer carrying an `id` of its own
+    // keeps it — a document whose identity was silently overwritten by the
+    // word "the" would be a long afternoon.
+    fetch: async (signal) => [{ id: THE, doc: await spec.fetch(signal) }],
+    getKey: () => THE,
+  })
+}
+
+/**
+ * Readies a document set and hands back its answer.
+ *
+ * The counterpart of `heldRows` below, and it preloads for the same reason: a
+ * count tile or a record lookup on a cold start genuinely has to wait for the
+ * first sync. Undefined only where the set synced and the school sent nothing.
+ */
+export async function heldDocument<T>(collection: {
+  preload: () => Promise<void>
+  toArray: Document<T>[]
+}): Promise<T | undefined> {
+  await collection.preload()
+  return collection.toArray[0]?.doc
+}
+
+/**
  * Readies a set and hands back what it holds.
  *
  * How anything that is not a live query reads a collection — a count tile, a

@@ -1,8 +1,9 @@
+import { heldDocument } from '@/db/collection'
+import { schoolingInvoices } from '@/db/collections/schooling'
 import { pageRows } from '@/features/collections/api'
+import { localFirst } from '@/features/collections/local-first'
 import type { CollectionDef } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
-import { queryClient } from '@/lib/query-client'
-import { studentInvoicesQuery } from '../api/queries'
 import { feeCounts, invoiceRows, paidTotal, paymentRows } from '../features/fees/fees'
 
 /**
@@ -13,7 +14,14 @@ import { feeCounts, invoiceRows, paidTotal, paymentRows } from '../features/fees
  * opens, the payments tab beside it and all three tiles want the same answer
  * on the same render, and react-query collapses them into one call.
  */
-const ledger = () => queryClient.query(studentInvoicesQuery)
+/**
+ * A ledger with nothing on it stands in for one this device holds nothing of:
+ * every reader below already treats no bills as no bills. A set that never
+ * synced refuses inside `heldDocument`, and that refusal is what puts the page
+ * into its "could not load" state rather than showing a pupil a clean sheet.
+ */
+const ledger = async () =>
+  (await heldDocument(schoolingInvoices)) ?? { invoices: [], transactions: [] }
 
 const rows = () => ledger().then((data) => invoiceRows(data.invoices, data.transactions))
 
@@ -86,6 +94,14 @@ export const invoices: CollectionDef = {
       empty: 'Nothing has been taken against this invoice yet.',
     },
   ],
+  // Read off the device. `invoiceRows` puts the newest first, as the footer
+  // says; the payments taken against the bills arrive in the same answer,
+  // which is why the whole ledger is kept rather than the bills alone.
+  collection: localFirst({
+    entities: schoolingInvoices,
+    rows: (kept) =>
+      kept[0] ? invoiceRows(kept[0].doc.invoices, kept[0].doc.transactions) : [],
+  }),
   source: (params) => rows().then((all) => pageRows(all, params)),
   record: (recordId) => rows().then((all) => all.find((row) => row.id === recordId)),
 }

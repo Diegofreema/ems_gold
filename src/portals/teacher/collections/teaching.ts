@@ -11,7 +11,7 @@ import { pageRows } from '@/features/collections/api';
 import { localFirst } from '@/features/collections/local-first';
 import type { CollectionDef, Row } from '@/features/collections/types';
 import { myArms, myEClasses, myMarks, myStudents, mySubjects, myTopics } from './mine';
-import { byId, newestFirst } from './order';
+import { byId, newestFirst } from '@/features/collections/order';
 import { topicBody, topicUpdate } from './teaching-body';
 import {
   eclassRow,

@@ -1,10 +1,13 @@
+import type { Loan } from '@/api/library/types'
+import { heldRows } from '@/db/collection'
+import { schoolingLoans } from '@/db/collections/schooling'
 import { pageRows } from '@/features/collections/api'
+import { localFirst } from '@/features/collections/local-first'
 import type { CollectionDef } from '@/features/collections/types'
 import { loanFine, loanPaid } from '@/features/library/loan-read'
 import { formatNaira } from '@/lib/format'
-import { queryClient } from '@/lib/query-client'
-import { studentLoansQuery } from '../api/queries'
 import { myLoanRow } from './my-loan-row'
+import { newestFirst } from '@/features/collections/order'
 
 /**
  * The pupil's own borrowings, off `GET /loanedbooks/mine`.
@@ -14,14 +17,21 @@ import { myLoanRow } from './my-loan-row'
  * figure a pupil is asked about at the desk.
  */
 
-const myLoans = () =>
-  queryClient
-    .query(studentLoansQuery)
-    .then((loans) => loans.map((loan) => myLoanRow(loan)))
+/**
+ * Newest first, which now has to be said rather than inherited: a collection is
+ * keyed and hands its rows back in key order whatever order the endpoint sent
+ * them in. The borrowing date is the one a pupil reads the list by, and the id
+ * settles the ties — a desk that issues two books at once stamps them the same
+ * day.
+ */
+const borrowings = (loans: readonly Loan[]) =>
+  newestFirst(loans, (loan) => loan.borrowed_on ?? loan.date_created ?? loan.dateadded)
+
+const myLoans = () => heldRows(schoolingLoans).then((loans) => borrowings(loans).map((loan) => myLoanRow(loan)))
 
 /** What is owed across every borrowing, for the tile. */
 const finesOwing = async () => {
-  const loans = await queryClient.query(studentLoansQuery)
+  const loans = await heldRows(schoolingLoans)
   return loans
     .filter((loan) => loanPaid(loan) === 'Owing')
     .reduce((sum, loan) => sum + loanFine(loan), 0)
@@ -75,6 +85,10 @@ export const library: CollectionDef = {
     { key: 'fine', label: 'Fine' },
     { key: 'paid', label: 'Fine standing' },
   ],
+  collection: localFirst({
+    entities: schoolingLoans,
+    rows: (loans) => borrowings(loans).map((loan) => myLoanRow(loan)),
+  }),
   source: (params) => myLoans().then((rows) => pageRows(rows, params)),
   record: (recordId) => myLoans().then((rows) => rows.find((row) => row.id === recordId)),
 }

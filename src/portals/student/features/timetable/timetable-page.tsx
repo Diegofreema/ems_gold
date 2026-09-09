@@ -1,12 +1,13 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { EmptyState } from '@/components/feedback/empty-state'
+import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { text } from '@/features/profile/record'
 import { WeekCalendar } from '@/features/timetable/week-calendar'
 import { periodTally, weekGrid } from '@/features/timetable/week-grid'
-import { studentCoursesQuery, studentTimetableQuery } from '../../api/queries'
+import { schoolingCourses, schoolingTimetable } from '@/db/collections/schooling'
+import { useHeldDocument } from '@/db/live'
 import { classOf, teacherFor } from './timetable'
 
 /**
@@ -22,12 +23,19 @@ import { classOf, teacherFor } from './timetable'
  */
 export function TimetablePage() {
   const navigate = useNavigate()
-  const { data: grid } = useSuspenseQuery(studentTimetableQuery)
-  const { data: courses } = useSuspenseQuery(studentCoursesQuery)
+  // Read off the device rather than suspended on. There is nothing to suspend
+  // on once the reading is local, and a paused request would never settle.
+  const week = useHeldDocument(schoolingTimetable)
+  const registered = useHeldDocument(schoolingCourses)
+  const grid = week.doc
+  const courses = registered.doc
 
-  const columns = weekGrid(grid, new Date(), (period) => ({
-    teacher: teacherFor(period, courses),
-  }))
+  const columns =
+    grid && courses
+      ? weekGrid(grid, new Date(), (period) => ({
+          teacher: teacherFor(period, courses),
+        }))
+      : []
   const tally = periodTally(columns)
 
   /** The block's full record — everything the hover says, and the term with it. */
@@ -46,7 +54,9 @@ export function TimetablePage() {
       />
       <Rule />
 
-      {tally === 0 ? (
+      {week.pending || registered.pending ? (
+        <TableSkeleton rows={5} />
+      ) : !grid || tally === 0 ? (
         <EmptyState
           title="No timetable to show"
           // The API's own sentence is "No timetable has been entered for this

@@ -6,7 +6,7 @@ import type { CollectionDef, Row } from '@/features/collections/types'
 import { termFromResults } from '../features/term/term'
 import { batchRow, lineRow, parseBatchKey } from './batch-row'
 import { myArms, myBatches, myMarks } from './mine'
-import { newestFirst } from './order'
+import { newestFirst } from '@/features/collections/order'
 import { markRow } from './teaching-row'
 import { uploadBody } from './teaching-body'
 

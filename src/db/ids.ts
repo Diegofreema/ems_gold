@@ -23,6 +23,16 @@ export const SET = {
   teachingTopics: 'teaching.topics',
   teachingEClasses: 'teaching.eclasses',
 
+  schoolingStats: 'schooling.stats',
+  schoolingCourses: 'schooling.courses',
+  schoolingMaterials: 'schooling.materials',
+  schoolingAssignments: 'schooling.assignments',
+  schoolingResults: 'schooling.results',
+  schoolingAttendance: 'schooling.attendance',
+  schoolingInvoices: 'schooling.invoices',
+  schoolingLoans: 'schooling.loans',
+  schoolingTimetable: 'schooling.timetable',
+
   registerArms: 'attendance.arms',
   registerStatuses: 'attendance.statuses',
   registerDays: 'attendance.days',

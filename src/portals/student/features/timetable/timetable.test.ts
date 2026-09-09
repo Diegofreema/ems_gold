@@ -130,3 +130,10 @@ test('the class reads the same pair as My subjects', () => {
   assert.equal(classOf({ class: { id: 1, name: 'JSS 1' } }), 'JSS 1')
   assert.equal(classOf({}), '—')
 })
+
+test('the class reads the pair even when the arm arrives expanded', () => {
+  assert.equal(
+    classOf({ class: { name: 'JSS 3' }, class_arm: { arm_name: 'B' } } as never),
+    'JSS 3 · B',
+  )
+})

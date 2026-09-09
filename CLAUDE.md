@@ -58,6 +58,17 @@ visibly not one.
   binding, built in `src/features/collections/local-first.ts`. Searching and paging still happen in
   `pageRows`, so a bound register and an unbound one hand the page the same shape and nothing in
   `collection-list.tsx`, the data table or the pagination changes. Not yet compatible with `filters`.
+  Ordering lives in `src/features/collections/order.ts`.
+- **An endpoint that answers with a document is kept whole**, through `schoolDocument()`. A pupil's
+  fee ledger is the bills *and* the payments taken against them; the timetable is the grid *and* the
+  class it was drawn for; the mark catalogue is the words *and* which of them mean the child was in
+  school. The list is one field of the answer, and storing the field alone throws away what the
+  panel beside it reads. `heldDocument()` reads one back, `useHeldDocument()` in `src/db/live.ts`
+  watches one from a component.
+- **A page reads a set with `useHeld`/`useHeldDocument`, never `useSuspenseQuery`.** There is
+  nothing to suspend on once the reading is local, and a paused request never settles. `pending` is
+  true only before a set has answered *either way*: a set that refused is not pending, it is a set
+  this device has never synced and cannot sync now, which is a thing to say rather than spin on.
 
 Reads are **not** persisted by `persistedCollectionOptions`. That was tried and measured: with rows
 already on disk and the fetch failing, the collection settles into `status: 'error'` with `toArray`
@@ -132,6 +143,12 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   chained edits on records the school has never seen.
 - **Signing out wipes the device's database**, including the SQLite write-ahead log and the VFS page
   pool — a `.sqlite` deleted on its own leaves rows in `-wal`. School machines are shared.
+- **The school's clock is anchored across reloads.** `src/lib/server-clock.ts` keeps the last
+  offset in `localStorage`, so a pupil sitting an assignment on a laptop that is ten minutes fast
+  keeps the correction through a reload with no signal — the one moment nothing can re-measure it.
+  A stored anchor beyond two days is discarded: it would mean the device's own clock had been
+  changed since, and a wrong correction is worse than none. It remains what it always was — not a
+  security boundary.
 - **The first visit runs from the network.** wa-sqlite is ~500 KB gzipped, so `bootstrapDb()` gives
   up after 1.5s and the session runs in memory; the service worker keeps it and every later visit is
   durable.

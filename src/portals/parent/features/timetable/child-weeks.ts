@@ -1,3 +1,4 @@
+import { nameOf } from '../../../../features/timetable/name-of.ts'
 import type { ChildTimetable } from '../../../../api/timetables/types.ts'
 import {
   periodTally,
@@ -34,15 +35,19 @@ export type ChildWeek = {
   message: string | null
 }
 
-/** The class and the arm, in that order, with neither said twice. */
+/**
+ * The class and the arm, in that order, with neither said twice.
+ *
+ * Both read through `nameOf`: the school sends `class_arm` as its record rather
+ * than its name on this deployment, and a `.trim()` on a record is a TypeError
+ * that takes the page down rather than a dash on screen.
+ */
 export function classLine(entry: ChildTimetable): string {
-  const parts = [entry.class_name, entry.class_arm]
-    .map((part) => part?.trim())
-    .filter(Boolean) as string[]
+  const parts = [nameOf(entry.class_name), nameOf(entry.class_arm)].filter(Boolean)
   return [...new Set(parts)].join(' · ') || 'No class yet'
 }
 
-function nameOf(entry: ChildTimetable): string {
+function childName(entry: ChildTimetable): string {
   return entry.name?.trim() || `Student ${entry.student_id}`
 }
 
@@ -57,13 +62,13 @@ function nameOf(entry: ChildTimetable): string {
  */
 function headings(children: ChildTimetable[]): Map<number, string> {
   const seen = new Map<string, number>()
-  const key = (entry: ChildTimetable) => `${nameOf(entry)}|${classLine(entry)}`
+  const key = (entry: ChildTimetable) => `${childName(entry)}|${classLine(entry)}`
   for (const entry of children) seen.set(key(entry), (seen.get(key(entry)) ?? 0) + 1)
 
   return new Map(
     children.map((entry) => {
       const id = entry.student_id ?? 0
-      const name = nameOf(entry)
+      const name = childName(entry)
       return [id, (seen.get(key(entry)) ?? 0) > 1 ? `${name} · student ${id}` : name]
     }),
   )
@@ -79,12 +84,12 @@ function headings(children: ChildTimetable[]): Map<number, string> {
  * the student id separates them and the tabs say so.
  */
 export function tabLabels(children: ChildTimetable[]): Map<number, string> {
-  const first = (entry: ChildTimetable) => nameOf(entry).split(/\s+/)[0]
+  const first = (entry: ChildTimetable) => childName(entry).split(/\s+/)[0]
   const steps = [
     first,
     nameOf,
-    (entry: ChildTimetable) => `${nameOf(entry)} \u00b7 ${classLine(entry)}`,
-    (entry: ChildTimetable) => `${nameOf(entry)} \u00b7 student ${entry.student_id}`,
+    (entry: ChildTimetable) => `${childName(entry)} \u00b7 ${classLine(entry)}`,
+    (entry: ChildTimetable) => `${childName(entry)} \u00b7 student ${entry.student_id}`,
   ]
 
   const label =
@@ -103,8 +108,8 @@ export function childWeeks(children: ChildTimetable[], today: Date): ChildWeek[]
     const columns = grid ? weekGrid(grid, today) : []
     return {
       id: String(entry.student_id ?? ''),
-      name: names.get(entry.student_id ?? 0) ?? nameOf(entry),
-      tab: tabs.get(entry.student_id ?? 0) ?? nameOf(entry),
+      name: names.get(entry.student_id ?? 0) ?? childName(entry),
+      tab: tabs.get(entry.student_id ?? 0) ?? childName(entry),
       klass: classLine(entry),
       columns,
       total: periodTally(columns),

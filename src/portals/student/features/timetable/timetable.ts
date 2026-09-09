@@ -3,6 +3,7 @@ import type { ClassTimetable, Period } from '../../../../api/timetables/types.ts
 import type { Row } from '../../../../features/collections/types.ts'
 import { labelOf, timeRange } from '../../../../features/timetable/week-grid.ts'
 import { weekPeriods } from '../../../../features/timetable/week.ts'
+import { nameOf } from '../../../../features/timetable/name-of.ts'
 import { text } from '../../../../features/profile/record.ts'
 import { teachersOf } from '../courses/courses.ts'
 
@@ -29,7 +30,7 @@ export function teacherFor(period: Period, courses: MyCourses): string {
 
 /** The class the timetable is for, arm and all — the same pair as My subjects. */
 export function classOf(timetable: ClassTimetable): string {
-  const parts = [timetable.class?.name?.trim(), timetable.class_arm?.trim()].filter(Boolean)
+  const parts = [nameOf(timetable.class?.name), nameOf(timetable.class_arm)].filter(Boolean)
   return parts.length ? parts.join(' · ') : text(null)
 }
 
