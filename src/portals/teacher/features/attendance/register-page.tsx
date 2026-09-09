@@ -1,11 +1,7 @@
 import { parseAsString, useQueryStates } from 'nuqs';
 import { useCallback, useState } from 'react';
-import {
-  useRegister,
-  useRegisterStatuses,
-  useTakeRegister,
-} from '@/api/attendance/hooks';
-import type { SavedRegister } from '@/api/attendance/types';
+import { SET, WRITE } from '@/db/ids';
+import { enqueue } from '@/db/drain';
 import { EmptyState } from '@/components/feedback/empty-state';
 import { TableSkeleton } from '@/components/feedback/table-skeleton';
 import { PageHeader } from '@/components/page/page-header';
@@ -17,15 +13,13 @@ import { NoArmsState } from './arms';
 import {
   changedMarks,
   type Edits,
-  ignoredNote,
   isFuture,
   liveTally,
   registerRows,
-  statusOptions,
 } from './register';
 import { RegisterFilters } from './register-filters';
 import { RegisterSheet } from './register-sheet';
-import { useRegisterArms } from './use-register-arms';
+import { useMarkWords, useRegisterArms, useRegisterDay } from './use-register-day';
 
 /**
  * The daily register: one arm, one day.
@@ -35,27 +29,22 @@ import { useRegisterArms } from './use-register-arms';
  * half-finished register safe to leave.
  */
 export function RegisterPage() {
-  const statuses = useRegisterStatuses();
-  const save = useTakeRegister();
+  const { options: marks, note: markNote } = useMarkWords();
   const [edits, setEdits] = useState<Edits>({});
-  const [saved, setSaved] = useState<SavedRegister>();
 
   const [{ arm, date }, setQuery] = useQueryStates({
     arm: parseAsString.withDefault(''),
     date: parseAsString.withDefault(''),
   });
 
-  const { arms, armId, pending: armsPending, none } = useRegisterArms(arm);
-  const day = useRegister(
-    armId ? { class_arm_id: armId, ...(date ? { date } : {}) } : null,
-  );
+  const { arms, armId, pending: armsPending, none, unknown } = useRegisterArms(arm);
+  const day = useRegisterDay(armId, date);
 
   const onArm = useCallback(
     (id: number) => {
       // Edits belong to the arm they were typed against; carrying them across
       // would file one class's marks onto another's roll.
       setEdits({});
-      setSaved(undefined);
       void setQuery({ arm: String(id) });
     },
     [setQuery],
@@ -67,7 +56,7 @@ export function RegisterPage() {
 
   const header = <Header />;
 
-  if (armsPending || statuses.isPending) {
+  if (armsPending) {
     return (
       <>
         {header}
@@ -87,14 +76,27 @@ export function RegisterPage() {
     );
   }
 
-  const marks = statusOptions(statuses.data);
-  const rows = registerRows(day.data?.pupils ?? [], edits);
+  // Never synced on this device, so there is no roll to draw and no way to
+  // find out what it is. Saying so beats a sheet with nobody on it.
+  if (unknown) {
+    return (
+      <>
+        {header}
+        <EmptyState
+          title="Your classes are not on this device"
+          body="This register has not been opened here while you had a connection, so there is nothing to mark from yet. Open it once with a connection and it will work without one afterwards."
+        />
+      </>
+    );
+  }
+
+  const rows = registerRows(day.pupils, edits);
   const tally = liveTally(rows, marks);
-  const pending = changedMarks(rows);
-  const count = Object.keys(pending).length;
+  const changed = changedMarks(rows);
+  const count = Object.keys(changed).length;
   const future = isFuture(date);
   const inSchool = marks.find((mark) => mark.inSchool);
-  const ignored = ignoredNote(saved);
+  const armLabel = arms.find((one) => one.id === armId)?.label ?? 'your class';
 
   const setMark = (studentId: number, status: string) =>
     setEdits((previous) => ({
@@ -124,18 +126,24 @@ export function RegisterPage() {
     });
   };
 
-  const submit = async () => {
-    if (!day.data || count === 0 || future) return;
-    const answer = await save
-      .mutateAsync({ class_arm_id: armId, date: day.data.date, marks: pending })
-      // A refusal has already been announced by the mutation cache; what was
-      // filed before it stays filed, and the register is re-read either way.
-      .catch(() => undefined);
-    // Only once the school has them: clearing regardless emptied a half-taken
-    // register on a refusal, which is exactly the work this page promises is
-    // safe to leave.
-    if (!answer) return;
-    setSaved(answer);
+  /**
+   * Written down on the device, and sent when there is somewhere to send it.
+   *
+   * The edits are cleared straight away, which the old mutation could not do:
+   * they are not being thrown away, they are being moved somewhere durable.
+   * The sheet reads the queue as well as the school, so the marks stay exactly
+   * where they were on screen — through a page turn, a reload, a closed
+   * browser and three days with no signal.
+   */
+  const submit = () => {
+    if (count === 0 || future) return;
+    enqueue({
+      handler: WRITE.takeRegister,
+      payload: { class_arm_id: armId, date: day.date, marks: changed },
+      collectionId: SET.registerDays,
+      toast: { success: 'Register saved' },
+      label: `Register for ${armLabel}, ${day.date}`,
+    });
     setEdits({});
   };
 
@@ -153,11 +161,7 @@ export function RegisterPage() {
                 Mark the rest {inSchool.label.toLowerCase()}
               </Button>
             )}
-            <Button
-              pending={save.isPending}
-              disabled={count === 0 || future}
-              onClick={submit}
-            >
+            <Button disabled={count === 0 || future} onClick={submit}>
               {count
                 ? `Save ${count} mark${count === 1 ? '' : 's'}`
                 : 'Save register'}
@@ -182,9 +186,15 @@ export function RegisterPage() {
         </div>
       )}
 
-      {ignored && (
+      {/* A sheet drawn from the roll alone. The endpoint leaves a student out
+          of `marks` alone, so marking from one cannot erase anybody — but a
+          teacher is owed the difference between "nobody marked this day" and
+          "this device does not know who did". */}
+      {!day.pending && !day.known && (
         <div className="mb-5 rounded-lg border border-divider bg-raised px-4 py-3.5 text-sm">
-          {ignored}
+          The marks already filed for this day are not on this device, so this
+          sheet is drawn from your roll. Anything you mark here is filed over
+          what the school holds; anyone you leave alone stays as they are.
         </div>
       )}
 
@@ -203,12 +213,13 @@ export function RegisterPage() {
         ]}
       />
 
-      {day.isPending ? (
+      {day.pending ? (
         <TableSkeleton rows={6} />
       ) : rows.length ? (
         <RegisterSheet
           rows={rows}
           statuses={marks}
+          waiting={day.waiting}
           onMark={setMark}
           onNote={setNote}
         />
@@ -220,14 +231,14 @@ export function RegisterPage() {
       )}
 
       <p className="mt-3.5 text-xs text-muted-foreground">
-        {day.data?.taken
+        {day.taken
           ? 'This register has been taken. Changing a mark files the change over it.'
           : 'Nobody has marked this day yet.'}{' '}
         A student you leave alone stays as they are — nothing here marks anyone
         absent by default.
         {/* The school's own sentence about what its words mean, rather than
             this page's paraphrase of it. */}
-        {statuses.data?.note && <> {statuses.data.note}</>}
+        {markNote && <> {markNote}</>}
       </p>
     </>
   );

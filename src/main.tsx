@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { bootstrapDb } from '@/db/bootstrap'
 import { startDrain } from '@/db/drain'
+import '@/db/handlers'
 import { UpdatePrompt } from '@/features/sync/components/update-prompt'
 import { queryClient } from '@/lib/query-client'
 import { router } from '@/router'
@@ -22,7 +23,9 @@ await bootstrapDb()
 
 // Anything left unsent from a previous visit is read back off the disk and
 // put in line. Awaited, so no screen can queue a write against a queue that
-// has not finished loading — see `storeReady`.
+// has not finished loading — see `storeReady`. The handlers above are imported
+// first: the drain starts here, and an op whose handler is not registered yet
+// is an op this build claims not to understand.
 await startDrain()
 
 createRoot(document.getElementById('root')!).render(

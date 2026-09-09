@@ -12,6 +12,8 @@ import { subjectsService } from '@/api/subjects/service'
 import { teachingService } from '@/api/teaching/service'
 import { teachersService } from '@/api/teachers/service'
 import { usersService } from '@/api/users/service'
+import { heldRows as held } from '@/db/collection'
+import { teacherArms, teacherSubjects } from '@/db/collections/teaching'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
 import { guardianOption } from './guardian-option'
@@ -133,7 +135,12 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // A teacher cannot read `/subjects` at all — it answers "restricted to
     // administrators" — and has no business filing a topic under a subject
     // that is not theirs, so the feed is the one the office gave them.
-    const subjects = await teachingService.subjects()
+    //
+    // Off the device, and the same set the subject register draws: a form
+    // whose dropdown had to be fetched would be a form that cannot be filled
+    // in without a connection, which is most of the point of filing a topic
+    // from a classroom.
+    const subjects = await held(teacherSubjects)
     return distinct(
       subjects.map((subject) => ({
         value: String(subject.id),
@@ -177,8 +184,9 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
 
   if (key === 'my-arms') {
     // The arms come back beside the roll rather than on it, and one student is
-    // enough of the roll to read them off.
-    const { class_arms } = await teachingService.students({ limit: 1 })
+    // enough of the roll to read them off — which is what the collection asks
+    // for. Off the device, like the subjects above.
+    const class_arms = await held(teacherArms)
     return class_arms.map((arm) => ({
       value: String(arm.id),
       label: arm.department?.name ? `${arm.department.name} · ${arm.arm_name}` : arm.arm_name,

@@ -14,11 +14,18 @@ import type { RegisterRow, StatusOption } from './register'
 export function RegisterSheet({
   rows,
   statuses,
+  waiting,
   onMark,
   onNote,
 }: {
   rows: RegisterRow[]
   statuses: StatusOption[]
+  /**
+   * Students whose mark is written down on this device and not yet with the
+   * school. Saying so on the row is what lets a teacher believe the sheet: the
+   * mark is theirs, it is kept, and it has not been filed yet.
+   */
+  waiting: ReadonlySet<number>
   onMark: (studentId: number, status: string) => void
   onNote: (studentId: number, notes: string) => void
 }) {
@@ -45,6 +52,9 @@ export function RegisterSheet({
                   {row.regno || BLANK}
                   {!row.status && <span> · Not marked</span>}
                   {row.edited && <span className="text-brand"> · Unsaved</span>}
+                  {!row.edited && waiting.has(row.student_id) && (
+                    <span className="text-brand"> · Waiting to send</span>
+                  )}
                 </div>
               </td>
               <td className="px-2 py-2.75">

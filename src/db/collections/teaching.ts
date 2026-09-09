@@ -8,6 +8,7 @@ import type {
   Topic,
 } from '@/api/teaching/types'
 import { schoolCollection } from '../collection'
+import { SET } from '../ids'
 
 /**
  * Everything the teacher's own pages read, on the teacher's own device.
@@ -36,7 +37,7 @@ export const ALL = 500
 
 /** The subjects the office has put in this teacher's hands. */
 export const teacherSubjects = schoolCollection<TeacherSubject, number>({
-  id: 'teaching.subjects',
+  id: SET.teachingSubjects,
   fetch: () => teachingService.subjects(),
   getKey: (subject) => subject.id,
   schemaVersion: 1,
@@ -44,7 +45,7 @@ export const teacherSubjects = schoolCollection<TeacherSubject, number>({
 
 /** The roll: every student in the arms this teacher takes. */
 export const teacherRoll = schoolCollection<TeacherStudent, number>({
-  id: 'teaching.students',
+  id: SET.teachingStudents,
   fetch: () => teachingService.students({ limit: ALL }).then((roll) => roll.items),
   getKey: (student) => student.id,
   schemaVersion: 1,
@@ -60,7 +61,7 @@ export const teacherRoll = schoolCollection<TeacherStudent, number>({
  * arms, and the roll itself is the set above.
  */
 export const teacherArms = schoolCollection<TeacherClassArm, number>({
-  id: 'teaching.arms',
+  id: SET.teachingArms,
   fetch: () => teachingService.students({ limit: 1 }).then((roll) => roll.class_arms),
   getKey: (arm) => arm.id,
   schemaVersion: 1,
@@ -68,7 +69,7 @@ export const teacherArms = schoolCollection<TeacherClassArm, number>({
 
 /** Every mark on file in the subjects this teacher takes. */
 export const teacherMarks = schoolCollection<TeacherResult, number>({
-  id: 'teaching.results',
+  id: SET.teachingResults,
   fetch: () => teachingService.results({ limit: ALL }).then((page) => page.items),
   getKey: (mark) => mark.id,
   schemaVersion: 1,
@@ -76,7 +77,7 @@ export const teacherMarks = schoolCollection<TeacherResult, number>({
 
 /** What the teacher has recorded covering, subject by subject. */
 export const teacherTopics = schoolCollection<Topic, number>({
-  id: 'teaching.topics',
+  id: SET.teachingTopics,
   fetch: () => teachingService.topics(),
   getKey: (topic) => topic.id,
   schemaVersion: 1,
@@ -84,7 +85,7 @@ export const teacherTopics = schoolCollection<Topic, number>({
 
 /** The online rooms opened for this teacher's classes. */
 export const teacherEClasses = schoolCollection<EClass, number>({
-  id: 'teaching.eclasses',
+  id: SET.teachingEClasses,
   fetch: () => teachingService.eclasses(),
   getKey: (eclass) => eclass.id,
   schemaVersion: 1,

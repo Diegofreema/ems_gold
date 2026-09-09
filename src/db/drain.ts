@@ -6,7 +6,7 @@ import { refetchCollection } from './collection'
 import { cascadeFrom, nextOp, substitute, unresolved, type OutboxOp } from './outbox'
 import { handlerFor } from './registry'
 import { idMap, isStoreReady, outbox, resolvedIds, storeReady } from './store'
-import { announceFailed, announceHeld, announceSaved, GRACE_MS } from './toast'
+import { announceFailed, announceHeld, announceNote, announceSaved, GRACE_MS } from './toast'
 
 export type EnqueueSpec = {
   /** A name registered in `registry.ts`. */
@@ -127,6 +127,12 @@ export async function drain(): Promise<void> {
   // waiting and deciding there was nothing to send.
   await storeReady()
 
+  // Whether anything actually reached the school this pass. What a write makes
+  // stale is dropped once at the end rather than after each op: a register of
+  // thirty marks drains as thirty ops, and dropping every derived read thirty
+  // times over would ask the school for the same answers thirty times.
+  let sent = false
+
   try {
     for (;;) {
       const op = nextOp(outbox().toArray, Date.now())
@@ -157,12 +163,24 @@ export async function drain(): Promise<void> {
       try {
         const answer = await handler.send(substitute(op.payload, ids) as never)
         await landed(op, handler.collectionId ?? op.collectionId, answer)
+        // Anything the school said about what it actually did with this. The
+        // page that wrote it is long gone, so the drain is the only place left
+        // that can pass it on.
+        const note = handler.note?.(answer)
+        if (note) announceNote(note)
+        sent = true
       } catch (error) {
         if (!handleFailure(op, error)) break
       }
     }
   } finally {
     draining = false
+    // Also on the way out of a queue that stopped part-way: what did land is
+    // on the school's record whatever became of the op behind it.
+    // A migrated write still makes un-migrated derived reads stale — a teacher
+    // saving a topic moves a dashboard that is still on the query path — and
+    // it makes the device's own sets stale too, which no invalidation reaches.
+    if (sent) await dropDerivedReads(queryClient)
   }
 }
 
@@ -183,12 +201,10 @@ async function landed(
 
   if (pendingAnnouncements.delete(op.id)) announceSaved(op.toast)
 
-  // The school's version of the row, rather than ours.
+  // The school's version of the row, rather than ours. Targeted, and per op,
+  // because this is the set the op was actually about; everything else a write
+  // makes stale is dropped once at the end of the drain.
   if (collectionId) await refetchCollection(collectionId)
-
-  // A migrated write still makes un-migrated derived reads stale — a teacher
-  // saving a topic moves a dashboard that is still on the query path.
-  await dropDerivedReads(queryClient)
 }
 
 /** True when the drain may carry on; false when the whole queue must stop. */

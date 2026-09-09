@@ -1,5 +1,6 @@
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { createCollection, type Collection } from '@tanstack/react-db'
+import { alsoDropOnWrite } from '@/features/collections/invalidate'
 import { queryClient } from '@/lib/query-client'
 import { classify } from './classify'
 import { OfflineError, ShapeError } from './errors'
@@ -58,6 +59,27 @@ export const allCollections = () => [...built.values()]
 
 export const collectionById = (id: string) => built.get(id)
 
+/**
+ * Readies a set and hands back what it holds.
+ *
+ * How anything that is not a live query reads a collection — a count tile, a
+ * record lookup, a form's dropdown. `preload` is the documented way to make one
+ * ready and is safe from anywhere that reads; it is only a mutation handler and
+ * the outbox drain that must never call it, where it deadlocks.
+ *
+ * A refusal reaches the caller. A device that has synced this set before
+ * answers from the copy it kept, connection or no connection, so getting an
+ * error here means the school has never been reached on this device — which is
+ * worth saying rather than passing off as an empty register.
+ */
+export async function heldRows<T extends object>(collection: {
+  preload: () => Promise<void>
+  toArray: T[]
+}): Promise<T[]> {
+  await collection.preload()
+  return collection.toArray
+}
+
 /** Refetches one collection by id, if this build has it. */
 export async function refetchCollection(id: string): Promise<void> {
   await refetchers.get(id)?.()
@@ -77,9 +99,24 @@ export async function refetchCollection(id: string): Promise<void> {
 export async function resyncCollections(ids?: readonly string[]): Promise<void> {
   const wanted = ids ?? [...refetchers.keys()]
   await Promise.all(
-    wanted.map((id) => Promise.resolve(refetchers.get(id)?.()).catch(() => undefined)),
+    wanted
+      // A set nobody has opened is left alone. Collections sync lazily, so a
+      // module being imported is not evidence anyone wants its rows — and
+      // refetching an untouched one would ask for it on the strength of a
+      // write to something else entirely. An admin saving a fee would fetch
+      // the teacher's own subjects, which the school answers with a 403.
+      .filter((id) => built.get(id)?.status !== 'idle')
+      .map((id) => Promise.resolve(refetchers.get(id)?.()).catch(() => undefined)),
   )
 }
+
+/*
+ * Every write in the app has to reach the device's own sets, not just the query
+ * cache — a register read off a collection is not behind any key an
+ * invalidation can drop. Registered as this module is imported, which is as
+ * soon as there is a collection to resync and never before.
+ */
+alsoDropOnWrite(() => void resyncCollections())
 
 /**
  * The one way to put a school endpoint on the device.

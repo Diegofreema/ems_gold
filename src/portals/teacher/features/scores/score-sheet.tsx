@@ -66,7 +66,16 @@ export function ScoreSheet({
                   <Tag variant={toneForStatus(row.grade)}>{row.grade}</Tag>
                 ) : (
                   <span className="text-muted-foreground">
-                    {row.edited ? 'Unsaved' : BLANK}
+                    {row.edited ? (
+                      'Unsaved'
+                    ) : row.waiting ? (
+                      // Saved on this device, not yet with the school — which
+                      // is a different thing from unsaved, and the difference
+                      // is the whole promise this page makes.
+                      <span className="text-brand">Waiting to send</span>
+                    ) : (
+                      BLANK
+                    )}
                   </span>
                 )}
               </td>

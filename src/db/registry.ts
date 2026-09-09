@@ -30,6 +30,15 @@ export type OutboxHandler<P = never> = {
   idempotent: boolean
   /** The collection to refetch once it lands, so the row comes back as saved. */
   collectionId?: string
+  /**
+   * Something in the school's answer the person who wrote this needs told.
+   *
+   * A queued write's response comes back to the drain, not to the page that
+   * made it — hours later, on another screen — so anything the endpoint says
+   * about what it did has nowhere else to go. Returning nothing is the normal
+   * case and says nothing.
+   */
+  note?: (answer: unknown) => string | undefined
 }
 
 const handlers = new Map<string, OutboxHandler<never>>()

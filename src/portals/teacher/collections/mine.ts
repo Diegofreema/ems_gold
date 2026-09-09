@@ -8,6 +8,7 @@ import type {
   TeacherSubject,
   Topic,
 } from '@/api/teaching/types'
+import { heldRows as held } from '@/db/collection'
 import {
   teacherArms,
   teacherEClasses,
@@ -40,14 +41,6 @@ export { ALL } from '@/db/collections/teaching'
  * never been reached on this device — which is worth saying rather than
  * passing off as an empty register.
  */
-
-async function held<T extends object>(collection: {
-  preload: () => Promise<void>
-  toArray: T[]
-}): Promise<T[]> {
-  await collection.preload()
-  return collection.toArray
-}
 
 export const mySubjects = (): Promise<TeacherSubject[]> => held(teacherSubjects)
 

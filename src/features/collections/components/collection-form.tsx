@@ -236,7 +236,7 @@ export function CollectionForm({
         }
         submitLabel={editing ? 'Save changes' : definition.action}
         onSubmit={async (values) => {
-          if (definition.save) {
+          if (definition.save || definition.queue) {
             // A refusal has already been announced by the mutation cache;
             // swallowing it here only keeps the form open on the values typed.
             const saved = await save

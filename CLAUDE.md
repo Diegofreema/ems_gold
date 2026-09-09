@@ -42,11 +42,22 @@ visibly not one.
   the app's default network mode, so with no connection it pauses rather than fails, never settles,
   and strands the route loader waiting on `preload()`. Read another set's snapshot, or call the
   service directly.
-- Collections sync lazily. A route loader's `preload()` or a live query starts it; importing the
-  module does not, or a signed-out visitor on the landing page would fire the parent portal's
-  requests.
-- `preload()` in a route loader is the documented integration point. **Never call `preload()` or
-  `loadSubset()` from a mutation handler or the outbox drain** — it deadlocks.
+- Collections sync lazily, and **only the portal's own shell-route loader starts them**. Importing
+  the module does not, or a signed-out visitor on the landing page would fire the parent portal's
+  requests — and a live query does not either, measured: a register bound to an unsynced collection
+  sits on its skeleton for ever. Every portal shell preloads its own sets, fire-and-forget.
+- `preload()` in a route loader is the documented integration point, and `heldRows()` in
+  `src/db/collection.ts` is how everything that is not a live query reads a set — a count tile, a
+  record lookup, a form's dropdown. **Never call `preload()` or `loadSubset()` from a mutation
+  handler or the outbox drain** — it deadlocks.
+- **A register bound to a collection must state its own order.** A collection is keyed and hands its
+  rows back in key order whatever order the endpoint sent them in — measured, and it silently
+  inverted the two registers whose footers promise "Newest first". Ordering lives in the binding;
+  see `src/portals/teacher/collections/order.ts`.
+- A register reads a collection through `collection:` on its `CollectionDef` — a `localFirst(...)`
+  binding, built in `src/features/collections/local-first.ts`. Searching and paging still happen in
+  `pageRows`, so a bound register and an unbound one hand the page the same shape and nothing in
+  `collection-list.tsx`, the data table or the pagination changes. Not yet compatible with `filters`.
 
 Reads are **not** persisted by `persistedCollectionOptions`. That was tried and measured: with rows
 already on disk and the fetch failing, the collection settles into `status: 'error'` with `toArray`
@@ -72,12 +83,43 @@ Every mutation is applied locally at once and enqueued in the durable outbox (`s
   terminal one fails that op and cascades to whatever depended on it.
 - 401/403 pauses the whole drain and burns no attempts. An expired token must not turn thirty saved
   attendance marks into thirty permanent failures.
+- **Handlers are registered at boot, in `src/db/handlers/`, never by the portal that uses them.** A
+  register marked on Tuesday afternoon is sent by whatever code is running on Wednesday morning, and
+  a drain that ran before the teacher's bundle loaded would find the op naming a handler this build
+  "no longer knows how to send" and put a good register in front of somebody to puzzle over. For the
+  same reason a handler names its collection by id from `src/db/ids.ts` and never imports one:
+  importing them there would build every portal's sets for every visitor, on the first load.
+- **A screen shows queued work by reading the outbox, not by writing into the collection.** An
+  optimistic `writeUpsert` is wiped by the next sync, which for a register is any refetch before the
+  op lands; an overlay read from the queue exists exactly as long as the op does and disappears when
+  the school's own answer replaces it. `day.ts` and `scores/queued.ts` are the two worked examples,
+  both pure and both tested. Only ops still expected to land are drawn — a `failed` one would tell a
+  teacher a child was marked when the school refused it, and that op belongs to the drawer.
+- **A queued write's answer comes back to the drain, not to the page that made it.** Anything the
+  endpoint says about what it did — which student ids it ignored — has nowhere else to go, so the
+  handler declares a `note` and the drain raises it.
+
+A register a teacher fills in is composed from three things, in this order: the roll, so there is a
+sheet at all; what the school has already filed for that day, where the device holds it; and the
+marks this teacher has made that the school has not heard. A day outside the window the device keeps
+is drawn from the roll alone and **says so** — `POST /attendances/register` leaves a student out of
+`marks` alone, so marking from a blank sheet cannot erase anybody, but a teacher is owed the
+difference between "nobody marked this day" and "this device does not know who did".
 
 ### What is deliberately not local-first
 
 The audit log (`src/api/logs`) is append-only and server-owned. Analytics are server aggregates. The
 invoice ledger scan in `src/portals/admin/api/dashboard.ts` reads 6×1000 rows for a total the API
-will not compute. These stay on the query path.
+will not compute. Register coverage (`attendances/coverage`) is an audit of which registers were
+never taken, over a range — a month of it is not what a teacher needs in a classroom, and there is
+no endpoint that answers for a range anyway. These stay on the query path, and each says plainly
+when it could not be reached rather than drawing zeroes: "every day has a register" is the one
+wrong answer that page could give.
+
+Upload batches are not a set either, for a different reason: `GET /teachers/me/uploads` answers
+`{"batches": []}` for every teaching login on this deployment, so which fields carry the four ids
+that name a batch is exactly what nobody has seen — and a collection needs a key. Storing rows under
+a key guessed from an unseen shape is how a register quietly holds two copies of the same row.
 
 ### Accepted trade-offs, written down so nobody rediscovers them as bugs
 
@@ -111,9 +153,16 @@ will not compute. These stay on the query path.
   an augmentation aimed at the re-exporting module is silently dropped — every `meta.success` goes
   back to `unknown`.
 - **Every write drops the derived reads.** `dropDerivedReads` invalidates registers, records,
-  pickers and dashboards from one place. Collection sources on the query path must read with
-  `queryClient.query`, never `ensureQueryData`. Writes that move money also call `dropMoneyReads`,
-  which resyncs the device's collections too — an invalidation does not reach one.
+  pickers and dashboards from one place, and resyncs the device's own sets alongside them — an
+  invalidation reaches a query key, never a collection, so a teacher filing a topic would otherwise
+  watch the register go on showing what it held. `src/db/collection.ts` registers that resync
+  through `alsoDropOnWrite` rather than being imported, so the two modules do not need each other.
+  A set nobody has opened is skipped: refetching an idle collection asks for it on the strength of a
+  write to something else, and an admin saving a fee would fetch the teacher's own subjects and be
+  refused. Collection sources on the query path must read with `queryClient.query`, never
+  `ensureQueryData`. Writes that move money also call `dropMoneyReads`.
+  The outbox drain drops them **once at the end of a pass**, not per op — thirty attendance marks
+  are thirty ops, and thirty full resyncs would ask the school the same questions thirty times.
 - **A shell route must never throw.** Its error boundary replaces the shell, and a missing pending
   component blanks the page. Portal route loaders start their work and swallow the failure.
 - **`src/index.css` is the only source of design truth** — the hybrid token system, soft raised

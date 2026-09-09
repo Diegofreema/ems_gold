@@ -16,7 +16,7 @@ import {
 import { formatCount } from '@/lib/format';
 import { ArmPicker, NoArmsState } from './arms';
 import { missingDays } from './register';
-import { useRegisterArms } from './use-register-arms';
+import { useRegisterArms } from './use-register-day';
 
 type Range = { from?: Date; to?: Date };
 
@@ -40,11 +40,12 @@ export function CoveragePage() {
   });
 
   const { arms, armId, pending, none } = useRegisterArms(arm);
-  const { data } = useCoverage(
+  const coverage = useCoverage(
     armId
       ? { class_arm_id: armId, ...(from ? { from } : {}), ...(to ? { to } : {}) }
       : null,
   );
+  const data = coverage.data;
 
   const onArm = useCallback(
     (id: number) => void setQuery({ arm: String(id) }),
@@ -77,6 +78,14 @@ export function CoveragePage() {
     );
   }
 
+  /*
+   * This page audits which registers were never taken, and only the endpoint
+   * knows. It is deliberately not one of the sets kept on the device — a month
+   * of somebody else's audit is not what a teacher needs in a classroom — so
+   * with no answer there is nothing to say, and saying "every day has a
+   * register" would be the one wrong answer of the three.
+   */
+  const unanswered = !data;
   const missing = missingDays(data);
   // The dates the endpoint actually used, which are not always the ones asked
   // for — an empty range is its own choice, and it says which.
@@ -92,14 +101,16 @@ export function CoveragePage() {
         <RangeFields from={from} to={to} onRange={setQuery} />
       </div>
 
-      <TileStrip
-        className="mb-3"
-        tiles={[
-          { label: 'School days', value: formatCount(data?.school_days ?? 0) },
-          { label: 'Registers taken', value: formatCount(data?.taken ?? 0) },
-          { label: 'Never taken', value: formatCount(data?.missing_count ?? 0) },
-        ]}
-      />
+      {!unanswered && (
+        <TileStrip
+          className="mb-3"
+          tiles={[
+            { label: 'School days', value: formatCount(data.school_days ?? 0) },
+            { label: 'Registers taken', value: formatCount(data.taken ?? 0) },
+            { label: 'Never taken', value: formatCount(data.missing_count ?? 0) },
+          ]}
+        />
+      )}
 
       {covered && (
         <p className="mb-3 text-xs text-muted-foreground">
@@ -107,7 +118,13 @@ export function CoveragePage() {
         </p>
       )}
 
-      {missing.length > 0 ? (
+      {unanswered ? (
+        <p className="text-sm text-muted-foreground">
+          This one is read from the school rather than kept on your device, and
+          it could not be reached. Taking a register still works without a
+          connection — this is the audit of which ones were taken.
+        </p>
+      ) : missing.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
           {missing.map((day) => (
             <Link

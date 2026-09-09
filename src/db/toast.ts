@@ -41,3 +41,13 @@ export function announceFailed(label: string, error: unknown, onOpen: () => void
     action: { label: 'Review', onClick: onOpen },
   })
 }
+
+/**
+ * What the school said it did, where that is not simply "saved".
+ *
+ * Neither a success nor a failure: the write landed, and the answer carried
+ * something the teacher would otherwise have to count the rows to notice.
+ */
+export function announceNote(note: string): void {
+  toast.warning(note)
+}

@@ -3,11 +3,14 @@ import type {
   MarkInput,
   MyClass,
   RegisterStudent,
-  SavedRegister,
   StatusCatalogue,
 } from '../../../../api/attendance/types.ts'
+import { ignoredNote } from '../../../../api/attendance/ignored.ts'
 import { toApiDate } from '../../../../features/collections/date-range.ts'
 import { capitalise, formatDate } from '../../../../lib/format.ts'
+
+/** Kept exported from here: it was this page's sentence before it was the drain's. */
+export { ignoredNote }
 
 /** One of the school's words for a mark, as the sheet offers it. */
 export type StatusOption = {
@@ -177,19 +180,6 @@ export function liveTally(rows: RegisterRow[], statuses: StatusOption[]): Tally 
  */
 export function isFuture(date: string, today = toApiDate(new Date()) ?? ''): boolean {
   return Boolean(date) && Boolean(today) && date > today
-}
-
-/**
- * What the endpoint filed and what it threw away.
- *
- * A student id from another class is ignored and named rather than filed against
- * a class they are not in — so it is worth repeating on screen, since the
- * teacher will otherwise count the saved rows and find one short.
- */
-export function ignoredNote(saved: SavedRegister | undefined): string {
-  const ignored = saved?.ignored ?? []
-  if (ignored.length === 0) return ''
-  return `${ignored.length} student ${ignored.length === 1 ? 'id was' : 'ids were'} not in this class and ${ignored.length === 1 ? 'was' : 'were'} not filed: ${ignored.join(', ')}.`
 }
 
 /** The days nobody marked, newest first, ready to open. */

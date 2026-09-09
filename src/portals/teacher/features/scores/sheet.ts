@@ -5,6 +5,7 @@ import type {
 } from '../../../../api/teaching/types.ts'
 import type { MarkingTerm } from '../term/term.ts'
 import { CA_MAX, EXAM_MAX, markOf, totalOf } from './grade.ts'
+import { scoreKey, type QueuedScore } from './queued.ts'
 
 /** What a teacher has typed but not yet filed, keyed subject and student. */
 export type Edit = { ca?: string; exam?: string }
@@ -23,8 +24,10 @@ export type SheetRow = {
    * the teacher is still typing would be inventing one.
    */
   grade: string
-  /** Whether what is typed differs from the mark the school holds. */
+  /** Whether what is typed differs from the mark this device holds. */
   edited: boolean
+  /** This mark is written down on the device and not yet with the school. */
+  waiting: boolean
   /** Set where a mark is above what the endpoint will take. */
   problem: string
 }
@@ -64,11 +67,22 @@ export function sheetRows(
   marks: TeacherResult[],
   subjectId: number,
   edits: Edits,
+  /**
+   * Marks this device has written down and not yet sent.
+   *
+   * They stand in front of the school's own: a teacher who files a sheet with
+   * no connection must see what they filed, not the mark it replaced, and must
+   * not see their own work as an unsaved edit either — it is saved, on the
+   * device, which is a different thing from lost.
+   */
+  queued: ReadonlyMap<string, QueuedScore> = new Map(),
 ): SheetRow[] {
   return students.map((student) => {
-    const held = marks.find(
+    const school = marks.find(
       (mark) => mark.student_id === student.id && mark.subject_id === subjectId,
     )
+    const waiting = queued.get(scoreKey(subjectId, student.id))
+    const held = waiting ? { ...school, ca: waiting.ca, score: waiting.exam } : school
     const heldCa = marked(held?.ca)
     // `score` is the exam half; `total` is that plus the CA, worked out by the
     // school rather than sent to it.
@@ -85,8 +99,11 @@ export function sheetRows(
       ca,
       exam,
       total: totalOf(ca, exam),
-      grade: edited ? '' : (held?.grade?.trim() ?? ''),
+      // Blank while a row is edited, and blank while it waits: the bands are
+      // the school's, and it has not seen this mark yet.
+      grade: edited || waiting ? '' : (school?.grade?.trim() ?? ''),
       edited,
+      waiting: Boolean(waiting),
       // Only what the teacher has typed is held to the entry endpoint's caps.
       // Marks already on file routinely sit above them — a spreadsheet upload
       // carries three exam columns and files their sum — and those are the

@@ -516,6 +516,17 @@ export type CollectionDef = {
    */
   save?: (values: Record<string, unknown>, recordId?: string) => Promise<unknown>
   /**
+   * Writes the form back through the durable outbox instead of over the wire.
+   *
+   * Present instead of `save`, never beside it — a definition has one write
+   * path, and two would be two things to keep in step. It returns nothing and
+   * returns at once: the write is accepted on the device and sent when there is
+   * somewhere to send it, so there is no answer to wait for and no refusal to
+   * catch. The queue raises its own toast, which is why a queued definition
+   * gets none from the mutation cache.
+   */
+  queue?: (values: Record<string, unknown>, recordId?: string) => void
+  /**
    * Deletes a record, from its row and from its edit form. A collection
    * without one keeps the prototype's toast, since it has no endpoint yet.
    */

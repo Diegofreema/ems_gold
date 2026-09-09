@@ -2,6 +2,7 @@ import { myFamilyService } from '@/api/parents/service'
 import type { Child as EnrolledChild, FamilyInvoice } from '@/api/parents/types'
 import type { Mark } from '@/portals/parent/family'
 import { schoolCollection } from '../collection'
+import { SET } from '../ids'
 import { readSnapshot } from '../snapshot'
 
 /**
@@ -21,7 +22,7 @@ import { readSnapshot } from '../snapshot'
 
 /** Who the children are, so one with nothing billed still appears. */
 export const parentChildren = schoolCollection<EnrolledChild, number>({
-  id: 'parent.children',
+  id: SET.parentChildren,
   fetch: () => myFamilyService.children(),
   getKey: (child) => child.id,
   schemaVersion: 1,
@@ -36,7 +37,7 @@ export const parentChildren = schoolCollection<EnrolledChild, number>({
 export const INVOICE_SCAN = 200
 
 export const parentInvoices = schoolCollection<FamilyInvoice, number>({
-  id: 'parent.invoices',
+  id: SET.parentInvoices,
   fetch: () =>
     myFamilyService.invoices({ limit: INVOICE_SCAN }).then((page) => page.items),
   getKey: (invoice) => invoice.id,
@@ -80,10 +81,10 @@ function isoDay(date: Date): string {
  * fetcher must always be able to finish.
  */
 export const parentAttendance = schoolCollection<ChildMark, string>({
-  id: 'parent.attendance',
+  id: SET.parentAttendance,
   fetch: async () => {
     const children =
-      readSnapshot<EnrolledChild>('parent.children') ?? (await myFamilyService.children())
+      readSnapshot<EnrolledChild>(SET.parentChildren) ?? (await myFamilyService.children())
 
     const today = new Date()
     const from = new Date(today)

@@ -54,7 +54,29 @@ const DERIVED = [
  * would hand this refetch the same rows straight back.
  */
 export function dropDerivedReads(queryClient: QueryClient): Promise<unknown> {
+  alsoDrop?.()
   return Promise.all(
     DERIVED.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
   )
+}
+
+/** What else a write has to reach; see `alsoDropOnWrite`. */
+let alsoDrop: (() => void) | undefined
+
+/**
+ * Adds something to what every write drops.
+ *
+ * The registers are moving off the query cache and onto the device, and an
+ * invalidation does not reach a collection: a teacher who files a topic drops
+ * `['collection']` correctly and the topic register, which no longer reads
+ * that key, goes on showing what it held. So `src/db/collection.ts` registers
+ * its own resync here as it is imported.
+ *
+ * A slot rather than an import because the dependency only runs one way. The
+ * collections need the query client; the invalidation must not need the
+ * collections, or the two modules import each other in a circle for the sake
+ * of one call.
+ */
+export function alsoDropOnWrite(drop: () => void): void {
+  alsoDrop = drop
 }

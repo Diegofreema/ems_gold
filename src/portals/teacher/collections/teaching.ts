@@ -1,4 +1,6 @@
-import { teachingService } from '@/api/teaching/service';
+import { enqueue } from '@/db/drain';
+import { SET, WRITE } from '@/db/ids';
+import { newLocalKey } from '@/db/outbox';
 import {
   teacherEClasses,
   teacherRoll,
@@ -203,10 +205,46 @@ export const topics: CollectionDef = {
   source: async (params) => pageRows(await topicRows(), params),
   record: async (recordId) =>
     (await topicRows()).find((topic) => topic.id === String(recordId)),
-  save: (values, recordId) =>
-    recordId
-      ? teachingService.updateTopic(recordId, topicUpdate(values))
-      : teachingService.addTopic(topicBody(values)),
+  /**
+   * Filed on the device and sent afterwards.
+   *
+   * A scheme of work is written up at the end of a lesson, which is exactly
+   * where the signal is worst. What the teacher wrote is kept whatever the
+   * connection is doing, and the pending-work drawer is where they can see it
+   * is still waiting.
+   *
+   * Unlike the register and the mark sheet, a queued topic does not appear in
+   * the list below until the school has it. Those two are marked in bulk and
+   * read back all day, so they overlay the queue on screen; this is one record
+   * written once, and a ghost row that could not be opened or corrected would
+   * cost more than it explained. The toast says it is saved, and the drawer
+   * says it is waiting.
+   */
+  queue: (values, recordId) => {
+    const named = String(values.title ?? '').trim() || 'Untitled topic';
+
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateTopic,
+        payload: { id: recordId, body: topicUpdate(values) },
+        collectionId: SET.teachingTopics,
+        targetKey: recordId,
+        toast: { success: 'Topic updated' },
+        label: `Topic "${named}"`,
+      });
+      return;
+    }
+
+    enqueue({
+      handler: WRITE.addTopic,
+      payload: topicBody(values),
+      collectionId: SET.teachingTopics,
+      // The school issues the id, so the device names it in the meantime.
+      targetKey: newLocalKey(),
+      toast: { success: 'Topic created' },
+      label: `Topic "${named}"`,
+    });
+  },
   // No endpoint deletes one, so no row offers to. A topic recorded in error is
   // corrected on its own page.
   form: [

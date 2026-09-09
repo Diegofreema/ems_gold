@@ -1,7 +1,22 @@
+import { useLiveQuery } from '@tanstack/react-db'
 import { useQueryState } from 'nuqs'
 import { useState } from 'react'
-import { useEnterScores } from '@/api/teaching/hooks'
-import { useMySubjects, useMyResults, useMyStudents } from '@/api/teaching/hooks'
+import type {
+  TeacherClassArm,
+  TeacherResult,
+  TeacherStudent,
+  TeacherSubject,
+} from '@/api/teaching/types'
+import {
+  teacherArms,
+  teacherMarks,
+  teacherRoll,
+  teacherSubjects,
+} from '@/db/collections/teaching'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import type { OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
@@ -10,22 +25,33 @@ import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { termFromResults } from '../term/term'
 import { sheetAverage } from './grade'
+import { queuedScores } from './queued'
 import { ScoreSheet } from './score-sheet'
 import { changedMarks, type Edits, editKey, sheetRows } from './sheet'
 
-/** A teacher's whole roll and mark sheet, both of which page at the endpoint. */
-const ALL = 500
+/** A set has answered one way or the other and the page can draw. */
+const settled = (state: { isReady: boolean; isError: boolean }) =>
+  state.isReady || state.isError
 
+/**
+ * The mark sheet, read off the device and written to the queue.
+ *
+ * Four sets the teacher portal has already synced, plus whatever this device is
+ * still holding for the school. Nothing here is a request: a paused query never
+ * settles, and a teacher with a sheet of marks and no signal would be looking
+ * at a skeleton.
+ */
 export function ScoresPage() {
-  const subjects = useMySubjects()
-  const roll = useMyStudents({ limit: ALL })
-  const marks = useMyResults({ limit: ALL })
-  const save = useEnterScores()
+  const subjects = useLiveQuery({ query: (q) => q.from({ subject: teacherSubjects }) })
+  const roll = useLiveQuery({ query: (q) => q.from({ student: teacherRoll }) })
+  const myArms = useLiveQuery({ query: (q) => q.from({ arm: teacherArms }) })
+  const marks = useLiveQuery({ query: (q) => q.from({ mark: teacherMarks }) })
+  const queue = useLiveQuery({ query: (q) => q.from({ op: outbox() }) })
   const [edits, setEdits] = useState<Edits>({})
   const [chosenSubject, setSubject] = useQueryState('subject')
   const [chosenArm, setArm] = useQueryState('arm')
 
-  if (subjects.isPending || roll.isPending || marks.isPending) {
+  if (![subjects, roll, myArms, marks].every(settled)) {
     return (
       <>
         <Header />
@@ -34,10 +60,11 @@ export function ScoresPage() {
     )
   }
 
-  const mine = subjects.data ?? []
-  const arms = roll.data?.class_arms ?? []
-  const students = roll.data?.items ?? []
-  const held = marks.data?.items ?? []
+  const mine = (subjects.data ?? []) as TeacherSubject[]
+  const arms = (myArms.data ?? []) as TeacherClassArm[]
+  const students = (roll.data ?? []) as TeacherStudent[]
+  const held = (marks.data ?? []) as TeacherResult[]
+  const waiting = queuedScores((queue.data ?? []) as OutboxOp[])
 
   if (!mine.length || !arms.length) {
     return (
@@ -67,6 +94,7 @@ export function ScoresPage() {
     held,
     subject.id,
     edits,
+    waiting,
   )
   const term = termFromResults(held)
   const pending = rows.filter((row) => row.edited)
@@ -78,20 +106,33 @@ export function ScoresPage() {
       return { ...previous, [key]: { ...previous[key], [field]: value } }
     })
 
-  const submit = async () => {
+  /**
+   * Written down on the device, one op per mark, and sent when there is
+   * somewhere to send them.
+   *
+   * One op per mark rather than one for the sheet, which is strictly better
+   * than the loop this replaces: that one sent them in turn and stopped at the
+   * first refusal, stranding every row after it. As ordered ops, a mark the
+   * school argues with fails on its own and the rest still land.
+   *
+   * The edits are cleared straight away — not thrown away, moved somewhere
+   * durable. The sheet reads the queue as well as the school, so the marks stay
+   * exactly where they were on screen.
+   */
+  const submit = () => {
     if (!term) return
-    const filed = await save
-      .mutateAsync(changedMarks(rows, subject.id, term))
-      // A refusal has already been announced by the mutation cache. What was
-      // taken before it stays taken, and the sheet is re-read either way.
-      .then(
-        () => true,
-        () => false,
-      )
-    // Only once the school has them. Clearing regardless wiped a whole sheet of
-    // typed marks off the screen on a refusal, with nothing filed to replace
-    // them — the teacher's work, gone because the network was not there.
-    if (filed) setEdits({})
+    for (const mark of changedMarks(rows, subject.id, term)) {
+      enqueue({
+        handler: WRITE.enterScore,
+        payload: mark,
+        collectionId: SET.teachingResults,
+        toast: { success: 'Scores saved' },
+        label: `${subject.name} mark for ${
+          rows.find((row) => row.student_id === mark.student_id)?.name ?? 'a student'
+        }`,
+      })
+    }
+    setEdits({})
   }
 
   return (
@@ -99,7 +140,6 @@ export function ScoresPage() {
       <Header
         action={
           <Button
-            pending={save.isPending}
             disabled={!term || pending.length === 0 || problems.length > 0}
             onClick={submit}
           >
