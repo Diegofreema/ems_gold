@@ -1,26 +1,23 @@
-import { libraryService } from '@/api/library/service'
 import type { Book } from '@/api/library/types'
+import { heldRows } from '@/db/collection'
+import { refBooks } from '@/db/collections/reference'
 import { pageRows } from '@/features/collections/api'
+import { localFirst } from '@/features/collections/local-first'
+import { byId } from '@/features/collections/order'
 import { BLANK } from '@/features/collections/blank'
 import type { CollectionDef, Row } from '@/features/collections/types'
 import { when } from '@/features/collections/when'
-import { queryClient } from '@/lib/query-client'
 
 /**
  * The shelf itself, off `GET /admins/books` — every title the school holds,
  * with the copies and whether it still lends. The borrowings against it are
  * the Lending page (`./loans`).
  *
- * The endpoint answers whole and ignores paging, so the catalogue is fetched
- * once and searched here, sharing the `['library']` cache prefix with the
- * lending register. Read through `queryClient.query`, which refetches what a
- * write has invalidated — `ensureQueryData` would hand back the old shelf.
+ * The endpoint answers whole and ignores paging, so the catalogue is one set on
+ * the device, searched and paged here. It is the same set the lending flow's
+ * title picker offers, so the two read one copy between them.
  */
-const allBooks = (): Promise<Book[]> =>
-  queryClient.query({
-    queryKey: ['library', 'books'],
-    queryFn: () => libraryService.books(),
-  })
+const allBooks = (): Promise<Book[]> => heldRows(refBooks)
 
 function text(value: string | number | null | undefined): string {
   const written = String(value ?? '').trim()
@@ -44,7 +41,14 @@ function bookRow(book: Book): Row {
   }
 }
 
-const shelf = () => allBooks().then((found) => found.map((book) => bookRow(book)))
+/**
+ * The order the school added them in, stated rather than inherited: a keyed
+ * collection hands its rows back in key order, and nothing here promised any
+ * other. The search box is how a title is actually found.
+ */
+const shelved = (books: readonly Book[]) => byId(books).map((book) => bookRow(book))
+
+const shelf = () => allBooks().then(shelved)
 
 export const books: CollectionDef = {
   id: 'books',
@@ -101,6 +105,14 @@ export const books: CollectionDef = {
     { key: 'lending', label: 'Lending' },
     { key: 'added', label: 'Added' },
   ],
+  collection: localFirst({
+    entities: refBooks,
+    rows: shelved,
+    // Already worked out on the rows rather than sent to the endpoint, which
+    // is what lets it move to the device unchanged.
+    narrow: (rows, filters) =>
+      filters.lending ? rows.filter((row) => row.lending === filters.lending) : rows,
+  }),
   source: async (params) => {
     const rows = await shelf()
     const lending = params.filters.lending

@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import { capitalise } from '@/lib/format'
 import type { CollectionDef } from './types'
+import { isUnsynced, UNSYNCED_REASON } from './unsynced'
 
 /**
  * Writes a record back through the collection's own `save`.
@@ -10,9 +11,13 @@ import type { CollectionDef } from './types'
  * mutation in the app at once — see `dropDerivedReads` — so what is left here
  * is the one thing a query cache cannot reach.
  */
+/**
+ * Only ever the direct path. A write that goes through the outbox is accepted
+ * on the device and returns at once, so the form calls it straight rather than
+ * wrapping something synchronous in a mutation — see `collection-form.tsx`.
+ */
 export function useSaveRecord(definition: CollectionDef, editing: boolean) {
   const router = useRouter()
-  const queue = definition.queue
 
   return useMutation({
     mutationFn: async ({
@@ -21,19 +26,23 @@ export function useSaveRecord(definition: CollectionDef, editing: boolean) {
     }: {
       values: Record<string, unknown>
       recordId?: string
-    }) => (queue ? queue(values, recordId) : definition.save!(values, recordId)),
-    // "Student created", to read like every other toast in the app. A queued
-    // write says the same sentence, but the queue is what says it — and adds
-    // "saved on this device" when it had to wait. Two announcements for one
-    // save would be one too many.
-    meta: queue
-      ? undefined
-      : {
-          success: `${capitalise(definition.noun)} ${editing ? 'updated' : 'created'}`,
-        },
-    // A record that is still a page reads from the route's loader, which no
-    // query invalidation reaches — the form goes back to it the moment this
-    // resolves, and would land on the values it was opened with.
+    }) => {
+      // As in `useRemoveRecord`: the edit route is already withheld from an
+      // unsynced record, so reaching this means something got past it, and an
+      // update naming an id the school has never issued is worse than a refusal.
+      if (recordId && isUnsynced({ id: recordId })) throw new Error(UNSYNCED_REASON)
+      return definition.save!(values, recordId)
+    },
+    // "Student created", to read like every other toast in the app.
+    meta: {
+      success: `${capitalise(definition.noun)} ${editing ? 'updated' : 'created'}`,
+    },
+    /*
+     * A record that is still a page reads from the route's loader, which no
+     * query invalidation reaches — the form goes back to it the moment this
+     * resolves, and would land on the values it was opened with.
+     *
+     */
     onSuccess: () => router.invalidate(),
   })
 }

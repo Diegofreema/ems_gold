@@ -15,6 +15,7 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
 import { primaryActionKind } from '../primary-action'
+import { canChange } from '../unsynced'
 import { useCollectionRows } from '../use-collection-rows'
 import { useRemoveRecord } from '../use-remove-record'
 import { useRowAction } from '../use-row-action'
@@ -272,10 +273,12 @@ export function CollectionList({
               // Only where the API can actually delete. Without a `remove` the
               // row used to offer Delete and answer with a toast saying the
               // record was gone, which it never was.
-              onDelete={editRoute && definition.remove ? askDelete : undefined}
+              onDelete={editRoute && (definition.remove || definition.queueRemove) ? askDelete : undefined}
               // A register may mix records only some of which this account can
-              // delete — teaching records beside office ones.
-              canDelete={definition.removeWhen}
+              // delete — teaching records beside office ones. A record this
+              // device wrote and the school has not seen yet is off limits to
+              // everybody until it sends; see `unsynced.ts`.
+              canDelete={(row) => canChange(row, definition.removeWhen)}
               action={rowControl}
               searchQuery={query}
               onClearSearch={() => setQuery('')}

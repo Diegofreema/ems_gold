@@ -1,8 +1,11 @@
 import { libraryService } from '@/api/library/service'
 import type { Loan } from '@/api/library/types'
+import { heldRows } from '@/db/collection'
+import { refLoans } from '@/db/collections/reference'
 import { pageRows } from '@/features/collections/api'
+import { localFirst } from '@/features/collections/local-first'
+import { newestFirst } from '@/features/collections/order'
 import type { CollectionDef } from '@/features/collections/types'
-import { queryClient } from '@/lib/query-client'
 import { loanRow } from './loan-row'
 
 /**
@@ -11,19 +14,22 @@ import { loanRow } from './loan-row'
  * The shelf itself is the Library page next door (`./books`), where titles are
  * added and edited.
  *
- * The endpoint is not known to page or search, so the register is fetched
- * whole and searched here, under the `['library']` cache prefix. Read through
- * `queryClient.query` rather than `ensureQueryData`: the second returns what is
- * cached however stale it is, so a lending flow's invalidation would be handed
- * straight back the page it had just dropped.
+ * The endpoint is not known to page or search, so the register is one set on
+ * the device, searched and paged here.
  */
-const allLoans = (): Promise<Loan[]> =>
-  queryClient.query({
-    queryKey: ['library', 'loans'],
-    queryFn: () => libraryService.loans(),
-  })
+const allLoans = (): Promise<Loan[]> => heldRows(refLoans)
 
-const register = () => allLoans().then((loans) => loans.map((loan) => loanRow(loan)))
+/**
+ * Newest first, which this register has to state now that it is read out of a
+ * keyed collection — the endpoint's own order does not survive being stored,
+ * and the desk reads the day's borrowings off the top.
+ */
+const borrowings = (loans: readonly Loan[]) =>
+  newestFirst(loans, (loan) => loan.borrowed_on ?? loan.date_created ?? loan.dateadded).map(
+    (loan) => loanRow(loan),
+  )
+
+const register = () => allLoans().then(borrowings)
 
 const countLoans = (standing?: string) => async () => {
   const rows = await register()
@@ -79,6 +85,13 @@ export const library: CollectionDef = {
     { key: 'penalty_today', label: 'Fine if returned today' },
   ],
   tabs: [],
+  collection: localFirst({
+    entities: refLoans,
+    rows: borrowings,
+    // Already worked out on the rows rather than sent to the endpoint.
+    narrow: (rows, filters) =>
+      filters.standing ? rows.filter((row) => row.standing === filters.standing) : rows,
+  }),
   source: async (params) => {
     const rows = await register()
     const standing = params.filters.standing

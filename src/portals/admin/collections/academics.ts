@@ -1,11 +1,24 @@
 import { classArmsService } from '@/api/class-arms/service'
+import type { ClassArm } from '@/api/class-arms/types'
 import { departmentsService } from '@/api/departments/service'
+import type { Department } from '@/api/departments/types'
 import { subjectsService } from '@/api/subjects/service'
+import type { Subject } from '@/api/subjects/types'
+import { heldRows } from '@/db/collection'
+import { BLANK } from '@/features/collections/blank'
+import { refArms, refClassCensus, refSubjects } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
+import { localFirst } from '@/features/collections/local-first'
+import { byId } from '@/features/collections/order'
 import { timetablesService } from '@/api/timetables/service'
 import { weekPeriods } from '@/features/timetable/week'
-import type { CollectionDef } from '@/features/collections/types'
+import type { CollectionDef, Row } from '@/features/collections/types'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
-import { queryClient } from '@/lib/query-client'
+import { byClassAndStatus } from './narrow'
+import { pendingSubjectStatus, withPendingSubjectStatus } from './pending-state'
 import { armBody, subjectBody } from './academics-body'
 import { classPeriodRow } from './period-row'
 import {
@@ -34,18 +47,92 @@ const ARM_STATUSES = ['Active', 'Inactive', 'Archived'] as const
 /** `subjects.status` is a number: 1 is offered, 0 is withdrawn. */
 const SUBJECT_STATUSES = ['Active', 'Inactive'] as const
 
-/** Every class on one page — a school has them in the dozens, not thousands. */
-const ALL_CLASSES = 200
-
 function asId(value: string | undefined) {
   return Number(value) || undefined
 }
 
-const countSubjects = (status?: 0 | 1) => async () =>
-  (await subjectsService.list({ status, limit: 1 })).pagination.total
+/*
+ * Counted off the device, like the registers below, so the figures above a list
+ * and the list itself can never disagree — and so both still read with no
+ * connection. The whole catalogue is stored, withdrawn subjects and archived
+ * arms included, so a count of one kind is a filter rather than a request.
+ */
+const countSubjects = (status?: 0 | 1) => async () => {
+  const all = await heldRows(refSubjects)
+  if (status === undefined) return all.length
 
-const countArms = (status?: 'active' | 'inactive' | 'archived') => async () =>
-  (await classArmsService.list({ status, limit: 1 })).pagination.total
+  // The queue counts too. A register showing one subject withdrawn under a
+  // tile reading "Withdrawn 0" would be disagreeing with itself in the same
+  // eyeful, and the row is the one the office just pressed.
+  const queued = pendingSubjectStatus(outbox().toArray)
+  const offered = (subject: { id: number; status?: unknown }) =>
+    queued.get(String(subject.id)) ?? Number(subject.status) === 1
+
+  return all.filter((subject) => offered(subject) === (status === 1)).length
+}
+
+const countArms = (status?: 'active' | 'inactive' | 'archived') => async () => {
+  const all = await heldRows(refArms)
+  return status === undefined
+    ? all.length
+    : all.filter((arm) => String(arm.status).toLowerCase() === status).length
+}
+
+/**
+ * Arms and subjects written on this device that the school has not seen.
+ *
+ * Each carries the `local:` key the device gave it, which keeps it read-only —
+ * and, for a subject, keeps it from being withdrawn before the school knows it
+ * exists.
+ */
+function queuedAcademic(
+  ops: readonly OutboxOp[],
+  handler: string,
+  build: (body: Record<string, unknown>) => Omit<Row, 'id'>,
+): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === handler &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => ({
+      id: op.targetKey as string,
+      ...build(op.payload as Record<string, unknown>),
+    }))
+}
+
+/**
+ * A cell on a queued row. Blank where the school has not filled it in yet reads
+ * as a column that failed to load; the dash the rest of the register uses says
+ * "not yet" instead. A subject's code is the case in point — the school
+ * generates it from the name, so nothing on this device can know it.
+ */
+const cell = (value: unknown) => String(value ?? '').trim() || BLANK
+
+/** The plain reading, for a field the form did fill in. */
+const text = (value: unknown) => String(value ?? '').trim()
+
+const queuedArms = (ops: readonly OutboxOp[]) =>
+  queuedAcademic(ops, WRITE.createArm, (body) => ({
+    arm: cell(body.arm_name),
+    klass: BLANK,
+    teacher: BLANK,
+    roll: BLANK,
+    status: 'Waiting to send',
+    department_id: text(body.department_id),
+  }))
+
+const queuedSubjects = (ops: readonly OutboxOp[]) =>
+  queuedAcademic(ops, WRITE.createSubject, (body) => ({
+    code: cell(body.subjectcode),
+    name: text(body.name),
+    klass: BLANK,
+    status: 'Waiting to send',
+    department_id: text(body.department_id),
+  }))
 
 const countClasses = async () =>
   (await departmentsService.list({ limit: 1 })).pagination.total
@@ -63,21 +150,37 @@ const countClasses = async () =>
  * runs. A school with hundreds of classes wants a counts endpoint instead of a
  * longer loop.
  */
-const classCensus = () =>
-  queryClient.query({
-    queryKey: ['departments', 'census'],
-    queryFn: async () => {
-      const { items } = await departmentsService.list({ limit: ALL_CLASSES })
-      // A class whose detail fails is kept with the row the list gave, so one
-      // bad response costs that class its counts rather than the page.
-      const detailed = await Promise.all(
-        items.map((department) =>
-          departmentsService.get(department.id).catch(() => department),
-        ),
-      )
-      return census(detailed)
-    },
-  })
+const classCensus = async () => census(await heldRows(refClassCensus))
+
+/**
+ * Classes written on this device that the school has not seen.
+ *
+ * A class holds nothing yet, so its counts read as dashes rather than as
+ * zeroes: nought arms is a claim about a class the school has never seen, and
+ * nobody has made it.
+ */
+function queuedClasses(ops: readonly OutboxOp[]): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === WRITE.createClass &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => {
+      const body = op.payload as Record<string, unknown>
+      return {
+        id: op.targetKey as string,
+        name: text(body.name) || 'Untitled class',
+        code: BLANK,
+        arms: BLANK,
+        students: BLANK,
+        subjectCount: BLANK,
+        armCount: BLANK,
+      }
+    })
+}
 
 export const classes: CollectionDef = {
   id: 'classes',
@@ -98,6 +201,7 @@ export const classes: CollectionDef = {
   // teacher and filled with students, which is more than a tab on a class can
   // carry. The class page still lists them; this is the way in to changing one.
   secondaryTo: { to: '/admin/arms', label: 'Class arms' },
+  // Counted off the device, from the same detailed set the register draws.
   counts: [
     { label: 'Classes', count: async () => (await classCensus()).totals.classes },
     { label: 'Arms', count: async () => (await classCensus()).totals.arms },
@@ -119,6 +223,20 @@ export const classes: CollectionDef = {
     { key: 'fees', label: 'Fees charged' },
     { key: 'terms', label: 'Terms' },
   ],
+  /*
+   * Read off the device, counts and all.
+   *
+   * The register shows how many arms, students and subjects each class holds,
+   * and the list endpoint sends none of that — so the set behind this one is
+   * the *detailed* classes, asked for once per class and then kept. See
+   * `refClassCensus`.
+   */
+  collection: localFirst({
+    entities: refClassCensus,
+    rows: (all: Department[]) =>
+      byId(all).map((department) => classRow(department, classCounts(department))),
+    queued: queuedClasses,
+  }),
   source: async ({ page, q }) => {
     const [{ items, pagination }, { counts }] = await Promise.all([
       departmentsService.list({ page, limit: PAGE_SIZE, q }),
@@ -134,17 +252,47 @@ export const classes: CollectionDef = {
   // The detail endpoint counts what the class holds itself, so the record page
   // does not wait on the census the register built.
   record: async (recordId) => {
+    if (isLocalKey(recordId)) {
+      return queuedClasses(outbox().toArray).find((row) => row.id === recordId)
+    }
     const department = await departmentsService.get(recordId)
     return classRow(department, classCounts(department))
   },
-  save: (values, recordId) =>
-    recordId
-      ? departmentsService.update(recordId, classBody(values))
-      : departmentsService.create(classBody(values)),
+  queue: (values, recordId) => {
+    const body = classBody(values)
+    const named = text(body.name) || 'Untitled class'
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateClass,
+        payload: { id: recordId, body },
+        collectionId: SET.refClassCensus,
+        targetKey: recordId,
+        toast: { success: 'Class updated' },
+        label: `Class “${named}”`,
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createClass,
+      payload: body,
+      collectionId: SET.refClassCensus,
+      targetKey: newLocalKey(),
+      toast: { success: 'Class created' },
+      label: `Class “${named}”`,
+    })
+  },
   // Never forced. `students.department_id` cannot be null, so a class deleted
   // out from under its students leaves them unable to load anywhere that joins
   // their class — the API's refusal is the right answer, not an obstacle.
-  remove: (recordId) => departmentsService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeClass,
+      payload: recordId,
+      collectionId: SET.refClassCensus,
+      targetKey: recordId,
+      toast: { success: 'Class deleted' },
+      label: 'A class',
+    }),
   removeBody: classDeleteBody,
   tabs: [
     {
@@ -270,6 +418,18 @@ export const arms: CollectionDef = {
     { key: 'department_id', label: 'All classes', optionsFrom: 'classes' },
     { key: 'status', label: 'Any status', options: ARM_STATUSES },
   ],
+  /*
+   * Read off the device. A school has arms in the dozens and the whole set is
+   * already here for every form's arm dropdown, so the register reads the same
+   * copy — which also means the search box matches every column rather than
+   * the one field the endpoint's `q` narrows by.
+   */
+  collection: localFirst({
+    entities: refArms,
+    rows: (all: ClassArm[]) => byId(all).map(armRow),
+    narrow: byClassAndStatus,
+    queued: queuedArms,
+  }),
   source: async ({ page, q, filters }) => {
     // Both the class and the form teacher arrive expanded on the row, so this
     // is one request — no name feeds to wait on.
@@ -284,15 +444,45 @@ export const arms: CollectionDef = {
     })
     return { items: items.map(armRow), pagination }
   },
-  record: (recordId) => classArmsService.get(recordId).then(armRow),
-  save: (values, recordId) =>
-    recordId
-      ? classArmsService.update(recordId, armBody(values))
-      : classArmsService.create(armBody(values)),
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedArms(outbox().toArray).find((row) => row.id === recordId)
+      : classArmsService.get(recordId).then(armRow),
+  queue: (values, recordId) => {
+    const body = armBody(values)
+    const named = text(body.arm_name) || 'Untitled arm'
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateArm,
+        payload: { id: recordId, body },
+        collectionId: SET.refArms,
+        targetKey: recordId,
+        toast: { success: 'Arm updated' },
+        label: `Arm “${named}”`,
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createArm,
+      payload: body,
+      collectionId: SET.refArms,
+      targetKey: newLocalKey(),
+      toast: { success: 'Arm created' },
+      label: `Arm “${named}”`,
+    })
+  },
   // Never forced. Forcing leaves results and attendance pointing at an arm
   // that is gone; archiving is the way to take an arm out of use, and the
   // confirm says so.
-  remove: (recordId) => classArmsService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeArm,
+      payload: recordId,
+      collectionId: SET.refArms,
+      targetKey: recordId,
+      toast: { success: 'Arm deleted' },
+      label: 'An arm',
+    }),
   removeBody: armDeleteBody,
   tabs: [
     {
@@ -383,13 +573,37 @@ export const subjects: CollectionDef = {
     { key: 'department_id', label: 'All classes', optionsFrom: 'classes' },
     { key: 'status', label: 'Any status', options: SUBJECT_STATUSES },
   ],
+  /*
+   * Withdrawing a subject, or putting it back, through the queue.
+   *
+   * The op says which state the subject should end in rather than "toggle", so
+   * a replay leaves it where the office meant it — a toggle sent twice is a
+   * toggle undone.
+   */
   rowAction: {
     ...withdrawAction,
-    run: (row) =>
-      row.status === 'Active'
-        ? subjectsService.deactivate(row.id)
-        : subjectsService.activate(row.id),
+    queueRun: (row) =>
+      enqueue({
+        handler: WRITE.setSubjectStatus,
+        payload: { id: row.id, offered: row.status !== 'Active' },
+        collectionId: SET.refSubjects,
+        targetKey: row.id,
+        toast: {
+          success: row.status === 'Active' ? 'Subject withdrawn' : 'Subject offered again',
+        },
+        label: `Subject “${row.name}”`,
+      }),
   },
+  // Read off the device, like the arms above and for the same reasons.
+  collection: localFirst({
+    entities: refSubjects,
+    rows: (all: Subject[]) => byId(all).map(subjectRow),
+    narrow: byClassAndStatus,
+    queued: queuedSubjects,
+    // A queued withdrawal shows on the row it is about, so the button is not a
+    // button that appears to do nothing.
+    overlay: withPendingSubjectStatus,
+  }),
   source: async ({ page, q, filters }) => {
     const { items, pagination } = await subjectsService.list({
       page,
@@ -401,14 +615,44 @@ export const subjects: CollectionDef = {
     })
     return { items: items.map(subjectRow), pagination }
   },
-  record: (recordId) => subjectsService.get(recordId).then(subjectRow),
-  save: (values, recordId) =>
-    recordId
-      ? subjectsService.update(recordId, subjectBody(values))
-      : subjectsService.create(subjectBody(values)),
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedSubjects(outbox().toArray).find((row) => row.id === recordId)
+      : subjectsService.get(recordId).then(subjectRow),
+  queue: (values, recordId) => {
+    const body = subjectBody(values)
+    const named = text(body.name) || 'Untitled subject'
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateSubject,
+        payload: { id: recordId, body },
+        collectionId: SET.refSubjects,
+        targetKey: recordId,
+        toast: { success: 'Subject updated' },
+        label: `Subject “${named}”`,
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createSubject,
+      payload: body,
+      collectionId: SET.refSubjects,
+      targetKey: newLocalKey(),
+      toast: { success: 'Subject created' },
+      label: `Subject “${named}”`,
+    })
+  },
   // Never forced: forcing leaves results, materials and topics pointing at a
   // subject that is gone. Withdrawing is how a subject stops being offered.
-  remove: (recordId) => subjectsService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeSubject,
+      payload: recordId,
+      collectionId: SET.refSubjects,
+      targetKey: recordId,
+      toast: { success: 'Subject deleted' },
+      label: 'A subject',
+    }),
   removeBody: subjectDeleteBody,
   tabs: [
     {

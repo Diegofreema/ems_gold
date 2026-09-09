@@ -1,8 +1,14 @@
 import { sessionsService, termsService } from '@/api/calendar/service'
-import { settingsService } from '@/api/settings/service'
-import type { CollectionDef } from '@/features/collections/types'
+import type { CalendarRecord } from '@/api/calendar/types'
+import { heldRows } from '@/db/collection'
+import { refSessions, refTerms } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
+import { localFirst } from '@/features/collections/local-first'
+import type { CollectionDef, Row } from '@/features/collections/types'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
-import { queryClient } from '@/lib/query-client'
 import {
   currentAction,
   sessionDeleteBody,
@@ -10,6 +16,53 @@ import {
   termDeleteBody,
   termRow,
 } from './calendar-row'
+import { withPendingCurrent } from './pending-state'
+
+/**
+ * Newest first for sessions — a school asks about this year or the last — and
+ * oldest first for terms, which run First, Second, Third. Stated rather than
+ * inherited: a keyed collection hands its rows back in key order however the
+ * endpoint sent them.
+ */
+const newestSession = (rows: readonly CalendarRecord[]) =>
+  [...rows].sort((one, two) => two.id - one.id)
+
+const inTermOrder = (rows: readonly CalendarRecord[]) =>
+  [...rows].sort((one, two) => one.id - two.id)
+
+/**
+ * Sessions or terms written on this device that the school has not seen.
+ *
+ * Each carries the `local:` key the device gave it, which is what keeps it
+ * read-only — and, here, keeps it from being made the school's current session
+ * before the school knows it exists.
+ */
+function queuedCalendar(ops: readonly OutboxOp[], handler: string): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === handler &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => ({
+      id: op.targetKey as string,
+      name: String((op.payload as { name?: string }).name ?? '').trim(),
+      state: 'Waiting to send',
+      opened: '—',
+      openedBy: '—',
+      invoices: '—',
+      payments: '—',
+      results: '—',
+      registrations: '—',
+    }))
+}
+
+/** One name, which is all a session or a term is. */
+const calendarBody = (values: Record<string, unknown>) => ({
+  name: String(values.name ?? '').trim(),
+})
 
 /**
  * Sessions and terms are two registers, not one list with a type column: a
@@ -38,14 +91,11 @@ export const sessions: CollectionDef = {
   nameKey: 'name',
   secondaryTo: { to: '/admin/terms', label: 'Terms' },
   counts: [
-    {
-      label: 'Sessions',
-      count: async () => (await sessionsService.list({ limit: 1 })).pagination.total,
-    },
-    {
-      label: 'Terms',
-      count: async () => (await termsService.list({ limit: 1 })).pagination.total,
-    },
+    // Counted off the device, like the register below, so the figures above a
+    // list and the list itself can never disagree — and so they still read
+    // with no connection.
+    { label: 'Sessions', count: async () => (await heldRows(refSessions)).length },
+    { label: 'Terms', count: async () => (await heldRows(refTerms)).length },
   ],
   columns: [
     { key: 'name', label: 'Session', cardRole: 'title' },
@@ -65,29 +115,82 @@ export const sessions: CollectionDef = {
   ],
   // The endpoint that changes this is a school setting rather than anything on
   // the sessions resource — both registers only read `is_current`.
+  /*
+   * Through the queue. Every unfiltered screen is about the current session, so
+   * the whole cache goes rather than being picked over — including the header's
+   * own chip — but that happens where the write actually lands, in the handler.
+   */
   rowAction: {
     ...currentAction('session'),
-    // Every unfiltered screen is about the current session, so the whole cache
-    // goes rather than being picked over — including the header's own chip.
-    run: async (row) => {
-      await settingsService.setCurrentSession(Number(row.id))
-      await queryClient.invalidateQueries()
-    },
+    queueRun: (row) =>
+      enqueue({
+        handler: WRITE.setCurrentSession,
+        payload: Number(row.id),
+        collectionId: SET.refSessions,
+        targetKey: row.id,
+        toast: { success: `${row.name} is now the current session` },
+        label: `Current session — ${row.name}`,
+      }),
   },
+  // Read off the device: a school has years in the tens, and this is the same
+  // set every form's session dropdown offers.
+  collection: localFirst({
+    entities: refSessions,
+    rows: (all) => newestSession(all).map(sessionRow),
+    queued: (ops) => queuedCalendar(ops, WRITE.createSession),
+    // A queued "make current" moves the word onto the row the office chose, so
+    // the button is not a button that appears to do nothing.
+    overlay: (rows, ops) => withPendingCurrent(rows, ops, WRITE.setCurrentSession),
+  }),
   source: async ({ page, q }) => {
     const { items, pagination } = await sessionsService.list({ page, limit: PAGE_SIZE, q })
     return { items: items.map(sessionRow), pagination }
   },
-  record: (recordId) => sessionsService.get(recordId).then(sessionRow),
-  save: (values, recordId) => {
-    const body = { name: String(values.name ?? '').trim() }
-    return recordId
-      ? sessionsService.rename(recordId, body)
-      : sessionsService.create(body)
+  /*
+   * The register's own row for one still in the queue; the school's own detail
+   * otherwise. The detail carries what the list does not — how many invoices,
+   * results and registrations are filed under the year — so it is still asked
+   * for where there is a year to ask about.
+   */
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedCalendar(outbox().toArray, WRITE.createSession).find(
+          (row) => row.id === recordId,
+        )
+      : sessionsService.get(recordId).then(sessionRow),
+  queue: (values, recordId) => {
+    const body = calendarBody(values)
+    if (recordId) {
+      enqueue({
+        handler: WRITE.renameSession,
+        payload: { id: recordId, body },
+        collectionId: SET.refSessions,
+        targetKey: recordId,
+        toast: { success: 'Session updated' },
+        label: `Session “${body.name}”`,
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createSession,
+      payload: body,
+      collectionId: SET.refSessions,
+      targetKey: newLocalKey(),
+      toast: { success: 'Session created' },
+      label: `Session “${body.name}”`,
+    })
   },
   // Never forced. Forcing leaves invoices, results and registrations pointing
   // at a year that is gone, and the API's refusal is the right answer.
-  remove: (recordId) => sessionsService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeSession,
+      payload: recordId,
+      collectionId: SET.refSessions,
+      targetKey: recordId,
+      toast: { success: 'Session deleted' },
+      label: 'A session',
+    }),
   removeBody: sessionDeleteBody,
   form: [
     {
@@ -124,14 +227,9 @@ export const terms: CollectionDef = {
   nameKey: 'name',
   secondaryTo: { to: '/admin/calendar', label: 'Sessions' },
   counts: [
-    {
-      label: 'Terms',
-      count: async () => (await termsService.list({ limit: 1 })).pagination.total,
-    },
-    {
-      label: 'Sessions',
-      count: async () => (await sessionsService.list({ limit: 1 })).pagination.total,
-    },
+    // Off the device; see the note on the sessions register above.
+    { label: 'Terms', count: async () => (await heldRows(refTerms)).length },
+    { label: 'Sessions', count: async () => (await heldRows(refSessions)).length },
   ],
   columns: [
     { key: 'name', label: 'Term', cardRole: 'title' },
@@ -147,21 +245,62 @@ export const terms: CollectionDef = {
   ],
   rowAction: {
     ...currentAction('term'),
-    run: async (row) => {
-      await settingsService.setCurrentTerm(Number(row.id))
-      await queryClient.invalidateQueries()
-    },
+    queueRun: (row) =>
+      enqueue({
+        handler: WRITE.setCurrentTerm,
+        payload: Number(row.id),
+        collectionId: SET.refTerms,
+        targetKey: row.id,
+        toast: { success: `${row.name} is now the current term` },
+        label: `Current term — ${row.name}`,
+      }),
   },
+  // Read off the device, in the order a school says them: First, Second, Third.
+  collection: localFirst({
+    entities: refTerms,
+    rows: (all) => inTermOrder(all).map(termRow),
+    queued: (ops) => queuedCalendar(ops, WRITE.createTerm),
+    overlay: (rows, ops) => withPendingCurrent(rows, ops, WRITE.setCurrentTerm),
+  }),
   source: async ({ page, q }) => {
     const { items, pagination } = await termsService.list({ page, limit: PAGE_SIZE, q })
     return { items: items.map(termRow), pagination }
   },
-  record: (recordId) => termsService.get(recordId).then(termRow),
-  save: (values, recordId) => {
-    const body = { name: String(values.name ?? '').trim() }
-    return recordId ? termsService.rename(recordId, body) : termsService.create(body)
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedCalendar(outbox().toArray, WRITE.createTerm).find((row) => row.id === recordId)
+      : termsService.get(recordId).then(termRow),
+  queue: (values, recordId) => {
+    const body = calendarBody(values)
+    if (recordId) {
+      enqueue({
+        handler: WRITE.renameTerm,
+        payload: { id: recordId, body },
+        collectionId: SET.refTerms,
+        targetKey: recordId,
+        toast: { success: 'Term updated' },
+        label: `Term “${body.name}”`,
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createTerm,
+      payload: body,
+      collectionId: SET.refTerms,
+      targetKey: newLocalKey(),
+      toast: { success: 'Term created' },
+      label: `Term “${body.name}”`,
+    })
   },
-  remove: (recordId) => termsService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeTerm,
+      payload: recordId,
+      collectionId: SET.refTerms,
+      targetKey: recordId,
+      toast: { success: 'Term deleted' },
+      label: 'A term',
+    }),
   removeBody: termDeleteBody,
   form: [
     {

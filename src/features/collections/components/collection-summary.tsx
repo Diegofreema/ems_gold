@@ -34,8 +34,29 @@ function CountedTiles({
     // Under the collection's own key, so anything that invalidates the list
     // — a decision, a save — moves the figures above it too.
     queryKey: ['collection', path, 'summary'],
-    queryFn: () => Promise.all(tiles.map((tile) => tile.count())),
+    /*
+     * Each tile counted on its own. `Promise.all` meant one figure that could
+     * not be worked out took the whole strip with it — a register counted off
+     * the device sat beside a single tile that still asks the school, and with
+     * no connection all three went blank. A tile that cannot answer reads as a
+     * dash; the ones that can still say what they know.
+     */
+    queryFn: async () => {
+      const counted = await Promise.allSettled(tiles.map((tile) => tile.count()))
+      return counted.map((one) => (one.status === 'fulfilled' ? one.value : undefined))
+    },
     staleTime: STALE_MS,
+    /**
+     * Deliberately `always`, not the app's default.
+     *
+     * A register's tiles are counted off the device now wherever its rows are,
+     * so they can answer with no connection — but under `online` react-query
+     * pauses without running the function at all, and the figures sat on the
+     * school's last answer beside a row the office had just changed. A tile
+     * whose count genuinely needs the school refuses instead and reads as a
+     * dash, which is the honest answer rather than a stale one.
+     */
+    networkMode: 'always',
   })
 
   return (
@@ -47,7 +68,7 @@ function CountedTiles({
           // A tile that has not answered yet reads blank rather than zero —
           // "0 suspended" is a claim, and one nobody has made yet.
           value:
-            data === undefined ? (
+            data?.[index] === undefined ? (
               BLANK
             ) : (
               <CountUp to={data[index]} format={tile.format ?? formatCount} />

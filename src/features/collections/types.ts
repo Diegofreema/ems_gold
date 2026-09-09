@@ -227,7 +227,16 @@ export type RowActionSpec = {
    */
   title?: (row: Row) => string
   cta?: (row: Row) => string
-  run: (row: Row) => Promise<unknown>
+  run?: (row: Row) => Promise<unknown>
+  /**
+   * Runs it through the durable outbox, as `queue` writes a form through it.
+   * Present instead of `run`, never beside it.
+   *
+   * Only worth giving to a register that already reads off the device: a queued
+   * action on a register that cannot be read with no connection is a button on
+   * a row nobody can see.
+   */
+  queueRun?: (row: Row) => void
 }
 
 /**
@@ -497,10 +506,10 @@ export type CollectionDef = {
    * A definition that binds one of these should point both at the same
    * collection, which is what `mine.ts` does for the teacher.
    *
-   * Not yet compatible with `filters`. Searching and paging happen in
-   * `pageRows` for both paths, but a filter is a query parameter the endpoint
-   * narrows by, and nothing here narrows the live query — a bound definition
-   * carrying filters would draw dropdowns that quietly did nothing.
+   * A definition carrying `filters` must give the binding a `narrow`, or the
+   * dropdowns beside the search box would quietly do nothing: only a filter
+   * already worked out on the rows can move to the device, since one the
+   * endpoint narrows by would need the set to hold every answer it could give.
    */
   collection?: LocalFirstBinding
   /**
@@ -525,12 +534,23 @@ export type CollectionDef = {
    * catch. The queue raises its own toast, which is why a queued definition
    * gets none from the mutation cache.
    */
-  queue?: (values: Record<string, unknown>, recordId?: string) => void
+  /**
+   * May be async, and is awaited. Queueing is synchronous in itself, but a
+   * write can need something off the device before it has a body — enrolling a
+   * pupil reads which session the school is in — and the form must not close
+   * before the op is written down.
+   */
+  queue?: (values: Record<string, unknown>, recordId?: string) => void | Promise<void>
   /**
    * Deletes a record, from its row and from its edit form. A collection
    * without one keeps the prototype's toast, since it has no endpoint yet.
    */
   remove?: (recordId: string) => Promise<unknown>
+  /**
+   * Deletes through the durable outbox, as `queue` writes through it. Present
+   * instead of `remove`, never beside it.
+   */
+  queueRemove?: (recordId: string) => void
   /**
    * Whether this record may be deleted by the person signed in. Only the API
    * can enforce it; this is what stops the button being offered where it will

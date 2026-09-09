@@ -105,10 +105,11 @@ export function schoolDocument<T>(spec: {
  */
 export async function heldDocument<T>(collection: {
   preload: () => Promise<void>
-  toArray: Document<T>[]
+  toArrayWhenReady: () => Promise<Document<T>[]>
 }): Promise<T | undefined> {
   await collection.preload()
-  return collection.toArray[0]?.doc
+  // As in `heldRows` below: ready is not the same moment as committed.
+  return (await collection.toArrayWhenReady())[0]?.doc
 }
 
 /**
@@ -126,10 +127,15 @@ export async function heldDocument<T>(collection: {
  */
 export async function heldRows<T extends object>(collection: {
   preload: () => Promise<void>
-  toArray: T[]
+  toArrayWhenReady: () => Promise<T[]>
 }): Promise<T[]> {
   await collection.preload()
-  return collection.toArray
+  // `toArrayWhenReady` rather than `toArray`, which is the same race the outbox
+  // hit at boot in a different place: `preload` resolving is not the same
+  // moment as the rows being committed, so reading the array straight after it
+  // can hand back a set that is still filling. It showed up as count tiles that
+  // disagreed with the register beside them and drifted on every reload.
+  return collection.toArrayWhenReady()
 }
 
 /** Refetches one collection by id, if this build has it. */

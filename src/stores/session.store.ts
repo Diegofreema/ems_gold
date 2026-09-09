@@ -1,3 +1,4 @@
+import { announceSignOut } from '@/db/tabs'
 import type { QueryClient } from '@tanstack/react-query'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
@@ -57,6 +58,11 @@ export function endSession(queryClient: QueryClient) {
   useSessionStore.getState().clear()
   useNotificationsStore.getState().clear()
   useAuthStore.getState().reset()
+
+  // And every other tab open on this machine, before the database goes: they
+  // are showing the same school's records, and one of them staying up after a
+  // sign-out is exactly the shared-laptop case this is all for.
+  announceSignOut()
 
   // And the school's own records off the device. Local-first means real
   // students, guardians and fee balances are in a file on this machine, and in

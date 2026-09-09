@@ -2,6 +2,8 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { collectionError, refetchCollection } from '@/db/collection'
+import type { OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
 import { useListQuery } from '@/hooks/use-list-query'
 import { collectionQuery, pageRows } from './api'
 import type { CollectionDef } from './types'
@@ -47,6 +49,13 @@ export function useCollectionRows(definition: CollectionDef) {
   const lookup = useLiveQuery({
     query: (q) => (local?.lookup ? q.from({ entity: local.lookup }) : undefined),
   })
+  // The queue, for a register that shows what this device has written and the
+  // school has not seen. Subscribed unconditionally — it is one subscription to
+  // a set that is already in memory, and the number of hooks cannot vary.
+  const alsoLookup = useLiveQuery({
+    query: (q) => (local?.alsoLookup ? q.from({ entity: local.alsoLookup }) : undefined),
+  })
+  const queue = useLiveQuery({ query: (q) => q.from({ op: outbox() }) })
 
   const {
     data: fetched,
@@ -67,17 +76,40 @@ export function useCollectionRows(definition: CollectionDef) {
    * The ordering is the binding's own; a collection is keyed and hands its
    * rows back in key order whatever order the endpoint sent them in.
    */
-  const held = useMemo(
-    () => (local ? local.rows(entities.data ?? [], lookup.data ?? []) : undefined),
-    [local, entities.data, lookup.data],
+  const held = useMemo(() => {
+    if (!local) return undefined
+    const ops = (queue.data ?? []) as OutboxOp[]
+    // The school's rows, with anything this device has queued about them
+    // written over the top — a subject withdrawn, a session made current.
+    const built = local.rows(
+      entities.data ?? [],
+      lookup.data ?? [],
+      alsoLookup.data ?? [],
+    )
+    const synced = local.overlay ? local.overlay(built, ops) : built
+    // What this device has written goes first: it is what the person who just
+    // wrote it is looking for, and it is the row that has not landed yet.
+    const waiting = local.queued?.(ops) ?? []
+    return waiting.length > 0 ? [...waiting, ...synced] : synced
+  }, [local, entities.data, lookup.data, alsoLookup.data, queue.data])
+
+  // The dropdowns, where this register's are worked out on the rows. Applied
+  // after the whole set is in hand, so `total` below is still the count of
+  // everything and the search still reads "matches of all".
+  const shown = useMemo(
+    () => (held && local?.narrow ? local.narrow(held, filters) : held),
+    [held, local, filters],
   )
 
   // Nothing is on screen until the collection has actually answered. An empty
   // set that is merely still syncing must not be drawn as an empty register.
-  const localReady = entities.isReady && (!local?.lookup || lookup.isReady)
+  const localReady =
+    entities.isReady &&
+    (!local?.lookup || lookup.isReady) &&
+    (!local?.alsoLookup || alsoLookup.isReady)
   const data = local
-    ? held && localReady
-      ? pageRows(held, { page: list.page, q: query, filters })
+    ? shown && localReady
+      ? pageRows(shown, { page: list.page, q: query, filters })
       : undefined
     : fetched
   const pagination = data?.pagination
@@ -154,7 +186,13 @@ export function useCollectionRows(definition: CollectionDef) {
      * — the whole set is in hand — which is why the running total above is
      * only kept for the paged one.
      */
-    total: local ? (localReady ? held?.length : undefined) : all,
+    /*
+     * A register that swaps its population has no whole to be a part of, local
+     * or not — the staff page holds the teaching records and the office ones in
+     * one set and shows one of them — so it reports matches alone, exactly as
+     * the paged path does.
+     */
+    total: local ? (swaps || !localReady ? undefined : held?.length) : all,
     paged:
       data && pagination
         ? {

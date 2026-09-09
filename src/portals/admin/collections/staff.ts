@@ -1,3 +1,14 @@
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { newLocalKey } from '@/db/outbox'
+import type { Admin } from '@/api/admins/types'
+import type { Teacher } from '@/api/teachers/types'
+import type { Role } from '@/api/users/types'
+import { heldRows } from '@/db/collection'
+import { refAdmins, refRoles, refTeachers } from '@/db/collections/reference'
+import { localFirst } from '@/features/collections/local-first'
+import { byId } from '@/features/collections/order'
+import { byStaffKind } from './narrow'
 import { adminsService } from '@/api/admins/service'
 import { teachersService } from '@/api/teachers/service'
 import type {
@@ -11,7 +22,6 @@ import type { Paginated } from '@/api/types'
 import { emptySource } from '@/features/collections/api'
 import { superAdminSignedIn } from '@/features/auth/session'
 import { optionLabels } from '@/features/collections/option-feeds'
-import { usersService } from '@/api/users/service'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { adminBody, adminUpdate, teacherBody, teacherUpdate } from './staff-body'
 import {
@@ -50,9 +60,6 @@ async function listAdmins(page: number): Promise<Paginated<Row>> {
   return { items: items.map((admin) => adminRow(admin, roles)), pagination }
 }
 
-/** Every office record on one page — a school has them in single figures. */
-const ALL_ADMINS = 200
-
 /**
  * One administrator, from `GET /users/admins/{id}`.
  *
@@ -63,16 +70,47 @@ const ALL_ADMINS = 200
  */
 const adminRecord = (id: string) => adminsService.get(id).then(adminRow)
 
-/** A summary figure, read off the pagination that comes back with one row. */
-const countTeachers = async () =>
-  (await teachersService.list({ limit: 1 })).pagination.total
+/** Summary figures, counted off the device like the registers they sit above. */
+const countTeachers = async () => (await heldRows(refTeachers)).length
 
-const countAdmins = async () => (await adminsService.list({ limit: 1 })).pagination.total
+const countAdmins = async () => (await heldRows(refAdmins)).length
 
 /** How many office logins can actually be used. */
-const countLogins = async () => {
-  const { items } = await adminsService.list({ limit: ALL_ADMINS })
-  return items.filter((admin) => admin.user?.userstatus === 'Enabled').length
+const countLogins = async () =>
+  (await heldRows(refAdmins)).filter((admin) => admin.user?.userstatus === 'Enabled')
+    .length
+
+/** Role id to the word an office account is called by. */
+const roleNames = (roles: Role[]): ReadonlyMap<string, string> =>
+  new Map(roles.map((role) => [String(role.id), role.role_name]))
+
+/**
+ * The staff register, read off the device.
+ *
+ * Both populations in one set, told apart by the kind their key already
+ * carries: the page's dropdown swaps between two endpoints rather than
+ * narrowing one, and the pinned pages are the same set with the swap decided
+ * for them. The third slot is the role catalogue — `GET /admins` sends a
+ * `role_id` and expands nothing, so without it every office record read the
+ * same word.
+ */
+function staffBinding(only?: 'teacher' | 'admin') {
+  return localFirst({
+    entities: refTeachers,
+    lookup: refAdmins,
+    alsoLookup: refRoles,
+    rows: (teachers: Teacher[], admins: Admin[], roles: Role[]) => {
+      const named = roleNames(roles)
+      return [
+        ...(only === 'admin' ? [] : byId(teachers).map(teacherRow)),
+        ...(only === 'teacher' ? [] : byId(admins).map((admin) => adminRow(admin, named))),
+      ]
+    },
+    narrow: only
+      ? undefined
+      : (rows, filters) =>
+          byStaffKind(rows, filters, ADMINISTRATORS, (id) => parseStaffKey(id).kind),
+  })
 }
 
 /** Reads one record from whichever endpoint its id says it came from. */
@@ -90,19 +128,32 @@ async function staffRecord(recordId: string): Promise<Row | undefined> {
  * already know, and pass their own kind.
  */
 function saveStaff(kind?: 'teacher' | 'admin') {
-  return async (values: Record<string, unknown>, recordId?: string) => {
+  return (values: Record<string, unknown>, recordId?: string) => {
     const target = staffTarget(kind, values.kind, recordId)
+    const office = target === 'admin'
+    const named = String(values.surname ?? values.firstname ?? '').trim() || 'A record'
 
     if (recordId) {
       const { id } = parseStaffKey(recordId)
-      return target === 'admin'
-        ? adminsService.update(id, adminUpdate(values))
-        : teachersService.update(id, teacherUpdate(values))
+      enqueue({
+        handler: office ? WRITE.updateAdmin : WRITE.updateTeacher,
+        payload: { id, body: office ? adminUpdate(values) : teacherUpdate(values) },
+        collectionId: office ? SET.refAdmins : SET.refTeachers,
+        targetKey: recordId,
+        toast: { success: office ? 'Administrator updated' : 'Teacher updated' },
+        label: `Staff record “${named}”`,
+      })
+      return
     }
 
-    return target === 'admin'
-      ? adminsService.create(adminBody(values))
-      : teachersService.create(teacherBody(values))
+    enqueue({
+      handler: office ? WRITE.createAdmin : WRITE.createTeacher,
+      payload: office ? adminBody(values) : teacherBody(values),
+      collectionId: office ? SET.refAdmins : SET.refTeachers,
+      targetKey: newLocalKey(),
+      toast: { success: office ? 'Administrator created' : 'Teacher created' },
+      label: `Staff record “${named}”`,
+    })
   }
 }
 
@@ -111,9 +162,17 @@ function saveStaff(kind?: 'teacher' | 'admin') {
  * permanent, and the API refuses the first administrator and your own account
  * outright — which the dialog says before the button rather than after it.
  */
-function removeStaff(recordId: string): Promise<unknown> {
+function removeStaff(recordId: string): void {
   const { kind, id } = parseStaffKey(recordId)
-  return kind === 'admin' ? adminsService.remove(id) : teachersService.remove(id)
+  const office = kind === 'admin'
+  enqueue({
+    handler: office ? WRITE.removeAdmin : WRITE.removeTeacher,
+    payload: id,
+    collectionId: office ? SET.refAdmins : SET.refTeachers,
+    targetKey: recordId,
+    toast: { success: office ? 'Administrator deleted' : 'Teacher deleted' },
+    label: office ? 'An office record' : 'A teaching record',
+  })
 }
 
 /**
@@ -363,12 +422,13 @@ export const staff: CollectionDef = {
     // Picking the other one is not a narrowing: it is the other register.
     { key: 'role', label: 'Teachers', options: [ADMINISTRATORS], replaces: true },
   ],
+  collection: staffBinding(),
   source: ({ page, q, filters }) =>
     filters.role === ADMINISTRATORS ? listAdmins(page) : listTeachers(page, q),
   record: staffRecord,
-  save: saveStaff(),
+  queue: saveStaff(),
   // Both registers delete, and the dialog says which one it is about.
-  remove: removeStaff,
+  queueRemove: removeStaff,
   removeWhen: canRemoveStaff,
   removeBody: staffDeleteBody,
   // Asked first, because it decides what the rest of the form asks for: the
@@ -438,6 +498,7 @@ export const staffAdmin = staffSlice(
   'Administrators',
   'The people who run the office: the principal, the bursary and the heads of section. These accounts see the admin portal, and what each one can open is set by their privileges.',
   {
+    collection: staffBinding('admin'),
     action: 'Add administrator',
     // Not "no such administrator": they are on the register, and the office
     // can see them there. `GET /users/admins/{id}` refuses any record whose
@@ -492,14 +553,26 @@ export const staffAdmin = staffSlice(
         row.account === 'Disabled'
           ? `${row.name} can sign in again`
           : `${row.name} can no longer sign in`,
-      run: (row) =>
-        usersService.setStatus({
-          id: row.user_id,
-          status: row.account === 'Disabled' ? 'Enabled' : 'Disabled',
+      queueRun: (row) =>
+        enqueue({
+          handler: WRITE.setLogin,
+          payload: {
+            id: row.user_id,
+            status: row.account === 'Disabled' ? 'Enabled' : 'Disabled',
+          },
+          collectionId: SET.refAdmins,
+          targetKey: row.id,
+          toast: {
+            success:
+              row.account === 'Disabled'
+                ? `${row.name} can sign in again`
+                : `${row.name} can no longer sign in`,
+          },
+          label: `Sign-in for “${row.name}”`,
         }),
     },
     source: ({ page }) => listAdmins(page),
-    save: saveStaff('admin'),
+    queue: saveStaff('admin'),
     tabs: [
       {
         label: 'Privileges',
@@ -554,8 +627,9 @@ export const staffTeachers = staffSlice(
     emptyBody: 'Add a teacher to assign them subjects and an arm.',
     detail: TEACHER_DETAIL,
     tabs: [SUBJECTS_TAB],
+    collection: staffBinding('teacher'),
     source: ({ page, q }) => listTeachers(page, q),
-    save: saveStaff('teacher'),
+    queue: saveStaff('teacher'),
     form: [IDENTITY, TEACHER_CLASS, ACCOUNT, PLACE, TEACHING],
   },
 )
@@ -577,11 +651,16 @@ export const staffOther = staffSlice(
     emptyBody:
       'This school’s records hold teaching staff and office staff only. A librarian or a security officer is added as an office record, and appears under Administrators.',
     searchable: false,
+    // Deliberately not read off the device: there is no endpoint behind this
+    // one, so it has nothing to hold. Spelled out because the register it is
+    // built from does have a binding, and inheriting it would fill a page that
+    // is meant to be empty with the whole staff list.
+    collection: undefined,
     source: emptySource,
     counts: undefined,
     // Adding one here writes the office record the empty state points at, so
     // the button does what the page says rather than nothing.
     form: [IDENTITY, OFFICE_CLASS, ACCOUNT],
-    save: saveStaff('admin'),
+    queue: saveStaff('admin'),
   },
 )

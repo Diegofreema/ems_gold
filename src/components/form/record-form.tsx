@@ -21,6 +21,7 @@ export function RecordForm<TValues extends FieldValues>({
   onCancel,
   deleteLabel,
   onDelete,
+  blocked,
   children,
 }: {
   form: UseFormReturn<TValues>
@@ -37,6 +38,8 @@ export function RecordForm<TValues extends FieldValues>({
   onCancel: () => void
   deleteLabel?: string
   onDelete?: () => void
+  /** Why the form cannot be saved right now. See `FormFooter`. */
+  blocked?: string
   children: ReactNode
 }) {
   const errorCount = Object.keys(form.formState.errors).length
@@ -52,12 +55,18 @@ export function RecordForm<TValues extends FieldValues>({
           <FormErrorBanner count={errorCount} />
           {children}
           <Rule />
+          {blocked && (
+            <p className="mb-3.5 rounded-lg border border-divider bg-raised px-4 py-3.5 text-sm">
+              {blocked}
+            </p>
+          )}
           <FormFooter
             submitLabel={submitLabel}
             onCancel={onCancel}
             deleteLabel={deleteLabel}
             onDelete={onDelete}
             pending={form.formState.isSubmitting}
+            blocked={blocked}
           />
         </form>
       </FormProvider>

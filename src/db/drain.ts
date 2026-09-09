@@ -4,6 +4,7 @@ import { dropDerivedReads } from '@/features/collections/invalidate'
 import { backoffFor, classify } from './classify'
 import { refetchCollection } from './collection'
 import { cascadeFrom, nextOp, substitute, unresolved, type OutboxOp } from './outbox'
+import { onlyOneTab } from './one-tab'
 import { handlerFor } from './registry'
 import { idMap, isStoreReady, outbox, resolvedIds, storeReady } from './store'
 import { announceFailed, announceHeld, announceNote, announceSaved, GRACE_MS } from './toast'
@@ -78,6 +79,15 @@ export function enqueue(spec: EnqueueSpec): OutboxOp {
 
   outbox().insert(op)
   announce(op)
+
+  /*
+   * A write accepted on the device makes what is derived from it stale *now*,
+   * not when the school eventually hears about it — that is the whole claim
+   * this app makes. A register reading a live query follows the queue by
+   * itself; the figures above it are react-query, and without this they went on
+   * showing the school's last answer beside a row the office had just changed.
+   */
+  void dropDerivedReads(queryClient)
   void drain()
 
   return op
@@ -122,6 +132,18 @@ const pendingAnnouncements = new Set<string>()
 export async function drain(): Promise<void> {
   if (draining || pausedForAuth || !navigator.onLine) return
   draining = true
+
+  try {
+    // One tab sends, whoever is signed in. `draining` above is this tab's own
+    // guard; the lock is the one that matters when the school laptop has two
+    // tabs open on the same queue — see `one-tab.ts`.
+    await onlyOneTab(sendWhatWeCan)
+  } finally {
+    draining = false
+  }
+}
+
+async function sendWhatWeCan(): Promise<void> {
 
   // Cheap once it has resolved, and the difference between sending what is
   // waiting and deciding there was nothing to send.
@@ -174,7 +196,6 @@ export async function drain(): Promise<void> {
       }
     }
   } finally {
-    draining = false
     // Also on the way out of a queue that stopped part-way: what did land is
     // on the school's record whatever became of the op behind it.
     // A migrated write still makes un-migrated derived reads stale — a teacher

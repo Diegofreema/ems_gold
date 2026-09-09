@@ -15,5 +15,12 @@
  * connection this app exists to cope without. The set to refetch is named by
  * its id from `../ids`.
  */
+import './academics'
 import './attendance'
+import './calendar'
+import './finance'
+import './notices'
+import './parents'
+import './staff'
+import './students'
 import './teaching'

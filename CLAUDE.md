@@ -70,12 +70,44 @@ visibly not one.
   true only before a set has answered *either way*: a set that refused is not pending, it is a set
   this device has never synced and cannot sync now, which is a thing to say rather than spin on.
 
+- **Every summary tile is counted on its own** (`Promise.allSettled`), and the strip runs with
+  `networkMode: 'always'`. One figure that cannot be worked out used to take the whole strip with
+  it — a register counted off the device sat beside a single tile that still asks the school, and
+  with no connection all three went blank. A tile that cannot answer reads as a dash.
+- **A count tile counts the set, not the endpoint** — `heldRows(...).length` rather than a
+  `pagination.total` off a `limit: 1` request. A figure above a register that is fetched separately
+  from the rows below it can disagree with them, and cannot be read at all with no connection.
+- **A summary tile's figure is animated on mount.** `CountUp` tweens from zero over ~900ms, longer
+  with the motion setting up, so a screenshot taken mid-tween shows a number that is neither the old
+  value nor the new one. Read the settled figure — or the data behind it — before concluding a count
+  is wrong; an afternoon has already gone that way, and the "fix" was reverting a correct change.
+
 Reads are **not** persisted by `persistedCollectionOptions`. That was tried and measured: with rows
 already on disk and the fetch failing, the collection settles into `status: 'error'` with `toArray`
 empty and stays there, and `toArrayWhenReady()` rejects — the rows are on the disk and unreachable,
 which is the one moment they are wanted. So the durable copy is ours (`src/db/snapshot.ts`) and the
 persistence package is used for the local-only collections — outbox, id map, snapshots — where it
 hydrates exactly as documented.
+
+The school's own reference data — classes, arms, subjects, fees, sessions, terms, roles, the
+catalogue, the staff and pupil directories — lives in `src/db/collections/reference.ts`, and every
+`optionsFrom` feed in `option-feeds.ts` reads it. **That is what makes a form fillable with no
+connection**, which is a bigger win than any one register: a page that lists something is useful to
+read, but a page that cannot offer the school's own classes is a page nobody can fill in.
+
+Two rules follow from it. A feed that used to ask the API for a **narrowed** answer now asks for the
+whole set and narrows it here — a set narrowed at the fetch cannot be widened later without a second
+request, and there may be no connection to make one over; that is why `class-arms/for-department/{id}`
+became a filter on the arms set, and why the retired fees and withdrawn subjects are stored and
+filtered rather than filtered away at the fetch. And the feeds' own react-query wrapper carries
+`networkMode: 'always'` for the same reason the collections do: under `online` it pauses without
+running the function, so a dependent feed the office had not already opened — an arm feed is keyed by
+the class chosen — stayed on "Loading…" for as long as the device was offline.
+
+The two **searched** feeds (`searchFrom`) still ask the school first: they exist for registers too
+long to hold, and the endpoint searches the whole of one where this device holds the first couple of
+hundred. A refusal falls back to searching what the device keeps, which is narrower than the school's
+answer and honest about it.
 
 ### Writes
 
@@ -86,6 +118,31 @@ Every mutation is applied locally at once and enqueued in the durable outbox (`s
 - **Never rely on TanStack DB's automatic rollback for a write that might be made offline.** It
   rolls back when the handler throws and never retries, so a network failure would destroy the
   user's work. Collections carry no `onInsert`/`onUpdate`/`onDelete`; the queue owns the write path.
+- **A row action can go through the queue too** — `queueRun` on the spec instead of `run`, called
+  straight rather than through a mutation for the same reason a queued save is. Worth giving only to
+  a register that already reads off the device: a queued action on a register nobody can open with
+  no connection is a button on a row nobody can see.
+- **A queued change to an existing row is shown by the binding's `overlay`**, as a queued *new*
+  record is shown by `queued`. Without it a queued row action reads as a button that did nothing —
+  the op is safe on the device and the row still says what the school last said. The row shows what
+  it is about to be; the banner and the drawer say it has not got there yet.
+- **`enqueue` drops the derived reads itself.** A write accepted on the device makes what is derived
+  from it stale *now*, not when the school eventually hears about it. A register on a live query
+  follows the queue by itself; the figures above it are react-query and do not.
+- **The guardrail covers row actions too**, not just edit and delete: making a session current is a
+  school setting pointing at a row, and it cannot point at one the school has never issued. The row
+  action's label is withheld for an unsynced row, so no button is offered at all.
+- **A queued write is called straight from the form, never through a mutation.** It is accepted on
+  the device and returns at once; wrapping that in a `useMutation` put the mutation cache, the
+  router's loaders and react-hook-form's own submitting state in front of something synchronous, and
+  the form sat with its button spinning over a write that was already safe. `definition.queue` and
+  `definition.queueRemove` are called directly; the queue raises its own toast, so a queued
+  definition takes no `meta`.
+- **A form that cannot be queued says so before it is filled in**, not after
+  (`src/features/collections/blocked.ts`). The two kinds that stay on the wire are there for a
+  reason: a form carrying a file has no body the queue could hold, and a create that reads the
+  school before writing — a pupil's enrolment asks which session is current — has nothing to read
+  when there is no school to ask.
 - **Nothing may read the queue before `storeReady()` resolves.** A persisted collection hydrates
   asynchronously, and until it has, `toArray` is an empty list indistinguishable from an empty
   queue — a drain started early finds nothing and stops, and an `enqueue` numbers its op `1` on top
@@ -127,6 +184,38 @@ no endpoint that answers for a range anyway. These stay on the query path, and e
 when it could not be reached rather than drawing zeroes: "every day has a register" is the one
 wrong answer that page could give.
 
+**One resource can be two sets, where the cheap read and the expensive one have different callers.**
+Classes are the case in point: `refClasses` is the plain list every form's class dropdown offers,
+and `refClassCensus` is the same classes each asked for its own detail, because the register shows
+how many arms, students and subjects each holds and `GET /departments` sends the row alone. Folding
+the second into the first would put an N+1 behind most of the forms in the app; keeping them apart
+means the detail syncs only when somebody opens the classes register. Measured: one list request on
+the arms page, none of the details.
+
+**The directories are held whole, on a decision taken in the open**: these schools run to hundreds
+of pupils, not thousands, so `A_SCHOOL` in `reference.ts` is the size the registers are fetched at
+and the one place a change of scale shows up. A school in the thousands wants the pupil and
+household registers paged at the endpoint again.
+
+**A register whose filter *replaces* the population holds both and picks one.** The staff page is
+teachers and office records — two endpoints — and its dropdown swaps between them rather than
+narrowing. Both sets are on the device, the rows are told apart by the kind their own key carries,
+and `narrow` picks the population; the pinned pages are the same binding with the choice made for
+them. A swapping register reports **matches alone** and never a total, local or not: there is no
+whole for it to be a part of. That register is also why a binding has three lookup slots — teachers,
+the office records beside them, and the catalogue that names an office account's role, which
+`GET /admins` sends as a bare `role_id`.
+
+**A predicate that reads a row's key must use that key's own reader.** `byStaffKind` matched on a
+prefix it had invented, and the test agreed with it because the fixtures used the invented format
+too — so both passed and the page showed an administrator on the teaching register. The reader is
+passed in now. A test written against a shape nobody produces proves nothing.
+
+**Money is not queued.** The fee *catalogue* is — what the school charges, and whether it still
+charges it — but raising an invoice against a fee and taking payment for one are not. A payment
+accepted on a device and sent later is a receipt the bursary cannot reconcile, which is a different
+decision from the ones this queue was built for.
+
 Upload batches are not a set either, for a different reason: `GET /teachers/me/uploads` answers
 `{"batches": []}` for every teaching login on this deployment, so which fields carry the four ids
 that name a batch is exactly what nobody has seen — and a collection needs a key. Storing rows under
@@ -139,8 +228,27 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
 - **Offline start runs on the cached identity** for at most the token's own twelve hours —
   `src/api/token.ts` already drops an expired one, which is the ceiling. A token revoked server-side
   but not yet expired buys read access to data already on that device until it expires.
-- **A row that has not synced is read-only** until it does, which is what lets the queue avoid
-  chained edits on records the school has never seen.
+- **A row that has not synced is read-only** until it does — `src/features/collections/unsynced.ts`,
+  recognised by its `local:` id. This is what lets the queue avoid chained edits on records the
+  school has never seen: an edit would name an id that does not exist yet, so the queue would need a
+  dependency graph, resolved at send time and unpicked when the create it depended on failed. One
+  rule removes all of it. The edit route and the delete button are withheld, and both write hooks
+  refuse such an id loudly in case something gets past them.
+- **Two tabs share one queue, and only one of them sends.** The persistence coordinator
+  (`BrowserCollectionCoordinator`, Web Locks + BroadcastChannel) elects one tab per collection so a
+  single SQLite file has a single writer and the tabs see each other's rows. That says nothing about
+  who is allowed to *send*, which is the dangerous half — a queued create is not idempotent — so the
+  drain holds a Web Lock of its own (`one-tab.ts`) and a second tab that cannot get it simply does
+  not drain. A browser with no Web Locks runs unguarded, which is the single-tab behaviour the app
+  had before and no worse than it.
+- **Two tabs enqueuing in the same instant can take the same `seq`.** They share the outbox, so each
+  reads the other's rows, but the read and the write are not atomic across tabs. A tie is an
+  unspecified order between two writes made at the same moment, which is genuinely ambiguous anyway
+  — not lost work, and not a reordering of anything that depended on anything.
+- **Signing out reaches every tab.** `announceSignOut` broadcasts and every other tab navigates to
+  the sign-in page, because signing out of one used to leave the next tab showing a register of real
+  pupils while the database was deleted underneath it. On a shared staff-room laptop that is the
+  whole point of wiping at all.
 - **Signing out wipes the device's database**, including the SQLite write-ahead log and the VFS page
   pool — a `.sqlite` deleted on its own leaves rows in `-wal`. School machines are shared.
 - **The school's clock is anchored across reloads.** `src/lib/server-clock.ts` keeps the last

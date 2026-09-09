@@ -1,4 +1,7 @@
-import type { PersistedCollectionPersistence } from '@tanstack/browser-db-sqlite-persistence'
+import type {
+  BrowserCollectionCoordinator,
+  PersistedCollectionPersistence,
+} from '@tanstack/browser-db-sqlite-persistence'
 
 /**
  * Where the device's database is reached from.
@@ -26,6 +29,15 @@ type Runtime = {
   dbName: string | null
   /** The account the open database belongs to. */
   ownerId: string | null
+  /**
+   * What keeps two tabs from writing the same file at once.
+   *
+   * Elects one tab per collection over Web Locks and routes the others' writes
+   * to it over a BroadcastChannel, so the tabs see each other's rows instead of
+   * each holding its own idea of the queue. Null where the database is not
+   * durable, since there is nothing to coordinate.
+   */
+  coordinator: BrowserCollectionCoordinator | null
   /** Closes the worker and its database handle. */
   close: (() => Promise<void>) | null
 }
@@ -35,6 +47,7 @@ export const runtime: Runtime = {
   durable: false,
   dbName: null,
   ownerId: null,
+  coordinator: null,
   close: null,
 }
 

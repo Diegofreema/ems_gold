@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { bootstrapDb } from '@/db/bootstrap'
 import { startDrain } from '@/db/drain'
+import { followSignOut } from '@/db/tabs'
 import '@/db/handlers'
 import { UpdatePrompt } from '@/features/sync/components/update-prompt'
 import { queryClient } from '@/lib/query-client'
@@ -27,6 +28,10 @@ await bootstrapDb()
 // first: the drain starts here, and an op whose handler is not registered yet
 // is an op this build claims not to understand.
 await startDrain()
+
+// A sign-out in one tab is a sign-out on this machine. Registered before the
+// app mounts, so a tab still loading when another signs out follows it too.
+followSignOut()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

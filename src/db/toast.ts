@@ -49,5 +49,11 @@ export function announceFailed(label: string, error: unknown, onOpen: () => void
  * something the teacher would otherwise have to count the rows to notice.
  */
 export function announceNote(note: string): void {
-  toast.warning(note)
+  /*
+   * Left up until it is dismissed. By the time a note fires, whoever wrote the
+   * thing is somewhere else entirely — that is what makes it a note from the
+   * drain rather than an answer on the screen — and one of these carries a
+   * household's first password, which nothing will ever say again.
+   */
+  toast.warning(note, { duration: Infinity, closeButton: true })
 }

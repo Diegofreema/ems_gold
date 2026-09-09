@@ -1,4 +1,5 @@
 import {
+  BrowserCollectionCoordinator,
   createBrowserWASQLitePersistence,
   openBrowserWASQLiteOPFSDatabase,
 } from '@tanstack/browser-db-sqlite-persistence'
@@ -70,8 +71,18 @@ export async function openFor(ownerId: string): Promise<void> {
       OPEN_TIMEOUT_MS,
     )
 
-    runtime.persistence = createBrowserWASQLitePersistence({ database })
+    /*
+     * A school laptop gets two tabs opened on it, and two tabs writing one
+     * SQLite file is how a queue becomes rubbish. The coordinator elects one
+     * of them per collection over Web Locks and routes the rest through it, so
+     * the tabs share one queue rather than each keeping a private idea of it.
+     */
+    const coordinator = new BrowserCollectionCoordinator({ dbName })
+
+    runtime.persistence = createBrowserWASQLitePersistence({ database, coordinator })
+    runtime.coordinator = coordinator
     runtime.close = async () => {
+      coordinator.dispose()
       await database.close?.()
     }
     runtime.dbName = dbName
@@ -83,6 +94,7 @@ export async function openFor(ownerId: string): Promise<void> {
     // this line is for whoever is looking at the console.
     console.warn('[db] running without local persistence:', error)
     runtime.persistence = null
+    runtime.coordinator = null
     runtime.close = null
     runtime.dbName = null
     runtime.ownerId = ownerId

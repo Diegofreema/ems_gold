@@ -1,12 +1,24 @@
+import type { Parent } from '@/api/parents/types'
+import type { Student } from '@/api/students/types'
+import { heldRows } from '@/db/collection'
+import { refClasses, refGuardians, refSessions, refStudents } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
+import { guardianOption } from '@/features/collections/guardian-option'
+import { localFirst } from '@/features/collections/local-first'
+import { BLANK } from '@/features/collections/blank'
+import { byId } from '@/features/collections/order'
+import { byClassArmAndStanding } from './narrow'
+import { pendingStanding, withPendingState } from './pending-state'
 import { optionLabels } from '@/features/collections/option-feeds'
-import { sessionsService } from '@/api/calendar/service'
-import { departmentsService } from '@/api/departments/service'
 import { studentsService } from '@/api/students/service'
-import type { StudentListParams } from '@/api/students/types'
 import type {
   CollectionDef,
   FieldSpec,
   FormSectionSpec,
+  Row,
 } from '@/features/collections/types'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { studentBody } from './student-body'
@@ -32,11 +44,96 @@ const ACTIVE = 'Active'
  * A summary figure, asked for as one row and read off the pagination the
  * endpoint returns with it — there is no endpoint that counts without listing.
  */
-const countStudents = (params: StudentListParams) => async () =>
-  (await studentsService.list({ ...params, limit: 1 })).pagination.total
+/**
+ * How many of the pupils on this device answer to something.
+ *
+ * The queue counts too, for the one figure it can move: a register showing a
+ * pupil suspended under a tile reading "Suspended 0" would be disagreeing with
+ * itself in the same eyeful. Admission is not something this app queues, so
+ * only the standing is read through the queue.
+ */
+const countHeld = (
+  matches: (student: Student, standing: string) => boolean,
+) => async () => {
+  const all = await heldRows(refStudents)
+  const queued = pendingStanding(outbox().toArray)
+  return all.filter((student) =>
+    matches(student, queued.get(String(student.id)) ?? (student.studentstatus ?? '')),
+  ).length
+}
+
 
 /** The households the school holds, so the register can name a student's own. */
 const guardianNames = () => optionLabels('guardians')
+
+/** The same lookup, built off the household set the register already holds. */
+const namesFrom = (guardians: Parent[]): ReadonlyMap<string, string> =>
+  new Map(guardians.map((parent) => {
+    const option = guardianOption(parent)
+    return [option.value, option.label]
+  }))
+
+/**
+ * The session a pupil enrolled now joins, read off the device.
+ *
+ * The school's own `sessions/current` is the authority, and asking it is what
+ * used to make enrolling a pupil impossible without a connection — a create
+ * that has to read the school before it can write cannot be queued. The same
+ * fact is on the sessions set, which every office form already reads, so it is
+ * taken from there instead.
+ *
+ * A make-current queued and not yet sent is not reflected here: this is the
+ * year the *school* is in, which is the one the pupil should be filed under.
+ */
+async function currentSessionId(): Promise<number | undefined> {
+  const sessions = await heldRows(refSessions)
+  return sessions.find((session) => session.is_current)?.id
+}
+
+/**
+ * Pupils enrolled on this device that the school has not seen.
+ *
+ * No admission number: the school issues it, so the column reads as a dash
+ * rather than inventing one.
+ */
+function queuedStudents(ops: readonly OutboxOp[]): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === WRITE.enrolStudent &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => {
+      const body = op.payload as Record<string, unknown>
+      const named = [body.fname, body.mname, body.lname]
+        .map((part) => String(part ?? '').trim())
+        .filter(Boolean)
+        .join(' ')
+      return {
+        id: op.targetKey as string,
+        adm: BLANK,
+        name: named || 'Unnamed pupil',
+        arm: BLANK,
+        parent: BLANK,
+        fees: BLANK,
+        status: 'Waiting to send',
+        admission: '',
+        studentstatus: '',
+        department_id: String(body.department_id ?? ''),
+        class_arm_id: String(body.class_arm_id ?? ''),
+      }
+    })
+}
+
+/** Pupils, with a queued suspension or reinstatement shown. */
+const withPendingStanding = (rows: Row[], ops: readonly OutboxOp[]) =>
+  withPendingState(rows, ops, WRITE.setStudentStanding, (payload) => {
+    const change = payload as { id?: unknown; status?: unknown } | null
+    if (change?.id === undefined) return undefined
+    return { id: String(change.id), state: String(change.status) }
+  })
 
 /** A filter's id as the endpoint wants it; an unset filter is left off. */
 function asId(value: string | undefined) {
@@ -191,15 +288,15 @@ export const students: CollectionDef = {
   emptyBody: 'Enrol your first student, or admit one from the applicants list.',
   noun: 'student',
   nameKey: 'name',
+  // Counted off the device, from the same set the register draws.
   counts: [
-    { label: 'Enrolled', count: countStudents({ status: 'Admitted' }) },
-    { label: 'Suspended', count: countStudents({ studentstatus: 'Suspended' }) },
-    { label: 'Applicants', count: countStudents({ status: APPLIED }) },
+    { label: 'Enrolled', count: countHeld((one) => one.status === 'Admitted') },
     {
-      label: 'Classes',
-      count: async () =>
-        (await departmentsService.list({ limit: 1 })).pagination.total,
+      label: 'Suspended',
+      count: countHeld((_one, standing) => standing === 'Suspended'),
     },
+    { label: 'Applicants', count: countHeld((one) => one.status === APPLIED) },
+    { label: 'Classes', count: async () => (await heldRows(refClasses)).length },
   ],
   columns: [
     { key: 'adm', label: 'Adm. no.', cardRole: 'subtitle' },
@@ -242,9 +339,34 @@ export const students: CollectionDef = {
     confirm: (row) => suspendAction(row.status).body,
     tone: (row) => suspendAction(row.status).tone,
     done: (row) => `${row.name} ${suspendAction(row.status).done}`,
-    run: (row) =>
-      studentsService.setStatus(row.id, { status: suspendAction(row.status).next }),
+    queueRun: (row) =>
+      enqueue({
+        handler: WRITE.setStudentStanding,
+        payload: { id: row.id, status: suspendAction(row.status).next },
+        collectionId: SET.refStudents,
+        targetKey: row.id,
+        toast: { success: `${row.name} ${suspendAction(row.status).done}` },
+        label: `Student “${row.name}”`,
+      }),
   },
+  /*
+   * Read off the device, joined to the household directory.
+   *
+   * The pupil register is the one set that scales with the school rather than
+   * with how it is organised, and it is held whole — see `A_SCHOOL`. A school
+   * in the thousands wants this paged at the endpoint again.
+   */
+  collection: localFirst({
+    entities: refStudents,
+    lookup: refGuardians,
+    rows: (all: Student[], guardians: Parent[]) => {
+      const named = namesFrom(guardians)
+      return byId(all).map((student) => studentRow(student, named))
+    },
+    narrow: byClassArmAndStanding,
+    queued: queuedStudents,
+    overlay: withPendingStanding,
+  }),
   source: async ({ page, q, filters }) => {
     // Both at once: the register does not wait on the guardian names to know
     // who is on it, and a slow directory cannot hold up the page.
@@ -262,18 +384,41 @@ export const students: CollectionDef = {
     ])
     return { items: items.map((student) => studentRow(student, guardians)), pagination }
   },
-  record: async (recordId) =>
-    studentRow(await studentsService.get(recordId), await guardianNames()),
-  save: async (values, recordId) => {
-    if (recordId) return studentsService.update(recordId, studentBody(values))
+  record: async (recordId) => {
+    if (isLocalKey(recordId)) {
+      return queuedStudents(outbox().toArray).find((row) => row.id === recordId)
+    }
+    return studentRow(await studentsService.get(recordId), await guardianNames())
+  },
+  queue: async (values, recordId) => {
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateStudent,
+        payload: { id: recordId, body: studentBody(values) },
+        collectionId: SET.refStudents,
+        targetKey: recordId,
+        toast: { success: 'Student updated' },
+        label: `Student record`,
+      })
+      return
+    }
 
-    // A new student joins the session the school is currently running. Editing
-    // one never moves them between sessions, so this is only asked for here.
-    const session = await sessionsService.current().catch(() => undefined)
-    return studentsService.create({
-      ...studentBody(values, session?.id),
-      status: ADMITTED,
-      studentstatus: ACTIVE,
+    // A new pupil joins the session the school is currently running. Editing
+    // one never moves them between sessions, so this is only read here — and
+    // it is read off the device, which is what lets an enrolment be written
+    // with no connection at all.
+    const session = await currentSessionId()
+    enqueue({
+      handler: WRITE.enrolStudent,
+      payload: {
+        ...studentBody(values, session),
+        status: ADMITTED,
+        studentstatus: ACTIVE,
+      },
+      collectionId: SET.refStudents,
+      targetKey: newLocalKey(),
+      toast: { success: 'Student enrolled' },
+      label: `Enrolment`,
     })
   },
   form: [
@@ -318,10 +463,11 @@ export const applicants: CollectionDef = {
     'Applications appear here as families submit them through the admission form.',
   noun: 'application',
   nameKey: 'name',
+  // Counted off the device, from the same set the queue is drawn from.
   counts: [
-    { label: 'Awaiting review', count: countStudents({ status: APPLIED }) },
-    { label: 'Admitted', count: countStudents({ status: 'Admitted' }) },
-    { label: 'Declined', count: countStudents({ status: 'Declined' }) },
+    { label: 'Awaiting review', count: countHeld((one) => one.status === APPLIED) },
+    { label: 'Admitted', count: countHeld((one) => one.status === 'Admitted') },
+    { label: 'Declined', count: countHeld((one) => one.status === 'Declined') },
   ],
   columns: [
     { key: 'ref', label: 'Reference', cardRole: 'subtitle' },
@@ -358,11 +504,43 @@ export const applicants: CollectionDef = {
     },
   ],
   filters: [
-    // Unset, the page is the queue: everyone still waiting on a decision.
-    // The two decided words are there to look back at what was settled.
-    { key: 'status', label: 'Awaiting review', options: ['Admitted', 'Declined'] },
+    /*
+     * Unset, the page is the queue: everyone still waiting on a decision. The
+     * two decided words are there to look back at what was settled.
+     *
+     * `replaces`, because none of the three is a part of the others: unset does
+     * not mean "all applications", it means one of three separate queues. So
+     * the count beside the search reads matches alone rather than claiming a
+     * whole that nothing on the page is measuring.
+     */
+    {
+      key: 'status',
+      label: 'Awaiting review',
+      options: ['Admitted', 'Declined'],
+      replaces: true,
+    },
     { key: 'department_id', label: 'All classes', optionsFrom: 'classes' },
   ],
+  /*
+   * The same set as the register above, read as applications rather than as
+   * pupils — an application *is* a student record, at the stage before the
+   * office has decided about it.
+   *
+   * Its filter does not narrow the queue, it moves between three of them: unset
+   * is everyone still waiting, and the two decided words are there to look back
+   * at what was settled. So the default is written down here rather than left
+   * to mean "all", exactly as the endpoint call below spells it.
+   */
+  collection: localFirst({
+    entities: refStudents,
+    rows: (all: Student[]) => byId(all).map(applicantRow),
+    narrow: (rows, filters) =>
+      rows.filter((row) => {
+        if (row.admission !== (filters.status || APPLIED)) return false
+        const klass = filters.department_id?.trim()
+        return !klass || String(row.department_id ?? '') === klass
+      }),
+  }),
   source: async ({ page, q, filters }) => {
     const { items, pagination } = await studentsService.list({
       page,

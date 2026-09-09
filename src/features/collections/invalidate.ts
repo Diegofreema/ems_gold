@@ -31,6 +31,11 @@ const DERIVED = [
   ['teaching', 'dashboard'],
   ['my-schooling', 'dashboard'],
   ['parent', 'family'],
+  // The readers' own notification feeds. The office's board is a set on the
+  // device now, so the write that changes it no longer passes through any key
+  // — but a notice posted has to reach the people it was posted to, and their
+  // lists are still read under this one.
+  ['notices'],
 ]
 
 /**

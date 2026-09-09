@@ -1,8 +1,14 @@
-import { noticesService } from '@/api/notifications/service'
-import type { Notice } from '@/api/notifications/types'
+import type { Notice, NoticeBody } from '@/api/notifications/types'
+import { heldRows } from '@/db/collection'
+import { refNotices } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
 import { pageRows } from '@/features/collections/api'
-import type { CollectionDef } from '@/features/collections/types'
-import { queryClient } from '@/lib/query-client'
+import { localFirst } from '@/features/collections/local-first'
+import { newestFirst } from '@/features/collections/order'
+import type { CollectionDef, Row } from '@/features/collections/types'
 import { noticeBody } from './notice-body'
 import { noticeRow } from './notice-row'
 
@@ -21,25 +27,69 @@ import { noticeRow } from './notice-row'
  * record page would inflate the tally the office is reading. The list carries
  * every field the record shows anyway.
  */
-const ALL = 200
+/**
+ * Newest first, which the board has to state now that it is read out of a keyed
+ * collection: the endpoint's own order does not survive being stored.
+ */
+const posted = (notices: readonly Notice[]) =>
+  newestFirst(notices, (notice) => notice.datecreated)
 
-const board = (): Promise<Notice[]> =>
-  queryClient
-    .query({
-      queryKey: ['notices', 'board'],
-      queryFn: () => noticesService.all({ limit: ALL }),
-    })
-    .then((page) => page.notifications ?? [])
+const board = (): Promise<Notice[]> => heldRows(refNotices)
 
-const rows = () => board().then((notices) => notices.map(noticeRow))
+const rows = () => board().then((notices) => posted(notices).map(noticeRow))
 
 const countBy = (predicate?: (notice: Notice) => boolean) => async () => {
   const notices = await board()
   return predicate ? notices.filter(predicate).length : notices.length
 }
 
-/** Anything the board changes has to reach the readers' own lists too. */
-const refresh = () => queryClient.invalidateQueries({ queryKey: ['notices'] })
+/**
+ * Notices written on this device that the school has not seen yet.
+ *
+ * Read out of the queue rather than written into the set: an optimistic write
+ * is wiped by the next sync, and a board refetches often. Each carries the
+ * `local:` key the device gave it, which is what marks it unsynced — and so
+ * read-only — until the school issues an id of its own; see `unsynced.ts`.
+ *
+ * Only the posts. A queued edit changes a row the board already shows, so it
+ * needs no ghost beside it, and a queued delete leaves the row where it is
+ * until the school agrees it is gone.
+ */
+function queuedNotices(ops: readonly OutboxOp[]): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === WRITE.postNotice &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    // Newest first, like the board itself.
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => {
+      const body = op.payload as NoticeBody
+      const row = noticeRow({
+        id: 0,
+        title: body.title ?? null,
+        message: body.message ?? null,
+        datecreated: new Date(op.createdAt).toISOString(),
+        user_id: null,
+        posted_by: null,
+        recipients: body.recipients ?? null,
+        status: body.status ?? 'active',
+        viewcount: 0,
+        is_read: false,
+        is_automatic: false,
+        // The school works out a notice's reach from the class it names; until
+        // it has, the row says what the office chose and nothing more.
+        scope: null,
+        class_name: null,
+      })
+      // The device's own key rather than the nought above: it is what tells the
+      // register, the record panel and the delete button that this row is not
+      // the school's yet.
+      return { ...row, id: op.targetKey as string }
+    })
+}
 
 export const notices: CollectionDef = {
   id: 'notices',
@@ -83,20 +133,65 @@ export const notices: CollectionDef = {
     // A hit rather than a reader: the same person opening it twice counts two.
     { key: 'views', label: 'Times opened' },
   ],
+  collection: localFirst({
+    entities: refNotices,
+    rows: (notices) => posted(notices).map(noticeRow),
+    queued: queuedNotices,
+  }),
   source: async (params) => pageRows(await rows(), params),
-  record: async (recordId) => (await rows()).find((row) => row.id === String(recordId)),
-  save: async (values, recordId) => {
-    const saved = recordId
-      ? await noticesService.edit(recordId, noticeBody(values))
-      : await noticesService.post(noticeBody(values))
-    await refresh()
-    return saved
+  /**
+   * A notice still in the queue is found in the queue, not in the set: the
+   * school has never heard of it, so nothing it holds could match. Without
+   * this, opening the row somebody had just written answered "record not
+   * found", which is true of the school and a lie about their work.
+   */
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedNotices(outbox().toArray).find((row) => row.id === recordId)
+      : (await rows()).find((row) => row.id === String(recordId)),
+  /**
+   * Posted from the device and sent afterwards.
+   *
+   * A notice is written where the office is, which is not always where the
+   * signal is. What is written is kept, appears on the board straight away as
+   * waiting, and goes when there is somewhere to send it.
+   */
+  queue: (values, recordId) => {
+    const body = noticeBody(values)
+    const named = body.title?.trim() || 'Untitled notice'
+
+    if (recordId) {
+      enqueue({
+        handler: WRITE.editNotice,
+        payload: { id: recordId, body },
+        collectionId: SET.refNotices,
+        targetKey: recordId,
+        toast: { success: 'Notice updated' },
+        label: `Notice “${named}”`,
+      })
+      return
+    }
+
+    enqueue({
+      handler: WRITE.postNotice,
+      payload: body,
+      collectionId: SET.refNotices,
+      // The school issues the id, so the device names it in the meantime — and
+      // that name is what keeps the row read-only until the school answers.
+      targetKey: newLocalKey(),
+      toast: { success: 'Notice posted' },
+      label: `Notice “${named}”`,
+    })
   },
-  remove: async (recordId) => {
-    const gone = await noticesService.remove(recordId)
-    await refresh()
-    return gone
-  },
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeNotice,
+      payload: recordId,
+      collectionId: SET.refNotices,
+      targetKey: recordId,
+      toast: { success: 'Notice deleted' },
+      label: 'A notice',
+    }),
   removeBody: (row) =>
     `Deleting “${row.title}” takes it off every reader's notifications, along with the record of who had opened it. There is no undo.`,
   form: [

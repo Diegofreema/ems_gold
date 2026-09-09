@@ -6,7 +6,7 @@ import { feesService } from '@/api/fees/service'
 import type { FeeType } from '@/api/fees/types'
 import { invoicesService } from '@/api/invoices/service'
 import { spendingsService } from '@/api/spendings/service'
-import type { CollectionDef, DetailTab } from '@/features/collections/types'
+import type { CollectionDef, DetailTab, Row } from '@/features/collections/types'
 import { formatNaira } from '@/lib/format'
 import { PAGE_SIZE } from '@/hooks/use-list-query'
 import { queryClient } from '@/lib/query-client'
@@ -14,9 +14,22 @@ import {
   activateAction,
   CHARGE_OPTIONS,
   feeBody,
+  feeCharge,
   feeRow,
 } from './fee-row'
+import type { Fee } from '@/api/fees/types'
+import { BLANK } from '@/features/collections/blank'
+import { money } from '@/features/collections/invoice'
+import { heldRows } from '@/db/collection'
+import { refFees } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
+import { localFirst } from '@/features/collections/local-first'
 import { collectRow, transactionRow } from './collect-row'
+import { byStatusAndCharge } from './narrow'
+import { pendingFeeStatus, withPendingFeeStatus } from './pending-state'
 import { invoiceBody, invoiceRow, settleAction } from './invoice-row'
 import {
   monthKey,
@@ -41,8 +54,55 @@ const monthlySpend = () =>
  * A count the catalogue asks for by listing one row and reading the total off
  * the pagination — there is no endpoint that counts fees without listing them.
  */
-const countFees = (status: 0 | 1) => async () =>
-  (await feesService.list({ status, limit: 1 })).pagination.total
+/*
+ * Counted off the device, and counting the queue with it: a catalogue showing
+ * one fee retired under a tile reading "Retired 0" would disagree with itself
+ * in the same eyeful. The whole catalogue is stored, retired fees included, so
+ * a count of one kind is a filter rather than a request.
+ */
+const countFees = (status: 0 | 1) => async () => {
+  const all = await heldRows(refFees)
+  const queued = pendingFeeStatus(outbox().toArray)
+  const charged = (fee: { id: number; is_active?: boolean | null; status?: unknown }) =>
+    queued.get(String(fee.id)) ?? (fee.is_active ?? Number(fee.status) === 1)
+
+  return all.filter((fee) => charged(fee) === (status === 1)).length
+}
+
+/**
+ * Newest first, as the footer says — by the id the school issued, which is the
+ * only thing here that knows the order. A fee carries a start and an end date
+ * but no record of when it was created.
+ */
+const newestFee = (fees: readonly Fee[]) => [...fees].sort((one, two) => two.id - one.id)
+
+/**
+ * Fees written on this device that the school has not seen. The `local:` key is
+ * what keeps one read-only — and keeps it from being retired before the school
+ * knows it exists.
+ */
+function queuedFees(ops: readonly OutboxOp[]): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === WRITE.createFee &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => {
+      const body = op.payload as Record<string, unknown>
+      return {
+        id: op.targetKey as string,
+        name: String(body.name ?? '').trim() || 'Untitled fee',
+        code: String(body.itemcode ?? '').trim() || BLANK,
+        charge: feeCharge(body.feetype as string | null | undefined),
+        amount: formatNaira(money(body.amount as string | number | null)),
+        status: 'Waiting to send',
+        feetype: String(body.feetype ?? ''),
+      }
+    })
+}
 
 export const fees: CollectionDef = {
   id: 'fees',
@@ -106,11 +166,25 @@ export const fees: CollectionDef = {
         ? 'It stops being charged from now on. Invoices already raised against it stay intact and payable.'
         : undefined,
     done: (row) => `${row.name} ${activateAction(row.status).done}`,
-    run: (row) =>
-      activateAction(row.status).activate
-        ? feesService.activate(row.id)
-        : feesService.deactivate(row.id),
+    queueRun: (row) =>
+      enqueue({
+        handler: WRITE.setFeeStatus,
+        payload: { id: row.id, charged: activateAction(row.status).activate },
+        collectionId: SET.refFees,
+        targetKey: row.id,
+        toast: { success: `${row.name} ${activateAction(row.status).done}` },
+        label: `Fee “${row.name}”`,
+      }),
   },
+  // Read off the device. The catalogue is a page in every school this runs in,
+  // and it is the same set every invoice form's fee dropdown offers.
+  collection: localFirst({
+    entities: refFees,
+    rows: (all: Fee[]) => newestFee(all).map(feeRow),
+    narrow: byStatusAndCharge,
+    queued: queuedFees,
+    overlay: withPendingFeeStatus,
+  }),
   source: async ({ page, q, filters }) => {
     const { items, pagination } = await feesService.list({
       page,
@@ -121,17 +195,47 @@ export const fees: CollectionDef = {
     })
     return { items: items.map(feeRow), pagination }
   },
-  record: (recordId) => feesService.get(recordId).then(feeRow),
-  save: (values, recordId) =>
-    recordId
-      ? feesService.update(recordId, feeBody(values))
-      : feesService.create(feeBody(values)),
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedFees(outbox().toArray).find((row) => row.id === recordId)
+      : feesService.get(recordId).then(feeRow),
+  queue: (values, recordId) => {
+    const body = feeBody(values)
+    const named = String(body.name ?? '').trim() || 'Untitled fee'
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateFee,
+        payload: { id: recordId, body },
+        collectionId: SET.refFees,
+        targetKey: recordId,
+        toast: { success: 'Fee updated' },
+        label: `Fee “${named}”`,
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createFee,
+      payload: body,
+      collectionId: SET.refFees,
+      targetKey: newLocalKey(),
+      toast: { success: 'Fee created' },
+      label: `Fee “${named}”`,
+    })
+  },
   /**
    * Refused with 409 while anything references the fee, and the API says what
    * in the message. Deactivating is almost always what was meant, which is why
    * that is the button on the row.
    */
-  remove: (recordId) => feesService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeFee,
+      payload: recordId,
+      collectionId: SET.refFees,
+      targetKey: recordId,
+      toast: { success: 'Fee deleted' },
+      label: 'A fee',
+    }),
   // Allocation is not here: passing `departments` replaces the whole set, so
   // an edit that did not ask about it would silently unallocate the fee.
   form: [

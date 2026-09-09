@@ -1,3 +1,4 @@
+import { isUnsynced, UNSYNCED_REASON } from '../unsynced'
 import { lazy, Suspense } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Pencil } from 'lucide-react'
@@ -103,7 +104,14 @@ export function CollectionDetail({
     )
   }
 
-  const editRoute = definition.readonly ? undefined : routes.edit
+  /*
+   * A record this device wrote and the school has not seen yet cannot be
+   * edited: the change would name an id that does not exist. It is a short
+   * wait — the create is at the head of the queue — and the panel says so
+   * rather than offering a button that would save into nothing.
+   */
+  const waiting = isUnsynced(record)
+  const editRoute = definition.readonly || waiting ? undefined : routes.edit
   // The same control the register offers, where the office is looking at the
   // one record it applies to.
   const actionLabel = rowAction.spec?.label(record)
@@ -201,7 +209,9 @@ export function CollectionDetail({
         <div className="flex flex-wrap gap-2.5">
           {/* A flow is a decision taken about the record, not an edit of it, so
               a collection nobody can change still offers the one it has. */}
-          {definition.readonly ? (
+          {waiting ? (
+            <p className="max-w-140 text-xs text-muted-foreground">{UNSYNCED_REASON}</p>
+          ) : definition.readonly ? (
             <>
               {linkButton}
               {flowButtons}

@@ -3,6 +3,7 @@ import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import type { useConfirm } from '@/hooks/use-confirm'
 import type { CollectionDef, Row } from './types'
+import { isUnsynced, UNSYNCED_REASON } from './unsynced'
 
 /**
  * Runs a collection's row action — from the register or from the record's own
@@ -25,7 +26,14 @@ export function useRowAction(
   const spec = definition.rowAction
 
   const mutation = useMutation({
-    mutationFn: (row: Row) => spec!.run(row),
+    mutationFn: (row: Row) => {
+      // The same rule the edit route and the delete button follow: nothing may
+      // be done to a record the school has never heard of, because the write
+      // would name an id that does not exist. Making a session current is the
+      // case in point — it is a setting pointing at a row.
+      if (isUnsynced(row)) throw new Error(UNSYNCED_REASON)
+      return spec!.run!(row)
+    },
     onSuccess: async (_data, row) => {
       toast.success(spec!.done(row))
       // The register and the record dialog go with every other mutation's, in
@@ -43,7 +51,16 @@ export function useRowAction(
     mutation.isPending && mutation.variables?.id === row.id
 
   return {
-    spec,
+    /**
+     * The spec, with its label withheld from a row this device wrote and the
+     * school has not seen. A label that returns nothing leaves the row alone —
+     * the register's own rule — so the button simply is not offered, which is
+     * better than offering one that refuses.
+     */
+    spec: spec && {
+      ...spec,
+      label: (row: Row) => (isUnsynced(row) ? undefined : spec.label(row)),
+    },
     pending,
     /**
      * A state the person on the row will feel either way is asked about, in
@@ -54,8 +71,23 @@ export function useRowAction(
       // Whichever way it was reached, a second press while the first is still
       // in flight would take the state twice.
       if (mutation.isPending) return
+      if (isUnsynced(row)) return
+
+      /*
+       * A queued action is accepted on the device and returns at once, so it is
+       * called straight rather than through a mutation — the same reason the
+       * save form does. The queue raises its own toast, so this one does not.
+       */
+      const queued = spec?.queueRun
+      const takeIt = queued
+        ? async () => {
+            queued(row)
+            await router.invalidate()
+          }
+        : () => mutation.mutateAsync(row)
+
       const body = spec?.confirm?.(row)
-      if (!body) return void mutation.mutate(row)
+      if (!body) return void takeIt()
       confirm.ask({
         title: spec!.title?.(row) ?? `${spec!.label(row)} this ${definition.noun}?`,
         body,
@@ -65,8 +97,9 @@ export function useRowAction(
         cancel: 'Go back',
         tone: spec!.tone?.(row),
         // Handed back rather than fired and forgotten, so the dialog stays up
-        // with its button spinning until the API has actually answered.
-        onConfirm: () => mutation.mutateAsync(row),
+        // with its button spinning until the write has been taken — by the
+        // school on the direct path, by the device on the queued one.
+        onConfirm: takeIt,
       })
     },
   }

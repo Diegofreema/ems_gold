@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { capitalise } from '@/lib/format'
 import type { CollectionDef } from './types'
+import { isUnsynced, UNSYNCED_REASON } from './unsynced'
 
 /**
  * Deletes a record through the collection's own `remove`.
@@ -18,8 +19,22 @@ import type { CollectionDef } from './types'
  * there is one place that knows what a delete costs.
  */
 export function useRemoveRecord(definition: CollectionDef) {
+  const queued = definition.queueRemove
+
   return useMutation({
-    mutationFn: (recordId: string) => definition.remove!(recordId),
-    meta: { success: `${capitalise(definition.noun)} deleted` },
+    // Synchronous where it queues, which is fine here: unlike the save form,
+    // the confirm dialog only awaits this to keep its button spinning, and a
+    // promise that has already resolved simply closes it.
+    mutationFn: async (recordId: string) => {
+      // The buttons that lead here are already withheld from an unsynced
+      // record, so reaching this means something got past them — a URL, a
+      // stale render. Refusing loudly beats sending a delete for an id the
+      // school has never issued.
+      if (isUnsynced({ id: recordId })) throw new Error(UNSYNCED_REASON)
+      return queued ? queued(recordId) : definition.remove!(recordId)
+    },
+    // A queued delete says the same sentence, but the queue is what says it —
+    // and adds "saved on this device" when it had to wait.
+    meta: queued ? undefined : { success: `${capitalise(definition.noun)} deleted` },
   })
 }

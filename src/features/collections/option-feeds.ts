@@ -1,18 +1,23 @@
 import { queryOptions } from '@tanstack/react-query'
-import { sessionsService, termsService } from '@/api/calendar/service'
-import { classArmsService } from '@/api/class-arms/service'
-import { paymentMethods } from '@/api/collect-fees/hooks'
-import { departmentsService } from '@/api/departments/service'
-import { feesService } from '@/api/fees/service'
-import { libraryService } from '@/api/library/service'
-import { noticesService } from '@/api/notifications/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
-import { subjectsService } from '@/api/subjects/service'
 import { teachingService } from '@/api/teaching/service'
-import { teachersService } from '@/api/teachers/service'
-import { usersService } from '@/api/users/service'
-import { heldRows as held } from '@/db/collection'
+import { heldDocument, heldRows as held } from '@/db/collection'
+import {
+  refArms,
+  refAudiences,
+  refBooks,
+  refClasses,
+  refFees,
+  refGuardians,
+  refMethods,
+  refRoles,
+  refSessions,
+  refStudents,
+  refSubjects,
+  refTeachers,
+  refTerms,
+} from '@/db/collections/reference'
 import { teacherArms, teacherSubjects } from '@/db/collections/teaching'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
@@ -20,8 +25,18 @@ import { guardianOption } from './guardian-option'
 import { audienceOptions } from '@/portals/admin/collections/notice-row'
 import { distinct, type Option, type OptionsKey, type SearchKey } from './options'
 
-/** Everything on one page — a school has classes and arms in the dozens. */
-const ALL = 200
+/**
+ * Every feed here reads a set on the device rather than an endpoint.
+ *
+ * That is what makes a form fillable with no connection — a dropdown that had
+ * to be fetched is a form that cannot be filled in — and it is why the ones
+ * that used to ask the API for a narrowed answer now ask for the whole set and
+ * narrow it here. A set narrowed at the fetch cannot be widened later without a
+ * second request, and there may be no connection to make one over.
+ *
+ * The react-query wrapper below stays: it is what the select components
+ * already speak, and it now dedupes the reading rather than the request.
+ */
 
 export function optionsQuery(key: OptionsKey, dependsOn: string) {
   return queryOptions({
@@ -29,12 +44,23 @@ export function optionsQuery(key: OptionsKey, dependsOn: string) {
     queryFn: () => fetchOptions(key, dependsOn),
     // Reference data: it changes when the school is reorganised, not mid-form.
     staleTime: 5 * 60_000,
+    /**
+     * Deliberately `always`, not the app's default.
+     *
+     * Under `online` react-query pauses without running the function at all, so
+     * a feed the office had not already opened stayed on "Loading…" for as long
+     * as the device was offline — which is every dependent feed, since an arm
+     * feed is keyed by the class chosen and no class had been chosen before.
+     * The reading is off the device now and can always finish, so letting it
+     * run is what makes the form fillable.
+     */
+    networkMode: 'always',
   })
 }
 
 async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[]> {
   if (key === 'classes') {
-    const { items } = await departmentsService.list({ limit: ALL })
+    const items = await held(refClasses)
     return distinct(
       items.map((department) => ({
         value: String(department.id),
@@ -50,25 +76,34 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // The board publishes its own catalogue beside its list, so the form
     // offers exactly what the endpoint will accept rather than a copy of it
     // that can drift.
-    const { audiences } = await noticesService.all({ limit: 1 })
-    return audienceOptions(audiences ?? [])
+    return audienceOptions((await heldDocument(refAudiences)) ?? [])
   }
 
   if (key === 'arms') {
     // An arm only means something inside a class, so this feed stays empty
     // until one is chosen rather than offering every arm in the school.
     if (!dependsOn) return []
-    const arms = await classArmsService.forDepartment(dependsOn)
-    // The feed's label already carries the class — "JSS 1 - JSS1 A" — which is
-    // what makes the choice unambiguous where two classes both have an A.
-    return arms.map((arm) => ({ value: String(arm.id), label: arm.label }))
+    // Narrowed here rather than by `class-arms/for-department/{id}`, which is a
+    // different answer per class and so cannot be a set on the device. An arm
+    // carries the class it belongs to, so the same answer is this set filtered
+    // — and filtered without a request.
+    const arms = (await held(refArms)).filter(
+      (arm) => String(arm.department_id) === String(dependsOn),
+    )
+    // The endpoint's own label reads "JSS 1 - JSS1 A" — class and arm together,
+    // which is what makes the choice unambiguous where two classes both have
+    // an A — so it is spelled the same way here.
+    return arms.map((arm) => ({
+      value: String(arm.id),
+      label: [arm.department, arm.arm_name].filter(Boolean).join(' - ') || arm.arm_name,
+    }))
   }
 
   if (key === 'all-arms') {
     // Unlike `arms`, this is not narrowed by a class: a teacher's arm has
     // nothing to do with the department they teach, so the whole school's arms
     // are offered, each labelled with its class to keep an "A" from every "A".
-    const { items } = await classArmsService.list({ limit: ALL })
+    const items = await held(refArms)
     return items.map((arm) => ({
       value: String(arm.id),
       label: [arm.department, arm.arm_name].filter(Boolean).join(' \u00b7 ') || arm.arm_name,
@@ -76,14 +111,18 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
   }
 
   if (key === 'students') {
-    const { items } = await studentsService.list({ limit: ALL, status: 'Admitted' })
-    return items.map(studentOption)
+    // Admitted alone, filtered here rather than at the fetch: the set on the
+    // device is the whole register, because the office's own list and the
+    // applicants beside it read the same one.
+    return (await held(refStudents))
+      .filter((student) => student.status === 'Admitted')
+      .map(studentOption)
   }
 
   if (key === 'all-books') {
     // Every title, for the edit flow — a retired one is exactly the title an
     // office may need to fix or put back on lending, so nothing is filtered.
-    const books = await libraryService.books()
+    const books = await held(refBooks)
     return distinct(
       books.map((book) => ({
         value: String(book.id),
@@ -98,7 +137,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // Only titles the office has left lendable are offered; whether a copy is
     // actually on the shelf is the lend endpoint's own 409 to give. The
     // catalogue comes back whole — it ignores paging — so no limit is sent.
-    const books = await libraryService.books()
+    const books = await held(refBooks)
     return distinct(
       books
         .filter((book) => book.isavailable === 'Available')
@@ -115,14 +154,21 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
   if (key === 'fees') {
     // Retired fees are left out: an invoice raised against one could not be
     // charged, and the catalogue keeps them only so old invoices still read.
-    const { items } = await feesService.list({ limit: ALL, status: 1 })
-    return items.map((fee) => ({ value: String(fee.id), label: fee.name }))
+    // Filtered here rather than at the fetch, so the set on the device is the
+    // whole catalogue and a register that wants a retired fee still has it.
+    const items = await held(refFees)
+    return items
+      .filter((fee) => Number(fee.status) === 1)
+      .map((fee) => ({ value: String(fee.id), label: fee.name }))
   }
 
   if (key === 'subjects') {
     // Withdrawn subjects are left out: a class cannot be taught one, and the
-    // register keeps them only so old results still read.
-    const { items } = await subjectsService.list({ limit: ALL, status: 1 })
+    // register keeps them only so old results still read. Filtered here for the
+    // same reason as the fees above.
+    const items = (await held(refSubjects)).filter(
+      (subject) => Number(subject.status) === 1,
+    )
     return items.map((subject) => ({
       value: String(subject.id),
       // Two schools' worth of "Mathematics" are told apart by the class that
@@ -194,15 +240,20 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
   }
 
   if (key === 'sessions' || key === 'terms') {
-    // Newest first for sessions, as the endpoint already sends them: a family
-    // asking about a year is nearly always asking about this one or the last.
-    const service = key === 'sessions' ? sessionsService : termsService
-    const { items } = await service.list({ limit: ALL })
-    return items.map((record) => ({ value: String(record.id), label: record.name }))
+    /*
+     * Newest first for sessions — a family asking about a year is nearly always
+     * asking about this one or the last — which now has to be said rather than
+     * taken from the endpoint's order: a collection is keyed and hands its rows
+     * back in key order however they arrived.
+     */
+    const items = await held(key === 'sessions' ? refSessions : refTerms)
+    return [...items]
+      .sort((one, two) => (key === 'sessions' ? two.id - one.id : one.id - two.id))
+      .map((record) => ({ value: String(record.id), label: record.name }))
   }
 
   if (key === 'roles') {
-    const roles = await usersService.roles()
+    const roles = await held(refRoles)
     return roles.map((role) => ({ value: String(role.id), label: role.role_name }))
   }
 
@@ -217,11 +268,11 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
   if (key === 'payment-methods') {
     // Named by the API rather than listed here, so a school that stops
     // taking cheques stops being offered cheque.
-    return methodOptions(await paymentMethods())
+    return methodOptions((await heldDocument(refMethods)) ?? {})
   }
 
   if (key === 'teachers') {
-    const { items } = await teachersService.list({ limit: ALL })
+    const items = await held(refTeachers)
     return distinct(
       items.map((teacher) => ({
         value: String(teacher.id),
@@ -235,8 +286,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     )
   }
 
-  const parents = await parentsService.directory()
-  return parents.map(guardianOption)
+  return (await held(refGuardians)).map(guardianOption)
 }
 
 /**
@@ -269,25 +319,64 @@ export function searchOptionsQuery(key: SearchKey, term: string) {
     // typo; a minute is long enough to spare the round trip, short enough that
     // a guardian added meanwhile still turns up.
     staleTime: 60_000,
+    // As above, and doubly so here: this one asks the school first and falls
+    // back to the device, and a paused query never reaches the fallback.
+    networkMode: 'always',
   })
 }
 
+/** How many a search offers before the office is asked to type more. */
+const FOUND = 20
+
+/**
+ * Whether what the office typed is in this option's text.
+ *
+ * The label is the whole of it on both searched feeds: a pupil's is the name
+ * and the admission number, and a guardian's is both parents' names — which is
+ * what the office is typing, and what the school's own search matches on.
+ */
+function matches(option: Option, needle: string): boolean {
+  return !needle || option.label.toLowerCase().includes(needle)
+}
+
+/**
+ * The searched feeds, asked of the school first and of the device when the
+ * school cannot be reached.
+ *
+ * These are the one place a request is still the right answer: they exist for
+ * registers too long to hold — every guardian, every admitted pupil — and the
+ * endpoint searches the whole of one where this device holds at most the first
+ * couple of hundred. So the school stays the authority.
+ *
+ * But a bursar at the counter with no signal is exactly who this app is for, so
+ * a refusal falls back to searching what the device already keeps rather than
+ * handing back nothing. That is narrower than the school's answer and honest
+ * about it: the same set the unsearched feed offers, matched on the text.
+ */
 async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
+  const needle = term.trim().toLowerCase()
+
   if (key === 'guardians') {
-    const { items } = await parentsService.list({ q: term || undefined, limit: 20 })
-    return items.map(guardianOption)
+    return await parentsService
+      .list({ q: term || undefined, limit: FOUND })
+      .then((page) => page.items.map(guardianOption))
+      .catch(async () =>
+        (await held(refGuardians)).map(guardianOption).filter((one) => matches(one, needle)).slice(0, FOUND),
+      )
   }
+
   if (key === 'students') {
     // The same register the `students` feed loads whole, narrowed server-side
     // by the name typed instead — for the flows where scrolling every admitted
     // student is worse than asking for the one being served.
-    const { items } = await studentsService.list({
-      q: term || undefined,
-      limit: 20,
-      status: 'Admitted',
-    })
-    return items.map(studentOption)
+    return await studentsService
+      .list({ q: term || undefined, limit: FOUND, status: 'Admitted' })
+      .then((page) => page.items.map(studentOption))
+      .catch(async () =>
+        (await held(refStudents)).map(studentOption).filter((one) => matches(one, needle)).slice(0, FOUND),
+      )
   }
+
   return []
 }
 

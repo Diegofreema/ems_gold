@@ -1,3 +1,5 @@
+import { blockedReason } from '../blocked'
+import { canChange } from '../unsynced'
 import { lazy, Suspense } from 'react'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { useWatch } from 'react-hook-form'
@@ -17,6 +19,7 @@ import { MoneyField } from '@/components/form/money-field'
 import { TextField } from '@/components/form/text-field'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { useConfirm } from '@/hooks/use-confirm'
+import { useOnlineStatus } from '@/hooks/use-online-status'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { BLANK } from '../blank'
 import { schemaFromSections } from '../schema'
@@ -168,6 +171,8 @@ export function CollectionForm({
   }
 
   const form = useRecordForm<Values>(schemaFromSections(sections), defaults)
+  // Why this one cannot be saved right now, where it cannot. See `blocked.ts`.
+  const blocked = blockedReason(definition, useOnlineStatus())
   // Sections that ask about the record's own kind — the staff form's teaching
   // half — appear once the kind is chosen, and never for the other one.
   const values = useWatch({ control: form.control })
@@ -178,7 +183,9 @@ export function CollectionForm({
   // Not every account may delete every record: an office record is a super
   // administrator's to remove, and the API refuses anyone else.
   const canDelete = Boolean(
-    record && definition.remove && (definition.removeWhen?.(record) ?? true),
+    record &&
+    (definition.remove || definition.queueRemove) &&
+    canChange(record, definition.removeWhen),
   )
   /**
    * Leaving the form goes back the way it was opened rather than pushing the
@@ -219,6 +226,7 @@ export function CollectionForm({
     <>
       <RecordForm
         form={form}
+        blocked={blocked}
         // Cold-opened, a form has no page behind it; the register it belongs
         // to is the one place that is certain to exist either way.
         back={
@@ -236,7 +244,23 @@ export function CollectionForm({
         }
         submitLabel={editing ? 'Save changes' : definition.action}
         onSubmit={async (values) => {
-          if (definition.save || definition.queue) {
+          /*
+           * A queued write is accepted on the device and returns at once, so it
+           * does not go through a mutation at all. Routing it through one put
+           * three async things in the way of something synchronous — the
+           * mutation cache, the router's loaders and react-hook-form's own
+           * submitting state — and the form sat with its button spinning over a
+           * write that was already safe. The queue raises its own toast.
+           */
+          if (definition.queue) {
+            // Awaited: queueing is synchronous in itself, but a write can need
+            // something off the device before it has a body, and the form must
+            // not close before the op is written down.
+            await definition.queue(values, record?.id)
+            back()
+            return
+          }
+          if (definition.save) {
             // A refusal has already been announced by the mutation cache;
             // swallowing it here only keeps the form open on the values typed.
             const saved = await save

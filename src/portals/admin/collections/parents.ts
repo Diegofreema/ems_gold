@@ -1,4 +1,15 @@
-import { toast } from 'sonner'
+import type { Parent } from '@/api/parents/types'
+import { heldRows } from '@/db/collection'
+import { refParents } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
+import { BLANK } from '@/features/collections/blank'
+import { localFirst } from '@/features/collections/local-first'
+import { byId } from '@/features/collections/order'
+import type { Row } from '@/features/collections/types'
+import { pendingValues, withPendingState } from './pending-state'
 import { parentsService } from '@/api/parents/service'
 import type { ParentStatus } from '@/api/parents/types'
 import type { CollectionDef, FormSectionSpec, ListPath } from '@/features/collections/types'
@@ -17,9 +28,69 @@ function asStatus(value: string | undefined): ParentStatus | undefined {
   return word === 'active' || word === 'deactivated' ? word : undefined
 }
 
-/** A summary figure, read off the pagination that comes back with one row. */
-const countParents = (status?: ParentStatus) => async () =>
-  (await parentsService.list({ status, limit: 1 })).pagination.total
+/**
+ * A summary figure, counted off the device — and counting the queue with it, so
+ * a register showing a household blocked under a tile reading "Deactivated 0"
+ * cannot disagree with itself in the same eyeful.
+ */
+const countParents = (status?: ParentStatus) => async () => {
+  const all = await heldRows(refParents)
+  const queued = pendingAccess(outbox().toArray)
+  const standing = (parent: Parent) => {
+    const active = queued.get(String(parent.id))
+    if (active !== undefined) return active ? 'active' : 'deactivated'
+    return String(parent.status ?? '').toLowerCase()
+  }
+  return status === undefined
+    ? all.length
+    : all.filter((parent) => standing(parent) === status).length
+}
+
+/** Which households this device has queued a change of sign-in for. */
+const pendingAccess = (ops: readonly OutboxOp[]) =>
+  pendingValues(ops, WRITE.setParentAccess, (payload) => {
+    const change = payload as { id?: unknown; active?: unknown } | null
+    if (change?.id === undefined) return undefined
+    return { id: String(change.id), value: Boolean(change.active) }
+  })
+
+/** Households, with a queued block or reinstatement shown. */
+const withPendingAccess = (rows: Row[], ops: readonly OutboxOp[]) =>
+  withPendingState(rows, ops, WRITE.setParentAccess, (payload) => {
+    const change = payload as { id?: unknown; active?: unknown } | null
+    if (change?.id === undefined) return undefined
+    return { id: String(change.id), state: change.active ? 'Active' : 'Deactivated' }
+  })
+
+/**
+ * Households written on this device that the school has not seen. The sign-in
+ * the school issues is not here — nothing on the device can know it — so the
+ * status says what it is instead.
+ */
+function queuedParents(ops: readonly OutboxOp[]): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === WRITE.createParent &&
+        OPEN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => {
+      const body = op.payload as Record<string, unknown>
+      const named = [body.fathersname, body.mothersname]
+        .map((part) => String(part ?? '').trim())
+        .filter(Boolean)
+        .join(' & ')
+      return {
+        id: op.targetKey as string,
+        name: named || 'Unnamed household',
+        phone: String(body.fatherphone ?? body.motherphone ?? '').trim() || BLANK,
+        email: String(body.pemailaddress ?? '').trim() || BLANK,
+        status: 'Waiting to send',
+      }
+    })
+}
 
 const FATHER: FormSectionSpec = {
   title: 'Father',
@@ -119,11 +190,33 @@ export const parents: CollectionDef = {
   // one distinction the API draws between guardian accounts.
   rowAction: {
     ...accessAction,
-    run: (row) =>
-      row.status === 'Deactivated'
-        ? parentsService.activate(row.id)
-        : parentsService.deactivate(row.id),
+    queueRun: (row) =>
+      enqueue({
+        handler: WRITE.setParentAccess,
+        payload: { id: row.id, active: row.status === 'Deactivated' },
+        collectionId: SET.refParents,
+        targetKey: row.id,
+        toast: {
+          success:
+            row.status === 'Deactivated'
+              ? `${row.name} can sign in again`
+              : `${row.name} can no longer sign in`,
+        },
+        label: `Household “${row.name}”`,
+      }),
   },
+  // Read off the device. A school's households are of the same order as its
+  // pupils, and this is the register the office searches by name.
+  collection: localFirst({
+    entities: refParents,
+    rows: (all: Parent[]) => byId(all).map(parentRow),
+    narrow: (rows, filters) =>
+      filters.status
+        ? rows.filter((row) => row.status === filters.status)
+        : rows,
+    queued: queuedParents,
+    overlay: withPendingAccess,
+  }),
   source: async ({ page, q, filters }) => {
     const { items, pagination } = await parentsService.list({
       page,
@@ -133,43 +226,53 @@ export const parents: CollectionDef = {
     })
     return { items: items.map(parentRow), pagination }
   },
-  record: (recordId) => parentsService.get(recordId).then(parentRow),
-  save: async (values, recordId) => {
-    if (recordId) return parentsService.update(recordId, parentBody(values))
-
-    const created = await parentsService.create(parentBody(values))
-    announceLogin(created)
-    return created
+  record: async (recordId) =>
+    isLocalKey(recordId)
+      ? queuedParents(outbox().toArray).find((row) => row.id === recordId)
+      : parentsService.get(recordId).then(parentRow),
+  /**
+   * The sign-in the school makes for a new household is the one thing it says
+   * once and never again, and a queued create hears it from the drain rather
+   * than from this form — hours later, if that is when the connection returns.
+   * The office gets the credentials late rather than being unable to register a
+   * guardian at all, which for a school with no signal for days is the better
+   * trade. See the note on the handler.
+   */
+  queue: (values, recordId) => {
+    const body = parentBody(values)
+    if (recordId) {
+      enqueue({
+        handler: WRITE.updateParent,
+        payload: { id: recordId, body },
+        collectionId: SET.refParents,
+        targetKey: recordId,
+        toast: { success: 'Parent updated' },
+        label: 'A household',
+      })
+      return
+    }
+    enqueue({
+      handler: WRITE.createParent,
+      payload: body,
+      collectionId: SET.refParents,
+      targetKey: newLocalKey(),
+      toast: { success: 'Parent created' },
+      label: 'A household',
+    })
   },
   // Refused with 409 while a student still points at the household, which the
   // confirm says before the button rather than a toast saying it after.
-  remove: (recordId) => parentsService.remove(recordId),
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeParent,
+      payload: recordId,
+      collectionId: SET.refParents,
+      targetKey: recordId,
+      toast: { success: 'Parent deleted' },
+      label: 'A household',
+    }),
   removeBody: parentDeleteBody,
   form: [FATHER, MOTHER, HOUSEHOLD],
-}
-
-/**
- * The sign-in the API just made for the household.
- *
- * `POST /sparents` answers with the username and the first password, and
- * nothing else ever will — there is no endpoint that reads a password back or
- * re-issues one. So it is put on screen and left there until it is dismissed,
- * rather than in a toast that clears itself while the office is still writing
- * it down.
- */
-function announceLogin(created: { username?: string; password?: string }) {
-  if (!created?.username || !created?.password) return
-  // Raised a tick late on purpose. The save's own "Parent created" toast goes
-  // up the moment this function returns, and sonner stacks the newest in
-  // front — announcing first would leave the one thing worth reading buried
-  // under the one that says nothing.
-  setTimeout(() => {
-    toast.success('Give the household these sign-in details', {
-      description: `${created.username} — first password ${created.password}. Shown once. If it is lost, the guardian resets it from the sign-in page.`,
-      duration: Infinity,
-      closeButton: true,
-    })
-  }, 0)
 }
 
 /** A view over the same guardians, pinned to one status — see `staffSlice`. */
