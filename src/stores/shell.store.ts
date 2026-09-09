@@ -3,8 +3,8 @@ import { create } from 'zustand'
 type ShellState = {
   /** Mobile drawer, only meaningful under the `narrow` breakpoint. */
   drawerOpen: boolean
-  /** Sidebar nav groups keyed by heading; absent means open. */
-  collapsedGroups: Record<string, boolean>
+  /** Sidebar nav groups keyed by heading; absent means collapsed. */
+  expandedGroups: Record<string, boolean>
   navQuery: string
 
   openDrawer: () => void
@@ -15,7 +15,7 @@ type ShellState = {
 
 export const useShellStore = create<ShellState>()((set) => ({
   drawerOpen: false,
-  collapsedGroups: {},
+  expandedGroups: {},
   navQuery: '',
 
   openDrawer: () => set({ drawerOpen: true }),
@@ -23,9 +23,9 @@ export const useShellStore = create<ShellState>()((set) => ({
 
   toggleGroup: (heading) =>
     set((state) => ({
-      collapsedGroups: {
-        ...state.collapsedGroups,
-        [heading]: !state.collapsedGroups[heading],
+      expandedGroups: {
+        ...state.expandedGroups,
+        [heading]: !state.expandedGroups[heading],
       },
     })),
 

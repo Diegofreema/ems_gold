@@ -61,6 +61,12 @@
       "skillPath": "skills/ponytail/SKILL.md",
       "computedHash": "210fa0831f649ce9f8a305f7b7c8cf2a0dd09ac4dd53067109941b96e7811d4e"
     },
+    "tanstack-db": {
+      "source": "Diegofreema/tanstack-db-local-first",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "27dbda3312289651258223ea406d324006cbfe90d4cff1de23af0a7f455f2601"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",

@@ -34,7 +34,7 @@ export function Sidebar({
   asDrawer: boolean
 }) {
   const navQuery = useShellStore((state) => state.navQuery)
-  const collapsedGroups = useShellStore((state) => state.collapsedGroups)
+  const expandedGroups = useShellStore((state) => state.expandedGroups)
   const toggleGroup = useShellStore((state) => state.toggleGroup)
   const closeDrawer = useShellStore((state) => state.closeDrawer)
   const account = useAccountSummary(config.roleLabel)
@@ -43,6 +43,10 @@ export function Sidebar({
     () => (config.searchableNav ? filterNav(config.nav, navQuery) : config.nav),
     [config.nav, config.searchableNav, navQuery],
   )
+
+  // Groups start collapsed and open on click. An active search overrides that
+  // so matched items aren't hidden behind a collapsed heading.
+  const searching = Boolean(config.searchableNav && navQuery.trim())
 
   return (
     <aside
@@ -59,7 +63,9 @@ export function Sidebar({
           <SidebarNavGroup
             key={group.heading ?? `group-${index}`}
             group={group}
-            collapsed={Boolean(group.heading && collapsedGroups[group.heading])}
+            collapsed={Boolean(
+              group.heading && !searching && !expandedGroups[group.heading],
+            )}
             onToggle={() => group.heading && toggleGroup(group.heading)}
             onNavigate={closeDrawer}
           />
