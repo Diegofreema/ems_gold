@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import type { CrumbLink } from '@/features/collections/types'
 import { cn } from '@/lib/utils'
+import { RouteProgress } from '@/components/layout/route-progress'
 import { useShellStore } from '@/stores/shell.store'
 import { ThemeToggle } from './theme-toggle'
 
@@ -33,7 +34,7 @@ export function AppHeader({
   const openDrawer = useShellStore((state) => state.openDrawer)
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3.5 border-b border-divider bg-background px-content py-3.5">
+    <header className="sticky top-0 z-20 flex items-center gap-3.5 border-b border-divider bg-background px-content py-3.5 relative">
       {narrow && (
         <Button
           variant="outline"
@@ -76,6 +77,10 @@ export function AppHeader({
 
       {children}
       <ThemeToggle />
+
+      {/* Sits on the header's own bottom border, so it is in view however far
+          a long register has been scrolled. See `RouteProgress`. */}
+      <RouteProgress />
     </header>
   )
 }

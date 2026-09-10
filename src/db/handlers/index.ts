@@ -18,6 +18,7 @@
 import './academics'
 import './attendance'
 import './calendar'
+import './conversations'
 import './finance'
 import './notices'
 import './parents'

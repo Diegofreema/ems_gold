@@ -37,13 +37,16 @@ import { Route as AdminInvoicesRouteImport } from './routes/admin/invoices'
 import { Route as AdminLendingRouteImport } from './routes/admin/lending'
 import { Route as AdminLibraryRouteImport } from './routes/admin/library'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminMessagesRouteImport } from './routes/admin/messages'
 import { Route as AdminNoticesRouteImport } from './routes/admin/notices'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminParentsRouteImport } from './routes/admin/parents'
 import { Route as AdminParentsInvitedRouteImport } from './routes/admin/parents-invited'
+import { Route as AdminPerformanceRouteImport } from './routes/admin/performance'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminResultQueueRouteImport } from './routes/admin/result-queue'
 import { Route as AdminResultsRouteImport } from './routes/admin/results'
+import { Route as AdminSearchRouteImport } from './routes/admin/search'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSpendingsRouteImport } from './routes/admin/spendings'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
@@ -58,8 +61,10 @@ import { Route as ParentIndexRouteImport } from './routes/parent/index'
 import { Route as ParentAssignmentsRouteImport } from './routes/parent/assignments'
 import { Route as ParentAttendanceRouteImport } from './routes/parent/attendance'
 import { Route as ParentInvoicesRouteImport } from './routes/parent/invoices'
+import { Route as ParentMessagesRouteImport } from './routes/parent/messages'
 import { Route as ParentMsgSchoolRouteImport } from './routes/parent/msg-school'
 import { Route as ParentNotificationsRouteImport } from './routes/parent/notifications'
+import { Route as ParentPerformanceRouteImport } from './routes/parent/performance'
 import { Route as ParentProfileRouteImport } from './routes/parent/profile'
 import { Route as ParentResultsRouteImport } from './routes/parent/results'
 import { Route as ParentTimetableRouteImport } from './routes/parent/timetable'
@@ -69,6 +74,7 @@ import { Route as StudentCoursesRouteImport } from './routes/student/courses'
 import { Route as StudentInvoicesRouteImport } from './routes/student/invoices'
 import { Route as StudentLibraryRouteImport } from './routes/student/library'
 import { Route as StudentNotificationsRouteImport } from './routes/student/notifications'
+import { Route as StudentPerformanceRouteImport } from './routes/student/performance'
 import { Route as StudentProfileRouteImport } from './routes/student/profile'
 import { Route as StudentResultsRouteImport } from './routes/student/results'
 import { Route as StudentTimetableRouteImport } from './routes/student/timetable'
@@ -76,9 +82,11 @@ import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
 import { Route as TeacherAssignmentsRouteImport } from './routes/teacher/assignments'
 import { Route as TeacherAttendanceRouteImport } from './routes/teacher/attendance'
 import { Route as TeacherEclassesRouteImport } from './routes/teacher/eclasses'
+import { Route as TeacherMessagesRouteImport } from './routes/teacher/messages'
 import { Route as TeacherMsgAdminRouteImport } from './routes/teacher/msg-admin'
 import { Route as TeacherMsgStudentsRouteImport } from './routes/teacher/msg-students'
 import { Route as TeacherNotificationsRouteImport } from './routes/teacher/notifications'
+import { Route as TeacherPerformanceRouteImport } from './routes/teacher/performance'
 import { Route as TeacherProfileRouteImport } from './routes/teacher/profile'
 import { Route as TeacherQuestionsRouteImport } from './routes/teacher/questions'
 import { Route as TeacherRegistersRouteImport } from './routes/teacher/registers'
@@ -251,6 +259,11 @@ const AdminLogsRoute = AdminLogsRouteImport.update({
   path: '/logs',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminNoticesRoute = AdminNoticesRouteImport.update({
   id: '/notices',
   path: '/notices',
@@ -271,6 +284,11 @@ const AdminParentsInvitedRoute = AdminParentsInvitedRouteImport.update({
   path: '/parents-invited',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminProfileRoute = AdminProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -284,6 +302,11 @@ const AdminResultQueueRoute = AdminResultQueueRouteImport.update({
 const AdminResultsRoute = AdminResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSearchRoute = AdminSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -356,6 +379,11 @@ const ParentInvoicesRoute = ParentInvoicesRouteImport.update({
   path: '/invoices',
   getParentRoute: () => ParentRouteRoute,
 } as any)
+const ParentMessagesRoute = ParentMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
 const ParentMsgSchoolRoute = ParentMsgSchoolRouteImport.update({
   id: '/msg-school',
   path: '/msg-school',
@@ -364,6 +392,11 @@ const ParentMsgSchoolRoute = ParentMsgSchoolRouteImport.update({
 const ParentNotificationsRoute = ParentNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => ParentRouteRoute,
+} as any)
+const ParentPerformanceRoute = ParentPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => ParentRouteRoute,
 } as any)
 const ParentProfileRoute = ParentProfileRouteImport.update({
@@ -411,6 +444,11 @@ const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => StudentRouteRoute,
 } as any)
+const StudentPerformanceRoute = StudentPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => StudentRouteRoute,
+} as any)
 const StudentProfileRoute = StudentProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -446,6 +484,11 @@ const TeacherEclassesRoute = TeacherEclassesRouteImport.update({
   path: '/eclasses',
   getParentRoute: () => TeacherRouteRoute,
 } as any)
+const TeacherMessagesRoute = TeacherMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
 const TeacherMsgAdminRoute = TeacherMsgAdminRouteImport.update({
   id: '/msg-admin',
   path: '/msg-admin',
@@ -459,6 +502,11 @@ const TeacherMsgStudentsRoute = TeacherMsgStudentsRouteImport.update({
 const TeacherNotificationsRoute = TeacherNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => TeacherRouteRoute,
+} as any)
+const TeacherPerformanceRoute = TeacherPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => TeacherRouteRoute,
 } as any)
 const TeacherProfileRoute = TeacherProfileRouteImport.update({
@@ -658,13 +706,16 @@ export interface FileRoutesByFullPath {
   '/admin/lending': typeof AdminLendingRoute
   '/admin/library': typeof AdminLibraryRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/notices': typeof AdminNoticesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
+  '/admin/performance': typeof AdminPerformanceRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spendings': typeof AdminSpendingsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -678,8 +729,10 @@ export interface FileRoutesByFullPath {
   '/parent/assignments': typeof ParentAssignmentsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
+  '/parent/messages': typeof ParentMessagesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
+  '/parent/performance': typeof ParentPerformanceRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/timetable': typeof ParentTimetableRoute
@@ -688,15 +741,18 @@ export interface FileRoutesByFullPath {
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/library': typeof StudentLibraryRoute
   '/student/notifications': typeof StudentNotificationsRoute
+  '/student/performance': typeof StudentPerformanceRoute
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/student/timetable': typeof StudentTimetableRoute
   '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
+  '/teacher/messages': typeof TeacherMessagesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
   '/teacher/msg-students': typeof TeacherMsgStudentsRoute
   '/teacher/notifications': typeof TeacherNotificationsRoute
+  '/teacher/performance': typeof TeacherPerformanceRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/questions': typeof TeacherQuestionsRoute
   '/teacher/registers': typeof TeacherRegistersRoute
@@ -757,13 +813,16 @@ export interface FileRoutesByTo {
   '/admin/lending': typeof AdminLendingRoute
   '/admin/library': typeof AdminLibraryRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/notices': typeof AdminNoticesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
+  '/admin/performance': typeof AdminPerformanceRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spendings': typeof AdminSpendingsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -777,8 +836,10 @@ export interface FileRoutesByTo {
   '/parent/assignments': typeof ParentAssignmentsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
+  '/parent/messages': typeof ParentMessagesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
+  '/parent/performance': typeof ParentPerformanceRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/timetable': typeof ParentTimetableRoute
@@ -787,15 +848,18 @@ export interface FileRoutesByTo {
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/library': typeof StudentLibraryRoute
   '/student/notifications': typeof StudentNotificationsRoute
+  '/student/performance': typeof StudentPerformanceRoute
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/student/timetable': typeof StudentTimetableRoute
   '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
+  '/teacher/messages': typeof TeacherMessagesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
   '/teacher/msg-students': typeof TeacherMsgStudentsRoute
   '/teacher/notifications': typeof TeacherNotificationsRoute
+  '/teacher/performance': typeof TeacherPerformanceRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/questions': typeof TeacherQuestionsRoute
   '/teacher/registers': typeof TeacherRegistersRoute
@@ -862,13 +926,16 @@ export interface FileRoutesById {
   '/admin/lending': typeof AdminLendingRoute
   '/admin/library': typeof AdminLibraryRoute
   '/admin/logs': typeof AdminLogsRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/notices': typeof AdminNoticesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/parents': typeof AdminParentsRoute
   '/admin/parents-invited': typeof AdminParentsInvitedRoute
+  '/admin/performance': typeof AdminPerformanceRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/result-queue': typeof AdminResultQueueRoute
   '/admin/results': typeof AdminResultsRoute
+  '/admin/search': typeof AdminSearchRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spendings': typeof AdminSpendingsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -882,8 +949,10 @@ export interface FileRoutesById {
   '/parent/assignments': typeof ParentAssignmentsRoute
   '/parent/attendance': typeof ParentAttendanceRoute
   '/parent/invoices': typeof ParentInvoicesRoute
+  '/parent/messages': typeof ParentMessagesRoute
   '/parent/msg-school': typeof ParentMsgSchoolRoute
   '/parent/notifications': typeof ParentNotificationsRoute
+  '/parent/performance': typeof ParentPerformanceRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/results': typeof ParentResultsRoute
   '/parent/timetable': typeof ParentTimetableRoute
@@ -892,15 +961,18 @@ export interface FileRoutesById {
   '/student/invoices': typeof StudentInvoicesRoute
   '/student/library': typeof StudentLibraryRoute
   '/student/notifications': typeof StudentNotificationsRoute
+  '/student/performance': typeof StudentPerformanceRoute
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/student/timetable': typeof StudentTimetableRoute
   '/teacher/assignments': typeof TeacherAssignmentsRoute
   '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/eclasses': typeof TeacherEclassesRoute
+  '/teacher/messages': typeof TeacherMessagesRoute
   '/teacher/msg-admin': typeof TeacherMsgAdminRoute
   '/teacher/msg-students': typeof TeacherMsgStudentsRoute
   '/teacher/notifications': typeof TeacherNotificationsRoute
+  '/teacher/performance': typeof TeacherPerformanceRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/teacher/questions': typeof TeacherQuestionsRoute
   '/teacher/registers': typeof TeacherRegistersRoute
@@ -967,13 +1039,16 @@ export interface FileRouteTypes {
     | '/admin/lending'
     | '/admin/library'
     | '/admin/logs'
+    | '/admin/messages'
     | '/admin/notices'
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
+    | '/admin/performance'
     | '/admin/profile'
     | '/admin/result-queue'
     | '/admin/results'
+    | '/admin/search'
     | '/admin/settings'
     | '/admin/spendings'
     | '/admin/staff'
@@ -987,8 +1062,10 @@ export interface FileRouteTypes {
     | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/invoices'
+    | '/parent/messages'
     | '/parent/msg-school'
     | '/parent/notifications'
+    | '/parent/performance'
     | '/parent/profile'
     | '/parent/results'
     | '/parent/timetable'
@@ -997,15 +1074,18 @@ export interface FileRouteTypes {
     | '/student/invoices'
     | '/student/library'
     | '/student/notifications'
+    | '/student/performance'
     | '/student/profile'
     | '/student/results'
     | '/student/timetable'
     | '/teacher/assignments'
     | '/teacher/attendance'
     | '/teacher/eclasses'
+    | '/teacher/messages'
     | '/teacher/msg-admin'
     | '/teacher/msg-students'
     | '/teacher/notifications'
+    | '/teacher/performance'
     | '/teacher/profile'
     | '/teacher/questions'
     | '/teacher/registers'
@@ -1066,13 +1146,16 @@ export interface FileRouteTypes {
     | '/admin/lending'
     | '/admin/library'
     | '/admin/logs'
+    | '/admin/messages'
     | '/admin/notices'
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
+    | '/admin/performance'
     | '/admin/profile'
     | '/admin/result-queue'
     | '/admin/results'
+    | '/admin/search'
     | '/admin/settings'
     | '/admin/spendings'
     | '/admin/staff'
@@ -1086,8 +1169,10 @@ export interface FileRouteTypes {
     | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/invoices'
+    | '/parent/messages'
     | '/parent/msg-school'
     | '/parent/notifications'
+    | '/parent/performance'
     | '/parent/profile'
     | '/parent/results'
     | '/parent/timetable'
@@ -1096,15 +1181,18 @@ export interface FileRouteTypes {
     | '/student/invoices'
     | '/student/library'
     | '/student/notifications'
+    | '/student/performance'
     | '/student/profile'
     | '/student/results'
     | '/student/timetable'
     | '/teacher/assignments'
     | '/teacher/attendance'
     | '/teacher/eclasses'
+    | '/teacher/messages'
     | '/teacher/msg-admin'
     | '/teacher/msg-students'
     | '/teacher/notifications'
+    | '/teacher/performance'
     | '/teacher/profile'
     | '/teacher/questions'
     | '/teacher/registers'
@@ -1170,13 +1258,16 @@ export interface FileRouteTypes {
     | '/admin/lending'
     | '/admin/library'
     | '/admin/logs'
+    | '/admin/messages'
     | '/admin/notices'
     | '/admin/notifications'
     | '/admin/parents'
     | '/admin/parents-invited'
+    | '/admin/performance'
     | '/admin/profile'
     | '/admin/result-queue'
     | '/admin/results'
+    | '/admin/search'
     | '/admin/settings'
     | '/admin/spendings'
     | '/admin/staff'
@@ -1190,8 +1281,10 @@ export interface FileRouteTypes {
     | '/parent/assignments'
     | '/parent/attendance'
     | '/parent/invoices'
+    | '/parent/messages'
     | '/parent/msg-school'
     | '/parent/notifications'
+    | '/parent/performance'
     | '/parent/profile'
     | '/parent/results'
     | '/parent/timetable'
@@ -1200,15 +1293,18 @@ export interface FileRouteTypes {
     | '/student/invoices'
     | '/student/library'
     | '/student/notifications'
+    | '/student/performance'
     | '/student/profile'
     | '/student/results'
     | '/student/timetable'
     | '/teacher/assignments'
     | '/teacher/attendance'
     | '/teacher/eclasses'
+    | '/teacher/messages'
     | '/teacher/msg-admin'
     | '/teacher/msg-students'
     | '/teacher/notifications'
+    | '/teacher/performance'
     | '/teacher/profile'
     | '/teacher/questions'
     | '/teacher/registers'
@@ -1454,6 +1550,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLogsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/notices': {
       id: '/admin/notices'
       path: '/notices'
@@ -1482,6 +1585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminParentsInvitedRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/performance': {
+      id: '/admin/performance'
+      path: '/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AdminPerformanceRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/profile': {
       id: '/admin/profile'
       path: '/profile'
@@ -1501,6 +1611,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/admin/results'
       preLoaderRoute: typeof AdminResultsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/search': {
+      id: '/admin/search'
+      path: '/search'
+      fullPath: '/admin/search'
+      preLoaderRoute: typeof AdminSearchRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/settings': {
@@ -1601,6 +1718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentInvoicesRouteImport
       parentRoute: typeof ParentRouteRoute
     }
+    '/parent/messages': {
+      id: '/parent/messages'
+      path: '/messages'
+      fullPath: '/parent/messages'
+      preLoaderRoute: typeof ParentMessagesRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
     '/parent/msg-school': {
       id: '/parent/msg-school'
       path: '/msg-school'
@@ -1613,6 +1737,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/parent/notifications'
       preLoaderRoute: typeof ParentNotificationsRouteImport
+      parentRoute: typeof ParentRouteRoute
+    }
+    '/parent/performance': {
+      id: '/parent/performance'
+      path: '/performance'
+      fullPath: '/parent/performance'
+      preLoaderRoute: typeof ParentPerformanceRouteImport
       parentRoute: typeof ParentRouteRoute
     }
     '/parent/profile': {
@@ -1678,6 +1809,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentNotificationsRouteImport
       parentRoute: typeof StudentRouteRoute
     }
+    '/student/performance': {
+      id: '/student/performance'
+      path: '/performance'
+      fullPath: '/student/performance'
+      preLoaderRoute: typeof StudentPerformanceRouteImport
+      parentRoute: typeof StudentRouteRoute
+    }
     '/student/profile': {
       id: '/student/profile'
       path: '/profile'
@@ -1727,6 +1865,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherEclassesRouteImport
       parentRoute: typeof TeacherRouteRoute
     }
+    '/teacher/messages': {
+      id: '/teacher/messages'
+      path: '/messages'
+      fullPath: '/teacher/messages'
+      preLoaderRoute: typeof TeacherMessagesRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
     '/teacher/msg-admin': {
       id: '/teacher/msg-admin'
       path: '/msg-admin'
@@ -1746,6 +1891,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/teacher/notifications'
       preLoaderRoute: typeof TeacherNotificationsRouteImport
+      parentRoute: typeof TeacherRouteRoute
+    }
+    '/teacher/performance': {
+      id: '/teacher/performance'
+      path: '/performance'
+      fullPath: '/teacher/performance'
+      preLoaderRoute: typeof TeacherPerformanceRouteImport
       parentRoute: typeof TeacherRouteRoute
     }
     '/teacher/profile': {
@@ -1989,13 +2141,16 @@ interface AdminRouteRouteChildren {
   AdminLendingRoute: typeof AdminLendingRoute
   AdminLibraryRoute: typeof AdminLibraryRoute
   AdminLogsRoute: typeof AdminLogsRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNoticesRoute: typeof AdminNoticesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminParentsRoute: typeof AdminParentsRoute
   AdminParentsInvitedRoute: typeof AdminParentsInvitedRoute
+  AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminProfileRoute: typeof AdminProfileRoute
   AdminResultQueueRoute: typeof AdminResultQueueRoute
   AdminResultsRoute: typeof AdminResultsRoute
+  AdminSearchRoute: typeof AdminSearchRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSpendingsRoute: typeof AdminSpendingsRoute
   AdminStaffRoute: typeof AdminStaffRoute
@@ -2031,13 +2186,16 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminLendingRoute: AdminLendingRoute,
   AdminLibraryRoute: AdminLibraryRoute,
   AdminLogsRoute: AdminLogsRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
   AdminNoticesRoute: AdminNoticesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminParentsRoute: AdminParentsRoute,
   AdminParentsInvitedRoute: AdminParentsInvitedRoute,
+  AdminPerformanceRoute: AdminPerformanceRoute,
   AdminProfileRoute: AdminProfileRoute,
   AdminResultQueueRoute: AdminResultQueueRoute,
   AdminResultsRoute: AdminResultsRoute,
+  AdminSearchRoute: AdminSearchRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSpendingsRoute: AdminSpendingsRoute,
   AdminStaffRoute: AdminStaffRoute,
@@ -2067,8 +2225,10 @@ interface ParentRouteRouteChildren {
   ParentAssignmentsRoute: typeof ParentAssignmentsRoute
   ParentAttendanceRoute: typeof ParentAttendanceRoute
   ParentInvoicesRoute: typeof ParentInvoicesRoute
+  ParentMessagesRoute: typeof ParentMessagesRoute
   ParentMsgSchoolRoute: typeof ParentMsgSchoolRoute
   ParentNotificationsRoute: typeof ParentNotificationsRoute
+  ParentPerformanceRoute: typeof ParentPerformanceRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentResultsRoute: typeof ParentResultsRoute
   ParentTimetableRoute: typeof ParentTimetableRoute
@@ -2084,8 +2244,10 @@ const ParentRouteRouteChildren: ParentRouteRouteChildren = {
   ParentAssignmentsRoute: ParentAssignmentsRoute,
   ParentAttendanceRoute: ParentAttendanceRoute,
   ParentInvoicesRoute: ParentInvoicesRoute,
+  ParentMessagesRoute: ParentMessagesRoute,
   ParentMsgSchoolRoute: ParentMsgSchoolRoute,
   ParentNotificationsRoute: ParentNotificationsRoute,
+  ParentPerformanceRoute: ParentPerformanceRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentResultsRoute: ParentResultsRoute,
   ParentTimetableRoute: ParentTimetableRoute,
@@ -2107,6 +2269,7 @@ interface StudentRouteRouteChildren {
   StudentInvoicesRoute: typeof StudentInvoicesRoute
   StudentLibraryRoute: typeof StudentLibraryRoute
   StudentNotificationsRoute: typeof StudentNotificationsRoute
+  StudentPerformanceRoute: typeof StudentPerformanceRoute
   StudentProfileRoute: typeof StudentProfileRoute
   StudentResultsRoute: typeof StudentResultsRoute
   StudentTimetableRoute: typeof StudentTimetableRoute
@@ -2124,6 +2287,7 @@ const StudentRouteRouteChildren: StudentRouteRouteChildren = {
   StudentInvoicesRoute: StudentInvoicesRoute,
   StudentLibraryRoute: StudentLibraryRoute,
   StudentNotificationsRoute: StudentNotificationsRoute,
+  StudentPerformanceRoute: StudentPerformanceRoute,
   StudentProfileRoute: StudentProfileRoute,
   StudentResultsRoute: StudentResultsRoute,
   StudentTimetableRoute: StudentTimetableRoute,
@@ -2145,9 +2309,11 @@ interface TeacherRouteRouteChildren {
   TeacherAssignmentsRoute: typeof TeacherAssignmentsRoute
   TeacherAttendanceRoute: typeof TeacherAttendanceRoute
   TeacherEclassesRoute: typeof TeacherEclassesRoute
+  TeacherMessagesRoute: typeof TeacherMessagesRoute
   TeacherMsgAdminRoute: typeof TeacherMsgAdminRoute
   TeacherMsgStudentsRoute: typeof TeacherMsgStudentsRoute
   TeacherNotificationsRoute: typeof TeacherNotificationsRoute
+  TeacherPerformanceRoute: typeof TeacherPerformanceRoute
   TeacherProfileRoute: typeof TeacherProfileRoute
   TeacherQuestionsRoute: typeof TeacherQuestionsRoute
   TeacherRegistersRoute: typeof TeacherRegistersRoute
@@ -2169,9 +2335,11 @@ const TeacherRouteRouteChildren: TeacherRouteRouteChildren = {
   TeacherAssignmentsRoute: TeacherAssignmentsRoute,
   TeacherAttendanceRoute: TeacherAttendanceRoute,
   TeacherEclassesRoute: TeacherEclassesRoute,
+  TeacherMessagesRoute: TeacherMessagesRoute,
   TeacherMsgAdminRoute: TeacherMsgAdminRoute,
   TeacherMsgStudentsRoute: TeacherMsgStudentsRoute,
   TeacherNotificationsRoute: TeacherNotificationsRoute,
+  TeacherPerformanceRoute: TeacherPerformanceRoute,
   TeacherProfileRoute: TeacherProfileRoute,
   TeacherQuestionsRoute: TeacherQuestionsRoute,
   TeacherRegistersRoute: TeacherRegistersRoute,

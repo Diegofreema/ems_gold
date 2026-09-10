@@ -114,7 +114,7 @@ function queuedStudents(ops: readonly OutboxOp[]): Row[] {
       return {
         id: op.targetKey as string,
         adm: BLANK,
-        name: named || 'Unnamed pupil',
+        name: named || 'Unnamed student',
         arm: BLANK,
         parent: BLANK,
         fees: BLANK,

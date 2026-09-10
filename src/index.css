@@ -261,6 +261,12 @@
   --animate-ems-shake: emsShake calc(420ms * var(--ems-motion)) both;
   --animate-ems-spin: emsSpin 800ms linear infinite;
 
+  /* The bar under the header while a page is being fetched. Indeterminate on
+     purpose: a route loader does not report how far along it is, and a bar
+     that crept toward a finish line would be inventing one. */
+  --animate-ems-progress: emsProgress calc(1150ms * var(--ems-motion))
+    cubic-bezier(0.65, 0, 0.35, 1) infinite;
+
   /* The narrow-viewport sidebar drawer sliding in from its own edge. */
   --animate-ems-draw: emsDraw calc(700ms * var(--ems-motion))
     cubic-bezier(0.2, 0.7, 0.3, 1) both;
@@ -346,6 +352,14 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+@keyframes emsProgress {
+  from {
+    transform: translateX(-115%);
+  }
+  to {
+    transform: translateX(420%);
   }
 }
 @keyframes emsShimmer {

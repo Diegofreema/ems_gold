@@ -8,9 +8,11 @@ import {
   LayoutGrid,
   List,
   MessageSquare,
+  MessagesSquare,
   // Monitor,
   PenLine,
   SquareCheckBig,
+  TrendingUp,
   Upload,
   Users,
 } from 'lucide-react';
@@ -65,11 +67,17 @@ export const teacherNav: NavGroup[] = [
       },
       { to: '/teacher/uploads', label: 'Upload batches', icon: Upload },
       { to: '/teacher/results', label: 'Browse results', icon: SquareCheckBig },
+      { to: '/teacher/performance', label: 'Performance', icon: TrendingUp },
     ],
   },
   {
     heading: 'Messages',
     items: [
+      // The threads both sides can write to. The two below it are outbound
+      // email that nobody can answer — a different thing, kept apart on
+      // purpose. No badge here: the header's messages button carries the
+      // count, which is live where a nav label written in a module is not.
+      { to: '/teacher/messages', label: 'Messages', icon: MessagesSquare },
       { to: '/teacher/msg-admin', label: 'Message admin', icon: MessageSquare },
       {
         to: '/teacher/msg-students',

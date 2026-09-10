@@ -7,6 +7,7 @@ export const adminPortal: PortalConfig = {
   role: 'admin',
   roleLabel: 'Bronze · Admin',
   basePath: '/admin',
+  messagesPath: '/admin/messages',
   nav: adminNav,
   searchableNav: true,
   useNotifications: useOfficeNotifications,
