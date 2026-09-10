@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
 import { toneForStatus } from '@/lib/status-tone'
 import { BLANK } from '../blank'
+import { hasText } from '../rich-text'
 import type {
   CollectionDef,
   CollectionRoutes,
@@ -164,11 +165,39 @@ export function CollectionDetail({
   const tagColumns = definition.columns.filter(
     (column) => column.tag && record[column.key] !== BLANK,
   )
+  /*
+   * And the figures above them, for the same reason: a tile reading "—" over a
+   * record is the loudest way this page had of looking like it had lost
+   * something. A register's summary tiles keep their dash on purpose — there,
+   * it means a figure that could not be worked out, which is worth saying —
+   * but a record simply does not carry every column the list does.
+   */
   const statColumns = definition.columns
-    .filter((column) => column.align === 'right')
+    .filter((column) => column.align === 'right' && filled(record[column.key]))
     .slice(0, 3)
   // A collection with no `detail` of its own reads back the columns it lists.
-  const fields: DetailFieldSpec[] = definition.detail ?? definition.columns
+  const listed: DetailFieldSpec[] = definition.detail ?? definition.columns
+  /*
+   * A field this record has nothing for is left out, rather than drawn as a
+   * label beside a dash.
+   *
+   * The panel lists what a record *can* hold, and these endpoints fill very
+   * little of it: a class charging no fees, a subject taught by nobody yet, a
+   * student enrolled before the office collected a religion. Every one of
+   * those drew a row reading "—", and a dozen of them together read as data
+   * that had gone missing rather than as a record that is simply shorter than
+   * the form behind it.
+   *
+   * Per record rather than per collection, deliberately. A label is only dead
+   * where the endpoint can never fill it, and none of these can be shown to be
+   * — the same field is blank on bronze's sparse records and filled on a real
+   * school's. Dropping the label outright would take it from the records that
+   * do have it. See also the tags above, which have skipped a blank the same
+   * way since the register was written.
+   */
+  const fields = listed.filter((field) =>
+    field.rich ? hasText(record[field.key] ?? '') : filled(record[field.key]),
+  )
 
   return (
     // A record with no sub-tables reads as one centred column — header, tiles
@@ -289,6 +318,13 @@ export function CollectionDetail({
 
         <aside>
           <SectionHeading className="mb-3.5">Record</SectionHeading>
+          {fields.length === 0 ? (
+            /* Every field was empty. Saying so beats an empty bordered box,
+               which reads as a panel that failed to load. */
+            <p className="border-t border-divider-strong py-3 text-sm text-muted-foreground">
+              The school holds nothing else about this {definition.noun} yet.
+            </p>
+          ) : (
           <div className="border-t border-divider-strong">
             {fields.map((field) =>
               /* A written body is read down the panel rather than across it:
@@ -325,10 +361,22 @@ export function CollectionDetail({
               ),
             )}
           </div>
+          )}
         </aside>
       </div>
 
       <ConfirmDialog request={confirm.request} onOpenChange={confirm.setOpen} />
     </div>
   )
+}
+
+/**
+ * Whether the record actually carries this field.
+ *
+ * `BLANK` is the dash every row mapper writes where the API sent nothing, so
+ * it counts as empty here — that is the whole point. An honest "0" does not:
+ * a class with no arms yet is a fact worth reading.
+ */
+function filled(value: string | undefined): boolean {
+  return value !== undefined && value.trim() !== '' && value.trim() !== BLANK
 }

@@ -3,7 +3,7 @@
  *
  * `class_arm` is typed as a string across the timetable endpoints and arrives
  * on this deployment as an object. That is not a wrong answer on screen — a
- * `.trim()` on a record is a TypeError, and it took the pupil's timetable page
+ * `.trim()` on a record is a TypeError, and it took the student's timetable page
  * down to its error boundary and would have done the same to the guardian's.
  *
  * Shared because both portals read the same field off the same endpoints, and

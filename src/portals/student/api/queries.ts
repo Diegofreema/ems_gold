@@ -3,11 +3,11 @@ import { assignmentKeys } from '@/api/assignments/keys'
 import { assignmentsService } from '@/api/assignments/service'
 
 /**
- * What is left on the query path in the pupil's portal.
+ * What is left on the query path in the student's portal.
  *
  * Everything a page *lists* is a set on the device now — see
  * `src/db/collections/schooling.ts`. These two are deliberately not: they are
- * the answers a sitting turns on, and a stale copy of either would put a pupil
+ * the answers a sitting turns on, and a stale copy of either would put a student
  * into an assignment they cannot send back. See `attempt.ts`.
  */
 

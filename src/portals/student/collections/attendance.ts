@@ -11,7 +11,7 @@ import {
 } from '../features/attendance/attendance';
 
 /**
- * The pupil's own register, off the device.
+ * The student's own register, off the device.
  *
  * An empty answer stands in for one this device holds nothing of, because
  * every reader below already treats a register with no days in it as a term

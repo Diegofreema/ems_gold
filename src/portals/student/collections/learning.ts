@@ -17,7 +17,7 @@ import { periodRows } from '../features/timetable/timetable';
  */
 /*
  * A set that synced and came back with nothing is an empty register, not a
- * failure — the pupil is registered for no subject yet. A set that never
+ * failure — the student is registered for no subject yet. A set that never
  * synced refuses inside `heldDocument`, which is the case worth saying out
  * loud, and it says it by throwing.
  */

@@ -131,7 +131,7 @@ export function useAddTopic() {
     meta: { success: 'Topic added' },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teachingKeys.topics() })
-      // A topic is a material in the pupils' portal.
+      // A topic is a material in the students' portal.
       queryClient.invalidateQueries({ queryKey: mySchoolingKeys.all })
     },
   })

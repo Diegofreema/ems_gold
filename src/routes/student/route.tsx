@@ -11,7 +11,7 @@ export const Route = createFileRoute('/student')({
   // `?record=` opens a thin collection's record modal over its list page.
   validateSearch: recordSearch,
   /**
-   * The pupil's own sets, readied once for the whole portal.
+   * The student's own sets, readied once for the whole portal.
    *
    * Started rather than awaited and its failure swallowed: this route draws the
    * shell, and a shell route that waits or throws takes the shell with it. The

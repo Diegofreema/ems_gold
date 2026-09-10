@@ -10,17 +10,17 @@ import { myLoanRow } from './my-loan-row'
 import { newestFirst } from '@/features/collections/order'
 
 /**
- * The pupil's own borrowings, off `GET /loanedbooks/mine`.
+ * The student's own borrowings, off `GET /loanedbooks/mine`.
  *
- * Read-only twice over: the desk lends and takes back, and a pupil's page has
+ * Read-only twice over: the desk lends and takes back, and a student's page has
  * no business offering either. The fines tile is here because it is the one
- * figure a pupil is asked about at the desk.
+ * figure a student is asked about at the desk.
  */
 
 /**
  * Newest first, which now has to be said rather than inherited: a collection is
  * keyed and hands its rows back in key order whatever order the endpoint sent
- * them in. The borrowing date is the one a pupil reads the list by, and the id
+ * them in. The borrowing date is the one a student reads the list by, and the id
  * settles the ties — a desk that issues two books at once stamps them the same
  * day.
  */

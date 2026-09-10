@@ -14,7 +14,7 @@ import { studentHome } from '@/portals/student/api/dashboard'
 export const Route = createFileRoute('/student/')({
   staticData: { title: 'Dashboard', crumb: 'NETPRO EMS Bronze' },
   // Readied here rather than suspended on: the counters and the ledger arrive
-  // together or not at all, and a refusal is swallowed so a pupil with no
+  // together or not at all, and a refusal is swallowed so a student with no
   // connection lands on their own home page rather than an error boundary.
   loader: () =>
     Promise.all(

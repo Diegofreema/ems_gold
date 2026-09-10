@@ -16,7 +16,7 @@ const LOAN: Loan = {
 
 const TODAY = new Date('2026-09-03T09:00:00+01:00')
 
-test('a pupil reads their loan without a student column', () => {
+test('a student reads their own loan without a student column', () => {
   const row = myLoanRow(LOAN, TODAY)
   assert.equal(row.book, 'Things Fall Apart')
   assert.equal(row.borrowed, '20 Aug 2026')

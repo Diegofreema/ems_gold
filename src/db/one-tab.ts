@@ -3,7 +3,7 @@
  *
  * The drain is the reason this exists. A queued create is **not** idempotent —
  * the school issues the id — so two tabs draining the same queue at the same
- * moment is two pupils enrolled, two notices on the board, two of whatever was
+ * moment is two students enrolled, two notices on the board, two of whatever was
  * written. The persistence coordinator keeps the tabs' *rows* in step; it says
  * nothing about which of them is allowed to send.
  *

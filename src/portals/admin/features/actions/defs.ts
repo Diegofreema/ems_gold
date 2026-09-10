@@ -358,9 +358,9 @@ async function bookLabel(values?: Record<string, unknown>): Promise<string> {
  *
  * Runs from the register's own button — the library page is the loans now, so
  * the title is picked here rather than opened first. The student is searched
- * by name because the admitted register runs long and the pupil is standing at
+ * by name because the admitted register runs long and the student is standing at
  * the counter; what is submitted is still both ids. A loan is one copy of one
- * book, and the endpoint refuses with its own reason where the pupil already
+ * book, and the endpoint refuses with its own reason where the student already
  * has a book out, owes a fine, or no copy is on the shelf — none of that is
  * re-checked here.
  */
@@ -396,7 +396,7 @@ function lend(): ActionDef {
     // Asked before the copy goes out: the loan is written against a named
     // student, and the dialog is the last chance to notice the wrong one. The
     // name is fetched rather than trusted from the form, so what the dialog
-    // says is what the register holds — and the pupil's own history is asked
+    // says is what the register holds — and the student's own history is asked
     // for its `may_borrow`, which is exactly what the contract publishes it
     // for, so a refusal is heard here rather than after the button.
     confirm: async (_total, values) => {
@@ -617,7 +617,7 @@ function loanSummary(row?: Row) {
  * Taking an issued copy back, via `POST /loanedbooks/{loanId}/return`.
  *
  * Keyed on the loan, not the book — the register's record is the one thing
- * that says which copy and which pupil. Returning settles the book only: a
+ * that says which copy and which student. Returning settles the book only: a
  * fine that accrued stays owing until the pay flow takes it, which is the
  * API's own split and is said out loud in the dialog rather than smoothed
  * over.

@@ -6,7 +6,7 @@ import type { Row } from '../../../features/collections/types.ts'
  * What this device has queued about rows that already exist, as a lookup.
  *
  * The shape three registers wanted — a subject withdrawn, a fee retired, a
- * pupil suspended — so it is written once here. Later ops win, in `seq` order:
+ * student suspended — so it is written once here. Later ops win, in `seq` order:
  * withdrawing a subject and then putting it back leaves it back, which is the
  * order the office did it in. Only ops still expected to land: a refused one is
  * not going to, and showing its state would tell the office something happened
@@ -145,7 +145,7 @@ export const withPendingFeeStatus = (rows: Row[], ops: readonly OutboxOp[]) =>
     }
   })
 
-/** Which pupils this device has queued a suspension or reinstatement for. */
+/** Which students this device has queued a suspension or reinstatement for. */
 export const pendingStanding = (ops: readonly OutboxOp[]) =>
   pendingValues(ops, WRITE.setStudentStanding, (payload) => {
     const change = payload as { id?: unknown; status?: unknown } | null

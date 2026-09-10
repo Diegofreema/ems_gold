@@ -21,7 +21,7 @@ import { SET } from '../ids'
 import { myNotices } from './my-notices'
 
 /**
- * Everything a pupil's own portal reads, on the pupil's own device.
+ * Everything a student's own portal reads, on the student's own device.
  *
  * Every endpoint here resolves the caller from the token — `students/me/*`,
  * `results/mine`, `attendances/mine`, `loanedbooks/mine`, `timetables/mine` —
@@ -36,9 +36,9 @@ import { myNotices } from './my-notices'
  */
 
 /**
- * The pupil's own record — the name, class and admission number the school
+ * The student's own record — the name, class and admission number the school
  * knows them by. The block above the sidebar reads it on every page, and a
- * pupil with no signal is still owed their own name.
+ * student with no signal is still owed their own name.
  */
 export const schoolingRecord = schoolDocument<Student>({
   id: SET.schoolingRecord,
@@ -46,7 +46,7 @@ export const schoolingRecord = schoolDocument<Student>({
   schemaVersion: 1,
 })
 
-/** The five counters on the pupil's home page. */
+/** The five counters on the student's home page. */
 export const schoolingStats = schoolDocument<StudentDashboard>({
   id: SET.schoolingStats,
   fetch: () => mySchoolingService.dashboard(),
@@ -74,7 +74,7 @@ export const schoolingResults = schoolDocument<MyMarks>({
   schemaVersion: 1,
 })
 
-/** Every day somebody took a register on this pupil, with the school's own rate. */
+/** Every day somebody took a register on this student, with the school's own rate. */
 export const schoolingAttendance = schoolDocument<MyAttendance>({
   id: SET.schoolingAttendance,
   fetch: () => registerService.mine(),
@@ -88,7 +88,7 @@ export const schoolingTimetable = schoolDocument<ClassTimetable>({
   schemaVersion: 1,
 })
 
-/** Files shared with the pupil's class. Empty school-wide, and legitimately so. */
+/** Files shared with the student's class. Empty school-wide, and legitimately so. */
 export const schoolingMaterials = schoolCollection<MyMaterial, number>({
   id: SET.schoolingMaterials,
   fetch: () => mySchoolingService.materials(),
@@ -96,7 +96,7 @@ export const schoolingMaterials = schoolCollection<MyMaterial, number>({
   schemaVersion: 1,
 })
 
-/** The pupil's own borrowings. */
+/** The student's own borrowings. */
 export const schoolingLoans = schoolCollection<Loan, number>({
   id: SET.schoolingLoans,
   fetch: () => libraryService.myLoans(),
@@ -105,7 +105,7 @@ export const schoolingLoans = schoolCollection<Loan, number>({
 })
 
 /**
- * Assignments set for the pupil's own arm.
+ * Assignments set for the student's own arm.
  *
  * Kept like everything else, and read with one eye open: `my_status` and
  * `window_problem` are worked out by the school against its own clock, so an
@@ -120,7 +120,7 @@ export const schoolingAssignments = schoolCollection<Assignment, number>({
   schemaVersion: 1,
 })
 
-/** Everything the pupil's portal keeps on the device. */
+/** Everything the student's portal keeps on the device. */
 export const schoolingCollections = [
   schoolingRecord,
   schoolingStats,

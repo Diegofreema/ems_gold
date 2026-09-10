@@ -110,7 +110,7 @@ export async function wipeLocalDb(): Promise<void> {
   // The localStorage fallback, for a device that never had OPFS — or for a
   // session that ran before the database had opened. The snapshots go with
   // the queue: a snapshot is the school's own registers, and leaving that key
-  // behind on a shared machine hands the next person real pupils, guardians
+  // behind on a shared machine hands the next person real students, guardians
   // and fee balances, which is the very thing this wipe exists to prevent.
   try {
     globalThis.localStorage?.removeItem(OUTBOX_KEY)

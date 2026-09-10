@@ -103,11 +103,11 @@ export const libraryService = {
   correctLoan: (id: Id, body: CorrectLoanBody) =>
     request<unknown>(`loanedbooks/${id}`, { method: 'POST', body }),
 
-  /** One pupil's history, with `may_borrow`. Office, pupil or guardian only. */
+  /** One student's history, with `may_borrow`. Office, student or guardian only. */
   studentLoans: (studentId: Id) =>
     request<unknown>(`loanedbooks/student/${studentId}`).then(asHistory),
 
-  /** The signed-in pupil's own borrowings. */
+  /** The signed-in student's own borrowings. */
   myLoans: () => request<unknown>('loanedbooks/mine').then(asLoans),
 
   /** Deletes the record; an outstanding copy goes back on the shelf itself. */

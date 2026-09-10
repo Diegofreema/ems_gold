@@ -3,7 +3,7 @@
  *
  * Only one thing so far, and it is the one that matters on a shared machine:
  * signing out. A school laptop gets two tabs opened on it, and signing out of
- * one used to leave the other showing a register of real pupils — the token
+ * one used to leave the other showing a register of real students — the token
  * gone, the records still on screen, and the device's database wiped out from
  * under it. The next person sat down to somebody else's school.
  *

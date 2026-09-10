@@ -10,7 +10,7 @@ import { armOf, feeStanding } from '../../student'
  * Read off the school's own record rather than written down — the admission
  * number is the one thing a student is asked for at every desk in the school,
  * and a written-in one would be the one believed. The record and the ledger
- * are the device's sets now, so a pupil with no signal still has their own
+ * are the device's sets now, so a student with no signal still has their own
  * name; the sync keeps both what the school last said.
  */
 export function StudentContext() {

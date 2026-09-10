@@ -7,7 +7,7 @@ import { studentContactBody } from './profile'
  * Saving the student's own record — the phone and the address, which is all
  * `POST /students/me` accepts.
  *
- * Queued rather than sent: a pupil correcting their address on a connection
+ * Queued rather than sent: a student correcting their address on a connection
  * that has gone keeps the correction, and the queue's toast says "saved on
  * this device" only when the send actually has to wait. The form keeps what
  * was typed — which is what was saved — so nothing here re-reads the record.

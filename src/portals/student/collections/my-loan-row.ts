@@ -13,8 +13,8 @@ import {
 import { formatNaira } from '../../../lib/format.ts'
 
 /**
- * One of the pupil's own borrowings, off `/loanedbooks/mine` — the same
- * reading as the office's lending register, minus the pupil column, because
+ * One of the student's own borrowings, off `/loanedbooks/mine` — the same
+ * reading as the office's lending register, minus the student column, because
  * every row here is theirs.
  */
 export function myLoanRow(loan: Loan, today = new Date()): Row {

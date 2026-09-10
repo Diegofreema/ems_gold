@@ -62,9 +62,9 @@ export function byStatusAndCharge(
  * The student register's four dropdowns.
  *
  * Class and arm are ids the row already carries for its edit form. The other
- * two are the school's two different words for a pupil's standing, and the
+ * two are the school's two different words for a student's standing, and the
  * column merges them — `status` shows whichever says the most — so the filters
- * read the unmerged pair beside it instead: `admission` is where the pupil is
+ * read the unmerged pair beside it instead: `admission` is where the student is
  * in admission, `studentstatus` is whether they are active or suspended.
  */
 export function byClassArmAndStanding(

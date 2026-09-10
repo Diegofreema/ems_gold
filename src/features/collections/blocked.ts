@@ -11,7 +11,7 @@ import type { CollectionDef } from './types.ts'
  * The two kinds that stay on the wire are named in CLAUDE.md and both are here
  * for a reason rather than for want of migrating: a form carrying a file has no
  * body the queue could hold, and a create that reads the school before writing
- * — a pupil's enrolment asks which session is current — has nothing to read
+ * — a student's enrolment asks which session is current — has nothing to read
  * when there is no school to ask.
  */
 export function blockedReason(

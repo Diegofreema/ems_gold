@@ -206,7 +206,7 @@ export const parents: CollectionDef = {
       }),
   },
   // Read off the device. A school's households are of the same order as its
-  // pupils, and this is the register the office searches by name.
+  // students, and this is the register the office searches by name.
   collection: localFirst({
     entities: refParents,
     rows: (all: Parent[]) => byId(all).map(parentRow),

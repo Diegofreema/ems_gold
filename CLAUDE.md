@@ -1,6 +1,6 @@
 # NETPRO EMS
 
-A school portal for four kinds of people — the office, teachers, pupils and guardians — running in
+A school portal for four kinds of people — the office, teachers, students and guardians — running in
 Nigerian schools where the connection is intermittent or absent.
 
 React 19 · TypeScript · Vite · TanStack Router · TanStack Query · TanStack DB · Tailwind 4 · zustand ·
@@ -61,7 +61,7 @@ visibly not one.
   `pageRows`, so a bound register and an unbound one hand the page the same shape and nothing in
   `collection-list.tsx`, the data table or the pagination changes. Not yet compatible with `filters`.
   Ordering lives in `src/features/collections/order.ts`.
-- **An endpoint that answers with a document is kept whole**, through `schoolDocument()`. A pupil's
+- **An endpoint that answers with a document is kept whole**, through `schoolDocument()`. A student's
   fee ledger is the bills *and* the payments taken against them; the timetable is the grid *and* the
   class it was drawn for; the mark catalogue is the words *and* which of them mean the child was in
   school. The list is one field of the answer, and storing the field alone throws away what the
@@ -92,7 +92,7 @@ persistence package is used for the local-only collections — outbox, id map, s
 hydrates exactly as documented.
 
 The school's own reference data — classes, arms, subjects, fees, sessions, terms, roles, the
-catalogue, the staff and pupil directories — lives in `src/db/collections/reference.ts`, and every
+catalogue, the staff and student directories — lives in `src/db/collections/reference.ts`, and every
 `optionsFrom` feed in `option-feeds.ts` reads it. **That is what makes a form fillable with no
 connection**, which is a bigger win than any one register: a page that lists something is useful to
 read, but a page that cannot offer the school's own classes is a page nobody can fill in.
@@ -143,7 +143,7 @@ Every mutation is applied locally at once and enqueued in the durable outbox (`s
 - **A form that cannot be queued says so before it is filled in**, not after
   (`src/features/collections/blocked.ts`). The two kinds that stay on the wire are there for a
   reason: a form carrying a file has no body the queue could hold, and a create that reads the
-  school before writing — a pupil's enrolment asks which session is current — has nothing to read
+  school before writing — a student's enrolment asks which session is current — has nothing to read
   when there is no school to ask.
 - **Nothing may read the queue before `storeReady()` resolves.** A persisted collection hydrates
   asynchronously, and until it has, `toArray` is an empty list indistinguishable from an empty
@@ -195,8 +195,8 @@ means the detail syncs only when somebody opens the classes register. Measured: 
 the arms page, none of the details.
 
 **The directories are held whole, on a decision taken in the open**: these schools run to hundreds
-of pupils, not thousands, so `A_SCHOOL` in `reference.ts` is the size the registers are fetched at
-and the one place a change of scale shows up. A school in the thousands wants the pupil and
+of students, not thousands, so `A_SCHOOL` in `reference.ts` is the size the registers are fetched at
+and the one place a change of scale shows up. A school in the thousands wants the student and
 household registers paged at the endpoint again.
 
 **A register whose filter *replaces* the population holds both and picks one.** The staff page is
@@ -249,12 +249,12 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   — not lost work, and not a reordering of anything that depended on anything.
 - **Signing out reaches every tab.** `announceSignOut` broadcasts and every other tab navigates to
   the sign-in page, because signing out of one used to leave the next tab showing a register of real
-  pupils while the database was deleted underneath it. On a shared staff-room laptop that is the
+  students while the database was deleted underneath it. On a shared staff-room laptop that is the
   whole point of wiping at all.
 - **Signing out wipes the device's database**, including the SQLite write-ahead log and the VFS page
   pool — a `.sqlite` deleted on its own leaves rows in `-wal`. School machines are shared.
 - **The school's clock is anchored across reloads.** `src/lib/server-clock.ts` keeps the last
-  offset in `localStorage`, so a pupil sitting an assignment on a laptop that is ten minutes fast
+  offset in `localStorage`, so a student sitting an assignment on a laptop that is ten minutes fast
   keeps the correction through a reload with no signal — the one moment nothing can re-measure it.
   A stored anchor beyond two days is discarded: it would mean the device's own clock had been
   changed since, and a wrong correction is worse than none. It remains what it always was — not a

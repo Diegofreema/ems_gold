@@ -17,7 +17,6 @@ import {
   House,
   LayoutGrid,
   List,
-  Mail,
   Megaphone,
   Shield,
   SlidersHorizontal,
@@ -56,10 +55,7 @@ export const adminNav: NavGroup[] = [
   },
   {
     heading: 'Parents',
-    items: [
-      { to: '/admin/parents', label: 'All parents', icon: House },
-      { to: '/admin/parents-invited', label: 'Deactivated', icon: Mail },
-    ],
+    items: [{ to: '/admin/parents', label: 'All parents', icon: House }],
   },
   {
     heading: 'Academics',

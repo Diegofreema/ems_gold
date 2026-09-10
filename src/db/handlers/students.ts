@@ -7,14 +7,14 @@ import { SET, WRITE } from '../ids'
 import { registerHandler } from '../registry'
 
 /**
- * The pupil register.
+ * The student register.
  *
  * Enrolling one is **not** idempotent — the school issues the admission number
  * and the id, so a replay admits the same child twice. Correcting a record and
- * suspending or reinstating one are: both name a pupil who already exists.
+ * suspending or reinstating one are: both name a student who already exists.
  *
  * There is no delete. The API has no route for one, which the register already
- * knows: a pupil who should not be on it is declined or suspended, and the
+ * knows: a student who should not be on it is declined or suspended, and the
  * record stays because everything filed against it does.
  */
 
@@ -31,7 +31,7 @@ registerHandler<{ id: Id; body: StudentBody }>(WRITE.updateStudent, {
 })
 
 /**
- * Suspending a pupil or putting them back. Idempotent: the op says which
+ * Suspending a student or putting them back. Idempotent: the op says which
  * standing they should end in rather than "toggle".
  */
 registerHandler<{ id: Id; status: 'Active' | 'Suspended' }>(WRITE.setStudentStanding, {
@@ -41,7 +41,7 @@ registerHandler<{ id: Id; status: 'Active' | 'Suspended' }>(WRITE.setStudentStan
 })
 
 /**
- * The pupil's own phone and address — all `POST /students/me` accepts.
+ * The student's own phone and address — all `POST /students/me` accepts.
  * Idempotent: the same fields over the caller's own record.
  */
 registerHandler<UpdateMyRecordBody>(WRITE.updateStudentRecord, {

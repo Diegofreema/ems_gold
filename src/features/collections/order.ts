@@ -9,7 +9,7 @@
  *
  * Shared rather than per portal, because the problem is the collection's and
  * not any one portal's: the teacher's e-classes and mark register and the
- * pupil's borrowing record all lost the same order for the same reason.
+ * student's borrowing record all lost the same order for the same reason.
  */
 
 /** When a row carries no usable stamp, so it sorts behind every row that does. */

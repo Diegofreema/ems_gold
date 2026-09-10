@@ -45,7 +45,7 @@ export const library: CollectionDef = {
   description:
     'Every borrowing on record — what is out, what is late and what is owed. Issue a book from here; open a loan to take it back or collect the fine.',
   action: 'Issue a book',
-  searchHint: 'Search pupil, title or standing',
+  searchHint: 'Search student, title or standing',
   footer: 'Every borrowing on record',
   emptyTitle: 'Nothing is out',
   emptyBody:

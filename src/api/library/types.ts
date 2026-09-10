@@ -54,7 +54,7 @@ export type BookSearchParams = {
 export type Loan = {
   id: number
   student_id?: number | null
-  /** The pupil's name, however the controller sends it — flat or as a record. */
+  /** The student's name, however the controller sends it — flat or as a record. */
   student_name?: string | null
   student?: {
     id?: number | null
@@ -104,7 +104,7 @@ export type BookStock = {
 
 /**
  * `POST /loanedbooks`. `toreturn` left out lends for the school's own
- * `Library.loanDays`. Refused with 409 — and a reason — where the pupil
+ * `Library.loanDays`. Refused with 409 — and a reason — where the student
  * already has a book out, owes a fine, or no copy is on the shelf.
  */
 export type LendBody = {
@@ -135,7 +135,7 @@ export type CorrectLoanBody = {
 }
 
 /**
- * `/loanedbooks/student/{studentId}` — one pupil's borrowing history, with the
+ * `/loanedbooks/student/{studentId}` — one student's borrowing history, with the
  * flag a client reads to disable the borrow button before the desk tries.
  * `may_borrow` is undefined where the answer did not carry it, and the desk
  * then simply asks the lend endpoint, which answers with its own reason.

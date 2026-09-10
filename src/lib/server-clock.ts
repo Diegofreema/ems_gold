@@ -40,7 +40,7 @@ let offset = restored()
  * The last anchor this device took, so an offline reload does not go back to
  * trusting the device's own clock.
  *
- * A pupil sitting an assignment on a laptop that is ten minutes fast keeps the
+ * A student sitting an assignment on a laptop that is ten minutes fast keeps the
  * correction through a reload with no signal, which is the one time nothing can
  * re-measure it. Guarded on every side: there is no storage at all under
  * `node --test`, a private window can throw on read, and what comes back is
@@ -60,7 +60,7 @@ function restored(): number {
  *
  * Separated out and tested because getting it wrong is quiet: whatever is under
  * this key was written by whoever used this browser last, and a nonsense value
- * read as a number would silently move every deadline a pupil is timed against.
+ * read as a number would silently move every deadline a student is timed against.
  */
 export function usableOffset(raw: unknown): number {
   if (raw === null || raw === undefined || raw === '') return 0

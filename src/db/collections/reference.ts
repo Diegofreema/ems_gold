@@ -222,7 +222,7 @@ export const refTeachers = schoolCollection<Teacher, number>({
 })
 
 /**
- * How many pupils a school on this deployment is expected to hold.
+ * How many students a school on this deployment is expected to hold.
  *
  * Higher than the `ALL` above, because this is the one register that scales
  * with the school rather than with how it is organised. Hundreds is the size
@@ -232,7 +232,7 @@ export const refTeachers = schoolCollection<Teacher, number>({
 export const A_SCHOOL = 500
 
 /**
- * Every pupil, whatever stage of admission they are at.
+ * Every student, whatever stage of admission they are at.
  *
  * Unfiltered on purpose. The office's register filters by admission and by
  * enrolment, the applicants list is the same set narrowed to one of them, and
@@ -313,7 +313,7 @@ export const refLoans = schoolCollection<Loan, number>({
  *
  * Readied by the admin shell so a form opened later, with no connection, still
  * has the school's own classes, arms, subjects, fees and calendar to offer.
- * The heavier directories — staff, pupils, guardians, the catalogue — are left
+ * The heavier directories — staff, students, guardians, the catalogue — are left
  * to sync when a feed actually asks for one.
  */
 export const referenceCollections = [

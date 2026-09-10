@@ -18,7 +18,7 @@ import { feeCounts, invoiceRows, paidTotal, paymentRows } from '../features/fees
  * A ledger with nothing on it stands in for one this device holds nothing of:
  * every reader below already treats no bills as no bills. A set that never
  * synced refuses inside `heldDocument`, and that refusal is what puts the page
- * into its "could not load" state rather than showing a pupil a clean sheet.
+ * into its "could not load" state rather than showing a student a clean sheet.
  */
 const ledger = async () =>
   (await heldDocument(schoolingInvoices)) ?? { invoices: [], transactions: [] }

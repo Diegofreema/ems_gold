@@ -102,29 +102,29 @@ test('nothing set leaves the whole catalogue', () => {
 
 
 /*
- * The student register merges the school's two words for a pupil's standing
+ * The student register merges the school's two words for a student's standing
  * into one column, so its filters read the unmerged pair beside it.
  */
-const PUPILS: Row[] = [
+const STUDENTS: Row[] = [
   { id: '1', department_id: '7', class_arm_id: '3', admission: 'Admitted', studentstatus: 'Active' },
   { id: '2', department_id: '7', class_arm_id: '4', admission: 'Admitted', studentstatus: 'Suspended' },
   { id: '3', department_id: '9', class_arm_id: '5', admission: 'Applied', studentstatus: '' },
 ]
 
 test('a class or an arm narrows the roll', () => {
-  assert.deepEqual(ids(byClassArmAndStanding(PUPILS, { department_id: '7' })), ['1', '2'])
-  assert.deepEqual(ids(byClassArmAndStanding(PUPILS, { class_arm_id: '4' })), ['2'])
+  assert.deepEqual(ids(byClassArmAndStanding(STUDENTS, { department_id: '7' })), ['1', '2'])
+  assert.deepEqual(ids(byClassArmAndStanding(STUDENTS, { class_arm_id: '4' })), ['2'])
 })
 
 test('admission and enrolment are two different filters', () => {
-  assert.deepEqual(ids(byClassArmAndStanding(PUPILS, { status: 'Applied' })), ['3'])
-  assert.deepEqual(ids(byClassArmAndStanding(PUPILS, { studentstatus: 'Suspended' })), ['2'])
+  assert.deepEqual(ids(byClassArmAndStanding(STUDENTS, { status: 'Applied' })), ['3'])
+  assert.deepEqual(ids(byClassArmAndStanding(STUDENTS, { studentstatus: 'Suspended' })), ['2'])
 })
 
 test('the four combine', () => {
   assert.deepEqual(
     ids(
-      byClassArmAndStanding(PUPILS, {
+      byClassArmAndStanding(STUDENTS, {
         department_id: '7',
         status: 'Admitted',
         studentstatus: 'Active',
@@ -135,7 +135,7 @@ test('the four combine', () => {
 })
 
 test('nothing set leaves the whole roll', () => {
-  assert.deepEqual(ids(byClassArmAndStanding(PUPILS, {})), ['1', '2', '3'])
+  assert.deepEqual(ids(byClassArmAndStanding(STUDENTS, {})), ['1', '2', '3'])
 })
 
 

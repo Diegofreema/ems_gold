@@ -330,7 +330,7 @@ const FOUND = 20
 /**
  * Whether what the office typed is in this option's text.
  *
- * The label is the whole of it on both searched feeds: a pupil's is the name
+ * The label is the whole of it on both searched feeds: a student's is the name
  * and the admission number, and a guardian's is both parents' names — which is
  * what the office is typing, and what the school's own search matches on.
  */
@@ -343,7 +343,7 @@ function matches(option: Option, needle: string): boolean {
  * school cannot be reached.
  *
  * These are the one place a request is still the right answer: they exist for
- * registers too long to hold — every guardian, every admitted pupil — and the
+ * registers too long to hold — every guardian, every admitted student — and the
  * endpoint searches the whole of one where this device holds at most the first
  * couple of hundred. So the school stays the authority.
  *

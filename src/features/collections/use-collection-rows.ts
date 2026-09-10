@@ -43,7 +43,7 @@ export function useCollectionRows(definition: CollectionDef) {
   /*
    * Every set the binding reads is made ready here, not left to whatever else
    * happens to preload it. The register is gated below on its lookups being
-   * ready, and a lookup nothing preloads — the guardians behind the pupils
+   * ready, and a lookup nothing preloads — the guardians behind the students
    * register, the roles behind the staff one — left it sitting on its
    * skeleton. Fire and forget, like the shell's own preloads: a set that
    * refuses answers through the live query's own error state.

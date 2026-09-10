@@ -537,7 +537,7 @@ export type CollectionDef = {
   /**
    * May be async, and is awaited. Queueing is synchronous in itself, but a
    * write can need something off the device before it has a body — enrolling a
-   * pupil reads which session the school is in — and the form must not close
+   * student reads which session the school is in — and the form must not close
    * before the op is written down.
    */
   queue?: (values: Record<string, unknown>, recordId?: string) => void | Promise<void>

@@ -3,7 +3,7 @@ import { BLANK } from '../collections/blank.ts'
 
 /**
  * Reading one borrowing off `/loanedbooks`, shared by the office's lending
- * register and the pupil's own page.
+ * register and the student's own page.
  *
  * The controller's live rows have not been read yet, so every field is taken
  * by the contract's own name first and then by the obvious variants — a name
@@ -17,7 +17,7 @@ export function first(...values: (string | null | undefined)[]): string {
   return ''
 }
 
-/** The pupil, whichever way the row spells them. */
+/** The student, whichever way the row spells them. */
 export function loanStudent(loan: Loan): string {
   const parts = loan.student
     ? [loan.student.fname, loan.student.mname, loan.student.lname]

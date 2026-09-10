@@ -16,7 +16,7 @@ import { formatNaira } from '../../../lib/format.ts'
 /**
  * One borrowing as the lending register reads it. The reading itself —
  * which key carries the name, when a loan counts as overdue — lives in
- * `features/library/loan-read`, shared with the pupil's own page.
+ * `features/library/loan-read`, shared with the student's own page.
  */
 
 function text(value: string | null | undefined): string {

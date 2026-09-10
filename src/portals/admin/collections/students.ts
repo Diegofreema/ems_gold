@@ -45,10 +45,10 @@ const ACTIVE = 'Active'
  * endpoint returns with it — there is no endpoint that counts without listing.
  */
 /**
- * How many of the pupils on this device answer to something.
+ * How many of the students on this device answer to something.
  *
  * The queue counts too, for the one figure it can move: a register showing a
- * pupil suspended under a tile reading "Suspended 0" would be disagreeing with
+ * student suspended under a tile reading "Suspended 0" would be disagreeing with
  * itself in the same eyeful. Admission is not something this app queues, so
  * only the standing is read through the queue.
  */
@@ -74,16 +74,16 @@ const namesFrom = (guardians: Parent[]): ReadonlyMap<string, string> =>
   }))
 
 /**
- * The session a pupil enrolled now joins, read off the device.
+ * The session a student enrolled now joins, read off the device.
  *
  * The school's own `sessions/current` is the authority, and asking it is what
- * used to make enrolling a pupil impossible without a connection — a create
+ * used to make enrolling a student impossible without a connection — a create
  * that has to read the school before it can write cannot be queued. The same
  * fact is on the sessions set, which every office form already reads, so it is
  * taken from there instead.
  *
  * A make-current queued and not yet sent is not reflected here: this is the
- * year the *school* is in, which is the one the pupil should be filed under.
+ * year the *school* is in, which is the one the student should be filed under.
  */
 async function currentSessionId(): Promise<number | undefined> {
   const sessions = await heldRows(refSessions)
@@ -91,7 +91,7 @@ async function currentSessionId(): Promise<number | undefined> {
 }
 
 /**
- * Pupils enrolled on this device that the school has not seen.
+ * Students enrolled on this device that the school has not seen.
  *
  * No admission number: the school issues it, so the column reads as a dash
  * rather than inventing one.
@@ -114,7 +114,7 @@ function queuedStudents(ops: readonly OutboxOp[]): Row[] {
       return {
         id: op.targetKey as string,
         adm: BLANK,
-        name: named || 'Unnamed pupil',
+        name: named || 'Unnamed student',
         arm: BLANK,
         parent: BLANK,
         fees: BLANK,
@@ -127,7 +127,7 @@ function queuedStudents(ops: readonly OutboxOp[]): Row[] {
     })
 }
 
-/** Pupils, with a queued suspension or reinstatement shown. */
+/** Students, with a queued suspension or reinstatement shown. */
 const withPendingStanding = (rows: Row[], ops: readonly OutboxOp[]) =>
   withPendingState(rows, ops, WRITE.setStudentStanding, (payload) => {
     const change = payload as { id?: unknown; status?: unknown } | null
@@ -352,7 +352,7 @@ export const students: CollectionDef = {
   /*
    * Read off the device, joined to the household directory.
    *
-   * The pupil register is the one set that scales with the school rather than
+   * The student register is the one set that scales with the school rather than
    * with how it is organised, and it is held whole — see `A_SCHOOL`. A school
    * in the thousands wants this paged at the endpoint again.
    */
@@ -403,7 +403,7 @@ export const students: CollectionDef = {
       return
     }
 
-    // A new pupil joins the session the school is currently running. Editing
+    // A new student joins the session the school is currently running. Editing
     // one never moves them between sessions, so this is only read here — and
     // it is read off the device, which is what lets an enrolment be written
     // with no connection at all.
@@ -523,7 +523,7 @@ export const applicants: CollectionDef = {
   ],
   /*
    * The same set as the register above, read as applications rather than as
-   * pupils — an application *is* a student record, at the stage before the
+   * students — an application *is* a student record, at the stage before the
    * office has decided about it.
    *
    * Its filter does not narrow the queue, it moves between three of them: unset

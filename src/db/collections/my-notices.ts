@@ -9,7 +9,7 @@ import { SET } from '../ids'
  *
  * Its own module rather than a member of any one portal's file, because the
  * endpoint is token-scoped and the bell hangs in all of them: a teacher, a
- * pupil and a guardian each get their own answer under the same id, and the
+ * student and a guardian each get their own answer under the same id, and the
  * per-account wipe keeps one login's board from ever reaching another. The
  * office is the exception — an administrator's `/notifications/mine` comes
  * back empty, so its bell reads `refBoard`, the board it posts to.
