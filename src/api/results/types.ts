@@ -68,6 +68,14 @@ export type Mark = {
   session?: { id: number; name: string } | null
   semester?: { id: number; name: string } | null
   subject?: { id: number; name: string; subjectcode?: string | null } | null
+  /**
+   * The class, and **not** under `department` — that name is taken by the id
+   * above, so the expansion arrives as `classdata`. Read through `markClass`
+   * in `result-row.ts`, which tries both: this was inferred from the sibling
+   * endpoints while bronze was refusing every login, and only the register
+   * showing a dash in its Class column revealed the real spelling.
+   */
+  classdata?: { id: number; name: string; deptcode?: string | null } | null
   department?: { id: number; name: string; deptcode?: string | null } | null
   student?: {
     id: number
@@ -132,12 +140,40 @@ export type DecideBody = { status: ApprovalStatus }
 /**
  * One batch waiting on the office.
  *
- * **Unverified.** The four ids are certain — `approve` and `reject` take
- * exactly them, so a queue that did not name them could not be acted on — and
- * everything past that is read tolerantly by `batchRow`, which is the single
- * place to correct once a populated queue has been seen.
+ * **Read live on 2026-09-10**, so nothing here is guessed any more. Every
+ * label the queue carries is flat — the four ids each sit beside a plain name,
+ * with none of the expanded rows the marks themselves arrive with.
+ *
+ * Two things it does **not** carry, and no screen may imply otherwise: there
+ * is no arm (a batch is subject × class × term × session, which is exactly
+ * what the four ids say) and there is no teacher. Who filed it is on the marks
+ * inside it, not on the batch.
  */
-export type PendingBatch = BatchKey & Record<string, unknown>
+export type PendingBatch = BatchKey & {
+  /**
+   * The school's own id for the batch — the same four ids, underscore-joined,
+   * in the same order `batchId` writes them. Used as the row id where it is
+   * there, so the office's URL is the school's own name for the batch.
+   */
+  key?: string | null
+  subject?: string | null
+  /**
+   * The class. Spelled `class` here, where a mark spells the same thing
+   * `classdata` — on a mark, `department` is taken by the id.
+   */
+  class?: string | null
+  semester?: string | null
+  session?: string | null
+  /**
+   * **Already formatted for a reader** — `"9/1/26, 2:38 PM"`, month/day/year
+   * with no zone, like the inbox's `last_message_at`. It must not be parsed:
+   * it is shown exactly as it arrived, or it becomes a date an hour out or an
+   * "Invalid Date".
+   */
+  uploaded?: string | null
+  /** How many students' marks are in the batch. The wire spelling is theirs. */
+  pupils?: number | null
+}
 
 /** `department_id` is required; the rest narrow the sheet. */
 export type ClassSheetParams = {

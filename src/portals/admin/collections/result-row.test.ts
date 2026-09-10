@@ -8,6 +8,7 @@ import {
   correctBody,
   deletable,
   enterBody,
+  markClass,
   markRow,
   markState,
   parseBatchId,
@@ -101,27 +102,59 @@ test('a row id that is not a batch key is refused rather than half-read', () => 
   assert.equal(parseBatchId('10-1-1-0'), undefined)
 })
 
-test('a batch is read for its four ids whether they arrive bare or expanded', () => {
-  const bare = batchRow({
+/** One batch exactly as `GET /results/pending` sends it, read 2026-09-10. */
+const BATCH = {
+  key: '10_1_1_12',
+  subject_id: 10,
+  subject: 'INTEGRATED SCIENCE',
+  department_id: 1,
+  class: 'JSS 1',
+  semester_id: 1,
+  semester: 'First Term',
+  session_id: 12,
+  session: '2025/2026',
+  uploaded: '9/1/26, 2:38 PM',
+  pupils: 4,
+}
+
+test('a batch reads every label the queue actually sends', () => {
+  const row = batchRow(BATCH)
+  assert.equal(row.subject, 'INTEGRATED SCIENCE')
+  assert.equal(row.klass, 'JSS 1')
+  assert.equal(row.term, 'First Term')
+  assert.equal(row.session, '2025/2026')
+  assert.equal(row.students, '4')
+})
+
+test("the row is keyed by the school's own key, and it parses back", () => {
+  assert.equal(batchRow(BATCH).id, '10_1_1_12')
+  assert.deepEqual(parseBatchId('10_1_1_12'), {
     subject_id: 10,
     department_id: 1,
     semester_id: 1,
-    session_id: 8,
-    subject_name: 'MATHEMATICS',
-    total: 30,
+    session_id: 12,
   })
-  assert.equal(bare.id, '10-1-1-8')
-  assert.equal(bare.subject, 'MATHEMATICS')
-  assert.equal(bare.marks, '30')
+})
 
-  const expanded = batchRow({
-    subject: { id: 10, name: 'MATHEMATICS' },
-    department: { id: 1, name: 'JSS 1' },
-    semester: { id: 1, name: 'First Term' },
-    session: { id: 8, name: '2025/2026' },
-  } as never)
-  assert.equal(expanded.id, '10-1-1-8')
-  assert.equal(expanded.klass, 'JSS 1')
+test('a queue that sends no key of its own is named by its four ids', () => {
+  assert.equal(batchRow({ ...BATCH, key: undefined }).id, '10-1-1-12')
+})
+
+test('the upload stamp is shown exactly as it arrived, never parsed', () => {
+  // "9/1/26, 2:38 PM" is month/day/year with no zone. Read as a date it is
+  // either a day out or an "Invalid Date"; the school already wrote it out.
+  assert.equal(batchRow(BATCH).filed, '9/1/26, 2:38 PM')
+})
+
+test('a batch missing a label reads blank rather than as a wrong one', () => {
+  const row = batchRow({ ...BATCH, class: null, uploaded: null, pupils: null })
+  assert.equal(row.klass, '\u2014')
+  assert.equal(row.filed, '\u2014')
+  assert.equal(row.students, '\u2014')
+})
+
+test('a batch of no students reads as none, not as missing', () => {
+  assert.equal(batchRow({ ...BATCH, pupils: 0 }).students, '0')
 })
 
 test('the batches are found whichever key the queue carries them under', () => {
@@ -170,4 +203,29 @@ test('the form can add the parts up before the API does', () => {
   assert.equal(partsTotal({ first_ca: '15', second_ca: '10', homework_project: '5', first_exam: '55' }), 85)
   assert.equal(partsTotal({ first_ca: '', first_exam: '40' }), 40)
   assert.equal(partsTotal({}), 0)
+})
+
+test('the class is read off `classdata`, which is where the answer carries it', () => {
+  const row = markRow({ ...MARK, department: undefined, classdata: { id: 3, name: 'JSS 2' } })
+  assert.equal(row.klass, 'JSS 2')
+})
+
+test('`department` still answers where a response carries it there', () => {
+  assert.equal(markClass({ ...MARK, classdata: undefined }), 'JSS 1')
+})
+
+test('`classdata` wins over `department` when a response sends both', () => {
+  assert.equal(
+    markClass({ ...MARK, classdata: { id: 3, name: 'JSS 2' } }),
+    'JSS 2',
+  )
+})
+
+test('a class sent as a plain name is read as one', () => {
+  const bare = { ...MARK, department: undefined, classdata: 'JSS 3' } as unknown as Mark
+  assert.equal(markClass(bare), 'JSS 3')
+})
+
+test('a class under none of the spellings reads blank, never as a wrong class', () => {
+  assert.equal(markClass({ ...MARK, department: undefined }), '\u2014')
 })

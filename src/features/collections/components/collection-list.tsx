@@ -19,6 +19,7 @@ import { canChange } from '../unsynced'
 import { useCollectionRows } from '../use-collection-rows'
 import { useRemoveRecord } from '../use-remove-record'
 import { useRowAction } from '../use-row-action'
+import { filledColumns } from '../columns'
 import { toTableColumns } from './collection-columns'
 import { CollectionFilters } from './collection-filters'
 import { CollectionSummary } from './collection-summary'
@@ -255,7 +256,7 @@ export function CollectionList({
             )}
           >
             <DataTable
-              columns={toTableColumns(definition.columns)}
+              columns={toTableColumns(filledColumns(definition.columns, paged.rows))}
               rows={paged.rows}
               rowKey={(row) => row.id}
               onRowClick={(row) =>

@@ -212,22 +212,28 @@ export const resultQueue: CollectionDef = {
     'Every batch of marks has been released or sent back. A new one appears here as soon as a teacher files marks, and a corrected mark comes back into the queue on its own.',
   noun: 'batch',
   nameKey: 'subject',
+  /*
+   * Everything the queue actually sends, and nothing it does not.
+   *
+   * There is no arm — a batch is subject × class × term × session, which is
+   * exactly what its four ids say — and no teacher: who filed a mark is on the
+   * mark, not on the batch it belongs to. Both used to be listed and both read
+   * as a dash on every row.
+   */
   columns: [
     { key: 'subject', label: 'Subject', cardRole: 'title' },
     { key: 'klass', label: 'Class', cardRole: 'subtitle' },
     { key: 'term', label: 'Term' },
-    { key: 'marks', label: 'Marks', align: 'right' },
-    { key: 'by', label: 'Filed by' },
+    { key: 'session', label: 'Session' },
+    { key: 'students', label: 'Students', align: 'right' },
     { key: 'filed', label: 'Filed' },
   ],
   detail: [
     { key: 'subject', label: 'Subject' },
     { key: 'klass', label: 'Class' },
-    { key: 'arm', label: 'Arm' },
     { key: 'term', label: 'Term' },
     { key: 'session', label: 'Session' },
-    { key: 'marks', label: 'Marks in the batch' },
-    { key: 'by', label: 'Filed by' },
+    { key: 'students', label: 'Students in the batch' },
     { key: 'filed', label: 'Filed' },
   ],
   source: async (params) => pageRows(await queueRows(), params),

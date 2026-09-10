@@ -7,7 +7,7 @@ import type {
   PendingBatch,
 } from '../../../api/results/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
-import { looseId, looseText, pick } from '../../../features/collections/loose.ts'
+import { looseText, pick } from '../../../features/collections/loose.ts'
 import { mark } from '../../../features/collections/mark.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { when } from '../../../features/collections/when.ts'
@@ -50,6 +50,40 @@ export function filedBy(entry: Mark): string {
 }
 
 /**
+ * The class a mark was filed against.
+ *
+ * `department` is what every sibling endpoint expands and what this row read
+ * for, and the register showed a dash in the Class column for every mark: the
+ * answer carries the class under `classdata` instead. That is not as odd as it
+ * looks — the API's table for a class is `departments`, and `department` on a
+ * mark is the *id*, so the expansion had to be called something else.
+ *
+ * Read tolerantly rather than repinned, because none of this shape was seen
+ * live when it was written: the marking cycle shipped while bronze was
+ * refusing every login, so the expansions were inferred from the guardian's
+ * and the teacher's own endpoints. The named keys are tried in turn and the
+ * value is read whether it arrived as a string or as an expanded row.
+ *
+ * The one place to correct — and to shrink to a single key — once a populated
+ * answer has been read properly.
+ */
+export function markClass(entry: Mark): string {
+  const record = entry as unknown as Record<string, unknown>
+  return className(
+    pick(record, 'classdata', 'department', 'class', 'class_name', 'department_name'),
+  )
+}
+
+/** A class however it arrived: a name, or a row that carries one. */
+function className(value: unknown): string {
+  if (value && typeof value === 'object') {
+    const named = pick(value as Record<string, unknown>, 'name', 'class_name', 'department', 'deptcode')
+    return named === undefined ? BLANK : looseText(named)
+  }
+  return looseText(value)
+}
+
+/**
  * One mark, as the office's register reads it.
  *
  * The four parts are on the record panel rather than the table: a register
@@ -63,7 +97,7 @@ export function markRow(entry: Mark): Row {
     id: String(entry.id),
     name: studentName(entry),
     subject: looseText(entry.subject) === BLANK ? `Subject ${entry.subject_id}` : looseText(entry.subject),
-    klass: looseText(entry.department),
+    klass: markClass(entry),
     total: mark(entry.total),
     grade: text(entry.grade),
     state: STATE_LABEL[state],
@@ -107,8 +141,16 @@ export function batchId(key: BatchKey): string {
   return [key.subject_id, key.department_id, key.semester_id, key.session_id].join('-')
 }
 
+/**
+ * Reads a row id back into the four ids.
+ *
+ * Both separators, because the queue sends its own `key` underscore-joined and
+ * the register used to compose one with hyphens. The order is the same either
+ * way, so a URL written before the school's own key was used still opens the
+ * batch it named.
+ */
 export function parseBatchId(recordId: string): BatchKey | undefined {
-  const parts = recordId.split('-').map(Number)
+  const parts = recordId.split(/[-_]/).map(Number)
   if (parts.length !== 4 || parts.some((part) => !Number.isFinite(part) || part <= 0)) {
     return undefined
   }
@@ -117,34 +159,40 @@ export function parseBatchId(recordId: string): BatchKey | undefined {
 }
 
 /**
- * One batch in the queue, read defensively.
+ * One batch in the queue.
  *
- * `GET /results/pending` has never been read with anything on it, so what a
- * batch row holds is unverified — except the four ids, which `approve` and
- * `reject` both take, so a queue that did not name them could not be acted on
- * at all. Everything else is read for the first key that carries it.
+ * Read live on 2026-09-10, so this reads the answer's own keys rather than
+ * trying spellings: every label is flat beside its id, the class is `class`,
+ * and the count of students is `pupils`.
+ *
+ * `uploaded` is passed straight through. It arrives already written for a
+ * reader — `"9/1/26, 2:38 PM"` — so `when()` would either re-format a date it
+ * had to guess the zone of, or hand back "Invalid Date".
  */
 export function batchRow(batch: PendingBatch): Row {
   const key: BatchKey = {
-    subject_id: looseId(pick(batch, 'subject_id', 'subject')) ?? 0,
-    department_id: looseId(pick(batch, 'department_id', 'department')) ?? 0,
-    semester_id: looseId(pick(batch, 'semester_id', 'semester')) ?? 0,
-    session_id: looseId(pick(batch, 'session_id', 'session')) ?? 0,
+    subject_id: Number(batch.subject_id) || 0,
+    department_id: Number(batch.department_id) || 0,
+    semester_id: Number(batch.semester_id) || 0,
+    session_id: Number(batch.session_id) || 0,
   }
-
-  const filed = pick(batch, 'uploaddate', 'datecreated', 'created_at', 'filed_at')
 
   return {
-    id: batchId(key),
-    subject: looseText(pick(batch, 'subject_name', 'subject')),
-    klass: looseText(pick(batch, 'department_name', 'class_name', 'department')),
-    arm: looseText(pick(batch, 'class_arm_name', 'class_arm')),
-    term: looseText(pick(batch, 'semester_name', 'semester')),
-    session: looseText(pick(batch, 'session_name', 'session')),
-    marks: looseText(pick(batch, 'total', 'count', 'marks', 'results', 'pupils')),
-    by: looseText(pick(batch, 'teacher', 'teacher_name', 'uploaded_by', 'user')),
-    filed: typeof filed === 'string' ? when(filed) : BLANK,
+    // The school's own name for the batch where it sent one. It is the same
+    // four ids in the same order, so the two forms name the same thing.
+    id: batch.key?.trim() || batchId(key),
+    subject: text(batch.subject),
+    klass: text(batch.class),
+    term: text(batch.semester),
+    session: text(batch.session),
+    students: count(batch.pupils),
+    filed: text(batch.uploaded),
   }
+}
+
+/** A tally. Nothing sent reads blank; a real zero reads as zero. */
+function count(value: number | null | undefined): string {
+  return typeof value === 'number' && Number.isFinite(value) ? String(value) : BLANK
 }
 
 /**

@@ -1116,12 +1116,20 @@ function batchOf(row?: Row) {
   return key
 }
 
+/**
+ * What the office is about to sign off, in the queue's own words. Only the
+ * tiles the batch actually carries — releasing marks is the one screen in the
+ * app where a dash would be read as "and something else I cannot see".
+ */
 function batchSummary(row?: Row) {
   return [
-    { label: 'Class', value: row?.klass ?? DASH },
-    { label: 'Term', value: row?.term ?? DASH },
-    { label: 'Marks', value: row?.marks ?? DASH },
-  ]
+    { label: 'Class', value: row?.klass },
+    { label: 'Term', value: row?.term },
+    { label: 'Session', value: row?.session },
+    { label: 'Students', value: row?.students },
+  ].filter((tile): tile is { label: string; value: string } =>
+    Boolean(tile.value && tile.value !== DASH),
+  )
 }
 
 const batchSubject = (row?: Row) =>
