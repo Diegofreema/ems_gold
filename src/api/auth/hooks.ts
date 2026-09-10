@@ -50,8 +50,12 @@ export function useLogin() {
       // Open this account's own database, wiping first if the device was last
       // used by somebody else. A signed-out session that was interrupted — a
       // closed lid, a killed tab — is the case this catches, and it must be
-      // caught before a single collection starts syncing into it.
-      void adoptDevice(String(result.user.id))
+      // caught before a single collection starts syncing into it. Returned
+      // rather than fired and forgotten: react-query settles `mutateAsync`
+      // only once this resolves, so the sign-in screen cannot navigate — and
+      // no portal can start syncing or queueing — while the database is still
+      // being wiped, opened or rebound under it.
+      return adoptDevice(String(result.user.id))
     },
   })
 }

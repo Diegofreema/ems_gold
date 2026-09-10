@@ -1,6 +1,7 @@
 import { openFor } from './bootstrap'
-import { resumeAfterSignIn, startDrain } from './drain'
+import { resumeAfterSignIn, startDrain, stopDrain } from './drain'
 import { runtime } from './runtime'
+import { resetStore, storeMatchesRuntime } from './store'
 import { removeForeignDatabases, wipeLocalDb } from './wipe'
 
 /**
@@ -23,6 +24,21 @@ export async function adoptDevice(ownerId: string): Promise<void> {
   await removeForeignDatabases(ownerId)
 
   await openFor(ownerId)
+
+  /*
+   * The store may already have been built — a boot with nobody signed in has
+   * no database to open, so the outbox, the id map and the snapshots were
+   * built against the localStorage fallback, and refs cached against the
+   * wrong backing would keep this whole session's work there: safe until the
+   * next reload bound to the real database and never read those keys again.
+   * So the store is torn down and rebuilt against what is open now;
+   * `startDrain` below reloads the queue, and `storeReady` walks anything the
+   * fallback still holds into the durable store.
+   */
+  if (!storeMatchesRuntime()) {
+    stopDrain()
+    resetStore()
+  }
 
   // A queue that stopped because the last token was refused can go again.
   resumeAfterSignIn()

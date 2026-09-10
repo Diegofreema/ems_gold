@@ -3,6 +3,7 @@ import type { Child as EnrolledChild, FamilyInvoice } from '@/api/parents/types'
 import type { Mark } from '@/portals/parent/family'
 import { schoolCollection } from '../collection'
 import { SET } from '../ids'
+import { mergeHeld } from '../merge-held'
 import { readSnapshot } from '../snapshot'
 
 /**
@@ -67,8 +68,9 @@ function isoDay(date: Date): string {
  *
  * There is no household-wide register — `my-children/{id}/attendance` is the
  * only one a guardian may read — so this still costs a request per child. A
- * child whose register refuses is drawn with no marks rather than taking the
- * household down with them, exactly as before.
+ * child whose register refuses keeps the marks the device already held for
+ * them rather than taking the household down with them — see the note on the
+ * fetch.
  *
  * Whose children they are is read off the copy the children collection already
  * keeps, and only asked for when there is none.
@@ -90,9 +92,28 @@ export const parentAttendance = schoolCollection<ChildMark, string>({
     const from = new Date(today)
     from.setDate(from.getDate() - MARK_DAYS)
 
-    const perChild = await Promise.all(
-      children.map((child) =>
-        myFamilyService
+    /*
+     * A child whose register refuses keeps the marks the device already held
+     * for them. What this fetch returns becomes the collection's whole state
+     * *and* its snapshot, so resolving a failed child as "no marks" did not
+     * draw an empty chart for a moment — it erased the school's last answer
+     * for that child, on the one kind of connection (`navigator.onLine` true,
+     * requests dying) that gets past the offline guard in `schoolCollection`.
+     * The held marks are kept whole rather than re-windowed: at worst they
+     * trail the moving window by the days since the last good sync, which is
+     * more truth, not less.
+     */
+    const held = new Map<number, ChildMark[]>()
+    for (const mark of readSnapshot<ChildMark>(SET.parentAttendance) ?? []) {
+      const marks = held.get(mark.childId)
+      if (marks) marks.push(mark)
+      else held.set(mark.childId, [mark])
+    }
+
+    const results = await Promise.all(
+      children.map(async (child) => ({
+        key: child.id,
+        fresh: await myFamilyService
           .childAttendance(child.id, {
             start_date: isoDay(from),
             end_date: isoDay(today),
@@ -106,11 +127,11 @@ export const parentAttendance = schoolCollection<ChildMark, string>({
               }),
             ),
           )
-          .catch((): ChildMark[] => []),
-      ),
+          .catch(() => undefined),
+      })),
     )
 
-    return perChild.flat()
+    return mergeHeld(results, held).flat()
   },
   getKey: (mark) => mark.id,
   schemaVersion: 1,

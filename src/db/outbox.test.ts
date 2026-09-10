@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { cascadeFrom, isLocalKey, nextOp, substitute, unresolved, type OutboxOp } from './outbox.ts'
+import {
+  cascadeFrom,
+  isLocalKey,
+  nextOp,
+  renumberImported,
+  substitute,
+  unresolved,
+  type OutboxOp,
+} from './outbox.ts'
 
 const op = (over: Partial<OutboxOp> & Pick<OutboxOp, 'id' | 'seq'>): OutboxOp => ({
   handler: 'test.write',
@@ -106,4 +114,29 @@ test('only a local key reads as one', () => {
   assert.equal(isLocalKey('4'), false)
   assert.equal(isLocalKey(4), false)
   assert.equal(isLocalKey(null), false)
+})
+
+test('an import into an empty queue keeps the numbers the work was done under', () => {
+  const imported = [op({ id: 'b', seq: 2 }), op({ id: 'a', seq: 1 })]
+  assert.deepEqual(
+    renumberImported([], imported).map((one) => [one.id, one.seq]),
+    [
+      ['a', 1],
+      ['b', 2],
+    ],
+  )
+})
+
+test('an import into a live queue follows it, in its own order', () => {
+  // Fallback seqs were issued against an empty queue; unchanged they would
+  // tie or undercut work the durable queue already numbered.
+  const existing = [op({ id: 'x', seq: 4 }), op({ id: 'y', seq: 7 })]
+  const imported = [op({ id: 'b', seq: 2 }), op({ id: 'a', seq: 1 })]
+  assert.deepEqual(
+    renumberImported(existing, imported).map((one) => [one.id, one.seq]),
+    [
+      ['a', 8],
+      ['b', 9],
+    ],
+  )
 })

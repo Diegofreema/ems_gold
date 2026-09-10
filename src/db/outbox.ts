@@ -87,6 +87,28 @@ export function nextOp(ops: readonly OutboxOp[], now: number): OutboxOp | undefi
 }
 
 /**
+ * Imported ops renumbered to sit behind whatever the queue already holds.
+ *
+ * A queue read back off the localStorage fallback — a session that ran before
+ * the durable database had opened — carries `seq` numbers issued against an
+ * empty queue, and dropping them in unchanged could tie or undercut work the
+ * durable queue already numbered. So where the durable queue holds anything,
+ * the imported ops keep their own relative order and follow it; where it is
+ * empty — the common case, a queue orphaned by a reload — they keep the
+ * numbers they were done under.
+ */
+export function renumberImported(
+  existing: readonly OutboxOp[],
+  imported: readonly OutboxOp[],
+): OutboxOp[] {
+  const ordered = [...imported].sort((a, b) => a.seq - b.seq)
+  if (existing.length === 0) return ordered
+
+  const base = Math.max(...existing.map((op) => op.seq))
+  return ordered.map((op, index) => ({ ...op, seq: base + index + 1 }))
+}
+
+/**
  * The op ids that fail as a consequence of `failedId` failing, transitively.
  *
  * A write that names a row the school will now never create cannot itself

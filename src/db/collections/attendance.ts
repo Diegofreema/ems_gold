@@ -2,6 +2,7 @@ import { ApiError } from '@/api/client'
 import { registerService } from '@/api/attendance/service'
 import type { MyClass, StatusCatalogue } from '@/api/attendance/types'
 import { schoolCollection } from '../collection'
+import { mergeHeld } from '../merge-held'
 import { dayKey, type DayRegister } from '../register-day'
 import { SET } from '../ids'
 import { readSnapshot } from '../snapshot'
@@ -96,30 +97,52 @@ export function daysKept(today: Date, span = DAYS_KEPT): string[] {
  * app's default network mode and would pause rather than fail, leaving this
  * collection in `loading` for as long as the device is offline.
  *
- * One refusing day is drawn as a day this device has not seen rather than
- * taking the other days down with it.
+ * One refusing day keeps the copy the device already held — see the note on
+ * the fetch — rather than taking the other days down with it, or worse, being
+ * erased by its own refusal.
  */
 export const registerDays = schoolCollection<DayRegister, string>({
   id: SET.registerDays,
   fetch: async () => {
+    // The same 404-means-none reading as `registerArms` above; any other
+    // failure throws, so the whole fetch falls through to the snapshot rather
+    // than deciding this teacher has no arms and erasing the register with it.
     const arms =
       readSnapshot<MyClass>(SET.registerArms) ??
-      (await registerService.myClasses().catch(() => [] as MyClass[]))
+      (await registerService.myClasses().catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 404) return [] as MyClass[]
+        throw error
+      }))
 
     const wanted = arms.flatMap((arm) =>
       daysKept(new Date()).map((date) => ({ armId: arm.class_arm_id, date })),
     )
 
-    const days = await Promise.all(
-      wanted.map(({ armId, date }) =>
-        registerService
+    /*
+     * A refusing day keeps the copy the device already held rather than being
+     * dropped. What this fetch returns becomes the collection's whole state
+     * *and* its snapshot, so dropping a failed day did not draw it as unknown
+     * for a moment — it deleted the school's last answer for it, on the one
+     * kind of connection (`navigator.onLine` true, requests dying) that gets
+     * past the offline guard in `schoolCollection`. Only a day this device
+     * never held is genuinely absent, and a day that rolled out of the window
+     * is the one deletion done on purpose.
+     */
+    const held = new Map(
+      (readSnapshot<DayRegister>(SET.registerDays) ?? []).map((day) => [day.id, day]),
+    )
+
+    const results = await Promise.all(
+      wanted.map(async ({ armId, date }) => ({
+        key: dayKey(armId, date),
+        fresh: await registerService
           .register({ class_arm_id: armId, date })
           .then((register): DayRegister => ({ ...register, id: dayKey(armId, date) }))
           .catch(() => undefined),
-      ),
+      })),
     )
 
-    return days.filter((day): day is DayRegister => day !== undefined)
+    return mergeHeld(results, held)
   },
   getKey: (day) => day.id,
   schemaVersion: 1,

@@ -1,7 +1,8 @@
 import { allCollections } from './collection'
 import { stopDrain } from './drain'
 import { dbNameFor, runtime } from './runtime'
-import { resetStore } from './store'
+import { SNAPSHOTS_KEY } from './snapshot'
+import { ID_MAP_KEY, OUTBOX_KEY, resetStore } from './store'
 
 /**
  * Everything SQLite leaves beside the database file.
@@ -106,10 +107,15 @@ export async function wipeLocalDb(): Promise<void> {
 
   if (dbName) await removeDatabaseFiles(dbName)
 
-  // The localStorage fallback, for a device that never had OPFS.
+  // The localStorage fallback, for a device that never had OPFS — or for a
+  // session that ran before the database had opened. The snapshots go with
+  // the queue: a snapshot is the school's own registers, and leaving that key
+  // behind on a shared machine hands the next person real pupils, guardians
+  // and fee balances, which is the very thing this wipe exists to prevent.
   try {
-    globalThis.localStorage?.removeItem('netpro.outbox')
-    globalThis.localStorage?.removeItem('netpro.id-map')
+    globalThis.localStorage?.removeItem(OUTBOX_KEY)
+    globalThis.localStorage?.removeItem(ID_MAP_KEY)
+    globalThis.localStorage?.removeItem(SNAPSHOTS_KEY)
   } catch {
     // Private mode. Nothing was written there either.
   }

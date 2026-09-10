@@ -343,13 +343,21 @@ export async function startDrain(): Promise<void> {
   await storeReady()
   recoverInterrupted()
 
-  globalThis.addEventListener?.('online', () => void drain())
+  // Once for the life of the tab: the drain is stopped and started again when
+  // a sign-in rebinds the store, and a listener added per start would fire the
+  // drain twice for one reconnection.
+  if (!listeningForOnline) {
+    listeningForOnline = true
+    globalThis.addEventListener?.('online', () => void drain())
+  }
   timer = setInterval(() => {
     if (outbox().toArray.length > 0) void drain()
   }, 15_000)
 
   void drain()
 }
+
+let listeningForOnline = false
 
 export function stopDrain(): void {
   if (timer !== null) clearInterval(timer)
