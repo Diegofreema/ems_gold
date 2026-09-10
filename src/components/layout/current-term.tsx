@@ -1,4 +1,5 @@
-import { useSchoolSettings } from '@/api/settings/hooks'
+import { refSettings } from '@/db/collections/reference'
+import { useHeldDocument } from '@/db/live'
 import { formatDate } from '@/lib/format'
 
 /**
@@ -19,11 +20,13 @@ function endOfTerm(stored: string | undefined): string | undefined {
  *
  * Read from the one settings row rather than written down: this is the same
  * answer the Sessions and Terms registers change, and it was worth reading
- * live the moment either of them could move it.
+ * live the moment either of them could move it. The row is the device's own
+ * set now — a wire read here used to vanish from every page header the
+ * moment the connection did.
  */
 export function CurrentTerm() {
-  const { data } = useSchoolSettings()
-  const calendar = data?.calendar
+  const { doc } = useHeldDocument(refSettings)
+  const calendar = doc?.calendar
   // Nothing rather than a placeholder — the header is one line of small print,
   // and a skeleton flashing in it is louder than the answer arriving late.
   if (!calendar?.session) return null

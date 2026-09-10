@@ -1,6 +1,7 @@
 import { sessionsService, termsService } from '@/api/calendar/service'
 import type { CalendarBody } from '@/api/calendar/types'
 import { settingsService } from '@/api/settings/service'
+import type { SettingsBody } from '@/api/settings/types'
 import { queryClient } from '@/lib/query-client'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
@@ -93,4 +94,15 @@ registerHandler<number>(WRITE.setCurrentTerm, {
   },
   idempotent: true,
   collectionId: SET.refTerms,
+})
+
+/**
+ * The settings row itself — who the school is on every document, and the
+ * dates the term runs to. Idempotent: the whole row is written, so a replay
+ * writes the same row again.
+ */
+registerHandler<SettingsBody>(WRITE.updateSettings, {
+  send: (body) => settingsService.update(body),
+  idempotent: true,
+  collectionId: SET.refSettings,
 })

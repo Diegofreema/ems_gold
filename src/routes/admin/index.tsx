@@ -14,7 +14,12 @@ import { FigureTiles } from '@/components/common/figure-tiles'
 
 export const Route = createFileRoute('/admin/')({
   staticData: { title: 'Dashboard', crumb: 'NETPRO EMS Bronze' },
-  loader: ({ context }) => context.queryClient.ensureQueryData(adminDashboardQuery),
+  // Started and swallowed: a loader that awaited a paused query used to hang
+  // the dashboard on its shimmer for as long as the device was offline. The
+  // component's `useSuspenseQuery` reads the same key and throws the honest
+  // failure to `RouteError`, which offers a retry.
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(adminDashboardQuery).catch(() => undefined),
   component: AdminDashboard,
 })
 

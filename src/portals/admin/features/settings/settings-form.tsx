@@ -9,7 +9,11 @@ import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
 import { TextField } from '@/components/form/text-field'
 import { Rule } from '@/components/page/rule'
-import { useSchoolSettings, useUpdateSettings } from '@/api/settings/hooks'
+import { collectionError, refetchCollection } from '@/db/collection'
+import { refSettings } from '@/db/collections/reference'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { useHeldDocument } from '@/db/live'
 import { useRecordForm } from '@/hooks/use-record-form'
 import {
   datesOutOfOrder,
@@ -35,8 +39,11 @@ const schema = z.object({
 }) satisfies z.ZodType<SettingsValues>
 
 export function SettingsForm() {
-  const { data, isPending, isError, error, refetch } = useSchoolSettings()
-  const update = useUpdateSettings()
+  // The one settings row, off the device's own set — filled with no
+  // connection, and saved through the queue for the same reason: the office
+  // correcting the school's address should not lose a full form to a
+  // connection that went while they typed.
+  const { doc: data, pending: isPending, failed: isError } = useHeldDocument(refSettings)
   const form = useRecordForm<SettingsValues>(schema, settingsValues(undefined))
 
   // The row arrives after the form is mounted, so the fields are filled when
@@ -58,7 +65,11 @@ export function SettingsForm() {
 
   if (isError) {
     return (
-      <ErrorState error={error} homeTo="/admin" onRetry={() => void refetch()} />
+      <ErrorState
+        error={collectionError(SET.refSettings)}
+        homeTo="/admin"
+        onRetry={() => void refetchCollection(SET.refSettings)}
+      />
     )
   }
 
@@ -85,10 +96,15 @@ export function SettingsForm() {
       description="Who the school is on every invoice, receipt and result sheet, and the dates the term runs to."
       submitLabel="Save settings"
       onSubmit={async (values) => {
-        // Caught here: react-hook-form re-throws whatever the submit handler
-        // rejects with, and the mutation cache has already said what went
-        // wrong. Without this a refused save is an unhandled rejection.
-        await update.mutateAsync(settingsBody(values)).catch(() => undefined)
+        // Accepted on the device and queued; the queue raises its own toast,
+        // adding "saved on this device" only when the send has to wait.
+        enqueue({
+          handler: WRITE.updateSettings,
+          payload: settingsBody(values),
+          collectionId: SET.refSettings,
+          toast: { success: 'Settings saved' },
+          label: 'School settings',
+        })
       }}
       onCancel={() => reset(settingsValues(data))}
     >
@@ -177,8 +193,8 @@ export function SettingsForm() {
  * the same decision made with none of that in front of you.
  */
 function CurrentlyIn() {
-  const { data } = useSchoolSettings()
-  const calendar = data?.calendar
+  const { doc } = useHeldDocument(refSettings)
+  const calendar = doc?.calendar
 
   return (
     <div className="col-[1/-1] rounded-lg border border-divider bg-raised px-4 py-3.5">

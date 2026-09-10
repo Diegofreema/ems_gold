@@ -1,3 +1,5 @@
+import { mySchoolingService } from '@/api/my-schooling/service'
+import type { UpdateMyRecordBody } from '@/api/my-schooling/types'
 import { studentsService } from '@/api/students/service'
 import type { StudentBody } from '@/api/students/types'
 import type { Id } from '@/api/types'
@@ -36,4 +38,14 @@ registerHandler<{ id: Id; status: 'Active' | 'Suspended' }>(WRITE.setStudentStan
   send: ({ id, status }) => studentsService.setStatus(id, { status }),
   idempotent: true,
   collectionId: SET.refStudents,
+})
+
+/**
+ * The pupil's own phone and address — all `POST /students/me` accepts.
+ * Idempotent: the same fields over the caller's own record.
+ */
+registerHandler<UpdateMyRecordBody>(WRITE.updateStudentRecord, {
+  send: (body) => mySchoolingService.updateRecord(body),
+  idempotent: true,
+  collectionId: SET.schoolingRecord,
 })

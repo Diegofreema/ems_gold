@@ -44,7 +44,14 @@ async function requireAccount(queryClient: QueryClient) {
     return cached
   }
 
-  const account = await loadAccount(queryClient)
+  // A shell route must never throw, and `loadAccount` throws for anything
+  // that is not a plain refusal — a dead uplink the browser still calls
+  // online, a captive portal, a 500. With no cached account there is no
+  // identity to open a portal on, so the form is the only page that can move
+  // things forward; the session itself may well be fine.
+  const account = await loadAccount(queryClient).catch(() => {
+    throw redirect({ to: '/sign-in' })
+  })
   if (!account) {
     throw redirect({ to: useAuthStore.getState().disabled ? '/sign-in' : '/session-expired' })
   }
@@ -79,8 +86,11 @@ export async function redirectIfSignedIn(queryClient: QueryClient) {
 
   // Offline the token cannot be checked, so the cached account decides. Nobody
   // is served the form they cannot submit while their own portal is readable.
+  // A check that could not be made at all — a dead uplink the browser still
+  // calls online — falls back the same way: rendering the form to somebody
+  // possibly signed in beats crashing the sign-in route itself.
   const account = navigator.onLine
-    ? await loadAccount(queryClient)
+    ? await loadAccount(queryClient).catch(() => useSessionStore.getState().account)
     : useSessionStore.getState().account
 
   const role = account ? roleForAccount(account) : null

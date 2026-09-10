@@ -17,4 +17,8 @@ import { timetablesService } from '@/api/timetables/service'
 export const childrenTimetablesQuery = queryOptions({
   queryKey: timetableKeys.children({}),
   queryFn: () => timetablesService.children(),
+  // `always`, so an offline device fails fast and the page's suspense throws
+  // to the route's error boundary — under the default `online` the request
+  // pauses without running and the page shimmers for ever.
+  networkMode: 'always',
 })

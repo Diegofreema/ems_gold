@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Row } from '../../../features/collections/types.ts'
-import { parseStaffKey } from './staff-row.ts'
+import { staffRowKind } from './staff-row.ts'
 import {
   byClassAndStatus,
   byClassArmAndStanding,
@@ -147,10 +147,13 @@ const STAFF: Row[] = [
   { id: 't-1', name: 'A teacher' },
   { id: 'a-2', name: 'An administrator' },
   { id: '3', name: 'A teacher with a bare id' },
+  // A record created offline: keyed `local:`, so only its own words say which
+  // register it belongs to.
+  { id: 'local:9', name: 'A queued administrator', role: 'Administrators' },
 ]
 
 /* The real reader, so this cannot pass against a format nobody uses. */
-const kindOf = (id: string) => parseStaffKey(id).kind
+const kindOf = staffRowKind
 
 test('unset, the staff register is the teaching records', () => {
   assert.deepEqual(ids(byStaffKind(STAFF, {}, 'Administrators', kindOf)), [
@@ -162,7 +165,7 @@ test('unset, the staff register is the teaching records', () => {
 test('picking the other one is the other register, not a narrowing', () => {
   assert.deepEqual(
     ids(byStaffKind(STAFF, { role: 'Administrators' }, 'Administrators', kindOf)),
-    ['a-2'],
+    ['a-2', 'local:9'],
   )
 })
 

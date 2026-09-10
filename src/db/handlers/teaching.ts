@@ -1,5 +1,12 @@
 import { teachingService } from '@/api/teaching/service'
-import type { CreateTopicBody, EnterScoreBody, UpdateTopicBody } from '@/api/teaching/types'
+import type {
+  CreateTopicBody,
+  EnterScoreBody,
+  MessageAdminBody,
+  MessageStudentsBody,
+  UpdateMyTeachingProfileBody,
+  UpdateTopicBody,
+} from '@/api/teaching/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
 import { registerHandler } from '../registry'
@@ -40,4 +47,31 @@ registerHandler<{ id: Id; body: UpdateTopicBody }>(WRITE.updateTopic, {
   send: ({ id, body }) => teachingService.updateTopic(id, body),
   idempotent: true,
   collectionId: SET.teachingTopics,
+})
+
+/**
+ * A message to the office, and one to the students of an arm.
+ *
+ * **Not** idempotent — each send is a fresh mail, so a replay of one that may
+ * already have gone out is the same message in everybody's inbox twice. An op
+ * interrupted in flight goes to the drawer for a person to decide, exactly as
+ * a topic does.
+ */
+registerHandler<MessageAdminBody>(WRITE.messageAdmin, {
+  send: (body) => teachingService.messageAdmin(body),
+  idempotent: false,
+})
+
+registerHandler<MessageStudentsBody>(WRITE.messageStudents, {
+  send: (body) => teachingService.messageStudents(body),
+  idempotent: false,
+})
+
+/**
+ * The teacher's own phone and address. Idempotent — the same fields over the
+ * same record, however many times it is sent.
+ */
+registerHandler<UpdateMyTeachingProfileBody>(WRITE.updateTeachingProfile, {
+  send: (body) => teachingService.updateProfile(body),
+  idempotent: true,
 })

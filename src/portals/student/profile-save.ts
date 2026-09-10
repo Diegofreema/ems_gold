@@ -1,27 +1,27 @@
-import { useRouter } from '@tanstack/react-router'
-import { useUpdateMyStudentRecord } from '@/api/my-schooling/hooks'
+import { enqueue } from '@/db/drain'
+import { WRITE } from '@/db/ids'
 import type { ProfileSave } from '@/features/profile/types'
 import { studentContactBody } from './profile'
 
 /**
  * Saving the student's own record — the phone and the address, which is all
  * `POST /students/me` accepts.
+ *
+ * Queued rather than sent: a pupil correcting their address on a connection
+ * that has gone keeps the correction, and the queue's toast says "saved on
+ * this device" only when the send actually has to wait. The form keeps what
+ * was typed — which is what was saved — so nothing here re-reads the record.
  */
 export function useStudentProfileSave(): ProfileSave {
-  const router = useRouter()
-  const save = useUpdateMyStudentRecord()
-
   return {
-    pending: save.isPending,
+    pending: false,
     save: async (values) => {
-      // A refusal has already been announced by the mutation cache.
-      const saved = await save.mutateAsync(studentContactBody(values)).then(
-        () => true,
-        () => false,
-      )
-      // The page is filled by the route's loader, so it is the loader that has
-      // to run again for the saved values to be what is on screen.
-      if (saved) await router.invalidate()
+      enqueue({
+        handler: WRITE.updateStudentRecord,
+        payload: studentContactBody(values),
+        toast: { success: 'Your details were saved' },
+        label: 'Your details',
+      })
     },
   }
 }

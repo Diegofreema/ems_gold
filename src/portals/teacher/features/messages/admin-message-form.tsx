@@ -1,6 +1,7 @@
 import { FormProvider } from 'react-hook-form'
 import { z } from 'zod'
-import { useMessageAdmin } from '@/api/teaching/hooks'
+import { enqueue } from '@/db/drain'
+import { WRITE } from '@/db/ids'
 import { FormErrorBanner } from '@/components/form/form-error-banner'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
@@ -27,15 +28,19 @@ const EMPTY: Values = { subject: '', message: '' }
  */
 export function AdminMessageForm() {
   const form = useRecordForm<Values>(schema, EMPTY)
-  const send = useMessageAdmin()
 
-  const submit = form.handleSubmit(async (values) => {
-    // The refusal has already been announced by the mutation cache; what the
-    // teacher wrote is left in the form so it is not lost with the toast.
-    await send.mutateAsync(values).then(
-      () => form.reset(EMPTY),
-      () => undefined,
-    )
+  const submit = form.handleSubmit((values) => {
+    // Accepted on the device and queued, so a note written with no signal
+    // goes when the signal comes back rather than being thrown away at the
+    // button. The queue's toast says "saved on this device" only when the
+    // send actually has to wait.
+    enqueue({
+      handler: WRITE.messageAdmin,
+      payload: values,
+      toast: { success: 'Message sent to the office' },
+      label: 'Message to the office',
+    })
+    form.reset(EMPTY)
   })
 
   return (
@@ -55,7 +60,7 @@ export function AdminMessageForm() {
             <MessageFields<Values> bodyHint="The office sees this beside your name." />
 
             <div>
-              <Button type="submit" pending={send.isPending}>
+              <Button type="submit">
                 Send to the office
               </Button>
             </div>

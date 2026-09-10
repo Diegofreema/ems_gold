@@ -4,6 +4,9 @@ import { teachersService } from '@/api/teachers/service'
 import type { CreateStaffBody, UpdateStaffBody } from '@/api/teachers/types'
 import type { Id } from '@/api/types'
 import { usersService } from '@/api/users/service'
+import { refreshAccount } from '@/features/auth/session'
+import { queryClient } from '@/lib/query-client'
+import type { UpdateProfileBody } from '@/api/users/types'
 import { SET, WRITE } from '../ids'
 import { registerHandler } from '../registry'
 
@@ -64,6 +67,26 @@ registerHandler<Id>(WRITE.removeAdmin, {
  */
 registerHandler<{ id: Id; status: 'Enabled' | 'Disabled' }>(WRITE.setLogin, {
   send: ({ id, status }) => usersService.setStatus({ id, status }),
+  idempotent: true,
+  collectionId: SET.refAdmins,
+})
+
+/**
+ * The signed-in administrator's own record — `PATCH /users/profile` writes to
+ * the same Admins row the register lists. Idempotent: the same fields over
+ * the caller's own record.
+ */
+registerHandler<UpdateProfileBody>(WRITE.updateAdminProfile, {
+  send: async (body) => {
+    const done = await usersService.updateProfile(body)
+    // The sidebar name and the greeting come off the signed-in account, which
+    // is this same record read through a different endpoint — re-read once
+    // the write has actually landed, never earlier. Guarded by `onLine`
+    // because `me` runs under the app's default network mode, and a paused
+    // read here would strand this op in `sending`.
+    if (navigator.onLine) await refreshAccount(queryClient).catch(() => undefined)
+    return done
+  },
   idempotent: true,
   collectionId: SET.refAdmins,
 })

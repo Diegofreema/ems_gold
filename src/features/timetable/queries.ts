@@ -21,6 +21,15 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 export const timetableClassesQuery = queryOptions({
   queryKey: timetableKeys.classes(),
   queryFn: () => timetablesService.classes(),
+  /**
+   * Deliberately `always`, not the app's default.
+   *
+   * Under `online` react-query pauses without running the fetcher, the
+   * promise never settles, and a route loader awaiting this hangs its page on
+   * the pending shimmer for as long as the device is offline. Running it lets
+   * it fail fast instead, and the page says so honestly.
+   */
+  networkMode: 'always',
 })
 
 /**
@@ -47,4 +56,7 @@ export const classTimetableQuery = (id: Id) =>
           message: errorMessage(error, OFFLINE_MESSAGE),
         }),
       ),
+    // As above — and the per-week fallback in the catch only exists at all if
+    // the fetcher actually runs, which under `online` it never would offline.
+    networkMode: 'always',
   })

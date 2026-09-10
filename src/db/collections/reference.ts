@@ -1,4 +1,6 @@
 import { sessionsService, termsService } from '@/api/calendar/service'
+import { settingsService } from '@/api/settings/service'
+import type { SchoolSettings } from '@/api/settings/types'
 import type { CalendarRecord } from '@/api/calendar/types'
 import { adminsService } from '@/api/admins/service'
 import type { Admin } from '@/api/admins/types'
@@ -131,6 +133,18 @@ export const refSessions = schoolCollection<CalendarRecord, number>({
   id: SET.refSessions,
   fetch: () => sessionsService.list({ limit: ALL }).then((page) => page.items),
   getKey: (session) => session.id,
+  schemaVersion: 1,
+})
+
+/**
+ * The one settings row — who the school is on every document, and the session
+ * and term it is in. The header of every admin page reads the calendar off
+ * it, and the settings form fills from it; restricted to administrators, like
+ * the rest of this file.
+ */
+export const refSettings = schoolDocument<SchoolSettings>({
+  id: SET.refSettings,
+  fetch: () => settingsService.get(),
   schemaVersion: 1,
 })
 
@@ -300,4 +314,9 @@ export const referenceCollections = [
   // written down here. A feed that cannot load is a required field that cannot
   // be filled, which is a form that cannot be posted.
   refAudiences,
+  // One row, and the header of every admin page reads the calendar off it.
+  refSettings,
+  // Tens of rows, and the office's bell is built on it — the board should be
+  // there before anybody opens the notices register.
+  refNotices,
 ]

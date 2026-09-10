@@ -64,8 +64,15 @@ export function recipientOf(student: TeacherStudent): Recipient {
   }
 }
 
+/**
+ * The two halves of the roll, however they were read — off the envelope
+ * `GET /teachers/me/students` answers with, or off the two device sets
+ * (`teacherRoll`, `teacherArms`) that hold the same answer.
+ */
+export type RollSlices = Pick<TeacherRoll, 'items' | 'class_arms'>
+
 /** Every arm the teacher takes, each carrying how many students sit in it. */
-export function armOptions(roll: TeacherRoll): ArmOption[] {
+export function armOptions(roll: RollSlices): ArmOption[] {
   return roll.class_arms.map((arm) => ({
     value: String(arm.id),
     label: armLabel(arm),
@@ -74,7 +81,7 @@ export function armOptions(roll: TeacherRoll): ArmOption[] {
 }
 
 /** The roll of one arm, in the order the school sent it. */
-export function recipientsIn(roll: TeacherRoll, armId: number): Recipient[] {
+export function recipientsIn(roll: RollSlices, armId: number): Recipient[] {
   return roll.items
     .filter((student) => student.class_arm_id === armId)
     .map(recipientOf)

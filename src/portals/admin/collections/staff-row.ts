@@ -1,4 +1,5 @@
 import type { ActivityLog } from '../../../api/admins/types.ts'
+import { isLocalKey } from '../../../db/outbox.ts'
 import type { Place } from '../../../api/types.ts'
 import type { Teacher, TeacherSubject } from '../../../api/teachers/types.ts'
 import type { Admin } from '../../../api/users/types.ts'
@@ -40,6 +41,20 @@ export function parseStaffKey(key: string): { kind: StaffKind; id: string } {
   if (head === PREFIX.admin && rest.length) return { kind: 'admin', id: rest.join('-') }
   if (head === PREFIX.teacher && rest.length) return { kind: 'teacher', id: rest.join('-') }
   return { kind: 'teacher', id: key }
+}
+
+/**
+ * Which register a row belongs to, rows this device has queued included.
+ *
+ * A record created offline is keyed `local:<uuid>` — the school has not
+ * issued an id yet — so its key says nothing about kind, and parsing it would
+ * read every queued administrator as a teacher. Such a row answers with the
+ * word its own `role` column carries instead; a synced row answers with its
+ * key, exactly as before.
+ */
+export function staffRowKind(row: Row): StaffKind {
+  if (isLocalKey(row.id)) return row.role === ADMINISTRATORS ? 'admin' : 'teacher'
+  return parseStaffKey(row.id).kind
 }
 
 /**

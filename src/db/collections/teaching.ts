@@ -1,4 +1,5 @@
 import { teachingService } from '@/api/teaching/service'
+import { myNotices } from './my-notices'
 import type {
   EClass,
   TeacherClassArm,
@@ -112,4 +113,5 @@ export const teachingCollections = [
   teacherMarks,
   teacherTopics,
   teacherEClasses,
+  myNotices,
 ]

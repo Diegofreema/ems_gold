@@ -1,18 +1,21 @@
-import { useMyStudentInvoices, useMyStudentRecord } from '@/api/my-schooling/hooks'
 import { Tag } from '@/components/common/tag'
+import { schoolingInvoices, schoolingRecord } from '@/db/collections/schooling'
+import { useHeldDocument } from '@/db/live'
 import { armOf, feeStanding } from '../../student'
 
 /**
  * The student block above the student sidebar's nav: who this is, the class and
  * admission number the school knows them by, and where they stand on fees.
  *
- * Read live rather than written down — the admission number is the one thing a
- * student is asked for at every desk in the school, and a written-in one would
- * be the one believed.
+ * Read off the school's own record rather than written down — the admission
+ * number is the one thing a student is asked for at every desk in the school,
+ * and a written-in one would be the one believed. The record and the ledger
+ * are the device's sets now, so a pupil with no signal still has their own
+ * name; the sync keeps both what the school last said.
  */
 export function StudentContext() {
-  const { data: student } = useMyStudentRecord()
-  const { data: ledger } = useMyStudentInvoices()
+  const { doc: student } = useHeldDocument(schoolingRecord)
+  const { doc: ledger } = useHeldDocument(schoolingInvoices)
 
   // Nothing rather than a skeleton: this block sits under the brand mark, and
   // a grey bar pulsing there is louder than the name arriving a moment late.

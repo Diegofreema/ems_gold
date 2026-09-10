@@ -18,4 +18,7 @@ import { teachingService } from '@/api/teaching/service'
 export const mySubjectsQuery = queryOptions({
   queryKey: teachingKeys.subjects(),
   queryFn: () => teachingService.subjects(),
+  // `always`, so an offline device fails fast instead of pausing the route
+  // loader on a promise that never settles — see `timetableClassesQuery`.
+  networkMode: 'always',
 })

@@ -1,13 +1,11 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
-import {
-  useAttendanceClassArms,
-  useAttendanceDepartments,
-} from '@/api/attendance/hooks'
 import { DateField } from '@/components/form/date-field'
 import { SelectField } from '@/components/form/select-field'
 import { fromApiDate, toApiDate } from '@/features/collections/date-range'
-import { ANY, armOption, classOptions, STATUSES } from './attendance'
+import { optionsQuery } from '@/features/collections/option-feeds'
+import { ANY, STATUSES } from './attendance'
 
 type Filters = { start?: Date; end?: Date; klass: string; arm: string; status: string }
 
@@ -51,20 +49,29 @@ export function ReportFilters({
   })
   const values = useWatch({ control: form.control })
 
-  const { data: departments } = useAttendanceDepartments()
-  // An arm only means something inside a class, so the feed is scoped to
-  // whichever is chosen — and every arm in the school where none is.
-  const chosenClass = values.klass && values.klass !== ANY ? Number(values.klass) : undefined
-  const { data: arms } = useAttendanceClassArms(chosenClass)
+  /*
+   * The classes and arms come off the device's own sets, through the same
+   * option feeds every form uses — the report used to ask
+   * `attendances/departments` and `class-arms/for-department/{id}` for a
+   * narrowed copy of registers `refClasses` and `refArms` already hold, and
+   * with no connection both dropdowns sat empty, which is a report nobody can
+   * filter. An arm only means something inside a class, so the arm feed is
+   * scoped to whichever is chosen — and the whole school's where none is.
+   */
+  const chosenClass = values.klass && values.klass !== ANY ? values.klass : undefined
+  const { data: classFeed } = useQuery(optionsQuery('classes', ''))
+  const { data: allArms } = useQuery(optionsQuery('all-arms', ''))
+  const { data: classArms } = useQuery(optionsQuery('arms', chosenClass ?? ''))
 
-  const classes = [{ value: ANY, label: 'All classes' }, ...classOptions(departments)]
-  const armOptions = [{ value: ANY, label: 'All arms' }, ...(arms ?? []).map(armOption)]
+  const arms = chosenClass ? classArms : allArms
+  const classes = [{ value: ANY, label: 'All classes' }, ...(classFeed ?? [])]
+  const armOptions = [{ value: ANY, label: 'All arms' }, ...(arms ?? [])]
 
   // An arm that does not belong to the chosen class is not a choice, however
   // it got there — a shared link, or the class being changed under it.
   const { setValue } = form
   const stale =
-    values.arm && values.arm !== ANY && arms && !arms.some((one) => String(one.id) === values.arm)
+    values.arm && values.arm !== ANY && arms && !arms.some((one) => one.value === values.arm)
   useEffect(() => {
     if (stale) setValue('arm', ANY)
   }, [stale, setValue])

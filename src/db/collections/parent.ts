@@ -5,6 +5,7 @@ import { schoolCollection } from '../collection'
 import { SET } from '../ids'
 import { mergeHeld } from '../merge-held'
 import { readSnapshot } from '../snapshot'
+import { myNotices } from './my-notices'
 
 /**
  * The household, on the guardian's own device.
@@ -138,4 +139,4 @@ export const parentAttendance = schoolCollection<ChildMark, string>({
 })
 
 /** Everything the parent portal keeps on the device. */
-export const parentCollections = [parentChildren, parentInvoices, parentAttendance]
+export const parentCollections = [parentChildren, parentInvoices, parentAttendance, myNotices]

@@ -1,6 +1,8 @@
 import { enqueue } from '@/db/drain'
 import { SET, WRITE } from '@/db/ids'
-import { newLocalKey } from '@/db/outbox'
+import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
+import { BLANK } from '@/features/collections/blank'
 import type { Admin } from '@/api/admins/types'
 import type { Teacher } from '@/api/teachers/types'
 import type { Role } from '@/api/users/types'
@@ -31,6 +33,7 @@ import {
   parseStaffKey,
   privilegeRow,
   staffDeleteBody,
+  staffRowKind,
   staffTarget,
   TEACHERS,
   teacherRow,
@@ -108,13 +111,88 @@ function staffBinding(only?: 'teacher' | 'admin') {
     },
     narrow: only
       ? undefined
-      : (rows, filters) =>
-          byStaffKind(rows, filters, ADMINISTRATORS, (id) => parseStaffKey(id).kind),
+      : (rows, filters) => byStaffKind(rows, filters, ADMINISTRATORS, staffRowKind),
+    queued: queuedStaff(only),
+    overlay: withQueuedLogins,
+  })
+}
+
+/**
+ * Staff records made on this device that the school has not seen yet.
+ *
+ * Without these a record created offline showed nowhere — the toast said
+ * "Teacher created", the register still showed the old set, and the natural
+ * next step was to add the teacher again: two ops in the queue, two teachers
+ * when the drain ran. The row carries a `local:` id, which is what withholds
+ * edit and delete until the school issues a real one.
+ */
+function queuedStaff(only?: 'teacher' | 'admin') {
+  return (ops: readonly OutboxOp[]): Row[] =>
+    ops
+      .filter(
+        (op) =>
+          OPEN_STATES.includes(op.state) &&
+          typeof op.targetKey === 'string' &&
+          ((only !== 'admin' && op.handler === WRITE.createTeacher) ||
+            (only !== 'teacher' && op.handler === WRITE.createAdmin)),
+      )
+      .sort((one, two) => two.seq - one.seq)
+      .map((op) => {
+        const body = op.payload as Record<string, unknown>
+        const office = op.handler === WRITE.createAdmin
+        // The office body calls the first half of the name `surname`; the
+        // teaching one calls it `firstname` — see `staff-body.ts`.
+        const named = [office ? body.surname : body.firstname, body.lastname]
+          .map((part) => String(part ?? '').trim())
+          .filter(Boolean)
+          .join(' ')
+        return {
+          id: op.targetKey as string,
+          name: named || 'Unnamed record',
+          role: office ? ADMINISTRATORS : TEACHERS,
+          phone: String(body.phone ?? '').trim() || BLANK,
+          gender: String(body.gender ?? '').trim() || BLANK,
+          status: 'Waiting to send',
+          account: BLANK,
+        }
+      })
+}
+
+/**
+ * The sign-in changes this device has queued, written over the rows they are
+ * about. Without this the register's own button read as one that did nothing:
+ * the op was safely queued and the row went on saying what the school last
+ * said. Later ops win, in `seq` order — disabling and re-enabling leaves it
+ * enabled, which is the order the office did it in. Only ops still expected
+ * to land are drawn.
+ */
+function withQueuedLogins(rows: Row[], ops: readonly OutboxOp[]): Row[] {
+  const pending = new Map<string, string>()
+  for (const op of [...ops].sort((one, two) => one.seq - two.seq)) {
+    if (op.handler !== WRITE.setLogin || !OPEN_STATES.includes(op.state)) continue
+    const status = (op.payload as { status?: unknown }).status
+    if (typeof op.targetKey === 'string' && typeof status === 'string') {
+      pending.set(op.targetKey, status)
+    }
+  }
+
+  if (pending.size === 0) return rows
+  return rows.map((row) => {
+    const status = pending.get(row.id)
+    if (status === undefined) return row
+    // The login's state prints under `account` on an office row and under
+    // `status` on a teaching one — one field on the login, two registers.
+    return staffRowKind(row) === 'admin' ? { ...row, account: status } : { ...row, status }
   })
 }
 
 /** Reads one record from whichever endpoint its id says it came from. */
 async function staffRecord(recordId: string): Promise<Row | undefined> {
+  // A record this device queued has no endpoint to read yet — the row on the
+  // register is the whole of what is known about it.
+  if (isLocalKey(recordId)) {
+    return queuedStaff()(outbox().toArray).find((row) => row.id === recordId)
+  }
   const { kind, id } = parseStaffKey(recordId)
   if (kind !== 'admin') return teacherRow(await teachersService.get(id))
   // Undefined rather than thrown: an id that is not on the register is the

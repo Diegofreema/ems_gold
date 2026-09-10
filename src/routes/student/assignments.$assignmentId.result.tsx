@@ -21,13 +21,20 @@ export const Route = createFileRoute('/student/assignments/$assignmentId/result'
    * the page says so itself.
    */
   loader: async ({ context, params }) => {
-    const assignment = await context.queryClient.ensureQueryData(
-      studentAssignmentQuery(params.assignmentId),
-    );
-    if (assignment.my_submission) {
-      await context.queryClient.ensureQueryData(
-        studentAssignmentResultQuery(String(assignment.my_submission.id)),
+    // Swallowed on failure — the page's own suspense retries and throws the
+    // honest error to `RouteError`; awaiting a paused query here used to hang
+    // the route on its shimmer for as long as the device was offline.
+    try {
+      const assignment = await context.queryClient.ensureQueryData(
+        studentAssignmentQuery(params.assignmentId),
       );
+      if (assignment.my_submission) {
+        await context.queryClient.ensureQueryData(
+          studentAssignmentResultQuery(String(assignment.my_submission.id)),
+        );
+      }
+    } catch {
+      // See above.
     }
   },
   component: Result,

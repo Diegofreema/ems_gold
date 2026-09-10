@@ -1,16 +1,19 @@
 import { useQueryState } from 'nuqs'
 import { Controller, FormProvider } from 'react-hook-form'
 import { z } from 'zod'
-import { useMessageMyStudents, useMyStudents } from '@/api/teaching/hooks'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { FormErrorBanner } from '@/components/form/form-error-banner'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { collectionError } from '@/db/collection'
+import { teacherArms, teacherRoll } from '@/db/collections/teaching'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { useHeld } from '@/db/live'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { useRecordForm } from '@/hooks/use-record-form'
-import { ALL } from '../../collections/mine'
 import { MessageFields } from './message-fields'
 import { RecipientPicker } from './recipient-picker'
 import { armOptions, recipientsIn } from './recipients'
@@ -35,23 +38,30 @@ const EMPTY: Values = { student_ids: [], subject: '', message: '' }
  * message survives a reload on the arm it was being written to.
  */
 export function StudentsMessageForm() {
-  const roll = useMyStudents({ limit: ALL })
-  const send = useMessageMyStudents()
+  // The roll and the arms off the device's own sets — the same two halves
+  // `GET /teachers/me/students` answers with, already synced by the shell, so
+  // the picker fills with no connection. The send is queued for the same
+  // reason: a message written in a staffroom with no signal goes when the
+  // signal comes back rather than being thrown away at the button.
+  const roll = useHeld(teacherRoll)
+  const armsHeld = useHeld(teacherArms)
   const form = useRecordForm<Values>(schema, EMPTY)
   const [chosenArm, setArm] = useQueryState('arm')
   const [query, setQuery] = useQueryState('q', { defaultValue: '' })
 
-  const data = roll.data
-  if (!data) {
+  if (roll.pending || armsHeld.pending || roll.failed || armsHeld.failed) {
     return (
       <>
         <Header />
-        {roll.isError ? (
+        {roll.failed || armsHeld.failed ? (
           // Without the roll there is nobody to pick, so this says why rather
           // than showing an empty arm the teacher would take for the truth.
           <EmptyState
             title="Your roll could not be read"
-            body={errorMessage(roll.error, OFFLINE_MESSAGE)}
+            body={errorMessage(
+              collectionError(SET.teachingStudents) ?? collectionError(SET.teachingArms),
+              OFFLINE_MESSAGE,
+            )}
           />
         ) : (
           <TableSkeleton rows={6} />
@@ -60,6 +70,7 @@ export function StudentsMessageForm() {
     )
   }
 
+  const data = { items: roll.rows, class_arms: armsHeld.rows }
   const arms = armOptions(data)
 
   if (arms.length === 0) {
@@ -79,16 +90,17 @@ export function StudentsMessageForm() {
   const armId = arms.find((arm) => arm.value === chosenArm)?.value ?? arms[0].value
   const students = recipientsIn(data, Number(armId))
 
-  const submit = form.handleSubmit(async (values) => {
-    await send.mutateAsync(values).then(
-      () => {
-        form.reset(EMPTY)
-        void setQuery('')
-      },
-      // Announced by the mutation cache. The message and the students picked
-      // stay put, so a refusal costs nothing already typed.
-      () => undefined,
-    )
+  const submit = form.handleSubmit((values) => {
+    // Accepted on the device and queued — the toast is the queue's own, and
+    // says "saved on this device" only when the send actually has to wait.
+    enqueue({
+      handler: WRITE.messageStudents,
+      payload: values,
+      toast: { success: 'Message sent to your students' },
+      label: 'Message to your students',
+    })
+    form.reset(EMPTY)
+    void setQuery('')
   })
 
   const chosen = form.watch('student_ids')
@@ -123,7 +135,7 @@ export function StudentsMessageForm() {
             <MessageFields<Values> bodyHint="Each student picked above receives this in their portal." />
 
             <div>
-              <Button type="submit" pending={send.isPending}>
+              <Button type="submit">
                 {chosen.length
                   ? `Send to ${chosen.length} student${chosen.length === 1 ? '' : 's'}`
                   : 'Send message'}

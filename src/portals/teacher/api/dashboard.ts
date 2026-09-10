@@ -45,4 +45,7 @@ export const teacherDashboardQuery = queryOptions({
   queryKey: teachingKeys.dashboard(),
   queryFn: () => teachingService.dashboard(),
   select: toTeacherHome,
+  // `always`, so an offline device fails fast into the route's error boundary
+  // instead of pausing the loader on a promise that never settles.
+  networkMode: 'always',
 })

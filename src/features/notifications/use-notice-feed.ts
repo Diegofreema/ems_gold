@@ -1,14 +1,26 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
-import { useMyNotices, useNotices, useUnreadNoticeCount } from '@/api/notifications/hooks'
+import { useUnreadNoticeCount } from '@/api/notifications/hooks'
 import { noticeKeys } from '@/api/notifications/keys'
 import type { Notice } from '@/api/notifications/types'
+import { collectionById, collectionError, refetchCollection } from '@/db/collection'
+import { myNotices } from '@/db/collections/my-notices'
+import { refNotices } from '@/db/collections/reference'
+import { SET } from '@/db/ids'
+import { useHeld } from '@/db/live'
 import { errorMessage } from '@/lib/errors'
 import { noticeFeed } from './notice-feed'
 import type { Notification } from './types'
 
-/** How many notices the board is asked for at once. */
+/** How many notices the bell shows at once. */
 const BOARD = 25
+
+/** Asks the school for a board set again, if this device is holding it at all. */
+function refreshBoard(id: string): void {
+  // An idle set is one nobody has opened; refetching it would sync a portal's
+  // board on the strength of a badge poll alone.
+  if (collectionById(id)?.status !== 'idle') void refetchCollection(id)
+}
 
 /**
  * Keeping the board fresh for the price of one integer.
@@ -16,8 +28,11 @@ const BOARD = 25
  * `/notifications/unread-count` is polled rather than the list, because a
  * notice posted while somebody has the tab open is the one worth arriving on
  * its own and the count is a fraction of the size. When the number moves —
- * either way; a notice can be deleted as well as posted — the list is
+ * either way; a notice can be deleted as well as posted — the lists are
  * refetched, and only then.
+ *
+ * The lists are the device's own sets now, so an invalidation alone does not
+ * reach them — the two board collections are asked again alongside it.
  *
  * The first answer is remembered rather than acted on: it is not a change, it
  * is the number arriving for the first time.
@@ -31,10 +46,11 @@ function useBoardWatch() {
     const count = unread.data
     if (count === undefined) return
     if (seen.current !== undefined && seen.current !== count) {
-      // The whole root, not just `mine`: a reader's own list and the
-      // office's board are two views of one thing, and a notice posted while
-      // the tab is open changes either.
+      // The whole root as well as the sets: the read markers and the office's
+      // register tiles still live under the query keys.
       void queryClient.invalidateQueries({ queryKey: noticeKeys.all })
+      refreshBoard(SET.myNotices)
+      refreshBoard(SET.refNotices)
     }
     seen.current = count
   }, [unread.data, queryClient])
@@ -44,10 +60,9 @@ function useBoardWatch() {
  * The office's own notices, as feed items — the half of every portal's bell
  * that somebody actually wrote.
  *
- * Read rather than loaded: a loader that awaited this would take the whole
- * shell down on a board that is unreachable. A failure here costs the board
- * and nothing else, so the derived half of the feed still draws and `error` is
- * handed back for the page to say so out loud rather than showing "you are up
+ * Off the device's own set, so the bell still has the board with no
+ * connection. A set that has genuinely never synced on this device is the one
+ * failure left, and `error` says so out loud rather than showing "you are up
  * to date", which would be a claim.
  */
 export type NoticeFeed = {
@@ -56,38 +71,41 @@ export type NoticeFeed = {
   error: string | null
 }
 
-/** One list, whichever endpoint it came off, as feed items. */
-function useFeedOf(notices: Notice[] | undefined, error: unknown): NoticeFeed {
+/** One board set, however it is held, as feed items. */
+function useFeedOf(rows: Notice[], failed: boolean, id: string): NoticeFeed {
   return useMemo(
     () => ({
-      notices: noticeFeed(notices ?? [], new Date()),
-      error: error
-        ? errorMessage(error, 'The notice board could not be reached.')
+      // `noticeFeed` sorts newest first itself, which matters here: a
+      // collection hands its rows back in key order whatever order the
+      // school sent them in.
+      notices: noticeFeed(rows, new Date()).slice(0, BOARD),
+      error: failed
+        ? errorMessage(collectionError(id), 'The notice board could not be reached.')
         : null,
     }),
-    [notices, error],
+    [rows, failed, id],
   )
 }
 
 export function useNoticeFeed(): NoticeFeed {
-  const board = useMyNotices({ limit: BOARD })
+  const board = useHeld(myNotices)
   useBoardWatch()
-  return useFeedOf(board.data, board.error)
+  return useFeedOf(board.rows, board.failed, SET.myNotices)
 }
 
 /**
- * The same feed for the office, off its own list rather than `mine`.
+ * The same feed for the office, off the board itself rather than `mine`.
  *
  * An administrator's `/notifications/mine` comes back empty — with
  * `audience: "all"`, and with notices on the board that are addressed to
  * `all` — so a bell built on it shows the office nothing it has posted.
- * `GET /notifications` is the list the office can actually read, and is what
- * `/admin/notices` manages the board from.
+ * `refNotices` is the board the office actually reads, and the same set
+ * `/admin/notices` manages it from.
  */
 export function useOfficeNoticeFeed(): NoticeFeed {
-  const board = useNotices({ limit: BOARD })
+  const board = useHeld(refNotices)
   useBoardWatch()
-  return useFeedOf(board.data?.notifications, board.error)
+  return useFeedOf(board.rows, board.failed, SET.refNotices)
 }
 
 /*

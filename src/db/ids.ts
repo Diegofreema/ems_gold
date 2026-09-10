@@ -41,6 +41,7 @@ export const SET = {
   refAudiences: 'reference.audiences',
   refNotices: 'reference.notices',
   refLoans: 'reference.loans',
+  refSettings: 'reference.settings',
 
   schoolingStats: 'schooling.stats',
   schoolingCourses: 'schooling.courses',
@@ -51,6 +52,10 @@ export const SET = {
   schoolingInvoices: 'schooling.invoices',
   schoolingLoans: 'schooling.loans',
   schoolingTimetable: 'schooling.timetable',
+  schoolingRecord: 'schooling.record',
+
+  /** `/notifications/mine` — token-scoped, so one id serves every portal. */
+  myNotices: 'my.notices',
 
   registerArms: 'attendance.arms',
   registerStatuses: 'attendance.statuses',
@@ -113,4 +118,10 @@ export const WRITE = {
   updateAdmin: 'staff.updateAdmin',
   removeAdmin: 'staff.removeAdmin',
   setLogin: 'staff.setLogin',
+  updateSettings: 'school.updateSettings',
+  messageAdmin: 'teaching.messageAdmin',
+  messageStudents: 'teaching.messageStudents',
+  updateTeachingProfile: 'teaching.updateProfile',
+  updateAdminProfile: 'staff.updateOwnProfile',
+  updateStudentRecord: 'schooling.updateRecord',
 } as const

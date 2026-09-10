@@ -98,13 +98,15 @@ export function byStaffKind(
   filters: ListParams['filters'],
   administrators: string,
   /**
-   * How a row's key says which register it came from. Passed in rather than
-   * matched on a prefix here: the key's shape belongs to `staff-row.ts`, and a
-   * copy of it in this file is a copy that can go out of step — which it did,
-   * and a test written against the copy agreed with it.
+   * How a row says which register it came from. Passed in rather than matched
+   * on a prefix here: the key's shape belongs to `staff-row.ts`, and a copy of
+   * it in this file is a copy that can go out of step — which it did, and a
+   * test written against the copy agreed with it. The whole row rather than
+   * the id, because a row this device queued is keyed `local:` and answers
+   * with its own words instead.
    */
-  kindOf: (id: string) => 'teacher' | 'admin',
+  kindOf: (row: Row) => 'teacher' | 'admin',
 ): Row[] {
   const office = filters.role?.trim() === administrators
-  return rows.filter((row) => (kindOf(row.id) === 'admin') === office)
+  return rows.filter((row) => (kindOf(row) === 'admin') === office)
 }

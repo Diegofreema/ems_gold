@@ -111,4 +111,7 @@ async function fetchDashboard(): Promise<AdminDashboard> {
 export const adminDashboardQuery = queryOptions({
   queryKey: ['admin', 'dashboard'],
   queryFn: fetchDashboard,
+  // `always`, so an offline device fails fast into the route's error boundary
+  // instead of pausing the loader on a promise that never settles.
+  networkMode: 'always',
 })

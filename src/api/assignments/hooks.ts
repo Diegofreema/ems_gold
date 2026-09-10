@@ -26,6 +26,15 @@ export function useAssignment(setassignmentId: Id | undefined) {
  * Submitting closes the assignment, so both the list's `my_status` and the
  * assignment's own `my_submission` are stale the moment it answers.
  */
+/**
+ * Deliberately on the wire, not the queue — the decision, written down: the
+ * sitting's window is judged by the school against its own clock, so an
+ * answer sheet queued offline and sent hours later would land after the
+ * window and be refused with the pupil long gone. The attempt itself is kept
+ * on the device (`attempt.ts`), so a refused submit loses nothing typed; what
+ * a pupil needs offline is to be told "this needs a connection" at the
+ * moment of sending, which the page does.
+ */
 export function useSubmitAssignment(setassignmentId: Id) {
   const queryClient = useQueryClient()
   return useMutation({

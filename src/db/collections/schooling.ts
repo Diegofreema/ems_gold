@@ -5,13 +5,20 @@ import type { MyAttendance } from '@/api/attendance/types'
 import { libraryService } from '@/api/library/service'
 import type { Loan } from '@/api/library/types'
 import { mySchoolingService } from '@/api/my-schooling/service'
-import type { MyCourses, MyInvoices, MyMaterial, StudentDashboard } from '@/api/my-schooling/types'
+import type {
+  MyCourses,
+  MyInvoices,
+  MyMaterial,
+  Student,
+  StudentDashboard,
+} from '@/api/my-schooling/types'
 import { resultsService } from '@/api/results/service'
 import type { MyMarks } from '@/api/results/types'
 import { timetablesService } from '@/api/timetables/service'
 import type { ClassTimetable } from '@/api/timetables/types'
 import { schoolCollection, schoolDocument } from '../collection'
 import { SET } from '../ids'
+import { myNotices } from './my-notices'
 
 /**
  * Everything a pupil's own portal reads, on the pupil's own device.
@@ -27,6 +34,17 @@ import { SET } from '../ids'
  * the mark sheet carries the term average the school worked out. Storing only
  * the list would throw away exactly what the panel beside it reads.
  */
+
+/**
+ * The pupil's own record — the name, class and admission number the school
+ * knows them by. The block above the sidebar reads it on every page, and a
+ * pupil with no signal is still owed their own name.
+ */
+export const schoolingRecord = schoolDocument<Student>({
+  id: SET.schoolingRecord,
+  fetch: () => mySchoolingService.record(),
+  schemaVersion: 1,
+})
 
 /** The five counters on the pupil's home page. */
 export const schoolingStats = schoolDocument<StudentDashboard>({
@@ -104,6 +122,7 @@ export const schoolingAssignments = schoolCollection<Assignment, number>({
 
 /** Everything the pupil's portal keeps on the device. */
 export const schoolingCollections = [
+  schoolingRecord,
   schoolingStats,
   schoolingCourses,
   schoolingInvoices,
@@ -113,4 +132,5 @@ export const schoolingCollections = [
   schoolingMaterials,
   schoolingLoans,
   schoolingAssignments,
+  myNotices,
 ]

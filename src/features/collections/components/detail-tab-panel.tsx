@@ -1,11 +1,12 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Suspense, useState } from 'react'
+import { Component, Suspense, useState, type ReactNode } from 'react'
 import { SectionHeading } from '@/components/common/section-heading'
 import { Button } from '@/components/ui/button'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { TableView } from '@/components/data-table/table-view'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import type { DetailTab, Row } from '../types'
 import { toTableColumns } from './collection-columns'
 
@@ -65,8 +66,53 @@ function LiveTab({
   const { data } = useSuspenseQuery({
     queryKey: ['detail-tab', tab.label, recordId],
     queryFn: () => source(recordId),
+    // `always`, so an offline device fails fast into the boundary below —
+    // under the default `online` the request pauses without running and the
+    // tab sits on its skeleton for as long as the device is offline.
+    networkMode: 'always',
   })
   return <TabTable tab={tab} rows={data} recordId={recordId} />
+}
+
+/**
+ * Catches a tab whose source could not be reached, so one dead endpoint costs
+ * that tab and not the record beside it — without this the throw walks up to
+ * the route's boundary and replaces the whole page. Retrying remounts the
+ * tab, which asks again.
+ */
+class TabBoundary extends Component<
+  { retry: () => void; children: ReactNode },
+  { error: unknown | null }
+> {
+  state: { error: unknown | null } = { error: null }
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error !== null) {
+      return (
+        <div className="px-6 py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            {errorMessage(this.state.error, OFFLINE_MESSAGE)}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3.5"
+            onClick={() => {
+              this.setState({ error: null })
+              this.props.retry()
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 /**
@@ -81,6 +127,9 @@ export function DetailTabPanel({
   recordId: string
 }) {
   const [active, setActive] = useState(0)
+  // Bumped by the boundary's "Try again": a new key remounts the tab, and a
+  // fresh mount of its suspense query asks the school again.
+  const [attempt, setAttempt] = useState(0)
   const tab = tabs[active]
 
   // A collection with nothing to show beside the record shows nothing, rather
@@ -118,16 +167,18 @@ export function DetailTabPanel({
         )}
       </div>
 
-      <div key={active} className="animate-ems-up overflow-x-auto">
-        <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>
-          <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
-            {tab.source ? (
-              <LiveTab tab={tab} recordId={recordId} source={tab.source} />
-            ) : (
-              <TabTable tab={tab} rows={tab.rows ?? []} recordId={recordId} />
-            )}
-          </div>
-        </Suspense>
+      <div key={`${active}:${attempt}`} className="animate-ems-up overflow-x-auto">
+        <TabBoundary retry={() => setAttempt((count) => count + 1)}>
+          <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>
+            <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
+              {tab.source ? (
+                <LiveTab tab={tab} recordId={recordId} source={tab.source} />
+              ) : (
+                <TabTable tab={tab} rows={tab.rows ?? []} recordId={recordId} />
+              )}
+            </div>
+          </Suspense>
+        </TabBoundary>
       </div>
     </section>
   )
