@@ -51,8 +51,11 @@ export function uploadBody(
   if (!(file instanceof File)) throw new Error('Choose the results file to upload.')
   if (!arm) throw new Error('Choose one of the arms you take.')
   if (!term) {
+    // Reached only when the school's own results register is empty too — see
+    // `resolveMarkingTerm`. A teacher with no marks of their own now reads the
+    // term off the school's, so this is no longer their first upload failing.
     throw new Error(
-      'There is no term to file these into yet. Ask the office to record your first mark of the term.',
+      'There is no term to file these into yet: the term is read off the marks on file, and the school has none. Ask the office to file the first mark of the term.',
     )
   }
 

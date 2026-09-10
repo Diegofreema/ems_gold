@@ -302,7 +302,7 @@ export type DetailFieldSpec = {
 export type FileTemplate = {
   label: string
   /** Reads the form as it stands: the arm chosen decides whose names go in it. */
-  build: (values: Record<string, unknown>) => Promise<{ text: string; filename: string }>
+  build: (values: Record<string, unknown>) => Promise<{ file: Blob; filename: string }>
   /** Sat under the button, saying what the file is for. */
   note?: string
 }

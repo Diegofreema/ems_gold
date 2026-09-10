@@ -3,20 +3,26 @@ import { useState } from 'react'
 import { type FieldValues, type Path, useController, useFormContext } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import type { FileTemplate } from '@/features/collections/types'
 import { saveBlob } from '@/lib/download'
+import { DropZone } from './drop-zone'
 import { FieldShell, type FieldSpan } from './field-shell'
 
 /**
  * A file picked off the machine, held on the form as the `File` itself so the
  * multipart body can append it unchanged.
  *
- * A file input's value cannot be set from code — the browser refuses, since a
- * page that could write one could read any path it liked. So this one is
- * uncontrolled by necessity: it never reads `field.value` back, which also
- * means an edit form opens with nothing chosen even where the record already
- * carries a file. The hint is where that belongs.
+ * A drop target rather than a bare `<input type="file">`, because that input
+ * says nothing about what it will take and nothing about what was chosen — and
+ * the one form in this app that uses it uploads a spreadsheet whose shape
+ * cannot be checked until the office reads it. The real input is still there
+ * underneath, so the field is worked from the keyboard exactly as before; see
+ * `DropZone`.
+ *
+ * The `File` is read back off the form here, which the bare input could not do
+ * — a file input's value cannot be set from code, since a page that could
+ * write one could read any path it liked. Holding it in form state instead is
+ * what lets the zone name the file, and what lets it be taken off again.
  */
 export function FileField<TValues extends FieldValues>({
   name,
@@ -50,17 +56,18 @@ export function FileField<TValues extends FieldValues>({
       required={required}
       span={span}
     >
-      <Input
-        {...field}
+      <DropZone
         id={name}
-        type="file"
         accept={accept}
-        className="h-auto py-1.5"
-        aria-invalid={Boolean(error)}
-        // Undefined, never the held `File`: a file input's value is the
-        // browser's to set, and React warns on any attempt to control it.
-        value={undefined}
-        onChange={(event) => field.onChange(event.target.files?.[0])}
+        invalid={Boolean(error)}
+        // `field.value` is typed by the form's shape, which for a file field
+        // is whatever the collection declared; the check is what makes it a
+        // `File` here rather than the assertion doing it.
+        file={(field.value as unknown) instanceof File ? (field.value as File) : undefined}
+        onFile={(chosen) => {
+          field.onChange(chosen)
+          field.onBlur()
+        }}
       />
       {template && <TemplateButton template={template} values={getValues} />}
     </FieldShell>
@@ -90,8 +97,8 @@ function TemplateButton({
   const download = async () => {
     setBuilding(true)
     try {
-      const { text, filename } = await template.build(values())
-      saveBlob(new Blob([text], { type: 'text/csv;charset=utf-8' }), filename)
+      const { file, filename } = await template.build(values())
+      saveBlob(file, filename)
     } catch {
       toast.error('That template could not be built. Try again once this page has loaded fully.')
     } finally {

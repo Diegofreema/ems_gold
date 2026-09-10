@@ -199,8 +199,21 @@ export type MessageStudentsBody = MessageAdminBody & {
 }
 
 /**
- * A results spreadsheet. Columns are A regno, B CA, C 1st exam, D 2nd exam,
- * E 3rd exam. The batch lands as `pending` for admin approval.
+ * A results spreadsheet, as `POST /teachers/me/uploads` takes it.
+ *
+ * Multipart, and confirmed against the endpoint on 2026-09-10: the file under
+ * `result`, then the five ids. `class_arm_id` is among them — a batch is
+ * approved as subject × class × term × session, so the arm is the one id the
+ * office's own queue never shows back, which makes it easy to think the upload
+ * does not take it.
+ *
+ * The file is appended under its own name rather than a placeholder, so a
+ * parser that picks its reader from the extension gets `.xlsx` rather than
+ * something with no extension at all.
+ *
+ * Columns are A regno, B CA, C 1st exam, D 2nd exam, E 3rd exam — see
+ * `result-template.ts`, which hands the teacher that exact sheet. The batch
+ * lands as `pending` for admin approval.
  */
 export type UploadResultsBody = {
   result: File

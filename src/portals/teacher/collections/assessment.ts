@@ -3,11 +3,11 @@ import { teacherMarks } from '@/db/collections/teaching'
 import { pageRows } from '@/features/collections/api'
 import { localFirst } from '@/features/collections/local-first'
 import type { CollectionDef, Row } from '@/features/collections/types'
-import { termFromResults } from '../features/term/term'
+import { resolveMarkingTerm } from '../features/term/use-marking-term'
 import { batchRow, lineRow, parseBatchKey } from './batch-row'
 import { myArms, myBatches, myMarks, myStudents } from './mine'
 import { optionLabels } from '@/features/collections/option-feeds'
-import { resultTemplate, templateName } from './result-template'
+import { resultTemplateFile, templateName } from './result-template'
 import { newestFirst } from '@/features/collections/order'
 import { markRow } from './teaching-row'
 import { uploadBody } from './teaching-body'
@@ -54,8 +54,12 @@ export const uploads: CollectionDef = {
   save: async (values) => {
     const [arms, marks] = await Promise.all([myArms(), myMarks()])
     const arm = arms.find((one) => String(one.id) === String(values.class_arm_id))
+    // The same term the score sheet files into, read the same way: the
+    // teacher's own marks first, and the school's register for a teacher who
+    // has none. Without the second reading a teacher could never upload their
+    // first batch, which is every teacher in their first term here.
     return teachingService.uploadResults(
-      uploadBody(values, arm, termFromResults(marks)),
+      uploadBody(values, arm, await resolveMarkingTerm(marks)),
     )
   },
   // Nothing withdraws a batch once it is with the office; a corrected file is
@@ -81,7 +85,7 @@ export const uploads: CollectionDef = {
            */
           template: {
             label: 'Download the template',
-            note: 'Opens in Excel. The registration numbers of the arm you pick are already filled in — type the marks beside them and upload it back.',
+            note: 'An Excel workbook with the columns the office reads. The registration numbers of the arm you pick are already filled in — type the marks beside them and upload it back.',
             build: async (values) => {
               const armId = String(values.class_arm_id ?? '')
               const students = await myStudents()
@@ -95,7 +99,7 @@ export const uploads: CollectionDef = {
                 optionLabels('my-arms'),
               ])
               return {
-                text: resultTemplate(
+                file: await resultTemplateFile(
                   roll.map((one) => one.regno ?? '').filter(Boolean),
                 ),
                 filename: templateName(
