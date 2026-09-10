@@ -23,7 +23,8 @@ import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
-import { termFromResults } from '../term/term'
+import { useMarkingTerm } from '../term/use-marking-term'
+import { blockedReason } from './blocked'
 import { sheetAverage } from './grade'
 import { queuedScores } from './queued'
 import { ScoreSheet } from './score-sheet'
@@ -50,6 +51,13 @@ export function ScoresPage() {
   const [edits, setEdits] = useState<Edits>({})
   const [chosenSubject, setSubject] = useQueryState('subject')
   const [chosenArm, setArm] = useQueryState('arm')
+  /*
+   * Read before the early returns below, because a hook cannot be called after
+   * one. It reads the marks straight off the live query rather than the
+   * narrowed `held` further down — the term is the same whichever sheet is
+   * open, and this way it is asked for once for the page.
+   */
+  const { term, looking } = useMarkingTerm((marks.data ?? []) as TeacherResult[])
 
   if (![subjects, roll, myArms, marks].every(settled)) {
     return (
@@ -96,9 +104,16 @@ export function ScoresPage() {
     edits,
     waiting,
   )
-  const term = termFromResults(held)
   const pending = rows.filter((row) => row.edited)
   const problems = rows.filter((row) => row.problem)
+
+  // Why the button will not go, in one sentence. See `blockedReason`.
+  const blocked = blockedReason({
+    problems: problems.length,
+    pending: pending.length,
+    hasTerm: Boolean(term),
+    looking,
+  })
 
   const setMark = (studentId: number, field: 'ca' | 'exam', value: string) =>
     setEdits((previous) => {
@@ -139,14 +154,26 @@ export function ScoresPage() {
     <>
       <Header
         action={
-          <Button
-            disabled={!term || pending.length === 0 || problems.length > 0}
-            onClick={submit}
-          >
-            {pending.length
-              ? `Save ${pending.length} mark${pending.length === 1 ? '' : 's'}`
-              : 'Save marks'}
-          </Button>
+          <div className="text-right">
+            <Button
+              disabled={!term || pending.length === 0 || problems.length > 0}
+              pending={looking && pending.length > 0}
+              onClick={submit}
+            >
+              {pending.length
+                ? `Save ${pending.length} mark${pending.length === 1 ? '' : 's'}`
+                : 'Save marks'}
+            </Button>
+            {/* Why the button will not go, beside the button. The same reasons
+                are spelled out under the sheet, which is a long way from the
+                thing being clicked — a teacher who has typed a sheet of marks
+                and cannot save them should not have to go looking. */}
+            {blocked && (
+              <p className="mt-1.5 max-w-64 text-2xs leading-relaxed text-muted-foreground">
+                {blocked}
+              </p>
+            )}
+          </div>
         }
       />
       <Rule />
@@ -196,10 +223,13 @@ export function ScoresPage() {
         ) : (
           // Without a session and a term the endpoint has nothing to file
           // against, and a teaching login cannot read the school calendar.
+          // The term is read off this teacher's own marks first and off the
+          // school's results register second; only when both say nothing —
+          // a school that has filed no marks at all — is the sheet unsaveable.
           <>
-            Marks cannot be filed yet: this portal reads the term off your own
-            marks, and you have none. Ask the school office to record your first
-            mark of the term, or to open the calendar to teaching logins.
+            {looking
+              ? 'Checking which term the school is filing into\u2026'
+              : 'Marks cannot be filed yet: this portal reads the term off the marks on file, and the school has none. Ask the office to file the first mark of the term, or to open the calendar to teaching logins.'}
           </>
         )}
       </div>

@@ -298,6 +298,15 @@ export type DetailFieldSpec = {
   link?: boolean
 }
 
+/** See `FieldSpec.template`. */
+export type FileTemplate = {
+  label: string
+  /** Reads the form as it stands: the arm chosen decides whose names go in it. */
+  build: (values: Record<string, unknown>) => Promise<{ text: string; filename: string }>
+  /** Sat under the button, saying what the file is for. */
+  note?: string
+}
+
 export type FieldSpec = {
   key: string
   label: string
@@ -358,6 +367,12 @@ export type FieldSpec = {
    * itself, so the collection's `save` must send multipart.
    */
   file?: string
+  /**
+   * A starting file the reader can download, for an upload whose shape the
+   * endpoint will not describe. Built when the button is pressed, from the
+   * form's own values, so it can be filled in with what has been chosen so far.
+   */
+  template?: FileTemplate
   date?: boolean
   /** With `date`: the answer is already behind us, so the years read backwards. */
   past?: boolean

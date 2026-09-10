@@ -62,7 +62,14 @@ function renderField(field: FieldSpec, record?: Row) {
   if (field.money)
     return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.file)
-    return <FileField<Values> key={field.key} {...shared} accept={field.file} />
+    return (
+      <FileField<Values>
+        key={field.key}
+        {...shared}
+        accept={field.file}
+        template={field.template}
+      />
+    )
   if (field.date)
     return <DateField<Values> key={field.key} {...shared} past={field.past} />
   if (field.rich)

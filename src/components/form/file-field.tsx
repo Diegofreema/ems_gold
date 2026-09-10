@@ -1,5 +1,11 @@
+import { Download } from 'lucide-react'
+import { useState } from 'react'
 import { type FieldValues, type Path, useController, useFormContext } from 'react-hook-form'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import type { FileTemplate } from '@/features/collections/types'
+import { saveBlob } from '@/lib/download'
 import { FieldShell, type FieldSpan } from './field-shell'
 
 /**
@@ -19,6 +25,7 @@ export function FileField<TValues extends FieldValues>({
   hint,
   required,
   span,
+  template,
 }: {
   name: Path<TValues>
   label: string
@@ -27,8 +34,10 @@ export function FileField<TValues extends FieldValues>({
   hint?: string
   required?: boolean
   span?: FieldSpan
+  /** A file to start from, where the endpoint expects a particular shape. */
+  template?: FileTemplate
 }) {
-  const { control } = useFormContext<TValues>()
+  const { control, getValues } = useFormContext<TValues>()
   const { field, fieldState } = useController({ control, name })
   const error = fieldState.error?.message
 
@@ -53,6 +62,54 @@ export function FileField<TValues extends FieldValues>({
         value={undefined}
         onChange={(event) => field.onChange(event.target.files?.[0])}
       />
+      {template && <TemplateButton template={template} values={getValues} />}
     </FieldShell>
+  )
+}
+
+/**
+ * Downloads the file the endpoint expects, already shaped.
+ *
+ * It is here rather than in a hint because the shape of an uploaded sheet is
+ * the one thing on a form nobody can check before it is sent: the wrong
+ * columns come back days later as a batch the office rejected. Handing over
+ * the sheet is the only way to be sure.
+ *
+ * Built on the press, not on render, so it reads whatever has been chosen on
+ * the form by then — the arm decides whose names are in it.
+ */
+function TemplateButton({
+  template,
+  values,
+}: {
+  template: FileTemplate
+  values: () => FieldValues
+}) {
+  const [building, setBuilding] = useState(false)
+
+  const download = async () => {
+    setBuilding(true)
+    try {
+      const { text, filename } = await template.build(values())
+      saveBlob(new Blob([text], { type: 'text/csv;charset=utf-8' }), filename)
+    } catch {
+      toast.error('That template could not be built. Try again once this page has loaded fully.')
+    } finally {
+      setBuilding(false)
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <Button type="button" variant="outline" size="sm" pending={building} onClick={download}>
+        <Download className="size-3.5" strokeWidth={2} />
+        {template.label}
+      </Button>
+      {template.note && (
+        <p className="mt-1.5 text-2xs leading-relaxed text-muted-foreground">
+          {template.note}
+        </p>
+      )}
+    </div>
   )
 }

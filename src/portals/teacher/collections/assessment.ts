@@ -5,7 +5,9 @@ import { localFirst } from '@/features/collections/local-first'
 import type { CollectionDef, Row } from '@/features/collections/types'
 import { termFromResults } from '../features/term/term'
 import { batchRow, lineRow, parseBatchKey } from './batch-row'
-import { myArms, myBatches, myMarks } from './mine'
+import { myArms, myBatches, myMarks, myStudents } from './mine'
+import { optionLabels } from '@/features/collections/option-feeds'
+import { resultTemplate, templateName } from './result-template'
 import { newestFirst } from '@/features/collections/order'
 import { markRow } from './teaching-row'
 import { uploadBody } from './teaching-body'
@@ -69,6 +71,40 @@ export const uploads: CollectionDef = {
           wide: true,
           file: '.csv,.xls,.xlsx',
           hint: 'Column A the admission number, B the CA, then C, D and E the three exam scores. The batch lands with the office as pending.',
+          /*
+           * The office reads this file by column position, and a sheet with
+           * the right words in the wrong order files exam marks as CA. So the
+           * shape is handed over rather than described — and handed over with
+           * the arm's own registration numbers already in it, which is the
+           * other half of what goes wrong: a number typed by hand that matches
+           * no student is a line the office throws away.
+           */
+          template: {
+            label: 'Download the template',
+            note: 'Opens in Excel. The registration numbers of the arm you pick are already filled in — type the marks beside them and upload it back.',
+            build: async (values) => {
+              const armId = String(values.class_arm_id ?? '')
+              const students = await myStudents()
+              const roll = armId
+                ? students.filter((one) => String(one.class_arm_id) === armId)
+                : []
+              // Named for what was chosen, so a teacher with three of these in
+              // their downloads can tell them apart.
+              const [subjects, arms] = await Promise.all([
+                optionLabels('my-subjects'),
+                optionLabels('my-arms'),
+              ])
+              return {
+                text: resultTemplate(
+                  roll.map((one) => one.regno ?? '').filter(Boolean),
+                ),
+                filename: templateName(
+                  subjects.get(String(values.subject_id ?? '')),
+                  arms.get(armId),
+                ),
+              }
+            },
+          },
         },
         {
           key: 'subject_id',
