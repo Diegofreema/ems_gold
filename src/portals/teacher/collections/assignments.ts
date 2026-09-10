@@ -1,41 +1,35 @@
-import { setAssignmentKeys } from '@/api/set-assignments/keys';
-import { setAssignmentsService } from '@/api/set-assignments/service';
-import { pageRows } from '@/features/collections/api';
+import type { Assignment, AssignmentBody } from '@/api/set-assignments/types';
+import { heldRows } from '@/db/collection';
+import { setAssignments, setQuestions, setSubmissions } from '@/db/collections/set-assignments';
+import { enqueue } from '@/db/drain';
+import { SET, WRITE } from '@/db/ids';
+import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox';
+import { outbox } from '@/db/store';
 import { BLANK } from '@/features/collections/blank';
+import { localFirst } from '@/features/collections/local-first';
 import type { CollectionDef, Row } from '@/features/collections/types';
-import { queryClient } from '@/lib/query-client';
 import { submissionRows } from '../features/assignments/marking';
 import { correctAnswer, typeLabel } from '../features/assignments/question';
 import { assignmentBody } from './assignment-body';
 import { assignmentRows, assignmentTally } from './assignment-row';
 
 /**
- * ponytail: the whole list at once.
- *
- * The endpoint pages, and a teacher's assignments are counted in tens — so reading
- * them whole is one request either way, and it is what lets the search box
- * match the subject, the class and the state rather than only the fields a
- * query parameter could narrow. A teacher with more assignments than this wants a
- * search term on the endpoint, which it does not have.
+ * The register reads the device's own set — `setAssignments` in
+ * `src/db/collections/set-assignments.ts` — and every write goes through the
+ * queue, so an assignment can be set, corrected and deleted with no
+ * connection at all. The questions and submissions the record's tabs show
+ * come off their own sets the same way.
  */
-const ALL = 200;
 
-const mine = () =>
-  queryClient
-    .query({
-      queryKey: setAssignmentKeys.list({ limit: ALL }),
-      queryFn: () => setAssignmentsService.list({ limit: ALL }),
-    })
-    .then((page) => assignmentRows(page.items));
+const mine = async () => assignmentRows(await heldRows(setAssignments));
 
 const tally = () => mine().then(assignmentTally);
 
 /** The assignment's questions, as the record panel's tab lists them. */
 const questionRows = async (assignmentId: string): Promise<Row[]> => {
-  const { questions } = await queryClient.query({
-    queryKey: setAssignmentKeys.questions(assignmentId),
-    queryFn: () => setAssignmentsService.questions(assignmentId),
-  });
+  const questions = (await heldRows(setQuestions)).filter(
+    (question) => String(question.assignment_id) === assignmentId,
+  );
 
   return questions.map((question, index) => ({
     id: String(question.id),
@@ -46,6 +40,41 @@ const questionRows = async (assignmentId: string): Promise<Row[]> => {
     answer: correctAnswer(question) ?? BLANK,
   }));
 };
+
+/**
+ * Assignments set on this device that the school has not seen yet. The
+ * subject and class are ids in the queued body and their names are not worth
+ * a lookup slot here — the title is what the teacher is looking for. A
+ * `local:` id is what withholds edit, delete and the questions link until the
+ * school issues a real one.
+ */
+function queuedAssignments(ops: readonly OutboxOp[]): Row[] {
+  return ops
+    .filter(
+      (op) =>
+        op.handler === WRITE.createAssignment &&
+        DRAWN_STATES.includes(op.state) &&
+        typeof op.targetKey === 'string',
+    )
+    .sort((one, two) => two.seq - one.seq)
+    .map((op) => {
+      const body = op.payload as AssignmentBody;
+      return {
+        id: op.targetKey as string,
+        title: body.title?.trim() || 'Untitled assignment',
+        subject: BLANK,
+        klass: BLANK,
+        questions: '0',
+        closes: BLANK,
+        state: 'Waiting to send',
+        details: body.details ?? '',
+        term: BLANK,
+        minutes: body.time_limit ? `${body.time_limit} minutes` : 'No limit',
+        pass: body.passing_score == null ? BLANK : `${body.passing_score}%`,
+        opens: BLANK,
+      };
+    });
+}
 
 export const assignments: CollectionDef = {
   id: 'assignments',
@@ -96,8 +125,11 @@ export const assignments: CollectionDef = {
   ],
   // Writing the questions is a page of its own — a question carries its own
   // choices and its own answer key, which is not a row of a record form.
+  // Withheld while the assignment is still queued: a question names the
+  // assignment's id, and the school has not issued one yet — one rule instead
+  // of a dependency graph, as everywhere else.
   rowLink: {
-    label: () => 'Questions',
+    label: (row) => (isLocalKey(row.id) ? undefined : 'Questions'),
     to: '/teacher/questions',
     search: (row) => ({ assignment: row.id }),
   },
@@ -126,7 +158,8 @@ export const assignments: CollectionDef = {
       ],
       source: async (recordId) =>
         submissionRows(
-          (await setAssignmentsService.submissions(recordId)).submissions ?? [],
+          (await heldRows(setSubmissions)).find((doc) => String(doc.id) === recordId)
+            ?.submissions ?? [],
         ),
       empty:
         'No student has submitted this assignment yet. Answers appear here as they send them in.',
@@ -146,19 +179,57 @@ export const assignments: CollectionDef = {
       }),
     },
   ],
-  source: async (params) => pageRows(await mine(), params),
-  record: async (recordId) => (await mine()).find((row) => row.id === recordId),
-  save: async (values, recordId) => {
-    if (!recordId) return setAssignmentsService.create(assignmentBody(values));
-    // The update body carries a status, and nothing in this portal sets one:
-    // the assignment's own is sent back rather than a guess at what it should be.
-    const current = (await mine()).find((row) => row.id === recordId);
-    return setAssignmentsService.update(
-      recordId,
-      assignmentBody(values, current?.status),
-    );
+  collection: localFirst({
+    entities: setAssignments,
+    // `assignmentRows` sorts for itself — unwritten first, then by newness —
+    // which is the order the footer promises; a collection alone would hand
+    // the rows back in key order.
+    rows: (items: Assignment[]) => assignmentRows(items),
+    queued: queuedAssignments,
+  }),
+  record: async (recordId) => {
+    if (isLocalKey(recordId)) {
+      return queuedAssignments(outbox().toArray).find((row) => row.id === recordId);
+    }
+    return (await mine()).find((row) => row.id === recordId);
   },
-  remove: (recordId) => setAssignmentsService.remove(recordId),
+  queue: async (values, recordId) => {
+    if (recordId) {
+      // The update body carries a status, and nothing in this portal sets one:
+      // the assignment's own is sent back rather than a guess at what it
+      // should be — read off the device, which is what lets the correction be
+      // queued at all.
+      const current = (await heldRows(setAssignments)).find(
+        (assignment) => String(assignment.id) === recordId,
+      );
+      enqueue({
+        handler: WRITE.updateAssignment,
+        payload: { id: recordId, body: assignmentBody(values, current?.status ?? undefined) },
+        collectionId: SET.teachingAssignments,
+        targetKey: recordId,
+        toast: { success: 'Assignment saved' },
+        label: `Assignment “${String(values.title ?? '').trim() || recordId}”`,
+      });
+      return;
+    }
+    enqueue({
+      handler: WRITE.createAssignment,
+      payload: assignmentBody(values),
+      collectionId: SET.teachingAssignments,
+      targetKey: newLocalKey(),
+      toast: { success: 'Assignment set' },
+      label: `Assignment “${String(values.title ?? '').trim() || 'Untitled'}”`,
+    });
+  },
+  queueRemove: (recordId) =>
+    enqueue({
+      handler: WRITE.removeAssignment,
+      payload: recordId,
+      collectionId: SET.teachingAssignments,
+      targetKey: recordId,
+      toast: { success: 'Assignment deleted' },
+      label: 'An assignment',
+    }),
   removeBody: (row) =>
     `The assignment and its ${row.questions} question${row.questions === '1' ? '' : 's'} go with it. An assignment students have already sat is better left to close than deleted.`,
   form: [

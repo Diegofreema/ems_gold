@@ -1,6 +1,6 @@
 import type { EnterScoreBody } from '../../../../api/teaching/types.ts'
 import { WRITE } from '../../../../db/ids.ts'
-import { OPEN_STATES, type OutboxOp } from '../../../../db/outbox.ts'
+import { DRAWN_STATES, type OutboxOp } from '../../../../db/outbox.ts'
 
 /** A mark written down on this device and not yet with the school. */
 export type QueuedScore = { ca: number; exam: number }
@@ -25,7 +25,7 @@ export function queuedScores(ops: readonly OutboxOp[]): Map<string, QueuedScore>
   const held = new Map<string, QueuedScore>()
 
   const mine = ops
-    .filter((op) => op.handler === WRITE.enterScore && OPEN_STATES.includes(op.state))
+    .filter((op) => op.handler === WRITE.enterScore && DRAWN_STATES.includes(op.state))
     .sort((one, two) => one.seq - two.seq)
 
   for (const op of mine) {

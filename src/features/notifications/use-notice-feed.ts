@@ -5,9 +5,9 @@ import { noticeKeys } from '@/api/notifications/keys'
 import type { Notice } from '@/api/notifications/types'
 import { collectionById, collectionError, refetchCollection } from '@/db/collection'
 import { myNotices } from '@/db/collections/my-notices'
-import { refNotices } from '@/db/collections/reference'
+import { refBoard } from '@/db/collections/reference'
 import { SET } from '@/db/ids'
-import { useHeld } from '@/db/live'
+import { useHeld, useHeldDocument } from '@/db/live'
 import { errorMessage } from '@/lib/errors'
 import { noticeFeed } from './notice-feed'
 import type { Notification } from './types'
@@ -50,7 +50,7 @@ function useBoardWatch() {
       // register tiles still live under the query keys.
       void queryClient.invalidateQueries({ queryKey: noticeKeys.all })
       refreshBoard(SET.myNotices)
-      refreshBoard(SET.refNotices)
+      refreshBoard(SET.refBoard)
     }
     seen.current = count
   }, [unread.data, queryClient])
@@ -99,14 +99,17 @@ export function useNoticeFeed(): NoticeFeed {
  * An administrator's `/notifications/mine` comes back empty — with
  * `audience: "all"`, and with notices on the board that are addressed to
  * `all` — so a bell built on it shows the office nothing it has posted.
- * `refNotices` is the board the office actually reads, and the same set
+ * `refBoard` is the board the office actually reads, and the same document
  * `/admin/notices` manages it from.
  */
 export function useOfficeNoticeFeed(): NoticeFeed {
-  const board = useHeld(refNotices)
+  const board = useHeldDocument(refBoard)
   useBoardWatch()
-  return useFeedOf(board.rows, board.failed, SET.refNotices)
+  return useFeedOf(board.doc?.notifications ?? EMPTY_BOARD, board.failed, SET.refBoard)
 }
+
+/** One value, so a board still syncing does not re-memo the feed per render. */
+const EMPTY_BOARD: Notice[] = []
 
 /*
  * What every portal's bell reads. Two hooks and not four, because the feed is

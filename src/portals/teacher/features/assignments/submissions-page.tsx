@@ -1,19 +1,27 @@
 import { Link } from '@tanstack/react-router'
+import { useLiveQuery } from '@tanstack/react-db'
 import { ChevronLeft } from 'lucide-react'
 import { parseAsString, useQueryState } from 'nuqs'
+import { collectionError } from '@/db/collection'
 import {
-  useGradeSubmission,
-  useSetAssignment,
-  useSetAssignmentSubmissions,
-  useSubmission,
-} from '@/api/set-assignments/hooks'
+  setAssignments,
+  setScripts,
+  setSubmissions,
+} from '@/db/collections/set-assignments'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { useHeld } from '@/db/live'
+import type { OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { MarkingSheet, type MarkingValues } from './marking-sheet'
 import { gradeBody, submissionRows } from './marking'
+import { gradedCounters, queuedGrades, withQueuedGrades, withQueuedScores } from './queued'
 import { SubmissionList } from './submission-list'
 
 /**
@@ -23,6 +31,11 @@ import { SubmissionList } from './submission-list'
  * back and `?submission` for one of them — so a teacher stopped halfway can be
  * sent back to exactly the script they were reading, and closing a marked
  * submission returns them to the list rather than out of the flow.
+ *
+ * The scripts come off the device's own sets and the marks go through the
+ * queue, so a class's papers marked in a staffroom with no signal are kept
+ * and sent when the signal comes back. What the queue holds is written over
+ * the list and the sheet by the pure composers in `queued.ts`.
  */
 export function SubmissionsPage() {
   const [assignmentId] = useQueryState('assignment', parseAsString.withDefault(''))
@@ -31,10 +44,11 @@ export function SubmissionsPage() {
     parseAsString.withDefault(''),
   )
 
-  const assignment = useSetAssignment(assignmentId || undefined)
-  const list = useSetAssignmentSubmissions(assignmentId || undefined)
-  const marking = useSubmission(submissionId || undefined)
-  const grade = useGradeSubmission(submissionId)
+  const assignments = useHeld(setAssignments)
+  const submissions = useHeld(setSubmissions)
+  const scripts = useHeld(setScripts)
+  const queue = useLiveQuery({ query: (q) => q.from({ op: outbox() }) })
+  const ops = (queue.data ?? []) as OutboxOp[]
 
   if (!assignmentId) {
     return (
@@ -53,7 +67,7 @@ export function SubmissionsPage() {
     )
   }
 
-  if (assignment.isPending || list.isPending) {
+  if (assignments.pending || submissions.pending) {
     return (
       <>
         <Header title="Marking" />
@@ -62,8 +76,19 @@ export function SubmissionsPage() {
     )
   }
 
-  // `paper` is the server's key for the assignment; the word is not ours.
-  const record = assignment.data?.paper
+  if (submissions.failed) {
+    return (
+      <>
+        <Header title="Marking" />
+        <EmptyState
+          title="The submissions could not be read"
+          body={errorMessage(collectionError(SET.teachingSubmissions), OFFLINE_MESSAGE)}
+        />
+      </>
+    )
+  }
+
+  const record = assignments.rows.find((assignment) => String(assignment.id) === assignmentId)
   const title = record?.title?.trim() || 'Marking'
   const where = [record?.subject, record?.class, record?.semester]
     .map((part) => part?.trim())
@@ -71,7 +96,7 @@ export function SubmissionsPage() {
     .join(' · ')
 
   if (submissionId) {
-    if (marking.isPending) {
+    if (scripts.pending) {
       return (
         <>
           <Header title={title} description={where} />
@@ -80,7 +105,13 @@ export function SubmissionsPage() {
       )
     }
 
-    const submission = marking.data
+    const script = scripts.rows.find((one) => String(one.id) === submissionId)
+    // The marks this device has already queued for this script, written back
+    // in — the sheet reopens on what the teacher gave, and reads as marked,
+    // which by this device's account it is.
+    const submission = script
+      ? withQueuedScores(script, queuedGrades(ops).get(submissionId))
+      : undefined
     const answers = submission?.answers ?? []
     // `graded_at` is the marking view's own answer to "has anybody marked it";
     // the list beside it says `graded`, and neither is on the other.
@@ -88,15 +119,21 @@ export function SubmissionsPage() {
     const marked = Boolean(head?.graded_at) || head?.total_score != null
     const student = head?.student?.trim() || 'This student'
 
-    const save = async (values: MarkingValues) => {
-      await grade
-        .mutateAsync(
-          gradeBody({ answers, scores: values.scores, comment: values.comment, marked }),
-        )
-        // A refusal has already been announced by the mutation cache; the sheet
-        // stays open holding the marks so they can be sent again.
-        .then(() => setSubmission(null))
-        .catch(() => undefined)
+    const save = (values: MarkingValues) => {
+      // Accepted on the device and queued. `regrade` is right either way: a
+      // second grade queued behind a first is a regrade by the time it sends,
+      // since the queue lands strictly in order.
+      enqueue({
+        handler: WRITE.gradeSubmission,
+        payload: {
+          submission_id: submissionId,
+          body: gradeBody({ answers, scores: values.scores, comment: values.comment, marked }),
+        },
+        collectionId: SET.teachingScripts,
+        toast: { success: 'Marks saved' },
+        label: `Marks for ${student}`,
+      })
+      void setSubmission(null)
     }
 
     return (
@@ -119,8 +156,13 @@ export function SubmissionsPage() {
           <MarkingSheet
             submission={submission}
             marked={marked}
-            pending={grade.isPending}
+            pending={false}
             onSave={save}
+          />
+        ) : scripts.failed ? (
+          <EmptyState
+            title="That script could not be read"
+            body={errorMessage(collectionError(SET.teachingScripts), OFFLINE_MESSAGE)}
           />
         ) : (
           <EmptyState
@@ -132,7 +174,22 @@ export function SubmissionsPage() {
     )
   }
 
-  const submissions = list.data?.submissions ?? []
+  const doc = submissions.rows.find((one) => String(one.id) === assignmentId)
+  const listed = doc?.submissions ?? []
+  const school = submissionRows(listed)
+  // The counters are moved against the school's own rows, before the overlay
+  // writes "Marked" over them — after it, a queued mark would count as
+  // nothing new.
+  const counters = gradedCounters(
+    {
+      sat: doc?.sat ?? listed.length,
+      marked: doc?.marked ?? 0,
+      waiting: doc?.waiting ?? 0,
+    },
+    school,
+    ops,
+  )
+  const rows = withQueuedGrades(school, ops)
 
   return (
     <>
@@ -150,10 +207,10 @@ export function SubmissionsPage() {
       <Rule />
 
       <SubmissionList
-        rows={submissionRows(submissions)}
-        sat={list.data?.sat ?? submissions.length}
-        marked={list.data?.marked ?? 0}
-        waiting={list.data?.waiting ?? 0}
+        rows={rows}
+        sat={counters.sat}
+        marked={counters.marked}
+        waiting={counters.waiting}
         onOpen={(id) => void setSubmission(id)}
       />
     </>
@@ -175,7 +232,7 @@ function Header({
       title={title}
       description={
         description ||
-        'What your students submitted, for you to mark. The school scores the multiple choice itself; the written answers, and the note beside the mark, are yours.'
+        'What your students submitted, for you to mark. The multiple choice is proposed from the answer key; the written answers, and the note beside the mark, are yours.'
       }
       action={action}
     />

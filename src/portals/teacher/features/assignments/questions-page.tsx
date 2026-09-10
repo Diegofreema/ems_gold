@@ -1,24 +1,26 @@
 import { Link } from '@tanstack/react-router'
+import { useLiveQuery } from '@tanstack/react-db'
 import { Plus } from 'lucide-react'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useState } from 'react'
-import {
-  useAddQuestion,
-  useSetAssignment,
-  useSetAssignmentQuestions,
-  useRemoveQuestion,
-  useUpdateQuestion,
-} from '@/api/set-assignments/hooks'
-import type { AssignmentQuestion } from '@/api/set-assignments/types'
+import { collectionError } from '@/db/collection'
+import { setAssignments, setQuestions } from '@/db/collections/set-assignments'
+import { enqueue } from '@/db/drain'
+import { SET, WRITE } from '@/db/ids'
+import { useHeld } from '@/db/live'
+import { newLocalKey, type OutboxOp } from '@/db/outbox'
+import { outbox } from '@/db/store'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { PageHeader } from '@/components/page/page-header'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { useConfirm } from '@/hooks/use-confirm'
 import { QuestionCard } from './question-card'
 import { QuestionForm } from './question-form'
+import { composeQuestions, type PageQuestion } from './queued'
 import {
   blankQuestion,
   questionBody,
@@ -34,18 +36,21 @@ import {
  * one over and a teacher can keep the link. It is its own page and not a tab
  * of the assignment's record because a question is not a row of a record form: it
  * carries its own choices and its own answer key, and both are edited here.
+ *
+ * The questions come off the device's own set and every write goes through
+ * the queue, so a paper can be written in full with no connection — the
+ * afternoon this flow exists for. What the queue holds is composed onto the
+ * school's rows by `composeQuestions`, which is pure and tested.
  */
 export function QuestionsPage() {
   const [assignmentId] = useQueryState('assignment', parseAsString.withDefault(''))
-  const assignment = useSetAssignment(assignmentId || undefined)
-  const questions = useSetAssignmentQuestions(assignmentId || undefined)
-  const add = useAddQuestion(assignmentId)
-  const update = useUpdateQuestion(assignmentId)
-  const remove = useRemoveQuestion(assignmentId)
+  const assignments = useHeld(setAssignments)
+  const held = useHeld(setQuestions)
+  const queue = useLiveQuery({ query: (q) => q.from({ op: outbox() }) })
   const confirm = useConfirm()
 
-  /** Nothing open, the new question, or the id of the one being rewritten. */
-  const [editing, setEditing] = useState<'new' | number | null>(null)
+  /** Nothing open, the new question, or the key of the one being rewritten. */
+  const [editing, setEditing] = useState<'new' | string | null>(null)
 
   if (!assignmentId) {
     return (
@@ -64,7 +69,7 @@ export function QuestionsPage() {
     )
   }
 
-  if (assignment.isPending || questions.isPending) {
+  if (assignments.pending || held.pending) {
     return (
       <>
         <Header title="Write the questions" />
@@ -73,34 +78,68 @@ export function QuestionsPage() {
     )
   }
 
-  // `paper` is the server's key for the assignment; the word is not ours.
-  const record = assignment.data?.paper
-  const written = questions.data?.questions ?? []
-  const marks = questions.data?.total_marks ?? totalMarks(written)
-
-  const save = async (values: QuestionValues) => {
-    const body = questionBody(values)
-    await (editing === 'new'
-      ? add.mutateAsync(body)
-      : update.mutateAsync({ questionId: editing as number, body })
+  if (held.failed) {
+    return (
+      <>
+        <Header title="Write the questions" />
+        <EmptyState
+          title="The questions could not be read"
+          body={errorMessage(collectionError(SET.teachingQuestions), OFFLINE_MESSAGE)}
+        />
+      </>
     )
-      // A refusal has already been announced by the mutation cache. The form
-      // stays open holding what was typed, so it can be sent again.
-      .then(() => setEditing(null))
-      .catch(() => undefined)
   }
 
-  const askDelete = (question: AssignmentQuestion) =>
+  const record = assignments.rows.find((assignment) => String(assignment.id) === assignmentId)
+  const ops = (queue.data ?? []) as OutboxOp[]
+  const written = held.rows
+    .filter((question) => String(question.assignment_id) === assignmentId)
+    .sort((a, b) => (a.order_number ?? a.id) - (b.order_number ?? b.id))
+  const composed = composeQuestions(written, ops, assignmentId)
+  const marks = totalMarks(composed.map((one) => one.question))
+
+  const save = (values: QuestionValues) => {
+    const body = questionBody(values)
+    if (editing === 'new') {
+      enqueue({
+        handler: WRITE.addQuestion,
+        payload: { assignment_id: assignmentId, body },
+        collectionId: SET.teachingQuestions,
+        targetKey: newLocalKey(),
+        toast: { success: 'Question added' },
+        label: `A question for “${record?.title?.trim() || `assignment ${assignmentId}`}”`,
+      })
+    } else {
+      enqueue({
+        handler: WRITE.updateQuestion,
+        payload: { assignment_id: assignmentId, question_id: editing, body },
+        collectionId: SET.teachingQuestions,
+        toast: { success: 'Question saved' },
+        label: `A question of “${record?.title?.trim() || `assignment ${assignmentId}`}”`,
+      })
+    }
+    setEditing(null)
+  }
+
+  const askDelete = (entry: PageQuestion) =>
     confirm.ask({
       title: 'Delete this question?',
       body: 'It goes from the assignment, and the assignment is worth that much less. A student who has already sat the assignment keeps the answer they gave.',
-      subject: question.question_text?.trim() || `Question ${question.id}`,
+      subject: entry.question.question_text?.trim() || `Question ${entry.key}`,
       cta: 'Delete the question',
       cancel: 'Keep it',
-      onConfirm: () => remove.mutateAsync(question.id).catch(() => undefined),
+      onConfirm: () => {
+        enqueue({
+          handler: WRITE.removeQuestion,
+          payload: { assignment_id: assignmentId, question_id: entry.key },
+          collectionId: SET.teachingQuestions,
+          toast: { success: 'Question deleted' },
+          label: 'A question',
+        })
+      },
     })
 
-  const opened = written.find((question) => question.id === editing)
+  const opened = composed.find((entry) => entry.key === editing)
 
   return (
     <>
@@ -132,23 +171,26 @@ export function QuestionsPage() {
           // Remounted per question, so the form opens on the one being edited
           // rather than on whatever was open before it.
           key={String(editing)}
-          values={opened ? questionValues(opened) : blankQuestion()}
+          values={opened ? questionValues(opened.question) : blankQuestion()}
           submitLabel={editing === 'new' ? 'Add the question' : 'Save the question'}
-          pending={add.isPending || update.isPending}
+          pending={false}
           onSubmit={save}
           onCancel={() => setEditing(null)}
         />
       )}
 
-      {written.length ? (
+      {composed.length ? (
         <ul className="grid gap-2.5">
-          {written.map((question, index) => (
+          {composed.map((entry, index) => (
             <QuestionCard
-              key={question.id}
-              question={question}
-              position={question.order_number ?? index + 1}
-              onEdit={() => setEditing(question.id)}
-              onDelete={() => askDelete(question)}
+              key={entry.key}
+              question={entry.question}
+              position={entry.question.order_number ?? index + 1}
+              // A question still queued has no id the school knows; editing it
+              // waits for one, the same one rule every unsynced row follows.
+              onEdit={entry.waiting ? undefined : () => setEditing(entry.key)}
+              onDelete={entry.waiting ? undefined : () => askDelete(entry)}
+              waiting={entry.waiting}
             />
           ))}
         </ul>
@@ -163,7 +205,7 @@ export function QuestionsPage() {
       )}
 
       <div className="mt-3.5 text-xs text-muted-foreground">
-        {written.length} question{written.length === 1 ? '' : 's'} · {marks} mark
+        {composed.length} question{composed.length === 1 ? '' : 's'} · {marks} mark
         {marks === 1 ? '' : 's'} in total
         {record?.passing_score != null && ` · pass at ${record.passing_score}%`}
         {record?.time_limit ? ` · ${record.time_limit} minutes allowed` : ''}

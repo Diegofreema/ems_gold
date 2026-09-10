@@ -1,17 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { resultKeys } from '../results/keys'
 import { mySchoolingKeys } from '../my-schooling/keys'
-import type { Id, PageParams } from '../types'
+import type { Id } from '../types'
 import { teachingKeys } from './keys'
 import { teachingService } from './service'
 import type {
   CreateTopicBody,
   EnterScoreBody,
-  MessageAdminBody,
-  MessageStudentsBody,
-  MyResultParams,
   RegisteredStudentParams,
-  UpdateMyTeachingProfileBody,
   UpdateTopicBody,
   UploadBatchKey,
   UploadResultsBody,
@@ -21,15 +17,6 @@ export function useMyTeachingProfile() {
   return useQuery({
     queryKey: teachingKeys.profile(),
     queryFn: () => teachingService.profile(),
-  })
-}
-
-export function useUpdateMyTeachingProfile() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (body: UpdateMyTeachingProfileBody) => teachingService.updateProfile(body),
-    meta: { success: 'Your details were saved' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: teachingKeys.profile() }),
   })
 }
 
@@ -47,13 +34,6 @@ export function useMySubjects() {
   })
 }
 
-export function useMyStudents(params: PageParams = {}) {
-  return useQuery({
-    queryKey: teachingKeys.students(params),
-    queryFn: () => teachingService.students(params),
-  })
-}
-
 export function useMyEClasses() {
   return useQuery({
     queryKey: teachingKeys.eclasses(),
@@ -67,20 +47,6 @@ export function useRegisteredStudents(params: Partial<RegisteredStudentParams>) 
     queryKey: teachingKeys.registeredStudents(params),
     queryFn: () => teachingService.registeredStudents(params as RegisteredStudentParams),
     enabled: params.subject_id !== undefined,
-  })
-}
-
-export function useMessageAdmin() {
-  return useMutation({
-    mutationFn: (body: MessageAdminBody) => teachingService.messageAdmin(body),
-    meta: { success: 'Message sent to the office' },
-  })
-}
-
-export function useMessageMyStudents() {
-  return useMutation({
-    mutationFn: (body: MessageStudentsBody) => teachingService.messageStudents(body),
-    meta: { success: 'Message sent to your students' },
   })
 }
 
@@ -111,13 +77,6 @@ export function useUploadBatch(key: Partial<UploadBatchKey>) {
     queryKey: teachingKeys.uploadBatch(key as UploadBatchKey),
     queryFn: () => teachingService.uploadBatch(key as UploadBatchKey),
     enabled: ready,
-  })
-}
-
-export function useMyResults(params: MyResultParams = {}) {
-  return useQuery({
-    queryKey: teachingKeys.results(params),
-    queryFn: () => teachingService.results(params),
   })
 }
 

@@ -25,22 +25,6 @@ export function useAttendanceReport(params: AttendanceReportParams = {}) {
   })
 }
 
-export function useAttendanceDepartments() {
-  return useQuery({
-    queryKey: attendanceKeys.departments(),
-    queryFn: () => attendanceService.departments(),
-    staleTime: Infinity,
-  })
-}
-
-export function useAttendanceClassArms(departmentId?: number) {
-  return useQuery({
-    queryKey: attendanceKeys.classArms(departmentId),
-    queryFn: () => attendanceService.classArms(departmentId),
-    staleTime: Infinity,
-  })
-}
-
 /**
  * A download, not a cache entry — hence a mutation. The file is fetched with
  * the bearer token and saved from memory, because the endpoint cannot be

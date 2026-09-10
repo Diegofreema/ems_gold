@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { saveBlob } from '@/lib/download'
 import { adminKeys } from '../admins/keys'
-import { authKeys } from '../auth/keys'
 import type { Id } from '../types'
 import { userKeys } from './keys'
 import { usersService } from './service'
@@ -9,7 +8,6 @@ import type {
   CreateUserBody,
   SetUserStatusBody,
   UpdateAdminBody,
-  UpdateProfileBody,
   UserListParams,
 } from './types'
 
@@ -78,20 +76,6 @@ export function useMyProfile() {
   return useQuery({
     queryKey: userKeys.profile(),
     queryFn: () => usersService.profile(),
-  })
-}
-
-export function useUpdateMyProfile() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (body: UpdateProfileBody) => usersService.updateProfile(body),
-    meta: { success: 'Your profile was saved' },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userKeys.profile() })
-      // The name in the sidebar and the greeting come from the signed-in
-      // account, which is this same record read through a different endpoint.
-      queryClient.invalidateQueries({ queryKey: authKeys.me() })
-    },
   })
 }
 

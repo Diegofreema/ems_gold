@@ -37,3 +37,11 @@ test('backoff climbs and then holds, so a device in a corridor keeps asking', ()
   // A negative count is nonsense, but it must not read as "wait forever".
   assert.equal(backoffFor(-1), 1_000)
 })
+
+test('a request the client gave up on is a dropped connection, not a refusal', () => {
+  // `request()` bounds every send; a socket that stopped answering rejects
+  // with a TimeoutError, and the school may or may not have heard — exactly
+  // the ambiguity of a link dying mid-flight, so it is retried the same way.
+  assert.equal(classify(new DOMException('took too long', 'TimeoutError')), 'retryable')
+  assert.equal(classify(new DOMException('torn down', 'AbortError')), 'retryable')
+})

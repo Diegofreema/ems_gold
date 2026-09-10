@@ -22,7 +22,15 @@ export const assignmentsService = {
   list: (subjectId?: number) =>
     request<{ assignments: Assignment[] }>('assignments', {
       query: { subject_id: subjectId },
-    }).then((data) => data.assignments ?? []),
+    }).then((data) => {
+      // A missing field is a shape change, not an empty term. This list is
+      // the complete state of a set on the device, so reading it as "no
+      // assignments" would erase the device's copy and look like none set.
+      if (!Array.isArray(data.assignments)) {
+        throw new Error('The server sent the assignment list in a shape this app cannot read.')
+      }
+      return data.assignments
+    }),
 
   /** An assignment set for another class is refused; one that never existed 404s. */
   get: (setassignmentId: Id) =>

@@ -29,7 +29,12 @@ export const mySchoolingService = {
 
   /** Files shared with the caller's class. Empty school-wide — see `MyMaterial`. */
   materials: () =>
-    request<{ materials: MyMaterial[] }>('students/me/materials').then(
-      (data) => data.materials ?? [],
-    ),
+    request<{ materials: MyMaterial[] }>('students/me/materials').then((data) => {
+      // A missing field is a shape change, not an empty shelf — this list is
+      // the complete state of a set on the device.
+      if (!Array.isArray(data.materials)) {
+        throw new Error('The server sent the materials in a shape this app cannot read.')
+      }
+      return data.materials
+    }),
 }

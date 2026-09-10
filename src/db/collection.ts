@@ -29,8 +29,10 @@ export type SchoolCollectionSpec<T extends object, K extends string | number> = 
    * Off by default, and it matters: a collection is a module constant, so
    * eager sync means a signed-out visitor on the landing page fires the
    * parent portal's three requests — and a teacher pays for the admin
-   * portal's. The route loader's `preload()` and any live query both start it,
-   * which is every place it is genuinely wanted.
+   * portal's. An explicit `preload()` is what starts one — the shell loaders,
+   * the assignment routes and `useCollectionRows` all call it. Whether a live
+   * query alone would has been claimed both ways (the library's docs say yes;
+   * CLAUDE.md records a measurement that said no), so nothing relies on it.
    */
   startSync?: boolean
   /** Only for genuinely volatile sets. Most school data is not. */

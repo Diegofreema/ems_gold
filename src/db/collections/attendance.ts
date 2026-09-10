@@ -6,6 +6,7 @@ import { mergeHeld } from '../merge-held'
 import { dayKey, type DayRegister } from '../register-day'
 import { SET } from '../ids'
 import { readSnapshot } from '../snapshot'
+import { serverNow } from '@/lib/server-clock'
 
 /**
  * The daily register, on the class teacher's own device.
@@ -114,8 +115,12 @@ export const registerDays = schoolCollection<DayRegister, string>({
         throw error
       }))
 
+    // Today by the school's clock, not this device's. The anchor exists for
+    // exactly the laptop that is ten minutes — or a day — out, and a window
+    // drawn around the wrong "today" fetches registers for days the school
+    // is not on.
     const wanted = arms.flatMap((arm) =>
-      daysKept(new Date()).map((date) => ({ armId: arm.class_arm_id, date })),
+      daysKept(new Date(serverNow())).map((date) => ({ armId: arm.class_arm_id, date })),
     )
 
     /*

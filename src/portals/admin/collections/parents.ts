@@ -3,7 +3,7 @@ import { heldRows } from '@/db/collection'
 import { refParents } from '@/db/collections/reference'
 import { enqueue } from '@/db/drain'
 import { SET, WRITE } from '@/db/ids'
-import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
 import { BLANK } from '@/features/collections/blank'
 import { localFirst } from '@/features/collections/local-first'
@@ -72,7 +72,7 @@ function queuedParents(ops: readonly OutboxOp[]): Row[] {
     .filter(
       (op) =>
         op.handler === WRITE.createParent &&
-        OPEN_STATES.includes(op.state) &&
+        DRAWN_STATES.includes(op.state) &&
         typeof op.targetKey === 'string',
     )
     .sort((one, two) => two.seq - one.seq)

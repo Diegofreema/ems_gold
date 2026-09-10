@@ -1,6 +1,6 @@
 import { enqueue } from '@/db/drain'
 import { SET, WRITE } from '@/db/ids'
-import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
 import { BLANK } from '@/features/collections/blank'
 import type { Admin } from '@/api/admins/types'
@@ -131,7 +131,7 @@ function queuedStaff(only?: 'teacher' | 'admin') {
     ops
       .filter(
         (op) =>
-          OPEN_STATES.includes(op.state) &&
+          DRAWN_STATES.includes(op.state) &&
           typeof op.targetKey === 'string' &&
           ((only !== 'admin' && op.handler === WRITE.createTeacher) ||
             (only !== 'teacher' && op.handler === WRITE.createAdmin)),
@@ -169,7 +169,7 @@ function queuedStaff(only?: 'teacher' | 'admin') {
 function withQueuedLogins(rows: Row[], ops: readonly OutboxOp[]): Row[] {
   const pending = new Map<string, string>()
   for (const op of [...ops].sort((one, two) => one.seq - two.seq)) {
-    if (op.handler !== WRITE.setLogin || !OPEN_STATES.includes(op.state)) continue
+    if (op.handler !== WRITE.setLogin || !DRAWN_STATES.includes(op.state)) continue
     const status = (op.payload as { status?: unknown }).status
     if (typeof op.targetKey === 'string' && typeof status === 'string') {
       pending.set(op.targetKey, status)

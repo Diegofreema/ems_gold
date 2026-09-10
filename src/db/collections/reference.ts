@@ -15,7 +15,7 @@ import { libraryService } from '@/api/library/service'
 import type { Book } from '@/api/library/types'
 import type { Loan } from '@/api/library/types'
 import { noticesService } from '@/api/notifications/service'
-import type { Notice } from '@/api/notifications/types'
+import type { AllNoticesEnvelope } from '@/api/notifications/types'
 import { parentsService } from '@/api/parents/service'
 import type { Parent } from '@/api/parents/types'
 import { studentsService } from '@/api/students/service'
@@ -27,7 +27,9 @@ import type { Teacher } from '@/api/teachers/types'
 import { usersService } from '@/api/users/service'
 import type { Role } from '@/api/users/types'
 import { schoolCollection, schoolDocument } from '../collection'
+import { ShapeError } from '../errors'
 import { SET } from '../ids'
+import { readSnapshot } from '../snapshot'
 
 /**
  * The school's own reference data, on the device.
@@ -72,16 +74,28 @@ export const refClasses = schoolCollection<Department, number>({
  * `refClasses` would put that N+1 behind every form's class dropdown instead,
  * which is most of the forms in the app.
  *
- * A class whose detail refuses is kept with the row the list gave, so one bad
- * response costs that class its counts rather than costing the page.
+ * A class whose detail refuses keeps the counts the device already held —
+ * this answer overwrites the snapshot, so falling back to the bare list row
+ * used to write a countless copy over a complete one. The list's own fields
+ * still win over the held detail, so a renamed class reads by its new name
+ * even while its counts are the last ones the school confirmed. Only a class
+ * this device never counted falls back to the list row alone.
  */
 export const refClassCensus = schoolCollection<Department, number>({
   id: SET.refClassCensus,
   fetch: async () => {
     const { items } = await departmentsService.list({ limit: ALL })
+    const held = new Map(
+      (readSnapshot<Department>(SET.refClassCensus) ?? []).map((department) => [
+        department.id,
+        department,
+      ]),
+    )
     return Promise.all(
       items.map((department) =>
-        departmentsService.get(department.id).catch(() => department),
+        departmentsService
+          .get(department.id)
+          .catch((): Department => ({ ...(held.get(department.id) ?? {}), ...department })),
       ),
     )
   },
@@ -258,31 +272,31 @@ export const refGuardians = schoolCollection<Parent, number>({
 })
 
 /**
- * Who a notice may be addressed to, as the board itself lists them.
+ * The school notice board, whole — the notices *and* the audience catalogue,
+ * which is a sibling of the list, not an endpoint of its own.
  *
- * Read off the notice list's own envelope — the catalogue is a sibling of the
- * notices, not an endpoint of its own — so the form offers exactly what the
- * endpoint will accept rather than a copy of it that can drift.
- */
-export const refAudiences = schoolDocument<string[]>({
-  id: SET.refAudiences,
-  fetch: () => noticesService.all({ limit: 1 }).then((data) => data.audiences ?? []),
-  schemaVersion: 1,
-})
-
-/**
- * The school notice board, whole.
+ * One document rather than the two sets it used to be: the board and the
+ * catalogue came off the same `GET /notifications` answer fetched twice, two
+ * requests whose snapshots could disagree — and each kept its field with a
+ * `?? []` that read a renamed field as a successful empty answer and wiped
+ * the device's copy with it. Kept whole, the notice form offers exactly the
+ * audiences the board itself published beside the posts.
  *
- * A school posts notices in the tens, so the office's whole board is one page.
  * Deliberately **not** read through `GET /notifications/{id}` anywhere: that
  * endpoint marks a notice read and counts a view every time it is asked, so
  * opening the office's own record would inflate the tally the office is
  * reading. Every field the record shows is on the list.
  */
-export const refNotices = schoolCollection<Notice, number>({
-  id: SET.refNotices,
-  fetch: () => noticesService.all({ limit: ALL }).then((page) => page.notifications ?? []),
-  getKey: (notice) => notice.id,
+export const refBoard = schoolDocument<AllNoticesEnvelope>({
+  id: SET.refBoard,
+  fetch: async () => {
+    const board = await noticesService.all({ limit: ALL })
+    // The guard `schoolCollection` gives a list, done by hand for the field a
+    // document keeps it in: an answer without the posts is a shape change,
+    // not an empty school, and must not become the stored copy.
+    if (!Array.isArray(board.notifications)) throw new ShapeError(SET.refBoard)
+    return board
+  },
   schemaVersion: 1,
 })
 
@@ -309,14 +323,11 @@ export const referenceCollections = [
   refFees,
   refSessions,
   refTerms,
-  // Small, and the notice form cannot be completed without it: `recipients` is
-  // required, and its choices are the board's own catalogue rather than a list
-  // written down here. A feed that cannot load is a required field that cannot
-  // be filled, which is a form that cannot be posted.
-  refAudiences,
   // One row, and the header of every admin page reads the calendar off it.
   refSettings,
-  // Tens of rows, and the office's bell is built on it — the board should be
-  // there before anybody opens the notices register.
-  refNotices,
+  // The board and its audience catalogue in one document. The office's bell
+  // is built on it, and the notice form cannot be completed without it:
+  // `recipients` is required, and its choices are the catalogue the board
+  // publishes beside its own posts.
+  refBoard,
 ]

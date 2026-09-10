@@ -46,6 +46,33 @@ export type RequestOptions = {
 }
 
 /**
+ * How long a request may sit before it is abandoned.
+ *
+ * The connection this app lives on fails by hanging, not by refusing: a
+ * half-open link keeps a fetch pending for however long the OS takes to give
+ * up on the socket, which can be minutes. The outbox sends strictly in order,
+ * so one hung send held the whole queue's head — thirty marks waiting on a
+ * socket nobody was coming back for. A timeout aborts the same way a dropped
+ * connection does, which `classify` already reads as "not now, try again".
+ *
+ * File uploads are exempt: a CV over a slow link can honestly take longer
+ * than any figure written here, and the queue never carries one anyway.
+ */
+const REQUEST_TIMEOUT_MS = 30_000
+
+/**
+ * The caller's signal, bounded by the timeout — where this browser can
+ * combine the two. An old Safari without `AbortSignal.any` keeps the caller's
+ * signal and loses the bound, which is the behaviour the app always had.
+ */
+function boundedSignal(signal: AbortSignal | undefined): AbortSignal | undefined {
+  if (typeof AbortSignal.timeout !== 'function') return signal
+  const bound = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  if (!signal) return bound
+  return typeof AbortSignal.any === 'function' ? AbortSignal.any([signal, bound]) : signal
+}
+
+/**
  * One request, one place. Adds the bearer token, unwraps the envelope and
  * turns a refusal into `ApiError` — so a service function is only ever a URL,
  * a shape and a return type.
@@ -58,7 +85,7 @@ export async function request<TData>(
     method: options.method ?? 'GET',
     headers: buildHeaders(options),
     body: options.form ?? (options.body === undefined ? undefined : JSON.stringify(options.body)),
-    signal: options.signal,
+    signal: options.form ? options.signal : boundedSignal(options.signal),
   })
 
   // Every answer re-anchors the school's clock, which is what an assignment's

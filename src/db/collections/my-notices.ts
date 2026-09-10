@@ -12,7 +12,7 @@ import { SET } from '../ids'
  * pupil and a guardian each get their own answer under the same id, and the
  * per-account wipe keeps one login's board from ever reaching another. The
  * office is the exception — an administrator's `/notifications/mine` comes
- * back empty, so its bell reads `refNotices`, the board it posts to.
+ * back empty, so its bell reads `refBoard`, the board it posts to.
  *
  * Every reader portal's shell preloads this alongside its own sets, so the
  * bell has the board with no connection.

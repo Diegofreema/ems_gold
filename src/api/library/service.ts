@@ -22,7 +22,15 @@ import type {
 function asLoans(answer: unknown): Loan[] {
   if (Array.isArray(answer)) return answer as Loan[]
   const wrapped = answer as { loans?: Loan[]; data?: Loan[] } | null
-  return wrapped?.loans ?? wrapped?.data ?? []
+  const loans = wrapped?.loans ?? wrapped?.data
+  // An answer wearing none of the known shapes is a fault, not an empty
+  // register: this list is the complete state of a set on the device, and a
+  // fault read as "no loans" would erase the device's copy of the lending
+  // register.
+  if (!Array.isArray(loans)) {
+    throw new Error('The server sent the loans in a shape this app cannot read.')
+  }
+  return loans
 }
 
 function asLoan(answer: unknown): Loan {

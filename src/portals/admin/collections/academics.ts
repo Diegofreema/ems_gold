@@ -6,10 +6,10 @@ import { subjectsService } from '@/api/subjects/service'
 import type { Subject } from '@/api/subjects/types'
 import { heldRows } from '@/db/collection'
 import { BLANK } from '@/features/collections/blank'
-import { refArms, refClassCensus, refSubjects } from '@/db/collections/reference'
+import { refArms, refClassCensus, refClasses, refSubjects } from '@/db/collections/reference'
 import { enqueue } from '@/db/drain'
 import { SET, WRITE } from '@/db/ids'
-import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
 import { localFirst } from '@/features/collections/local-first'
 import { byId } from '@/features/collections/order'
@@ -94,7 +94,7 @@ function queuedAcademic(
     .filter(
       (op) =>
         op.handler === handler &&
-        OPEN_STATES.includes(op.state) &&
+        DRAWN_STATES.includes(op.state) &&
         typeof op.targetKey === 'string',
     )
     .sort((one, two) => two.seq - one.seq)
@@ -134,8 +134,10 @@ const queuedSubjects = (ops: readonly OutboxOp[]) =>
     department_id: text(body.department_id),
   }))
 
-const countClasses = async () =>
-  (await departmentsService.list({ limit: 1 })).pagination.total
+// Counted off the device like the tiles beside it — it used to ask the
+// endpoint for a `pagination.total`, and with no connection sat as a dash
+// beside two figures that still answered.
+const countClasses = async () => (await heldRows(refClasses)).length
 
 /**
  * What every class holds, in one cached answer.
@@ -164,7 +166,7 @@ function queuedClasses(ops: readonly OutboxOp[]): Row[] {
     .filter(
       (op) =>
         op.handler === WRITE.createClass &&
-        OPEN_STATES.includes(op.state) &&
+        DRAWN_STATES.includes(op.state) &&
         typeof op.targetKey === 'string',
     )
     .sort((one, two) => two.seq - one.seq)

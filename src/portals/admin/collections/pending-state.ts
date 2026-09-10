@@ -1,5 +1,5 @@
 import { WRITE } from '../../../db/ids.ts'
-import { OPEN_STATES, type OutboxOp } from '../../../db/outbox.ts'
+import { DRAWN_STATES, type OutboxOp } from '../../../db/outbox.ts'
 import type { Row } from '../../../features/collections/types.ts'
 
 /**
@@ -10,7 +10,8 @@ import type { Row } from '../../../features/collections/types.ts'
  * withdrawing a subject and then putting it back leaves it back, which is the
  * order the office did it in. Only ops still expected to land: a refused one is
  * not going to, and showing its state would tell the office something happened
- * that the school said no to.
+ * that the school said no to. The states a person has to decide about —
+ * `needs-review`, `conflict` — wait in the drawer with it.
  */
 export function pendingValues<T>(
   ops: readonly OutboxOp[],
@@ -20,7 +21,7 @@ export function pendingValues<T>(
   const pending = new Map<string, T>()
 
   for (const op of [...ops].sort((one, two) => one.seq - two.seq)) {
-    if (op.handler !== handler || !OPEN_STATES.includes(op.state)) continue
+    if (op.handler !== handler || !DRAWN_STATES.includes(op.state)) continue
     const change = read(op.payload)
     if (change) pending.set(change.id, change.value)
   }
@@ -110,7 +111,7 @@ export function withPendingCurrent(
   let chosen: string | undefined
 
   for (const op of [...ops].sort((one, two) => one.seq - two.seq)) {
-    if (op.handler !== handler || !OPEN_STATES.includes(op.state)) continue
+    if (op.handler !== handler || !DRAWN_STATES.includes(op.state)) continue
     chosen = String(op.payload)
   }
 

@@ -1,9 +1,9 @@
-import type { Notice, NoticeBody } from '@/api/notifications/types'
-import { heldRows } from '@/db/collection'
-import { refNotices } from '@/db/collections/reference'
+import type { AllNoticesEnvelope, Notice, NoticeBody } from '@/api/notifications/types'
+import { heldDocument, type Document } from '@/db/collection'
+import { refBoard } from '@/db/collections/reference'
 import { enqueue } from '@/db/drain'
 import { SET, WRITE } from '@/db/ids'
-import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
 import { pageRows } from '@/features/collections/api'
 import { localFirst } from '@/features/collections/local-first'
@@ -34,7 +34,8 @@ import { noticeRow } from './notice-row'
 const posted = (notices: readonly Notice[]) =>
   newestFirst(notices, (notice) => notice.datecreated)
 
-const board = (): Promise<Notice[]> => heldRows(refNotices)
+const board = async (): Promise<Notice[]> =>
+  (await heldDocument(refBoard))?.notifications ?? []
 
 const rows = () => board().then((notices) => posted(notices).map(noticeRow))
 
@@ -60,7 +61,7 @@ function queuedNotices(ops: readonly OutboxOp[]): Row[] {
     .filter(
       (op) =>
         op.handler === WRITE.postNotice &&
-        OPEN_STATES.includes(op.state) &&
+        DRAWN_STATES.includes(op.state) &&
         typeof op.targetKey === 'string',
     )
     // Newest first, like the board itself.
@@ -134,8 +135,11 @@ export const notices: CollectionDef = {
     { key: 'views', label: 'Times opened' },
   ],
   collection: localFirst({
-    entities: refNotices,
-    rows: (notices) => posted(notices).map(noticeRow),
+    // One document — the board and its audience catalogue — not a set of
+    // rows; the register reads the list field out of it.
+    entities: refBoard,
+    rows: (docs: Document<AllNoticesEnvelope>[]) =>
+      posted(docs[0]?.doc.notifications ?? []).map(noticeRow),
     queued: queuedNotices,
   }),
   source: async (params) => pageRows(await rows(), params),
@@ -164,7 +168,7 @@ export const notices: CollectionDef = {
       enqueue({
         handler: WRITE.editNotice,
         payload: { id: recordId, body },
-        collectionId: SET.refNotices,
+        collectionId: SET.refBoard,
         targetKey: recordId,
         toast: { success: 'Notice updated' },
         label: `Notice “${named}”`,
@@ -175,7 +179,7 @@ export const notices: CollectionDef = {
     enqueue({
       handler: WRITE.postNotice,
       payload: body,
-      collectionId: SET.refNotices,
+      collectionId: SET.refBoard,
       // The school issues the id, so the device names it in the meantime — and
       // that name is what keeps the row read-only until the school answers.
       targetKey: newLocalKey(),
@@ -187,7 +191,7 @@ export const notices: CollectionDef = {
     enqueue({
       handler: WRITE.removeNotice,
       payload: recordId,
-      collectionId: SET.refNotices,
+      collectionId: SET.refBoard,
       targetKey: recordId,
       toast: { success: 'Notice deleted' },
       label: 'A notice',

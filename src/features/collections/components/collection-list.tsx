@@ -270,6 +270,12 @@ export function CollectionList({
                   ? (row) => navigate({ to: editRoute, params: params(row) })
                   : undefined
               }
+              // A record this device wrote and the school has not seen is
+              // read-only until it sends — the phone card layout offers Edit
+              // per row, so it is told which rows may take one. The desktop
+              // table offers no inline edit; its rows open the record, which
+              // withholds the control itself.
+              canEdit={(row) => canChange(row)}
               // Only where the API can actually delete. Without a `remove` the
               // row used to offer Delete and answer with a toast saying the
               // record was gone, which it never was.

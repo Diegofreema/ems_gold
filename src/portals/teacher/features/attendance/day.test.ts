@@ -71,12 +71,15 @@ test('a failed op is not drawn as a mark', () => {
   assert.deepEqual(queuedMarks(ops, 3, DAY), {})
 })
 
-test('an op still in flight or waiting on a person is still drawn', () => {
+test('an op still in flight is drawn; one waiting on a person is not', () => {
+  // A `needs-review` op was in flight when the tab died and may already have
+  // landed — a person has to decide, and until they do it belongs to the
+  // drawer, not the sheet.
   const ops = [
     op(1, { class_arm_id: 3, date: DAY, marks: { '10': 'present' } }, 'sending'),
     op(2, { class_arm_id: 3, date: DAY, marks: { '11': 'absent' } }, 'needs-review'),
   ]
-  assert.deepEqual(queuedMarks(ops, 3, DAY), { '10': 'present', '11': 'absent' })
+  assert.deepEqual(queuedMarks(ops, 3, DAY), { '10': 'present' })
 })
 
 test('another kind of queued write is not mistaken for a mark', () => {

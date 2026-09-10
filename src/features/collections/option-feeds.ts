@@ -1,11 +1,10 @@
 import { queryOptions } from '@tanstack/react-query'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
-import { teachingService } from '@/api/teaching/service'
 import { heldDocument, heldRows as held } from '@/db/collection'
 import {
   refArms,
-  refAudiences,
+  refBoard,
   refBooks,
   refClasses,
   refFees,
@@ -76,7 +75,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // The board publishes its own catalogue beside its list, so the form
     // offers exactly what the endpoint will accept rather than a copy of it
     // that can drift.
-    return audienceOptions((await heldDocument(refAudiences)) ?? [])
+    return audienceOptions((await heldDocument(refBoard))?.audiences ?? [])
   }
 
   if (key === 'arms') {
@@ -202,17 +201,17 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
      * `/class-arms` and `/subjects` all answer "restricted to administrators" —
      * so the classes offered are the ones the teacher's own record names: the
      * class behind every subject they were given, and behind every arm they
-     * are class teacher of. A teacher given neither is offered nothing, which
-     * is the truth: the office has not put them in front of a class yet.
+     * take. A teacher given neither is offered nothing, which is the truth:
+     * the office has not put them in front of a class yet. Both halves come
+     * off the device's own sets, like every other feed here — this was the
+     * one feed left asking the school, and offline it left the assignment
+     * form's required class field with nothing to offer.
      */
-    const [subjects, profile] = await Promise.all([
-      teachingService.subjects(),
-      teachingService.profile(),
-    ])
+    const [subjects, arms] = await Promise.all([held(teacherSubjects), held(teacherArms)])
     const classes = new Map<number, { name: string; code: string }>()
     for (const one of [
       ...subjects.map((subject) => subject.department),
-      ...profile.class_arms.map((arm) => arm.department),
+      ...arms.map((arm) => arm.department),
     ]) {
       if (one) classes.set(one.id, { name: one.name, code: one.deptcode ?? '' })
     }

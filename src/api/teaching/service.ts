@@ -51,10 +51,19 @@ export const teachingService = {
    */
   students: (params: { page?: number; limit?: number } = {}) =>
     request<Record<string, unknown>>('teachers/me/students', { query: { ...params } }).then(
-      (data): TeacherRoll => ({
-        ...paginated<TeacherStudent>(data, 'students'),
-        class_arms: (data.class_arms ?? []) as TeacherClassArm[],
-      }),
+      (data): TeacherRoll => {
+        // The arms arrive beside the roll on every answer this endpoint has
+        // given; an answer without them is a shape change, and reading it as
+        // "no arms" would erase the device's copy of the arms set — the one
+        // the message picker and the upload form are built on.
+        if (!Array.isArray(data.class_arms)) {
+          throw new Error('The server sent the roll without its arms.')
+        }
+        return {
+          ...paginated<TeacherStudent>(data, 'students'),
+          class_arms: data.class_arms as TeacherClassArm[],
+        }
+      },
     ),
 
   /** Keyed `classes`, like `registeredStudents` and unlike everything else here. */

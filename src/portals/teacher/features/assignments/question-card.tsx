@@ -16,11 +16,15 @@ export function QuestionCard({
   position,
   onEdit,
   onDelete,
+  waiting,
 }: {
   question: AssignmentQuestion
   position: number
-  onEdit: () => void
-  onDelete: () => void
+  /** Absent on a question still queued — it has no id to edit against yet. */
+  onEdit?: () => void
+  onDelete?: () => void
+  /** Saved on this device, not the school's yet. */
+  waiting?: boolean
 }) {
   const points = question.points ?? 0
 
@@ -40,17 +44,22 @@ export function QuestionCard({
               <span className="text-2xs text-muted-foreground tabular-nums">
                 {points} point{points === 1 ? '' : 's'}
               </span>
+              {waiting && <Tag>Waiting to send</Tag>}
             </div>
           </div>
         </div>
 
         <div className="flex gap-1.5">
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            Edit
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onDelete}>
-            Delete
-          </Button>
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="ghost" size="sm" onClick={onDelete}>
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 

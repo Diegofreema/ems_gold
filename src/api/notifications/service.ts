@@ -28,9 +28,14 @@ export const noticesService = {
    * endpoint made to be polled, rather than a copy that ages with this page.
    */
   mine: (params: MyNoticeParams = {}) =>
-    request<MyNoticesEnvelope>('notifications/mine', { query: { ...params } }).then(
-      (page) => page.notifications ?? [],
-    ),
+    request<MyNoticesEnvelope>('notifications/mine', { query: { ...params } }).then((page) => {
+      // A missing field is a shape change, not an empty board — this list is
+      // the complete state of a set on the device.
+      if (!Array.isArray(page.notifications)) {
+        throw new Error('The server sent the notices in a shape this app cannot read.')
+      }
+      return page.notifications
+    }),
 
   /** Just the badge number. Cheap enough to poll, which is what it is for. */
   unreadCount: () =>

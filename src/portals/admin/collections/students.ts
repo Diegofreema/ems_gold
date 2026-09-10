@@ -4,7 +4,7 @@ import { heldRows } from '@/db/collection'
 import { refClasses, refGuardians, refSessions, refStudents } from '@/db/collections/reference'
 import { enqueue } from '@/db/drain'
 import { SET, WRITE } from '@/db/ids'
-import { isLocalKey, newLocalKey, OPEN_STATES, type OutboxOp } from '@/db/outbox'
+import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
 import { guardianOption } from '@/features/collections/guardian-option'
 import { localFirst } from '@/features/collections/local-first'
@@ -101,7 +101,7 @@ function queuedStudents(ops: readonly OutboxOp[]): Row[] {
     .filter(
       (op) =>
         op.handler === WRITE.enrolStudent &&
-        OPEN_STATES.includes(op.state) &&
+        DRAWN_STATES.includes(op.state) &&
         typeof op.targetKey === 'string',
     )
     .sort((one, two) => two.seq - one.seq)

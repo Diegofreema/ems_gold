@@ -40,8 +40,14 @@ export function classify(error: unknown): Verdict {
   // through untouched, so this is what a dead connection looks like here.
   if (error instanceof TypeError) return 'retryable'
 
-  // An abort is the app's own doing — a navigation, a teardown — not a refusal.
-  if (error instanceof DOMException && error.name === 'AbortError') return 'retryable'
+  // An abort is the app's own doing — a navigation, a teardown — not a
+  // refusal. A timeout is the client giving up on a socket that stopped
+  // answering (`request()` bounds every send), which is a dropped connection
+  // by another name: the school may or may not have heard, exactly as when
+  // the link dies mid-flight, so it is retried the same way.
+  if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+    return 'retryable'
+  }
 
   // Anything with no story to tell is treated as final rather than replayed
   // forever against a server that may already have taken it.

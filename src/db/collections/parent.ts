@@ -6,6 +6,7 @@ import { SET } from '../ids'
 import { mergeHeld } from '../merge-held'
 import { readSnapshot } from '../snapshot'
 import { myNotices } from './my-notices'
+import { serverNow } from '@/lib/server-clock'
 
 /**
  * The household, on the guardian's own device.
@@ -89,7 +90,9 @@ export const parentAttendance = schoolCollection<ChildMark, string>({
     const children =
       readSnapshot<EnrolledChild>(SET.parentChildren) ?? (await myFamilyService.children())
 
-    const today = new Date()
+    // Today by the school's clock, not this device's — the same anchor the
+    // register window uses, and for the same reason.
+    const today = new Date(serverNow())
     const from = new Date(today)
     from.setDate(from.getDate() - MARK_DAYS)
 
@@ -119,15 +122,22 @@ export const parentAttendance = schoolCollection<ChildMark, string>({
             start_date: isoDay(from),
             end_date: isoDay(today),
           })
-          .then((answer) =>
-            (answer.attendance as Mark[]).map(
-              (mark): ChildMark => ({
-                ...mark,
-                childId: child.id,
-                id: `${child.id}:${mark.attendance_date}`,
-              }),
-            ),
-          )
+          .then((answer) => {
+            /*
+             * One mark per child per day, decided here rather than left to
+             * the keyed collection to collapse silently. The key is the date
+             * because the school takes one register a day today; should it
+             * ever send two — a morning and an afternoon — the later entry
+             * in its own answer wins, which is at least a decision written
+             * down where the key's assumption is.
+             */
+            const byDay = new Map<string, ChildMark>()
+            for (const mark of answer.attendance as Mark[]) {
+              const id = `${child.id}:${mark.attendance_date}`
+              byDay.set(id, { ...mark, childId: child.id, id })
+            }
+            return [...byDay.values()]
+          })
           .catch(() => undefined),
       })),
     )

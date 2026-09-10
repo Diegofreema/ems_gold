@@ -2,20 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Id } from '../types'
 import { noticeKeys } from './keys'
 import { noticesService } from './service'
-import type { MyNoticeParams, NoticeBody, NoticeEditBody, NoticeListParams } from './types'
+import type { NoticeBody, NoticeEditBody } from './types'
 
 /** Reading and writing the school's notice board. */
-
-/** Notices addressed to the signed-in caller. */
-export function useMyNotices(params: MyNoticeParams = {}) {
-  return useQuery({
-    queryKey: noticeKeys.mine(params),
-    queryFn: () => noticesService.mine(params),
-    // Nothing waits on this — the feed draws its other half regardless — and
-    // a board that is down is down for the whole visit, not for one attempt.
-    retry: false,
-  })
-}
 
 /**
  * The badge number on its own.
@@ -74,14 +63,6 @@ export function useMarkAllNoticesRead() {
       queryClient.setQueryData(noticeKeys.unread(), 0)
       return queryClient.invalidateQueries({ queryKey: noticeKeys.all })
     },
-  })
-}
-
-/** Every notice the office holds, whoever it was addressed to. The office only. */
-export function useNotices(params: NoticeListParams = {}) {
-  return useQuery({
-    queryKey: noticeKeys.list(params),
-    queryFn: () => noticesService.all(params),
   })
 }
 

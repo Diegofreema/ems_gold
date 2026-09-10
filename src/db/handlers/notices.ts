@@ -24,14 +24,14 @@ import { registerHandler } from '../registry'
 registerHandler<NoticeBody>(WRITE.postNotice, {
   send: (body) => noticesService.post(body),
   idempotent: false,
-  collectionId: SET.refNotices,
+  collectionId: SET.refBoard,
 })
 
 /** Correcting one. Idempotent — it writes the same fields over the same row. */
 registerHandler<{ id: Id; body: NoticeEditBody }>(WRITE.editNotice, {
   send: ({ id, body }) => noticesService.edit(id, body),
   idempotent: true,
-  collectionId: SET.refNotices,
+  collectionId: SET.refBoard,
 })
 
 /**
@@ -42,5 +42,5 @@ registerHandler<{ id: Id; body: NoticeEditBody }>(WRITE.editNotice, {
 registerHandler<Id>(WRITE.removeNotice, {
   send: (id) => noticesService.remove(id),
   idempotent: true,
-  collectionId: SET.refNotices,
+  collectionId: SET.refBoard,
 })

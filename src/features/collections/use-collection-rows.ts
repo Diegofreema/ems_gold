@@ -1,6 +1,6 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { collectionError, refetchCollection } from '@/db/collection'
 import type { OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
@@ -39,6 +39,21 @@ export function useCollectionRows(definition: CollectionDef) {
   const list = useListQuery(keys)
   const { query, filters } = list
   const local = definition.collection
+
+  /*
+   * Every set the binding reads is made ready here, not left to whatever else
+   * happens to preload it. The register is gated below on its lookups being
+   * ready, and a lookup nothing preloads — the guardians behind the pupils
+   * register, the roles behind the staff one — left it sitting on its
+   * skeleton. Fire and forget, like the shell's own preloads: a set that
+   * refuses answers through the live query's own error state.
+   */
+  useEffect(() => {
+    if (!local) return
+    for (const set of [local.entities, local.lookup, local.alsoLookup]) {
+      void set?.preload().catch(() => undefined)
+    }
+  }, [local])
 
   // Both live queries are declared unconditionally and disabled by handing
   // back nothing from the query callback, which is how `useLiveQuery` is

@@ -48,8 +48,21 @@ export type OutboxOp = {
  */
 export type OpState = 'queued' | 'sending' | 'failed' | 'needs-review' | 'conflict'
 
-/** The states that still want something to happen. */
+/** The states that still want something to happen. What the drawer shows. */
 export const OPEN_STATES: readonly OpState[] = ['queued', 'sending', 'needs-review', 'conflict']
+
+/**
+ * The states a register may draw as its own rows and marks.
+ *
+ * Narrower than `OPEN_STATES` on purpose. A `failed` op would tell a teacher
+ * a child was marked when the school refused it; a `needs-review` one was in
+ * flight when the tab died and very likely *did* land, so drawing its create
+ * puts a ghost row beside the school's own copy of the same record; a
+ * `conflict` is a person's to resolve before it means anything. All three
+ * belong to the pending-work drawer — only work still on its way belongs on
+ * a register.
+ */
+export const DRAWN_STATES: readonly OpState[] = ['queued', 'sending']
 
 /** Rows whose id the server has not issued yet are keyed like this. */
 export const LOCAL_KEY_PREFIX = 'local:'

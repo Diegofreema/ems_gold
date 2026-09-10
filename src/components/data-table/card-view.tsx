@@ -14,6 +14,7 @@ export function CardView<TRow>({
   onRowClick,
   onEdit,
   onDelete,
+  canEdit,
   canDelete,
   action,
 }: {
@@ -23,6 +24,8 @@ export function CardView<TRow>({
   onRowClick?: (row: TRow) => void
   onEdit?: (row: TRow) => void
   onDelete?: (row: TRow) => void
+  /** Which rows may actually be edited. Every one of them without it. */
+  canEdit?: (row: TRow) => boolean
   /** Which rows may actually be deleted. Every one of them without it. */
   canDelete?: (row: TRow) => boolean
   action?: RowAction<TRow>
@@ -86,7 +89,7 @@ export function CardView<TRow>({
               className="mt-3.5 flex gap-2"
               onClick={(event) => event.stopPropagation()}
             >
-              {onEdit && (
+              {onEdit && (canEdit?.(row) ?? true) && (
                 <Button variant="outline" onClick={() => onEdit(row)}>
                   Edit
                 </Button>

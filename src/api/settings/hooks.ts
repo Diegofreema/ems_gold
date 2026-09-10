@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { sessionKeys, termKeys } from '../calendar/keys'
 import { settingsKeys } from './keys'
 import { settingsService } from './service'
-import type { SettingsBody } from './types'
 
 export function useSchoolSettings() {
   return useQuery({
@@ -18,15 +17,6 @@ export function useSettingsOptions() {
     queryKey: settingsKeys.options(),
     queryFn: () => settingsService.options(),
     staleTime: Infinity,
-  })
-}
-
-export function useUpdateSettings() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (body: SettingsBody) => settingsService.update(body),
-    meta: { success: 'Settings saved' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: settingsKeys.all }),
   })
 }
 

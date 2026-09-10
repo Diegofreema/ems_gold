@@ -42,10 +42,12 @@ visibly not one.
   the app's default network mode, so with no connection it pauses rather than fails, never settles,
   and strands the route loader waiting on `preload()`. Read another set's snapshot, or call the
   service directly.
-- Collections sync lazily, and **only the portal's own shell-route loader starts them**. Importing
-  the module does not, or a signed-out visitor on the landing page would fire the parent portal's
-  requests — and a live query does not either, measured: a register bound to an unsynced collection
-  sits on its skeleton for ever. Every portal shell preloads its own sets, fire-and-forget.
+- Collections sync lazily, and **an explicit `preload()` is the only thing relied on to start
+  them**. Importing the module does not, or a signed-out visitor on the landing page would fire the
+  parent portal's requests. Whether a live query alone starts one has been claimed both ways — the
+  library's docs say it does, an afternoon's measurement here said it did not — so nothing bets a
+  register on it: every portal shell preloads its own sets fire-and-forget, the assignment routes
+  preload theirs, and `useCollectionRows` preloads whatever sets a binding reads.
 - `preload()` in a route loader is the documented integration point, and `heldRows()` in
   `src/db/collection.ts` is how everything that is not a live query reads a set — a count tile, a
   record lookup, a form's dropdown. **Never call `preload()` or `loadSubset()` from a mutation
@@ -53,7 +55,7 @@ visibly not one.
 - **A register bound to a collection must state its own order.** A collection is keyed and hands its
   rows back in key order whatever order the endpoint sent them in — measured, and it silently
   inverted the two registers whose footers promise "Newest first". Ordering lives in the binding;
-  see `src/portals/teacher/collections/order.ts`.
+  see `src/features/collections/order.ts`.
 - A register reads a collection through `collection:` on its `CollectionDef` — a `localFirst(...)`
   binding, built in `src/features/collections/local-first.ts`. Searching and paging still happen in
   `pageRows`, so a bound register and an unbound one hand the page the same shape and nothing in

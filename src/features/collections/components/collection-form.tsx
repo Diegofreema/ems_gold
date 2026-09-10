@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
+import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { BackLink } from '@/components/page/back-link'
 import { CheckboxGroupField } from '@/components/form/checkbox-group-field'
 import { DateField } from '@/components/form/date-field'
@@ -254,9 +255,19 @@ export function CollectionForm({
            */
           if (definition.queue) {
             // Awaited: queueing is synchronous in itself, but a write can need
-            // something off the device before it has a body, and the form must
-            // not close before the op is written down.
-            await definition.queue(values, record?.id)
+            // something off the device before it has a body — an enrolment
+            // reads which session is current — and the form must not close
+            // before the op is written down.
+            try {
+              await definition.queue(values, record?.id)
+            } catch (error) {
+              // The read the write needed refused — a set this device has
+              // never synced, on a device with no connection to sync it now.
+              // Said out loud, with the form and everything typed left open:
+              // an unhandled rejection here was a save that failed silently.
+              toast.error(errorMessage(error, OFFLINE_MESSAGE))
+              return
+            }
             back()
             return
           }

@@ -1,5 +1,6 @@
 import { teachingService } from '@/api/teaching/service'
 import { myNotices } from './my-notices'
+import { setAssignments } from './set-assignments'
 import type {
   EClass,
   TeacherClassArm,
@@ -114,4 +115,8 @@ export const teachingCollections = [
   teacherTopics,
   teacherEClasses,
   myNotices,
+  // The list alone. The questions, submissions and scripts fan out per
+  // assignment and are preloaded by the routes that read them instead — see
+  // `set-assignments.ts`.
+  setAssignments,
 ]
