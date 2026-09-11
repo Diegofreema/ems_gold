@@ -39,7 +39,7 @@ export type PortalConfig = {
   searchableNav?: boolean
   /**
    * Where the header's messages button goes, for the three portals that have
-   * one. The student portal sets none: the school gives a pupil no contacts,
+   * one. The student portal sets none: the school gives a student no contacts,
    * so a button there would open a page with nobody to write to.
    */
   messagesPath?: string

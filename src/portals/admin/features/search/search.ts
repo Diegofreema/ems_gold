@@ -46,7 +46,7 @@ const REGISTERS: {
  * that; `students` missing from `searched` means the caller lacks the Student
  * privilege — which gates Students *and* Sparents together. A screen that
  * showed both as "no results" would tell an administrator the school has no
- * such pupil when it may well have one.
+ * such student when it may well have one.
  */
 export function groups(data: SearchResults | undefined): Group[] {
   const searched = data?.searched ?? []

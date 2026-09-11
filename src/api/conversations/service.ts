@@ -20,7 +20,7 @@ import type {
 export const conversationsService = {
   /**
    * Who this account may start a conversation with, and why each of them is
-   * on the list. A pupil's is empty by design, which is a sentence to show
+   * on the list. A student's is empty by design, which is a sentence to show
    * rather than an error to raise.
    */
   contacts: () =>

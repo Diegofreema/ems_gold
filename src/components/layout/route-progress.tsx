@@ -7,7 +7,7 @@ import { useRouterState } from '@tanstack/react-router'
  * loader runs, and only swaps to a pending component once the wait passes
  * `defaultPendingMs`. That is the right behaviour — a register should not
  * blink into a skeleton because a record took 200ms — but on its own it means
- * a tap on a pupil's name does nothing visible for as long as the school takes
+ * a tap on a student's name does nothing visible for as long as the school takes
  * to answer. On the connections this app is for, that is long enough to tap
  * again.
  *

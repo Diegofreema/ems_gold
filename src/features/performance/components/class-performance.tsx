@@ -48,7 +48,7 @@ const VIEW_OPTIONS = [
  * class once and then asks four questions of it.
  *
  * **Staff only, deliberately.** In a class of three, a class average is one
- * subtraction away from a named pupil's mark, which is why none of this is
+ * subtraction away from a named student's mark, which is why none of this is
  * offered to a guardian.
  */
 export function ClassPerformance({
@@ -403,7 +403,7 @@ function MoverColumn({
 }
 
 /**
- * The pupils the thresholds picked out.
+ * The students the thresholds picked out.
  *
  * Every one of them is listed with the reasons the school gave and the
  * thresholds it used, because that is the only way a list like this is safe to

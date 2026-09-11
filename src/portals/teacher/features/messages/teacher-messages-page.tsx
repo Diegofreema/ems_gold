@@ -4,7 +4,7 @@ import { MessagesPage } from '@/features/messages/components/messages-page'
  * The staff room's side of the in-app messages.
  *
  * A teacher's contacts are worked out from their own teaching: the guardians
- * of the pupils they actually take, plus the office. That is why there is no
+ * of the students they actually take, plus the office. That is why there is no
  * "who can I write to" filter here — the school has already answered it, and
  * writing to anybody else is refused.
  *

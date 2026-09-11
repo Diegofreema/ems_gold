@@ -50,7 +50,7 @@ export type ClassSubjectLine = Named & {
   counted: number | undefined
 }
 
-/** How many pupils fall in one grade band. */
+/** How many students fall in one grade band. */
 export type GradeLine = Named & { count: number }
 
 /** A student whose average moved between two terms. */
@@ -87,7 +87,7 @@ export function termLines(rows: readonly PerformanceTerm[]): TermLine[] {
 }
 
 /**
- * The subjects, each with the gap to the pupil's own average.
+ * The subjects, each with the gap to the student's own average.
  *
  * The gap is the point of this endpoint: a child on 55 who scores 80
  * everywhere else is struggling, and a child on 55 in a class averaging 40 is
@@ -165,12 +165,12 @@ export function studentPointLines(
 }
 
 /**
- * The flagged pupils and the figures that flagged them.
+ * The flagged students and the figures that flagged them.
  *
  * `reasons` is the one field name with any evidence behind it — the API
  * collection's own test asserts every row carries a non-empty array of them —
- * and it is what makes this list safe to show at all: a pupil listed without
- * the reason is an accusation, and a pupil listed with it is a prompt a
+ * and it is what makes this list safe to show at all: a student listed without
+ * the reason is an accusation, and a student listed with it is a prompt a
  * teacher can disagree with.
  */
 export function riskLines(rows: readonly AtRiskPupil[]): RiskLine[] {

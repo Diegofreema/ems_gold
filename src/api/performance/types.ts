@@ -1,5 +1,5 @@
 /**
- * How a pupil, a class or a paper is doing, under `/performance`.
+ * How a student, a class or a paper is doing, under `/performance`.
  *
  * Arithmetic over the marks and the register — nothing here predicts anything
  * and every figure can be checked by hand, which is the whole point: a
@@ -8,7 +8,7 @@
  * **Read off live answers on 2026-09-08, all of them empty.** The school this
  * was read against has five marks on file and none of them approved, so every
  * envelope below is verified and every *row* inside one is not: no `terms`
- * entry, no `subjects` entry, no mover and no flagged pupil has ever been
+ * entry, no `subjects` entry, no mover and no flagged student has ever been
  * seen. The containers are typed exactly; the rows are handed on as they
  * arrived, with what the endpoint promises each one carries written down
  * beside them, rather than guessing at field names nobody has produced. Same
@@ -22,7 +22,7 @@
  *   picture for somebody who wants it.
  * - **`message` is the answer when there is no answer.** Every endpoint says
  *   in a sentence why it is empty — no marks entered, none approved yet, too
- *   few pupils to correlate. A screen shows that sentence instead of drawing
+ *   few students to correlate. A screen shows that sentence instead of drawing
  *   zeroes, which is the one wrong answer these pages could give.
  */
 
@@ -46,11 +46,11 @@ export type PerformanceScope = {
 }
 
 /**
- * A pupil's attendance over the period, as the performance reads count it.
+ * A student's attendance over the period, as the performance reads count it.
  *
  * `rate` is null where nothing was marked — not zero, which would read as a
  * child who never turned up — and `reading` is the sentence to show in its
- * place: "No register has been marked for this pupil in this period."
+ * place: "No register has been marked for this student in this period."
  */
 export type PerformanceAttendance = {
   present: number
@@ -65,7 +65,7 @@ export type PerformanceAttendance = {
 }
 
 /**
- * A duplicate the endpoint had to settle: two marks for the same pupil,
+ * A duplicate the endpoint had to settle: two marks for the same student,
  * subject and term. The newest is kept and counted, and the clash is listed
  * here for somebody in the office to sort out.
  *
@@ -73,7 +73,7 @@ export type PerformanceAttendance = {
  */
 export type PerformanceDuplicate = Record<string, unknown>
 
-/** The pupil a `/performance/student/{id}` answer is about. Seen live. */
+/** The student a `/performance/student/{id}` answer is about. Seen live. */
 export type PerformanceStudent = {
   id: number
   name: string
@@ -84,7 +84,7 @@ export type PerformanceStudent = {
 }
 
 /**
- * One term of a pupil's history, in the order it happened.
+ * One term of a student's history, in the order it happened.
  *
  * **Unverified**: `terms` was empty on the only live reading. It carries the
  * term and that term's average — enough to draw the line a `direction` is
@@ -93,7 +93,7 @@ export type PerformanceStudent = {
 export type PerformanceTerm = Record<string, unknown>
 
 /**
- * One subject, measured against the pupil's **own** average rather than the
+ * One subject, measured against the student's **own** average rather than the
  * class's — a child on 55 who scores 80 everywhere else is struggling; a
  * child on 55 in a class averaging 40 is not. That comparison is the reason
  * this endpoint exists rather than the report sheet being read twice.
@@ -119,9 +119,9 @@ export type StudentPerformance = {
   student: PerformanceStudent
   /** In the order they happened, so a chart reads left to right as time. */
   terms: PerformanceTerm[]
-  /** Which way the pupil is going across those terms. */
+  /** Which way the student is going across those terms. */
   direction: string | null
-  /** The pupil's own average, which each subject is then measured against. */
+  /** The student's own average, which each subject is then measured against. */
   own_average: number | null
   subjects: PerformanceSubject[]
   strongest: PerformanceSubject | null
@@ -146,7 +146,7 @@ export type StudentPerformance = {
  */
 export type ClassSubjectPerformance = Record<string, unknown>
 
-/** How many pupils fall in one grade band. Unverified; `grades` was empty. */
+/** How many students fall in one grade band. Unverified; `grades` was empty. */
 export type GradeBucket = Record<string, unknown>
 
 export type ClassPerformanceParams = {
@@ -161,7 +161,7 @@ export type ClassPerformanceParams = {
  * `GET /performance/class`.
  *
  * **Staff only, and deliberately so**: in a class of three, the class average
- * is one subtraction away from a named pupil's mark. Nothing here may be put
+ * is one subtraction away from a named student's mark. Nothing here may be put
  * in front of a guardian.
  */
 export type ClassPerformance = {
@@ -182,7 +182,7 @@ export type ClassPerformance = {
 }
 
 /**
- * A pupil whose average moved between the two terms named.
+ * A student whose average moved between the two terms named.
  *
  * **Unverified**: every one of `movers`, `risers` and `fallers` was empty on
  * the only live reading, which was itself a request that named no terms.
@@ -205,9 +205,9 @@ export type MoversParams = {
  * `GET /performance/movers` — not who is top, which the report sheet already
  * says, but who **changed** between two terms.
  *
- * A pupil with no mark in the earlier term is left out rather than reported
+ * A student with no mark in the earlier term is left out rather than reported
  * as a fall from nothing. `movers` is both lists together; `risers` and
- * `fallers` are the same pupils separated.
+ * `fallers` are the same students separated.
  */
 export type Movers = {
   movers: Mover[]
@@ -217,7 +217,7 @@ export type Movers = {
 }
 
 /**
- * One pupil's attendance beside their average — a row of the scatter.
+ * One student's attendance beside their average — a row of the scatter.
  *
  * **Unverified**: `pupils` was empty on the only live reading.
  */
@@ -233,16 +233,16 @@ export type AttendanceVsMarksParams = {
 /**
  * `GET /performance/attendance-vs-marks`.
  *
- * The correlation is reported **only with five or more pupils who have both**
+ * The correlation is reported **only with five or more students who have both**
  * an average and a marked register; below that it is null and
  * `correlation_reading` is null with `message` saying why. A coefficient off
- * three pupils is noise dressed as a finding, and the endpoint refuses to
+ * three students is noise dressed as a finding, and the endpoint refuses to
  * dress it — a screen must not fill the gap with a number of its own.
  */
 export type AttendanceVsMarks = {
   scope: PerformanceScope
   pupils: AttendanceVsMarksRow[]
-  /** Pupils who had both, so the denominator behind the five-pupil floor. */
+  /** Students who had both, so the denominator behind the five-student floor. */
   pairs: number
   /** Pearson's r, or null where there were too few pairs to report one. */
   correlation: number | null
@@ -252,7 +252,7 @@ export type AttendanceVsMarks = {
 }
 
 /**
- * A pupil the thresholds picked out, with the figures that put them there.
+ * A student the thresholds picked out, with the figures that put them there.
  *
  * The collection's own test asserts each row carries a non-empty `reasons`
  * array; **no populated row has been seen**, so that is the one field name
@@ -271,7 +271,7 @@ export type AtRiskParams = {
  * about one.
  *
  * Rule-based and fully stated: the thresholds come back in the answer, every
- * pupil listed comes with the figures that put them there, and the endpoint
+ * student listed comes with the figures that put them there, and the endpoint
  * sends its own `note` saying as much. A screen built on this shows the
  * thresholds beside the list, so a teacher can disagree with it — which is
  * the only way a list like this is safe to put in front of anybody.
@@ -279,7 +279,7 @@ export type AtRiskParams = {
 export type AtRisk = {
   scope: PerformanceScope
   pupils: AtRiskPupil[]
-  /** How many pupils were assessed at all, so a short list can be read fairly. */
+  /** How many students were assessed at all, so a short list can be read fairly. */
   considered: number
   thresholds: {
     pass_mark: number
@@ -293,7 +293,7 @@ export type AtRisk = {
 /**
  * `GET /performance/questions/{paperId}` — which questions a class got wrong.
  *
- * A **teaching** signal, not a pupil one: a question two thirds of the class
+ * A **teaching** signal, not a student one: a question two thirds of the class
  * missed says the topic needs re-teaching. An unmarked written answer is left
  * out of the rate rather than counted wrong, so the figure never punishes a
  * class for marking the teacher has not done yet.

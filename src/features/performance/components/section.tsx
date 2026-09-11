@@ -6,7 +6,7 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
  * A block of a performance page that can fail, or be empty, on its own.
  *
  * Every one of these endpoints answers its own empty case in a sentence — no
- * marks entered, none approved yet, too few pupils to correlate — and that
+ * marks entered, none approved yet, too few students to correlate — and that
  * sentence is the most useful thing on most of these responses today. So an
  * empty block shows the school's own words rather than a chart of zeroes,
  * which is the one wrong answer these pages could give.
@@ -51,7 +51,7 @@ export function Footnote({ children }: { children: ReactNode }) {
 }
 
 /**
- * The duplicates the endpoint had to settle: two marks for one pupil, subject
+ * The duplicates the endpoint had to settle: two marks for one student, subject
  * and term. It keeps the newest and lists the clash — which is somebody's job
  * to sort out, so it is said out loud rather than buried.
  */

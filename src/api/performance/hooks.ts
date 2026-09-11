@@ -31,7 +31,7 @@ import type {
  */
 
 /**
- * One pupil. Idle until an id is known, so a drawer that has not been opened
+ * One student. Idle until an id is known, so a drawer that has not been opened
  * asks nothing.
  */
 export function useStudentPerformance(
@@ -91,7 +91,7 @@ export function useAtRisk(params: Partial<AtRiskParams>) {
 
 /**
  * Which questions a class got wrong. A teaching signal — it belongs beside a
- * paper, on the teacher's own screen, and never beside a pupil's name.
+ * paper, on the teacher's own screen, and never beside a student's name.
  */
 export function useQuestionAnalysis(paperId: Id | undefined) {
   return useQuery({

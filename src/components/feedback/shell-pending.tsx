@@ -54,7 +54,7 @@ export const shellPending = (config: PortalConfig) => () => {
 
         {/*
           Only the office's nav search, which always renders. The block the
-          other portals put here is their context panel — the pupil's own
+          other portals put here is their context panel — the student's own
           record, the household, the term being marked — and each returns
           nothing until its set is on the device, which on a first sign-in it
           is not. A placeholder there would be a block that vanished and took

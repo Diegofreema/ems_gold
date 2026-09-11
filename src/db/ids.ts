@@ -63,8 +63,8 @@ export const SET = {
 
   /**
    * In-app messages. Token-scoped like the notice board, so one id each serves
-   * the office, the staff room and the guardian — a pupil reaches neither,
-   * because the school gives a pupil nobody to write to.
+   * the office, the staff room and the guardian — a student reaches neither,
+   * because the school gives a student nobody to write to.
    */
   msgContacts: 'messages.contacts',
   /** The whole `GET /conversations` answer: the threads and the unread total. */

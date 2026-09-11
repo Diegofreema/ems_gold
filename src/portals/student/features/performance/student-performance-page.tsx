@@ -5,15 +5,15 @@ import { useHeldDocument } from '@/db/live'
 import { StudentPerformance } from '@/features/performance/components/student-performance'
 
 /**
- * A pupil's own progress.
+ * A student's own progress.
  *
  * The one comparison worth showing a child is with themselves: which subjects
  * they do better in than they do overall, and which they do worse in. Ranking
  * against the class is the report sheet's job and is not repeated here.
  *
- * The pupil's id comes off their own record on the device, so the page knows
+ * The student's id comes off their own record on the device, so the page knows
  * who is asking with no connection — only the figures need the school. No
- * session or term pickers: a pupil login is refused `/sessions` and
+ * session or term pickers: a student login is refused `/sessions` and
  * `/semesters`, so offering them would be offering two empty dropdowns.
  */
 export function StudentPerformancePage() {

@@ -22,7 +22,7 @@ import { queueStart } from '../send'
  *
  * Who may be written to is the school's answer, not a list this app assembled
  * — a parent is offered the staff who actually teach their children plus the
- * office, a teacher the parents of the pupils they teach. So the picker is a
+ * office, a teacher the parents of the students they teach. So the picker is a
  * list to search rather than a form field to fill in, and writing to somebody
  * off it is not possible from here at all: the endpoint refuses it, and
  * offering it would be offering something that cannot work.

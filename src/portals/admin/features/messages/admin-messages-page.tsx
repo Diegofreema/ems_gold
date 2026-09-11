@@ -9,7 +9,7 @@ import { MessagesPage } from '@/features/messages/components/messages-page'
  * thread, which is the moderation the endpoint reserves for them — a closed
  * conversation takes no more replies from either side.
  *
- * No child picker: naming which pupil a thread is about is the guardian's
+ * No child picker: naming which student a thread is about is the guardian's
  * knowledge, and the office would be picking from the whole register.
  */
 export function AdminMessagesPage() {

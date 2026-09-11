@@ -10,8 +10,8 @@ import { SET } from '../ids'
  * endpoints are token-scoped and three of the four portals hang a messages
  * page off them: the office, the staff room and the guardian each get their
  * own answer under the same id, and the per-account wipe keeps one login's
- * inbox from ever reaching another. A pupil reaches neither — the school
- * gives a pupil no contacts, on purpose.
+ * inbox from ever reaching another. A student reaches neither — the school
+ * gives a student no contacts, on purpose.
  *
  * The two things worth having with no signal are exactly these: **who you may
  * write to**, so a message can be composed at all, and **what has been said**,

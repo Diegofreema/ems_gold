@@ -31,8 +31,8 @@ import { ThreadView } from './thread-view'
  * on, so nothing here is per-role except whether the reader may close a thread
  * and whether they have children to name one about.
  *
- * A pupil has no page of this kind, and that is the API's decision rather than
- * an omission — a pupil's contacts list is empty, because their messages to
+ * A student has no page of this kind, and that is the API's decision rather than
+ * an omission — a student's contacts list is empty, because their messages to
  * the school go through their guardian.
  *
  * Everything on screen is read off the device: the threads, the last message

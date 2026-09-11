@@ -16,14 +16,14 @@ import { directionTone, figure, signed, subjectLines, termLines } from '../perfo
 import { DuplicateNotice, Footnote, PendingNotice, Section } from './section'
 
 /**
- * One pupil's progress: where they are going, which subjects are carrying
+ * One student's progress: where they are going, which subjects are carrying
  * them and which are not, and whether they are in school for it.
  *
- * The comparison that matters here is a pupil against **themselves**. A child
+ * The comparison that matters here is a student against **themselves**. A child
  * on 55 who scores 80 everywhere else is struggling; a child on 55 in a class
  * averaging 40 is not — and the report sheet, which ranks them against the
  * class, cannot say either. So every subject is shown with its distance from
- * the pupil's own average, and that gap is what the eye is drawn to.
+ * the student's own average, and that gap is what the eye is drawn to.
  *
  * Only approved marks count, which is what makes this agree with the report
  * sheet. Anything unapproved is counted and named rather than dropped, and can

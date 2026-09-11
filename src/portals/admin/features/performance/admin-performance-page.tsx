@@ -22,7 +22,7 @@ type Scope = (typeof SCOPES)[number]
  *
  * Two scopes, because they are two different jobs: a head of department opens
  * a class, and a form teacher or a bursar fielding a phone call opens one
- * child. The pupil side searches the whole register at the school, which is
+ * child. The student side searches the whole register at the school, which is
  * the same searched feed the fee counter uses.
  */
 export function AdminPerformancePage() {

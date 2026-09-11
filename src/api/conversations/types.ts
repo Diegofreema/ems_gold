@@ -7,7 +7,7 @@ import type { Id } from '../types.ts'
  * takes their child, or the office. This is **not** the notice board
  * (`src/api/notifications`, one-way, the school talking to everybody) and not
  * the outbound SMS/e-mail log (`src/api/teaching`, which leaves the system
- * and never comes back). A pupil is deliberately given nobody to write to:
+ * and never comes back). A student is deliberately given nobody to write to:
  * their messages to the school go through their guardian.
  *
  * **Read off a live answer on 2026-09-08** for the contacts list, the inbox
@@ -24,8 +24,8 @@ export type ConversationStatus = 'open' | 'closed'
  *
  * The list is worked out server-side from the relationships that already
  * exist — a parent gets the staff who teach their own children plus the
- * office, a teacher gets the parents of the pupils they teach, an admin gets
- * everybody, a pupil gets an empty list. Writing to anybody not on it is a
+ * office, a teacher gets the parents of the students they teach, an admin gets
+ * everybody, a student gets an empty list. Writing to anybody not on it is a
  * 403 carrying a sentence saying what to do instead.
  */
 export type Contact = {

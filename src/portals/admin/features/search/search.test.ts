@@ -32,42 +32,42 @@ test('the three registers come back in a fixed order', () => {
 })
 
 test('a register left out of `searched` is not the same as one with no matches', () => {
-  const [pupils, guardians] = groups(
+  const [students, guardians] = groups(
     results({ searched: ['teachers'], counts: { students: 0, parents: 0, teachers: 0 } }),
   )
-  assert.equal(pupils.searched, false)
-  assert.equal(countLine(pupils), 'not searched')
+  assert.equal(students.searched, false)
+  assert.equal(countLine(students), 'not searched')
   assert.equal(guardians.searched, false)
 })
 
 test('a register that was searched and found nobody says so plainly', () => {
-  const [pupils] = groups(results({}))
-  assert.equal(pupils.searched, true)
-  assert.equal(countLine(pupils), 'none')
+  const [students] = groups(results({}))
+  assert.equal(students.searched, true)
+  assert.equal(countLine(students), 'none')
 })
 
 test('a list cut to the limit says how many there really are', () => {
-  const [pupils] = groups(
+  const [students] = groups(
     results({
       students: [row({ id: 1 }), row({ id: 2 })],
       counts: { students: 40, parents: 0, teachers: 0 },
     }),
   )
-  assert.equal(countLine(pupils), 'showing 2 of 40')
+  assert.equal(countLine(students), 'showing 2 of 40')
 })
 
 test('a complete list is just its count', () => {
-  const [pupils] = groups(
+  const [students] = groups(
     results({ students: [row({})], counts: { students: 1, parents: 0, teachers: 0 } }),
   )
-  assert.equal(countLine(pupils), '1')
+  assert.equal(countLine(students), '1')
 })
 
 test('a register the server did not send at all reads as empty, not as a crash', () => {
-  const [pupils] = groups(
+  const [students] = groups(
     results({ students: undefined as unknown as SearchRow[] }),
   )
-  assert.deepEqual(pupils.rows, [])
+  assert.deepEqual(students.rows, [])
 })
 
 test('the summary counts every register that answered', () => {

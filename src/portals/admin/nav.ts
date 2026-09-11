@@ -34,7 +34,7 @@ export const adminNav: NavGroup[] = [
   {
     items: [
       { to: '/admin', label: 'Dashboard', icon: LayoutGrid },
-      // One box across pupils, guardians and staff — for the telephone call
+      // One box across students, guardians and staff — for the telephone call
       // where whoever is being asked about could be any of the three.
       { to: '/admin/search', label: 'Search everyone', icon: Search },
       { to: '/admin/notifications', label: 'Notifications', icon: Bell },

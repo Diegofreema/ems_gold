@@ -16,7 +16,7 @@ import type {
 
 /**
  * Six reads, no writes — this family only ever counts what other endpoints
- * wrote. Every one of them answers for a whole class or a whole pupil rather
+ * wrote. Every one of them answers for a whole class or a whole student rather
  * than for a page of rows, so none paginates and none takes a search.
  *
  * Each answer is handed on whole, `message` and all: the sentence explaining
@@ -24,7 +24,7 @@ import type {
  * and narrowing to the arrays would throw it away.
  */
 export const performanceService = {
-  /** One pupil: terms, subjects against their own average, and attendance. */
+  /** One student: terms, subjects against their own average, and attendance. */
   student: (id: Id, params: StudentPerformanceParams = {}) =>
     request<StudentPerformance>(`performance/student/${id}`, { query: { ...params } }),
 

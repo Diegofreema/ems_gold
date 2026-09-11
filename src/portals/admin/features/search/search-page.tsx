@@ -13,9 +13,9 @@ import { staffKey } from '../../collections/staff-row'
 import { countLine, type Group, groups, MIN_TERM, summary, tooShort } from './search'
 
 /**
- * The office's one search box, across the pupil, guardian and staff registers.
+ * The office's one search box, across the student, guardian and staff registers.
  *
- * Somebody rings the office about "Okafor" and it could be the pupil, the
+ * Somebody rings the office about "Okafor" and it could be the student, the
  * father who pays the fees, or the teacher who takes them for English. Every
  * other register in this portal makes you decide which before you can look.
  *
@@ -29,7 +29,7 @@ import { countLine, type Group, groups, MIN_TERM, summary, tooShort } from './se
  * called that" and "you are not allowed to look". Students and Sparents both
  * sit behind the Student privilege, so an administrator without it gets
  * neither — and showing that as "no results" would tell them the school has no
- * such pupil when it may well have.
+ * such student when it may well have.
  */
 export function AdminSearchPage() {
   const [state, setState] = useQueryStates({

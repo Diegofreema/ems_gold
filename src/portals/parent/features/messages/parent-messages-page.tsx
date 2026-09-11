@@ -13,7 +13,7 @@ import { useFamily } from '../../parent.store'
  * The children come from the household already on the device, so a thread can
  * be marked as being about one child with no connection either. A guardian
  * with one child still gets the picker — "not about one child" is a real
- * answer, and a fee question is not about a pupil at all.
+ * answer, and a fee question is not about a student at all.
  */
 export function ParentMessagesPage() {
   const family = useFamily()
