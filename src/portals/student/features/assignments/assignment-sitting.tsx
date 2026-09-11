@@ -1,13 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
 import { parseAsInteger, useQueryState } from 'nuqs'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { AssignmentDetail } from '@/api/assignments/types'
 import { useSubmitAssignment } from '@/api/assignments/hooks'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { useConfirm } from '@/hooks/use-confirm'
+import { hasText } from '@/features/collections/rich-text'
 import { cn } from '@/lib/utils'
 import { clearAttempt, type StoredAttempt, writeAttempt } from './attempt'
 import { formatClock, isRunningOut } from './clock'
@@ -23,6 +23,17 @@ import {
 } from './assignment'
 import { QuestionPips } from './question-pips'
 import { useCountdown } from './use-countdown'
+
+/**
+ * Fetched only by a paper that actually has a theory question on it. The
+ * service worker has it cached with the rest of the build, so a student
+ * sitting with no signal still gets the box.
+ */
+const RichTextEditor = lazy(() =>
+  import('@/components/editor/rich-text-editor').then((module) => ({
+    default: module.RichTextEditor,
+  })),
+)
 
 /**
  * The assignment itself, one question at a time.
@@ -118,14 +129,31 @@ export function AssignmentSitting({
           </h3>
 
           {isTheory(question) ? (
-            <Textarea
-              rows={8}
-              value={String(draft[question.id] ?? '')}
-              placeholder="Write your answer here."
-              onChange={(event) =>
-                setDraft((previous) => ({ ...previous, [question.id]: event.target.value }))
+            /*
+              Written rather than typed, so a student can number the steps of a
+              working the way they would on paper. Lazy, and only reached by a
+              theory question — a paper of multiple choice never fetches it, and
+              this page is sat on whatever connection the hall has.
+            */
+            <Suspense
+              fallback={
+                <div className="h-52 animate-ems-fade rounded-lg border border-input" />
               }
-            />
+            >
+              <RichTextEditor
+                value={String(draft[question.id] ?? '')}
+                placeholder="Write your answer here."
+                onChange={(html) =>
+                  setDraft((previous) => ({
+                    ...previous,
+                    // Stored as nothing when it holds nothing, so an emptied
+                    // box does not count towards "answered" on the strength of
+                    // the `<p></p>` the editor leaves behind.
+                    [question.id]: hasText(html) ? html : '',
+                  }))
+                }
+              />
+            </Suspense>
           ) : (
             <OptionList
               options={question.options ?? []}

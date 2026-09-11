@@ -5,6 +5,7 @@ import type {
 } from '../../api/conversations/types.ts'
 import { WRITE } from '../../db/ids.ts'
 import { DRAWN_STATES, type OutboxOp } from '../../db/outbox.ts'
+import { plainText } from '../collections/rich-text.ts'
 import type { ThreadMessage } from './thread.ts'
 
 /**
@@ -65,7 +66,13 @@ export function queuedThreads(ops: readonly OutboxOp[]): ConversationSummary[] {
       student_id: body?.student_id === undefined ? null : Number(body.student_id),
       about: null,
       with: [],
-      last_message: body?.body ?? '',
+      /*
+       * The words, not the markup. A body is written in the editor now, and
+       * the inbox row is one line of preview text beside a subject — the
+       * school's own `last_message` is a sentence, and a queued row showing
+       * `<p>` beside it would be the only row in the list wearing its tags.
+       */
+      last_message: plainText(body?.body ?? ''),
       last_message_at: null,
       unread: 0,
     }

@@ -1,64 +1,75 @@
-import { adminsService } from '@/api/admins/service'
-import { classArmsService } from '@/api/class-arms/service'
-import { collectFeesService } from '@/api/collect-fees/service'
-import { departmentsService } from '@/api/departments/service'
-import { feesService } from '@/api/fees/service'
-import { libraryService } from '@/api/library/service'
-import { studentsService } from '@/api/students/service'
-import { subjectsService } from '@/api/subjects/service'
-import { teachersService } from '@/api/teachers/service'
-import { isSuperAdminRole } from '@/features/auth/role'
-import { superAdminSignedIn } from '@/features/auth/session'
-import { toApiDate } from '@/features/collections/date-range'
-import type { Row } from '@/features/collections/types'
+import { adminsService } from '@/api/admins/service';
+import { classArmsService } from '@/api/class-arms/service';
+import { collectFeesService } from '@/api/collect-fees/service';
+import { departmentsService } from '@/api/departments/service';
+import { feesService } from '@/api/fees/service';
+import { libraryService } from '@/api/library/service';
+import { studentsService } from '@/api/students/service';
+import { subjectsService } from '@/api/subjects/service';
+import { teachersService } from '@/api/teachers/service';
+import { isSuperAdminRole } from '@/features/auth/role';
+import { superAdminSignedIn } from '@/features/auth/session';
+import { toApiDate } from '@/features/collections/date-range';
+import type { Row } from '@/features/collections/types';
 import {
   ADMIT,
   admission,
   type ReviewValues,
-} from '@/portals/admin/collections/admission'
-import { applicantDocuments } from '@/portals/admin/collections/applicant-row'
-import { collecting, figure, payAction, paymentBody } from '@/portals/admin/collections/collect-row'
-import { parseStaffKey } from '@/portals/admin/collections/staff-row'
-import { parseBatchId } from '@/portals/admin/collections/result-row'
-import { resultsService } from '@/api/results/service'
+} from '@/portals/admin/collections/admission';
+import { applicantDocuments } from '@/portals/admin/collections/applicant-row';
+import {
+  collecting,
+  figure,
+  payAction,
+  paymentBody,
+} from '@/portals/admin/collections/collect-row';
+import { parseStaffKey } from '@/portals/admin/collections/staff-row';
+import { parseBatchId } from '@/portals/admin/collections/result-row';
+import { resultsService } from '@/api/results/service';
 import {
   moveOutcome,
   type MoveValues,
   studentMove,
-} from '@/portals/admin/collections/student-move'
-import { optionLabels } from '@/features/collections/option-feeds'
-import { formatDate, formatNaira, parseNaira } from '@/lib/format'
-import { queryClient } from '@/lib/query-client'
-import type { ActionDef } from './types'
+} from '@/portals/admin/collections/student-move';
+import { optionLabels } from '@/features/collections/option-feeds';
+import { formatDate, formatNaira, parseNaira } from '@/lib/format';
+import { queryClient } from '@/lib/query-client';
+import type { ActionDef } from './types';
 
 export type AdminFlow = {
   /** Which flow this is, and what `?flow=` in the URL calls it. */
-  name: string
+  name: string;
   /** Button label on the record, e.g. "Allocate to classes". */
-  label: string
+  label: string;
   /** The flow needs no record, so the list's primary action opens it. */
-  fromList?: boolean
+  fromList?: boolean;
   /** Records the flow can run against; offered on every record without it. */
-  when?: (record: Row) => boolean
+  when?: (record: Row) => boolean;
   /** Whether it may be run at all — by this account, on this record. */
-  allowed?: (record?: Row) => boolean
+  allowed?: (record?: Row) => boolean;
   /** Why it was refused, where want of a privilege is not the reason. */
-  deniedBody?: (record?: Row) => string | undefined
-  build: (row?: Row) => ActionDef | Promise<ActionDef>
-}
+  deniedBody?: (record?: Row) => string | undefined;
+  build: (row?: Row) => ActionDef | Promise<ActionDef>;
+};
 
 /** Everything on one page — a school has classes in the dozens. */
-const ALL_CLASSES = 200
+const ALL_CLASSES = 200;
 
 /** Same again for the two registers a teacher's flows read whole. */
-const ALL_SUBJECTS = 300
-const ALL_TEACHERS = 300
+const ALL_SUBJECTS = 300;
+const ALL_TEACHERS = 300;
 
-const DASH = '—'
+const DASH = '—';
 
 /** The student as the picker names them. */
-function studentName(student: { fname: string; lname: string; mname?: string | null }) {
-  return [student.fname, student.mname, student.lname].filter(Boolean).join(' ')
+function studentName(student: {
+  fname: string;
+  lname: string;
+  mname?: string | null;
+}) {
+  return [student.fname, student.mname, student.lname]
+    .filter(Boolean)
+    .join(' ');
 }
 
 /**
@@ -73,11 +84,11 @@ function studentName(student: { fname: string; lname: string; mname?: string | n
  * already charged to arrive ticked: unticking one is how it is unallocated.
  */
 async function allocate(row?: Row): Promise<ActionDef> {
-  const amount = parseNaira(row?.amount ?? '')
+  const amount = parseNaira(row?.amount ?? '');
   const classes = await departmentsService
     .list({ limit: ALL_CLASSES })
     .then((page) => page.items)
-    .catch(() => [])
+    .catch(() => []);
 
   const headcounts = await Promise.all(
     classes.map((department) =>
@@ -86,7 +97,7 @@ async function allocate(row?: Row): Promise<ActionDef> {
         .then((page) => page.pagination.total)
         .catch(() => 0),
     ),
-  )
+  );
 
   return {
     kicker: 'Finance · Fee catalogue',
@@ -108,7 +119,9 @@ async function allocate(row?: Row): Promise<ActionDef> {
       })),
       // Unticking is how a class is dropped, so what it is already charged to
       // has to be on screen before anything is changed.
-      preselected: row?.classIds ? row.classIds.split(',').filter(Boolean) : undefined,
+      preselected: row?.classIds
+        ? row.classIds.split(',').filter(Boolean)
+        : undefined,
       note: 'Unticking a class stops the fee applying to it. Invoices already raised are not touched.',
       requiredMessage: 'Pick at least one class to bill.',
     },
@@ -124,16 +137,17 @@ async function allocate(row?: Row): Promise<ActionDef> {
       cancel: 'Go back',
     }),
     run: async (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
+      const picked = (values.picks as string[] | undefined) ?? [];
       await feesService.allocate(String(row?.id ?? ''), {
         departments: picked.map(Number),
-      })
+      });
       return {
         message: `${row?.name ?? 'The fee'} allocated to ${picked.length} ${picked.length === 1 ? 'class' : 'classes'}`,
-      }
+      };
     },
-    done: (picked) => `Fee allocated to ${picked} ${picked === 1 ? 'class' : 'classes'}`,
-  }
+    done: (picked) =>
+      `Fee allocated to ${picked} ${picked === 1 ? 'class' : 'classes'}`,
+  };
 }
 
 /**
@@ -150,7 +164,7 @@ async function allocate(row?: Row): Promise<ActionDef> {
  * looking at it before touching money is the point of the screen.
  */
 function payment(row?: Row): ActionDef {
-  const total = figure(row?.total)
+  const total = figure(row?.total);
 
   return {
     kicker: 'Finance · Fee collection',
@@ -169,7 +183,7 @@ function payment(row?: Row): ActionDef {
         label: 'How it was paid',
         required: true,
         optionsFrom: 'payment-methods',
-        hint: 'The school\'s own list, not a fixed one.',
+        hint: "The school's own list, not a fixed one.",
       },
       {
         key: 'discount',
@@ -189,16 +203,16 @@ function payment(row?: Row): ActionDef {
     ],
     // What the clerk will actually take, recomputed as the discount is typed.
     tally: (values) => {
-      const { amount, discount } = collecting(total, values.discount)
+      const { amount, discount } = collecting(total, values.discount);
       return [
         { label: 'Discount', value: formatNaira(discount) },
         { label: 'To collect', value: formatNaira(amount) },
-      ]
+      ];
     },
     cta: 'Record payment',
     footnote: 'Nothing is collected until you press this.',
     confirm: (_total, values) => {
-      const { amount, discount } = collecting(total, values?.discount)
+      const { amount, discount } = collecting(total, values?.discount);
       return {
         title: 'Record this payment?',
         body: 'This settles the invoice outright and writes the transaction against your name. There is no undoing it from here.',
@@ -214,31 +228,39 @@ function payment(row?: Row): ActionDef {
           .join(' · '),
         cta: 'Record the payment',
         cancel: 'Go back',
-      }
+      };
     },
     run: async (values) => {
-      const body = paymentBody(total, values)
-      const { transaction } = await collectFeesService.pay(String(row?.id ?? ''), body)
+      const body = paymentBody(total, values);
+      const { transaction } = await collectFeesService.pay(
+        String(row?.id ?? ''),
+        body,
+      );
       // The API mints the reference, and it is what a parent quotes back when
       // they query the payment, so the toast hands it over rather than the
       // fixed "Payment recorded" a `meta` would give.
-      return { message: `Payment recorded — ${transaction.payref}` }
+      return { message: `Payment recorded — ${transaction.payref}` };
     },
     done: () => 'Payment recorded',
-  }
+  };
 }
 
 async function promote(row?: Row): Promise<ActionDef> {
-  const armId = row?.class_arm_id ?? ''
-  const from = { departmentId: row?.department_id ?? '' }
+  const armId = row?.class_arm_id ?? '';
+  const from = { departmentId: row?.department_id ?? '' };
 
   // Everyone in the student's own arm, plus anyone admitted into the class but
   // not yet placed — those are exactly the students this move can reach.
   const arm = armId
     ? await classArmsService.students(armId).catch(() => undefined)
-    : undefined
-  const students = [...(arm?.students ?? []), ...(arm?.unassigned_in_class ?? [])]
-  const names = new Map(students.map((student) => [student.id, studentName(student)]))
+    : undefined;
+  const students = [
+    ...(arm?.students ?? []),
+    ...(arm?.unassigned_in_class ?? []),
+  ];
+  const names = new Map(
+    students.map((student) => [student.id, studentName(student)]),
+  );
 
   return {
     kicker: 'People · Student register',
@@ -263,7 +285,12 @@ async function promote(row?: Row): Promise<ActionDef> {
       requiredMessage: 'Pick at least one student to move.',
     },
     fields: [
-      { key: 'department_id', label: 'Move to class', required: true, optionsFrom: 'classes' },
+      {
+        key: 'department_id',
+        label: 'Move to class',
+        required: true,
+        optionsFrom: 'classes',
+      },
       {
         key: 'class_arm_id',
         label: 'Move to arm',
@@ -275,21 +302,26 @@ async function promote(row?: Row): Promise<ActionDef> {
     ],
     cta: 'Move selected students',
     footnote: 'Written to the activity log against your name.',
-    done: (picked) => `${picked} ${picked === 1 ? 'student moved' : 'students moved'}`,
+    done: (picked) =>
+      `${picked} ${picked === 1 ? 'student moved' : 'students moved'}`,
     run: async (values) => {
-      const move = studentMove(values as unknown as MoveValues, from)
+      const move = studentMove(values as unknown as MoveValues, from);
       const result =
         move.kind === 'transfer'
           ? await classArmsService.assignStudents(move.armId, move.body)
-          : await studentsService.promote(move.body).then(() => undefined)
+          : await studentsService.promote(move.body).then(() => undefined);
 
-      return moveOutcome(move, result, (id) => names.get(id) ?? `Student ${id}`)
+      return moveOutcome(
+        move,
+        result,
+        (id) => names.get(id) ?? `Student ${id}`,
+      );
     },
-  }
+  };
 }
 
 function review(row?: Row): ActionDef {
-  const documents = applicantDocuments(row)
+  const documents = applicantDocuments(row);
   return {
     kicker: 'People · Applicants',
     title: `Review ${row?.name ?? 'application'}`,
@@ -304,11 +336,18 @@ function review(row?: Row): ActionDef {
       title: 'Documents on file',
       items: documents,
       // A document that was never supplied cannot have been seen.
-      preselected: documents.filter((item) => item.count > 0).map((item) => item.key),
+      preselected: documents
+        .filter((item) => item.count > 0)
+        .map((item) => item.key),
       note: 'Tick the documents you have seen and verified.',
     },
     fields: [
-      { key: 'decision', label: 'Decision', required: true, options: [ADMIT, 'Decline'] },
+      {
+        key: 'decision',
+        label: 'Decision',
+        required: true,
+        options: [ADMIT, 'Decline'],
+      },
       {
         key: 'department_id',
         label: 'Admit into class',
@@ -330,27 +369,27 @@ function review(row?: Row): ActionDef {
     footnote: 'The applicant appears on the student register once admitted.',
     done: () => 'Decision saved',
     run: async (values) => {
-      if (!row) throw new Error('That application could not be loaded.')
-      const { body, message } = admission(row, values as ReviewValues)
-      await studentsService.update(row.id, body)
-      return { message }
+      if (!row) throw new Error('That application could not be loaded.');
+      const { body, message } = admission(row, values as ReviewValues);
+      await studentsService.update(row.id, body);
+      return { message };
     },
-  }
+  };
 }
 
 /** The standard loan, and what the due date opens on. */
-const LOAN_DAYS = 14
+const LOAN_DAYS = 14;
 
 function dueDate(days = LOAN_DAYS): Date {
-  const due = new Date()
-  due.setDate(due.getDate() + days)
-  return due
+  const due = new Date();
+  due.setDate(due.getDate() + days);
+  return due;
 }
 
 /** The picked title's own name, off the same feed the select showed. */
 async function bookLabel(values?: Record<string, unknown>): Promise<string> {
-  const books = await optionLabels('books')
-  return books.get(String(values?.book_id ?? '')) ?? 'The book'
+  const books = await optionLabels('books');
+  return books.get(String(values?.book_id ?? '')) ?? 'The book';
 }
 
 /**
@@ -388,7 +427,13 @@ function lend(): ActionDef {
         searchFrom: 'students',
         hint: 'Type a name to search the admitted register; students are listed with their admission number.',
       },
-      { key: 'datetoreturn', label: 'Due back', required: true, date: true, value: dueDate() },
+      {
+        key: 'datetoreturn',
+        label: 'Due back',
+        required: true,
+        date: true,
+        value: dueDate(),
+      },
     ],
     cta: 'Issue book',
     footnote: 'The copy counts against the library until it is brought back.',
@@ -400,19 +445,24 @@ function lend(): ActionDef {
     // for its `may_borrow`, which is exactly what the contract publishes it
     // for, so a refusal is heard here rather than after the button.
     confirm: async (_total, values) => {
-      const studentId = String(values?.student_id ?? '')
+      const studentId = String(values?.student_id ?? '');
       const [student, history] = await Promise.all([
         studentsService.get(studentId).catch(() => null),
         libraryService.studentLoans(studentId).catch(() => null),
-      ])
+      ]);
       const name = student
-        ? [student.fname, student.mname, student.lname].filter(Boolean).join(' ').trim() ||
-          `Student ${student.id}`
-        : 'the student picked'
-      const due = values?.datetoreturn instanceof Date ? formatDate(values.datetoreturn) : null
+        ? [student.fname, student.mname, student.lname]
+            .filter(Boolean)
+            .join(' ')
+            .trim() || `Student ${student.id}`
+        : 'the student picked';
+      const due =
+        values?.datetoreturn instanceof Date
+          ? formatDate(values.datetoreturn)
+          : null;
       // Only a flat "false" warns: an answer without the flag, or no answer at
       // all, proves nothing, and the lend endpoint has its own refusal.
-      const blocked = history?.may_borrow === false
+      const blocked = history?.may_borrow === false;
       return {
         title: blocked ? 'The library would refuse this' : 'Issue this book?',
         body: blocked
@@ -423,21 +473,21 @@ function lend(): ActionDef {
           .join(' · '),
         cta: blocked ? 'Try anyway' : 'Issue the book',
         cancel: 'Go back',
-      }
+      };
     },
     run: async (values) => {
-      const due = toApiDate(values.datetoreturn as Date | undefined)
-      if (!due) throw new Error('Pick the date the book is due back.')
+      const due = toApiDate(values.datetoreturn as Date | undefined);
+      if (!due) throw new Error('Pick the date the book is due back.');
       await libraryService.lend({
         studentId: Number(values.student_id),
         bookId: Number(values.book_id),
         toreturn: due,
-      })
-      const title = await bookLabel(values)
-      dropCatalogue()
-      return { message: `${title} is out on loan.` }
+      });
+      const title = await bookLabel(values);
+      dropCatalogue();
+      return { message: `${title} is out on loan.` };
     },
-  }
+  };
 }
 
 /**
@@ -450,7 +500,7 @@ function lend(): ActionDef {
  * rather than painting the old answer first.
  */
 function dropCatalogue() {
-  queryClient.removeQueries({ queryKey: ['library'] })
+  queryClient.removeQueries({ queryKey: ['library'] });
 }
 
 /**
@@ -470,8 +520,20 @@ function addTitle(): ActionDef {
       'Put a new title in the catalogue so copies of it can be issued. How many the school holds is what the shelf count runs on.',
     summary: [],
     fields: [
-      { key: 'title', label: 'Title', required: true, wide: true, placeholder: 'Things Fall Apart' },
-      { key: 'author', label: 'Author', required: true, wide: true, placeholder: 'Chinua Achebe' },
+      {
+        key: 'title',
+        label: 'Title',
+        required: true,
+        wide: true,
+        placeholder: 'Things Fall Apart',
+      },
+      {
+        key: 'author',
+        label: 'Author',
+        required: true,
+        wide: true,
+        placeholder: 'Chinua Achebe',
+      },
       {
         key: 'copies',
         label: 'Copies held',
@@ -495,8 +557,9 @@ function addTitle(): ActionDef {
     footnote: 'The title can be issued the moment it is added.',
     done: () => 'Title added',
     run: async (values) => {
-      const field = (key: string) => String(values[key] ?? '').trim() || undefined
-      const title = field('title')
+      const field = (key: string) =>
+        String(values[key] ?? '').trim() || undefined;
+      const title = field('title');
       await libraryService.addBook({
         title,
         author: field('author'),
@@ -506,15 +569,15 @@ function addTitle(): ActionDef {
         section: field('section'),
         callno: field('callno'),
         department_id: Number(values.department_id) || undefined,
-      })
+      });
       // The shelf page reads its cache imperatively, and the issue flow's book
       // picker caches the catalogue for five minutes; a title added to be
       // issued should not wait either of them out.
-      dropCatalogue()
-      queryClient.removeQueries({ queryKey: ['options', 'books'] })
-      return { message: `${title ?? 'The title'} is in the catalogue.` }
+      dropCatalogue();
+      queryClient.removeQueries({ queryKey: ['options', 'books'] });
+      return { message: `${title ?? 'The title'} is in the catalogue.` };
     },
-  }
+  };
 }
 
 /**
@@ -550,9 +613,25 @@ function editTitle(row?: Row): ActionDef {
         value: row?.id,
         hint: 'Every title the school holds, retired ones included.',
       },
-      { key: 'title', label: 'Title', wide: true, placeholder: 'Keep as written' },
-      { key: 'author', label: 'Author', wide: true, placeholder: 'Keep as written' },
-      { key: 'copies', label: 'Copies held', number: true, min: 1, placeholder: 'Keep as written' },
+      {
+        key: 'title',
+        label: 'Title',
+        wide: true,
+        placeholder: 'Keep as written',
+      },
+      {
+        key: 'author',
+        label: 'Author',
+        wide: true,
+        placeholder: 'Keep as written',
+      },
+      {
+        key: 'copies',
+        label: 'Copies held',
+        number: true,
+        min: 1,
+        placeholder: 'Keep as written',
+      },
       { key: 'isbn', label: 'ISBN', placeholder: 'Keep as written' },
       { key: 'pubdate', label: 'Published', placeholder: 'Keep as written' },
       { key: 'section', label: 'Section', placeholder: 'Keep as written' },
@@ -574,12 +653,12 @@ function editTitle(row?: Row): ActionDef {
     footnote: 'Only what you filled in changes; the rest stands as written.',
     done: () => 'Title updated',
     run: async (values) => {
-      const picked = String(values.book_id ?? '')
-      const books = await libraryService.books()
-      const book = books.find((one) => String(one.id) === picked)
-      if (!book) throw new Error('That title could not be loaded.')
+      const picked = String(values.book_id ?? '');
+      const books = await libraryService.books();
+      const book = books.find((one) => String(one.id) === picked);
+      if (!book) throw new Error('That title could not be loaded.');
 
-      const typed = (key: string) => String(values[key] ?? '').trim()
+      const typed = (key: string) => String(values[key] ?? '').trim();
       await libraryService.updateBook(book.id, {
         title: typed('title') || book.title,
         author: typed('author') || book.author,
@@ -588,20 +667,24 @@ function editTitle(row?: Row): ActionDef {
         pubdate: typed('pubdate') || book.pubdate || undefined,
         section: typed('section') || book.section || undefined,
         callno: typed('callno') || book.callno || undefined,
-        department_id: Number(values.department_id) || book.department_id || undefined,
+        department_id:
+          Number(values.department_id) || book.department_id || undefined,
         isavailable:
-          typed('isavailable') === 'Available' || typed('isavailable') === 'Unavailable'
+          typed('isavailable') === 'Available' ||
+          typed('isavailable') === 'Unavailable'
             ? (typed('isavailable') as 'Available' | 'Unavailable')
             : book.isavailable,
-      })
+      });
       // The shelf page and both pickers read the catalogue; a rename or a
       // retirement should not wait out their caches.
-      dropCatalogue()
-      queryClient.removeQueries({ queryKey: ['options', 'books'] })
-      queryClient.removeQueries({ queryKey: ['options', 'all-books'] })
-      return { message: `${typed('title') || book.title} now reads as corrected.` }
+      dropCatalogue();
+      queryClient.removeQueries({ queryKey: ['options', 'books'] });
+      queryClient.removeQueries({ queryKey: ['options', 'all-books'] });
+      return {
+        message: `${typed('title') || book.title} now reads as corrected.`,
+      };
     },
-  }
+  };
 }
 
 /** The loan's tiles, shared by every flow that runs against one. */
@@ -610,7 +693,7 @@ function loanSummary(row?: Row) {
     { label: 'Student', value: row?.student ?? DASH },
     { label: 'Book', value: row?.book ?? DASH },
     { label: 'Due back', value: row?.due ?? DASH },
-  ]
+  ];
 }
 
 /**
@@ -626,7 +709,8 @@ function takeBack(row?: Row): ActionDef {
   return {
     kicker: 'School · Lending',
     title: `Return ${row?.book ?? 'book'}`,
-    description: 'Mark the copy returned and put it back on the shelf, ready to lend again.',
+    description:
+      'Mark the copy returned and put it back on the shelf, ready to lend again.',
     summary: [
       ...loanSummary(row),
       { label: 'Fine if returned today', value: row?.penalty_today ?? DASH },
@@ -650,17 +734,21 @@ function takeBack(row?: Row): ActionDef {
         row?.paid === 'Owing'
           ? 'The copy goes back on the shelf. The fine is not taken by this — collect it with its own button, before or after.'
           : 'The loan is closed and the copy goes back on the shelf, ready to be issued again.',
-      subject: [row?.book ?? 'This title', row?.student].filter(Boolean).join(' · '),
+      subject: [row?.book ?? 'This title', row?.student]
+        .filter(Boolean)
+        .join(' · '),
       cta: 'Return the book',
       cancel: 'Go back',
     }),
     run: async (values) => {
-      if (!row) throw new Error('That loan could not be loaded.')
-      await libraryService.returnLoan(row.id, { status: String(values.status ?? '').trim() })
-      dropCatalogue()
-      return { message: `${row.book} is back on the shelf.` }
+      if (!row) throw new Error('That loan could not be loaded.');
+      await libraryService.returnLoan(row.id, {
+        status: String(values.status ?? '').trim(),
+      });
+      dropCatalogue();
+      return { message: `${row.book} is back on the shelf.` };
     },
-  }
+  };
 }
 
 /**
@@ -691,29 +779,35 @@ function collectFine(row?: Row): ActionDef {
     footnote: 'Nothing is collected until you press this.',
     done: () => 'Fine collected',
     confirm: (_total, values) => {
-      const typed = parseNaira(String(values?.amount ?? ''))
+      const typed = parseNaira(String(values?.amount ?? ''));
       return {
         title: 'Collect this fine?',
         body: 'The payment is written against the loan. The book itself stays out until it is returned with its own button.',
         subject: [
           row?.student,
           row?.book,
-          typed ? formatNaira(typed) : `the full fine (${row?.fine ?? 'as it stands'})`,
+          typed
+            ? formatNaira(typed)
+            : `the full fine (${row?.fine ?? 'as it stands'})`,
         ]
           .filter(Boolean)
           .join(' · '),
         cta: 'Collect the fine',
         cancel: 'Go back',
-      }
+      };
     },
     run: async (values) => {
-      if (!row) throw new Error('That loan could not be loaded.')
-      const typed = parseNaira(String(values.amount ?? ''))
-      await libraryService.payFine(row.id, typed ? { amount: typed } : {})
-      dropCatalogue()
-      return { message: typed ? `${formatNaira(typed)} collected.` : 'Fine collected in full.' }
+      if (!row) throw new Error('That loan could not be loaded.');
+      const typed = parseNaira(String(values.amount ?? ''));
+      await libraryService.payFine(row.id, typed ? { amount: typed } : {});
+      dropCatalogue();
+      return {
+        message: typed
+          ? `${formatNaira(typed)} collected.`
+          : 'Fine collected in full.',
+      };
     },
-  }
+  };
 }
 
 /**
@@ -724,7 +818,7 @@ function collectFine(row?: Row): ActionDef {
  * No confirm: a correction commits no money and closes nothing.
  */
 function correctLoan(row?: Row): ActionDef {
-  const held = row?.due_raw ? new Date(row.due_raw) : undefined
+  const held = row?.due_raw ? new Date(row.due_raw) : undefined;
   return {
     kicker: 'School · Lending',
     title: 'Correct the record',
@@ -750,17 +844,17 @@ function correctLoan(row?: Row): ActionDef {
     footnote: 'Only the due date and condition change; the loan itself stands.',
     done: () => 'Loan corrected',
     run: async (values) => {
-      if (!row) throw new Error('That loan could not be loaded.')
-      const due = toApiDate(values.due_date as Date | undefined)
-      const condition = String(values.condition ?? '').trim()
+      if (!row) throw new Error('That loan could not be loaded.');
+      const due = toApiDate(values.due_date as Date | undefined);
+      const condition = String(values.condition ?? '').trim();
       await libraryService.correctLoan(row.id, {
         due_date: due,
         condition: condition || undefined,
-      })
-      dropCatalogue()
-      return { message: 'The record now reads as corrected.' }
+      });
+      dropCatalogue();
+      return { message: 'The record now reads as corrected.' };
     },
-  }
+  };
 }
 
 /**
@@ -781,8 +875,8 @@ function correctLoan(row?: Row): ActionDef {
  * moved from the promote flow, not from here.
  */
 async function placeStudents(row?: Row): Promise<ActionDef> {
-  const armId = String(row?.id ?? '')
-  const { unassigned_in_class } = await classArmsService.students(armId)
+  const armId = String(row?.id ?? '');
+  const { unassigned_in_class } = await classArmsService.students(armId);
 
   return {
     kicker: 'Academics · Class arms',
@@ -812,20 +906,26 @@ async function placeStudents(row?: Row): Promise<ActionDef> {
     cta: 'Place these students',
     footnote: 'Nothing moves until you press this.',
     run: async (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
-      const { assigned, failed } = await classArmsService.assignStudents(armId, {
-        student_ids: picked.map(Number),
-      })
+      const picked = (values.picks as string[] | undefined) ?? [];
+      const { assigned, failed } = await classArmsService.assignStudents(
+        armId,
+        {
+          student_ids: picked.map(Number),
+        },
+      );
       return {
         message: `${assigned.length} ${assigned.length === 1 ? 'student' : 'students'} placed in ${row?.arm ?? 'the arm'}`,
         failures: failed.map((one) => {
-          const student = unassigned_in_class.find((each) => each.id === one.student_id)
-          return `${student ? studentName(student) : `Student ${one.student_id}`} — ${one.reason}`
+          const student = unassigned_in_class.find(
+            (each) => each.id === one.student_id,
+          );
+          return `${student ? studentName(student) : `Student ${one.student_id}`} — ${one.reason}`;
         }),
-      }
+      };
     },
-    done: (picked) => `${picked} ${picked === 1 ? 'student' : 'students'} placed in the arm`,
-  }
+    done: (picked) =>
+      `${picked} ${picked === 1 ? 'student' : 'students'} placed in the arm`,
+  };
 }
 
 /**
@@ -837,10 +937,10 @@ async function placeStudents(row?: Row): Promise<ActionDef> {
  * stops a subject ending up taught to nobody — it is shown ticked and said so.
  */
 async function teachTo(row?: Row): Promise<ActionDef> {
-  const homeId = String(row?.department_id ?? '')
+  const homeId = String(row?.department_id ?? '');
   const classes = await departmentsService
     .list({ limit: ALL_CLASSES })
-    .then((page) => page.items)
+    .then((page) => page.items);
 
   return {
     kicker: 'Academics · Subjects',
@@ -867,7 +967,9 @@ async function teachTo(row?: Row): Promise<ActionDef> {
               : department.deptcode,
         count: 0,
       })),
-      preselected: row?.classIds ? row.classIds.split(',').filter(Boolean) : undefined,
+      preselected: row?.classIds
+        ? row.classIds.split(',').filter(Boolean)
+        : undefined,
       note: 'The home class stays whether it is ticked or not — a subject can never end up taught to nobody.',
       requiredMessage: 'Pick at least one class.',
     },
@@ -875,16 +977,17 @@ async function teachTo(row?: Row): Promise<ActionDef> {
     cta: 'Save these classes',
     footnote: 'Nothing changes until you press this.',
     run: async (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
+      const picked = (values.picks as string[] | undefined) ?? [];
       await subjectsService.setClasses(String(row?.id ?? ''), {
         classes: picked.map(Number),
-      })
+      });
       return {
         message: `${row?.name ?? 'The subject'} is taught to ${picked.length} ${picked.length === 1 ? 'class' : 'classes'}`,
-      }
+      };
     },
-    done: (picked) => `Taught to ${picked} ${picked === 1 ? 'class' : 'classes'}`,
-  }
+    done: (picked) =>
+      `Taught to ${picked} ${picked === 1 ? 'class' : 'classes'}`,
+  };
 }
 
 /**
@@ -897,9 +1000,9 @@ async function teachTo(row?: Row): Promise<ActionDef> {
  * it is taken away.
  */
 async function setPrivileges(row?: Row): Promise<ActionDef> {
-  const id = parseStaffKey(String(row?.id ?? '')).id
-  const { admin, available } = await adminsService.privileges(id)
-  const held = (admin.privileges ?? []).map((one) => String(one.id))
+  const id = parseStaffKey(String(row?.id ?? '')).id;
+  const { admin, available } = await adminsService.privileges(id);
+  const held = (admin.privileges ?? []).map((one) => String(one.id));
 
   return {
     kicker: 'Staff · Administrators',
@@ -926,17 +1029,17 @@ async function setPrivileges(row?: Row): Promise<ActionDef> {
     cta: 'Save these privileges',
     footnote: 'Nothing changes until you press this.',
     run: async (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
-      await adminsService.setPrivileges(id, { privileges: picked.map(Number) })
+      const picked = (values.picks as string[] | undefined) ?? [];
+      await adminsService.setPrivileges(id, { privileges: picked.map(Number) });
       return {
         message: picked.length
           ? `${row?.name ?? 'The administrator'} holds ${picked.length} ${picked.length === 1 ? 'privilege' : 'privileges'}`
           : `${row?.name ?? 'The administrator'} holds no privileges`,
-      }
+      };
     },
     done: (picked) =>
       picked ? `${picked} privileges saved` : 'Every privilege was taken away',
-  }
+  };
 }
 
 /**
@@ -949,11 +1052,11 @@ async function setPrivileges(row?: Row): Promise<ActionDef> {
  * classes.
  */
 async function assignSubjects(row?: Row): Promise<ActionDef> {
-  const id = parseStaffKey(String(row?.id ?? '')).id
+  const id = parseStaffKey(String(row?.id ?? '')).id;
   const subjects = await subjectsService
     .list({ limit: ALL_SUBJECTS })
-    .then((page) => page.items)
-  const held = row?.subjectIds ? row.subjectIds.split(',').filter(Boolean) : []
+    .then((page) => page.items);
+  const held = row?.subjectIds ? row.subjectIds.split(',').filter(Boolean) : [];
 
   return {
     kicker: 'Staff · Teachers',
@@ -963,7 +1066,10 @@ async function assignSubjects(row?: Row): Promise<ActionDef> {
     summary: [
       { label: 'Teacher', value: row?.name ?? DASH },
       { label: 'Class', value: row?.department ?? DASH },
-      { label: 'Carries now', value: held.length ? String(held.length) : 'None' },
+      {
+        label: 'Carries now',
+        value: held.length ? String(held.length) : 'None',
+      },
     ],
     picker: {
       title: 'Subjects',
@@ -971,7 +1077,10 @@ async function assignSubjects(row?: Row): Promise<ActionDef> {
         key: String(subject.id),
         // The class, because a school teaches the same subject to several and
         // the name alone would offer the reader five identical rows.
-        meta: [subject.department, subject.is_active === false ? 'Inactive' : '']
+        meta: [
+          subject.department,
+          subject.is_active === false ? 'Inactive' : '',
+        ]
           .filter(Boolean)
           .join(' · '),
         label: subject.name,
@@ -984,18 +1093,22 @@ async function assignSubjects(row?: Row): Promise<ActionDef> {
     cta: 'Save these subjects',
     footnote: 'Nothing changes until you press this.',
     run: async (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
-      await teachersService.assignSubjects(id, { subjects: picked.map(Number) })
-      const who = row?.name ?? 'The teacher'
+      const picked = (values.picks as string[] | undefined) ?? [];
+      await teachersService.assignSubjects(id, {
+        subjects: picked.map(Number),
+      });
+      const who = row?.name ?? 'The teacher';
       return {
         message: picked.length
           ? `${who} carries ${picked.length} ${picked.length === 1 ? 'subject' : 'subjects'}`
           : `${who} carries no subjects`,
-      }
+      };
     },
     done: (picked) =>
-      picked ? `${picked} ${picked === 1 ? 'subject' : 'subjects'} saved` : 'Every subject was taken off',
-  }
+      picked
+        ? `${picked} ${picked === 1 ? 'subject' : 'subjects'} saved`
+        : 'Every subject was taken off',
+  };
 }
 
 /**
@@ -1013,16 +1126,15 @@ async function assignSubjects(row?: Row): Promise<ActionDef> {
 async function mailStaff(row?: Row): Promise<ActionDef> {
   const teachers = await teachersService
     .list({ limit: ALL_TEACHERS })
-    .then((page) => page.items)
+    .then((page) => page.items);
 
   return {
     kicker: 'Staff · Teachers',
-    title: 'Write to staff',
-    description:
-      'One message, to everyone ticked. It goes to the address each of them signs in with.',
+    title: 'Message staffs',
+    description: 'Write to one or more staffs',
     summary: [
       { label: 'On the register', value: String(teachers.length) },
-      { label: 'Opened from', value: row?.name ?? 'The register' },
+      { label: 'Opened', value: row?.name ?? 'The register' },
     ],
     picker: {
       title: 'Who it goes to',
@@ -1051,48 +1163,52 @@ async function mailStaff(row?: Row): Promise<ActionDef> {
         label: 'Message',
         required: true,
         wide: true,
-        multiline: true,
+        // Written rather than typed, the same as the teacher's own message
+        // form beside it — `src/portals/teacher/features/messages`. Both post
+        // to the same kind of endpoint and both send HTML.
+        rich: true,
         placeholder: 'What you want them to know.',
       },
     ],
     tally: (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
+      const picked = (values.picks as string[] | undefined) ?? [];
       return [
         {
           label: 'Going to',
           value: `${picked.length} ${picked.length === 1 ? 'person' : 'people'}`,
         },
-      ]
+      ];
     },
     cta: 'Send this email',
     footnote: 'Sent the moment you press this.',
     confirm: (_total, values) => {
-      const picked = (values?.picks as string[] | undefined) ?? []
+      const picked = (values?.picks as string[] | undefined) ?? [];
       return {
         title: 'Send this email?',
         body: 'It leaves the school straight away and cannot be recalled. Check who it is going to and what it says.',
         subject: `${picked.length} ${picked.length === 1 ? 'person' : 'people'} · ${String(values?.subject ?? '').trim() || 'No subject'}`,
         cta: 'Send it',
         cancel: 'Go back',
-      }
+      };
     },
     run: async (values) => {
-      const picked = (values.picks as string[] | undefined) ?? []
+      const picked = (values.picks as string[] | undefined) ?? [];
       await teachersService.mail({
         user_ids: picked.map(Number),
         subject: String(values.subject ?? '').trim(),
         message: String(values.message ?? '').trim(),
-      })
+      });
       return {
         message: `Email sent to ${picked.length} ${picked.length === 1 ? 'person' : 'people'}`,
-      }
+      };
     },
-    done: (picked) => `Email sent to ${picked} ${picked === 1 ? 'person' : 'people'}`,
-  }
+    done: (picked) =>
+      `Email sent to ${picked} ${picked === 1 ? 'person' : 'people'}`,
+  };
 }
 
 /** Both of a teacher's flows, on the mixed register as on their own. */
-const isTeacher = (record: Row) => parseStaffKey(record.id).kind === 'teacher'
+const isTeacher = (record: Row) => parseStaffKey(record.id).kind === 'teacher';
 
 const teacherFlows: AdminFlow[] = [
   {
@@ -1102,7 +1218,7 @@ const teacherFlows: AdminFlow[] = [
     build: assignSubjects,
   },
   { name: 'mail', label: 'Send email', when: isTeacher, build: mailStaff },
-]
+];
 
 /**
  * What a batch is, for the two flows below: one subject, for one class, in one
@@ -1111,9 +1227,9 @@ const teacherFlows: AdminFlow[] = [
  * on a half-read key would sign off somebody else's marks.
  */
 function batchOf(row?: Row) {
-  const key = row && parseBatchId(row.id)
-  if (!key) throw new Error('That batch could not be read.')
-  return key
+  const key = row && parseBatchId(row.id);
+  if (!key) throw new Error('That batch could not be read.');
+  return key;
 }
 
 /**
@@ -1129,11 +1245,13 @@ function batchSummary(row?: Row) {
     { label: 'Students', value: row?.students },
   ].filter((tile): tile is { label: string; value: string } =>
     Boolean(tile.value && tile.value !== DASH),
-  )
+  );
 }
 
 const batchSubject = (row?: Row) =>
-  [row?.subject, row?.klass, row?.term].filter((part) => part && part !== DASH).join(' · ')
+  [row?.subject, row?.klass, row?.term]
+    .filter((part) => part && part !== DASH)
+    .join(' · ');
 
 /**
  * Releasing a batch.
@@ -1162,10 +1280,10 @@ function releaseBatch(row?: Row): ActionDef {
       cancel: 'Go back',
     }),
     run: async () => {
-      await resultsService.approve(batchOf(row))
-      return { message: 'Batch released' }
+      await resultsService.approve(batchOf(row));
+      return { message: 'Batch released' };
     },
-  }
+  };
 }
 
 /**
@@ -1194,16 +1312,17 @@ function sendBatchBack(row?: Row): ActionDef {
       },
     ],
     cta: 'Send it back',
-    footnote: 'The batch reappears here once the teacher has filed the corrections.',
+    footnote:
+      'The batch reappears here once the teacher has filed the corrections.',
     done: () => 'Batch sent back',
     run: async (values) => {
       await resultsService.reject({
         ...batchOf(row),
         reason: String(values.reason ?? '').trim(),
-      })
-      return { message: 'Batch sent back' }
+      });
+      return { message: 'Batch sent back' };
     },
-  }
+  };
 }
 
 export const adminFlows: Record<string, AdminFlow[]> = {
@@ -1216,7 +1335,8 @@ export const adminFlows: Record<string, AdminFlow[]> = {
     {
       name: 'privileges',
       label: 'Set privileges',
-      allowed: (record) => superAdminSignedIn() && !isSuperAdminRole(record?.role),
+      allowed: (record) =>
+        superAdminSignedIn() && !isSuperAdminRole(record?.role),
       deniedBody: (record) =>
         isSuperAdminRole(record?.role)
           ? 'A super administrator holds every section of the portal, and that is not edited from here — taking one away could leave the school with no account able to put it back. Their role is what decides it, and the role is changed on the login.'
@@ -1230,7 +1350,9 @@ export const adminFlows: Record<string, AdminFlow[]> = {
   'staff-teachers': teacherFlows,
   // Record-scoped, not `fromList`: a payment needs the invoice it settles,
   // and the queue's own search is how that invoice is found.
-  collect: [{ name: 'pay', label: 'Take a payment', when: payAction, build: payment }],
+  collect: [
+    { name: 'pay', label: 'Take a payment', when: payAction, build: payment },
+  ],
   arms: [{ name: 'place', label: 'Place students', build: placeStudents }],
   subjects: [{ name: 'classes', label: 'Teach to classes', build: teachTo }],
   students: [{ name: 'move', label: 'Promote or transfer', build: promote }],
@@ -1285,4 +1407,4 @@ export const adminFlows: Record<string, AdminFlow[]> = {
     },
     { name: 'correct', label: 'Correct the record', build: correctLoan },
   ],
-}
+};

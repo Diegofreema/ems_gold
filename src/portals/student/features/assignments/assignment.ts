@@ -5,6 +5,7 @@ import type {
 } from '../../../../api/assignments/types.ts'
 import { BLANK } from '../../../../features/collections/blank.ts'
 import { schoolTime, when } from '../../../../features/collections/when.ts'
+import { hasText } from '../../../../features/collections/rich-text.ts'
 import { text } from '../../../../features/profile/record.ts'
 
 /**
@@ -30,10 +31,15 @@ export function isTheory(question: Question): boolean {
 /**
  * Whether this question has been answered. Whitespace typed into a theory box
  * is not an answer — it would be sent, stored and marked as one.
+ *
+ * `hasText` rather than a trim, because the theory box is the editor: a
+ * student who typed a sentence and deleted it leaves `<p></p>` behind, which
+ * is a non-empty string and would have counted on the progress line, passed
+ * the "you have not answered everything" check, and been filed as an answer.
  */
 export function isAnswered(draft: Draft, question: Question): boolean {
   const answer = draft[question.id]
-  if (typeof answer === 'string') return answer.trim().length > 0
+  if (typeof answer === 'string') return hasText(answer)
   return answer !== undefined
 }
 

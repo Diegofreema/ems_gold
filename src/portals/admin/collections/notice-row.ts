@@ -1,6 +1,5 @@
 import type { Notice, NoticeAudience } from '../../../api/notifications/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
-import { plainText } from '../../../features/collections/rich-text.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { when } from '../../../features/collections/when.ts'
 
@@ -60,8 +59,16 @@ export function noticeRow(notice: Notice): Row {
     views: String(notice.viewcount ?? 0),
     status: text(notice.status),
 
-    // Read by the record panel and the edit form rather than the table.
-    message: plainText(notice.message ?? ''),
+    /*
+     * Read by the record panel and the edit form rather than the table, and
+     * kept **as the office wrote it**. Stripping the markup here cost the
+     * formatting twice over: the panel drew a notice's headings and lists as
+     * one flat paragraph, and the edit form loaded the flattened copy into the
+     * editor — so opening a notice and saving it destroyed the formatting for
+     * good. The register never shows this field, and the search box already
+     * matches on `plainText`, so there is nothing left that wanted it stripped.
+     */
+    message: notice.message ?? '',
     postedBy: text(notice.posted_by),
     raised: notice.is_automatic ? 'Automatically, by an assignment being set' : 'By hand',
     // What the form submits, kept beside the words the table shows.

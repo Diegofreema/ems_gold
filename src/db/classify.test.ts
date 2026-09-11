@@ -10,8 +10,20 @@ test('a connection that was never there is worth trying again', () => {
 })
 
 test('a refused token stops the queue rather than failing the work in it', () => {
-  assert.equal(classify(new ApiError(401, 'Unauthenticated.')), 'auth')
-  assert.equal(classify(new ApiError(403, 'This endpoint is restricted to administrators.')), 'auth')
+  assert.equal(classify(new ApiError(401, 'Authentication required. Send a valid bearer token.')), 'auth')
+})
+
+test('a 403 is this row refused, not this session refused', () => {
+  // The API answers 401 for a token it will not take and keeps 403 for what
+  // this account may not do to this particular row. Reading 403 as an auth
+  // failure paused the whole drain for the rest of the session over one write
+  // the school was never going to accept, with the banner still calling it
+  // "still being sent" and "Send now" returning at the pause without asking.
+  assert.equal(
+    classify(new ApiError(403, 'You cannot start a conversation with that person.')),
+    'terminal',
+  )
+  assert.equal(classify(new ApiError(403, 'This class is not yours to mark.')), 'terminal')
 })
 
 test('the school being unwell is temporary; the school saying no is not', () => {

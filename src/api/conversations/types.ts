@@ -96,19 +96,44 @@ export type InboxParams = {
 }
 
 /**
- * `GET /conversations/{id}` — participants and the messages themselves.
+ * One message on a thread. Read live on 2026-09-11.
  *
- * **Never fired.** Which key holds the messages, and what a message carries,
- * is exactly what nobody has seen, so the answer is handed on whole rather
- * than narrowed to a guessed field. The one thing the endpoint's own
- * description promises is that **opening a thread marks it read** — so this
- * is a read that writes, and like `GET /notifications/{id}` it must never sit
- * in a route loader, a prefetch, or anything react-query might retry.
+ * `mine` is the server's own answer to "did this account write it", which is
+ * better than the one this app worked out for itself: the school knows which
+ * login is calling, and a reader whose `user_id` is missing from the session
+ * would otherwise have every message drawn as somebody else's.
+ */
+export type ConversationMessage = {
+  id: number
+  user_id: number
+  /** The sender's name, already assembled. */
+  from: string
+  mine: boolean
+  body: string
+  /** Formatted for a reader, not ISO — see `last_message_at`. */
+  sent_at: string
+}
+
+/**
+ * `GET /conversations/{id}` — the thread, who is on it, and what was said.
+ *
+ * **The messages are one field of an answer that wraps them**, which is what
+ * this type exists to record: the payload is `{ conversation: { …, messages:
+ * [...] } }`, and reading `messages` off the top level — which this app did
+ * until 2026-09-11 — finds nothing and draws every thread in every portal as
+ * one it could not display.
+ *
+ * The one thing the endpoint's own description promises is that **opening a
+ * thread marks it read** — so this is a read that writes, and like
+ * `GET /notifications/{id}` it must never sit in a route loader, a prefetch,
+ * or anything react-query might retry.
  *
  * Anybody who is neither a participant nor an administrator gets a 404 rather
  * than a 403: they have no business learning the thread exists.
  */
-export type ConversationThread = Record<string, unknown>
+export type ConversationThread = {
+  conversation?: ConversationSummary & { messages?: ConversationMessage[] }
+}
 
 /** What `POST /conversations` takes. Subject and body are both required. */
 export type StartConversationBody = {

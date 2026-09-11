@@ -7,7 +7,7 @@ import { cascadeFrom, nextOp, substitute, unresolved, type OutboxOp } from './ou
 import { onlyOneTab } from './one-tab'
 import { handlerFor } from './registry'
 import { idMap, isStoreReady, outbox, resolvedIds, storeReady } from './store'
-import { announceFailed, announceHeld, announceNote, announceSaved, GRACE_MS } from './toast'
+import { announceFailed, announceHeld, announceNote, announceSaved } from './toast'
 
 export type EnqueueSpec = {
   /** A name registered in `registry.ts`. */
@@ -29,7 +29,8 @@ export type EnqueueSpec = {
  *
  * The whole queue stops rather than each op failing in turn: the work is fine,
  * the session is not, and burning thirty attendance marks against a dead token
- * would turn a sign-in problem into lost work. Cleared by a fresh sign-in.
+ * would turn a sign-in problem into lost work. Cleared by a fresh sign-in, and
+ * by somebody pressing "Send now" — see `sendNow`.
  */
 let pausedForAuth = false
 let draining = false
@@ -94,32 +95,61 @@ export function enqueue(spec: EnqueueSpec): OutboxOp {
 }
 
 /**
- * Says the ordinary sentence when the write lands promptly, and the longer one
- * when it does not.
+ * Every write is owed exactly one sentence, and this decides which.
+ *
+ * It used to be decided by a stopwatch: the queue waited 1.2 seconds and, if
+ * the write had not landed by then, told the reader it was being kept on the
+ * device. That read the wrong thing off the clock. A round trip to this school
+ * takes about a second on a perfectly good connection and longer for anything
+ * that writes, so an office with full signal was told its work had been held
+ * offline nearly every time it saved anything — which is both untrue and
+ * exactly the sentence that makes somebody distrust the rest of the screen.
+ * Worse, the op was never taken off the pending list, so when it did land a
+ * second toast said the opposite of the first.
+ *
+ * Slowness is not a failure. So nothing is said about the device until the
+ * write has actually been deferred, which is knowable rather than guessable:
+ * the device is offline when it is written, or the drain tried it and could
+ * not reach the school. In between, the write is simply in flight — and the
+ * bar under the header is already saying so, which is the right place for a
+ * sentence about work that has not settled yet.
  *
  * A screen that shows its own error keeps `ownsError` for the prompt case. Once
  * a write is in the queue there is no screen left to own anything, so a later
  * failure is announced by the drain regardless.
  */
 function announce(op: OutboxOp): void {
-  const settled = () => outbox().get(op.id) === undefined
-
-  if (navigator.onLine) {
-    setTimeout(() => {
-      if (settled()) return
-      announceHeld(op.toast)
-    }, GRACE_MS)
-
-    // The drain deletes the op when it lands, and announces then.
-    pendingAnnouncements.add(op.id)
+  // Known now, and nothing is going to be attempted: say so at once rather
+  // than leaving somebody with no answer at all.
+  if (!navigator.onLine) {
+    announceHeld(op.toast)
     return
   }
 
-  announceHeld(op.toast)
+  // Otherwise it is owed one, and what happens to it decides which: `landed`
+  // says it was sent, `deferred` says it is being kept.
+  pendingAnnouncements.add(op.id)
 }
 
-/** Ops still owed their success toast, if they land inside the grace window. */
+/**
+ * Ops still owed their one sentence.
+ *
+ * Membership is the right to speak, and it is taken by whoever speaks first —
+ * which is what stops a write that was held and then landed raising two
+ * toasts that contradict each other.
+ */
 const pendingAnnouncements = new Set<string>()
+
+/**
+ * Says the write is being kept, at the moment that becomes true.
+ *
+ * Only once. A queue serving out a backoff tries the same op every few
+ * seconds, and a reader does not need telling each time that the school is
+ * still out of reach — the bar under the header is holding that thought.
+ */
+function deferred(op: OutboxOp): void {
+  if (pendingAnnouncements.delete(op.id)) announceHeld(op.toast)
+}
 
 /**
  * Sends what it can, in the order it was done, and stops at the first thing it
@@ -250,6 +280,9 @@ function handleFailure(op: OutboxOp, error: unknown): boolean {
       draft.state = 'queued'
       draft.lastError = message
     })
+    // The school could not be reached, so the write is now genuinely being
+    // kept on the device — which is the one moment worth saying so.
+    deferred(op)
     return false
   }
 
@@ -314,6 +347,41 @@ export function retry(id: string): void {
     draft.nextAttemptAt = Date.now()
     draft.lastError = null
   })
+  // Through `sendNow` rather than `drain` for the same reason the banner's
+  // button is: a person pressing "try again" against a queue that is serving
+  // out a backoff, or paused on a token that has since been replaced, was
+  // pressing a button that returned at the first guard.
+  sendNow()
+}
+
+/**
+ * What a person means when they press "Send now": try it, now, whatever the
+ * queue had decided to do about it.
+ *
+ * `drain()` on its own could not honour that, and the button was dead in every
+ * state it was shown in. It returns at the `pausedForAuth` guard, which only a
+ * fresh sign-in cleared; and where the head of the queue is serving out a
+ * backoff, `nextOp` hands back nothing, so the pass runs and sends nothing.
+ * Both are right for the timer, which is asking on its own initiative. Neither
+ * is right for somebody who has looked at the banner and asked for it.
+ *
+ * So this clears both: the pause, because the token may well have been
+ * replaced since, and the waiting, because the person in front of it knows
+ * more about the connection than the backoff does. An attempt that fails for
+ * the reason it failed before costs one request and no work — an auth refusal
+ * burns no attempts and puts the pause straight back.
+ */
+export function sendNow(): void {
+  pausedForAuth = false
+
+  const now = Date.now()
+  for (const op of outbox().toArray) {
+    if (op.state !== 'queued' || op.nextAttemptAt <= now) continue
+    outbox().update(op.id, (draft) => {
+      draft.nextAttemptAt = now
+    })
+  }
+
   void drain()
 }
 

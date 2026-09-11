@@ -1,6 +1,7 @@
 import { MailOpen } from 'lucide-react'
 import type { ConversationSummary } from '@/api/conversations/types'
 import { Tag } from '@/components/common/tag'
+import { plainText } from '@/features/collections/rich-text'
 import { cn } from '@/lib/utils'
 import { threadHeading, withNames } from '../inbox'
 import { isQueuedThread } from '../queued'
@@ -44,6 +45,7 @@ export function ThreadList({
         const selected = thread.id === selectedId
         const queued = isQueuedThread(thread)
         const names = withNames(thread)
+        const preview = plainText(thread.last_message ?? '')
         return (
           <li key={thread.id}>
             <button
@@ -77,9 +79,16 @@ export function ThreadList({
                 </div>
               )}
 
-              {thread.last_message && (
+              {/*
+                Two lines of preview under the subject, so the markup comes off
+                rather than being drawn: a body is written in the editor now,
+                and the school echoes it back into `last_message` as it was
+                stored. Clamping HTML would have put `<p>` at the top of every
+                row in the list.
+              */}
+              {preview && (
                 <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                  {thread.last_message}
+                  {preview}
                 </p>
               )}
 

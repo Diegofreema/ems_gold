@@ -12,6 +12,9 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { staffKey } from '../../collections/staff-row'
 import { countLine, type Group, groups, MIN_TERM, summary, tooShort } from './search'
 
+/** How long the box waits after the last keystroke before asking the school. */
+const SETTLE_MS = 500
+
 /**
  * The office's one search box, across the student, guardian and staff registers.
  *
@@ -37,10 +40,22 @@ export function AdminSearchPage() {
     limit: parseAsString.withDefault('10'),
   })
 
-  // One request per settled term rather than one per keystroke. The hook keeps
-  // the previous answer on screen while the next is in flight, so a list never
-  // blanks into what reads as "no results" mid-typing.
-  const settled = useDebounced(state.q)
+  /*
+   * One request per settled term rather than one per keystroke, and a longer
+   * wait than the app's 300ms default.
+   *
+   * This box is the most expensive search in the portal — the school reads the
+   * whole of three registers for it, across names, registration numbers,
+   * e-mails, usernames and both guardians' phones — so a request thrown away
+   * because somebody was still typing costs more here than anywhere else. Half
+   * a second is about the gap between words in a name, which is the point at
+   * which an answer is worth asking for.
+   *
+   * The box itself stays on the live value; only what gets asked for lags. The
+   * hook also keeps the previous answer on screen while the next is in flight,
+   * so a list never blanks into what reads as "no results" mid-typing.
+   */
+  const settled = useDebounced(state.q, SETTLE_MS)
   const { data, isPending, isFetching, error } = useSearch({
     q: settled,
     limit: Number(state.limit) || 10,

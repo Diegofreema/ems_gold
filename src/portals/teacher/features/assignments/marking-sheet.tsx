@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-react';
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { FormProvider, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import type {
@@ -13,8 +13,8 @@ import { TileStrip } from '@/components/page/tile-strip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isRichText } from '@/features/collections/rich-text';
 import { useRecordForm } from '@/hooks/use-record-form';
-import { cn } from '@/lib/utils';
 import {
   answerKey,
   choiceCount,
@@ -28,6 +28,18 @@ import {
   runningTotal,
   wasRight,
 } from './marking';
+
+/**
+ * The reader is the editor with typing turned off, fetched only by a paper
+ * with a theory answer on it — and it is also what sanitises the answer: the
+ * markup is parsed against the schema in `@/components/editor/extensions`
+ * rather than set as HTML on an element.
+ */
+const RichTextView = lazy(() =>
+  import('@/components/editor/rich-text-view').then((module) => ({
+    default: module.RichTextView,
+  })),
+);
 
 /**
  * Marking one submission.
@@ -221,16 +233,7 @@ function AnswerCard({
 
       <div className="mt-3 pl-7 text-sm">
         {theory ? (
-          <p
-            className={cn(
-              'whitespace-pre-wrap',
-              answer.theory_answer?.trim()
-                ? 'text-foreground'
-                : 'text-muted-foreground',
-            )}
-          >
-            {answer.theory_answer?.trim() || 'Nothing was written.'}
-          </p>
+          <TheoryAnswer written={answer.theory_answer?.trim() ?? ''} />
         ) : (
           <div className="grid gap-1 text-muted-foreground">
             <div>
@@ -245,6 +248,30 @@ function AnswerCard({
       </div>
     </li>
   );
+}
+
+/**
+ * What the student wrote.
+ *
+ * The theory box is the editor now, so an answer sat since is HTML and one sat
+ * before it is the sentence they typed. Which it is has to be asked rather
+ * than assumed: drawing the first as text puts `<p>` in front of the teacher
+ * marking it, and drawing the second through the editor is a paragraph either
+ * way. `whitespace-pre-wrap` belongs to the plain branch alone — written
+ * markup carries its own paragraphs, and pre-wrap on top doubles every gap.
+ */
+function TheoryAnswer({ written }: { written: string }) {
+  if (!written) {
+    return <p className="text-muted-foreground">Nothing was written.</p>
+  }
+  if (isRichText(written)) {
+    return (
+      <Suspense fallback={<div className="h-5 animate-ems-fade" />}>
+        <RichTextView html={written} />
+      </Suspense>
+    )
+  }
+  return <p className="whitespace-pre-wrap text-foreground">{written}</p>
 }
 
 /** What this answer was worth to the student. Every answer carries one. */

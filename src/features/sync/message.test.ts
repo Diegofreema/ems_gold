@@ -29,6 +29,14 @@ test('anything needing a person outranks everything else', () => {
   assert.equal(said, '1 change needs your attention before it can be saved to the school.')
 })
 
+test('connected and waiting says only what it knows: the device is trying', () => {
+  // Not "to the school". The device has it and is trying; where the trying is
+  // what has gone wrong, naming the school reads as a delivery this sentence
+  // cannot promise.
+  assert.equal(state({ waiting: 1 }), '1 change is still being sent.')
+  assert.equal(state({ waiting: 4 }), '4 changes are still being sent.')
+})
+
 test('one reads as one and two read as two', () => {
   assert.match(state({ needsAnswer: 2 }), /^2 changes need your attention before they can/)
   assert.match(state({ online: false, waiting: 1 }), /1 change is saved on this device/)

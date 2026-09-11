@@ -1,4 +1,4 @@
-import { MessagesPage } from '@/features/messages/components/messages-page'
+import { MessagesPage } from '@/features/messages/components/messages-page';
 
 /**
  * The office's side of the in-app messages.
@@ -16,8 +16,8 @@ export function AdminMessagesPage() {
   return (
     <MessagesPage
       kicker="School"
-      description="Conversations between the office, the staff room and guardians. Administrators can read and close any thread — the office moderates these. Everything here is on this device, so it can be read with no connection, and a reply written offline sends itself when the signal comes back."
+      description="Conversations between the office, the staff room and guardians"
       canClose
     />
-  )
+  );
 }

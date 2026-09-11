@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { CircleAlert } from 'lucide-react'
 import { FormProvider } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -23,11 +23,24 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { formatNaira } from '@/lib/format'
 import { z } from 'zod'
+
 import { PickerList } from './picker-list'
 import { billing } from './total'
 import type { ActionDef, ActionField } from './types'
 
 type Values = Record<string, unknown>
+
+/**
+ * The editor is a large dependency and most flows are a figure and a date, so
+ * it is fetched only by a flow that actually asks for prose.
+ */
+const RichTextField = lazy(() =>
+  import('@/components/form/rich-text-field').then((module) => ({
+    // Bound to this form's value shape here: `lazy` cannot carry a generic
+    // through, so the type argument is applied at the import instead.
+    default: module.RichTextField<Values>,
+  })),
+)
 
 /**
  * The students the API would not move, and what it said about each. Shaped like
@@ -102,6 +115,18 @@ function renderField(field: ActionField) {
   if (field.money)
     return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.date) return <DateField<Values> key={field.key} {...shared} />
+  // The same branch a record form has, for the same reason: a flow that sends
+  // somebody prose asks for it in the editor, not in a textarea. Lazy, so a
+  // flow that asks for a figure never fetches it.
+  if (field.rich)
+    return (
+      <Suspense
+        key={field.key}
+        fallback={<div className="col-[1/-1] h-60 animate-ems-fade rounded-lg border border-input" />}
+      >
+        <RichTextField {...shared} span={2} placeholder={field.placeholder} />
+      </Suspense>
+    )
   if (field.searchFrom)
     return (
       <SearchSelectField<Values>

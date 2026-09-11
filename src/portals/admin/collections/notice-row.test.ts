@@ -34,13 +34,14 @@ test('a notice reads as one line of the office register', () => {
   assert.equal(row.recipients, 'students')
 })
 
-test('the message is flattened for the table, tags and all', () => {
-  const rich = noticeRow({
-    ...NOTICE,
-    message: '<p>School closes on <strong>Friday</strong>.</p><ul><li>Bring books</li></ul>',
-  })
-  assert.doesNotMatch(rich.message, /</)
-  assert.match(rich.message, /School closes on Friday/)
+test('the message is kept as the office wrote it', () => {
+  // It used to be flattened here, which cost the formatting twice: the record
+  // panel drew a notice's headings and lists as one paragraph, and the edit
+  // form loaded the flattened copy into the editor — so opening a notice and
+  // saving it destroyed the layout for good. The register never shows this
+  // field, and the search box matches on `plainText` of its own accord.
+  const written = '<p>School closes on <strong>Friday</strong>.</p><ul><li>Bring books</li></ul>'
+  assert.equal(noticeRow({ ...NOTICE, message: written }).message, written)
 })
 
 test('a notice limited to a class says which, and one that names none says so', () => {

@@ -124,7 +124,10 @@ export const notices: CollectionDef = {
   ],
   detail: [
     { key: 'title', label: 'Notice' },
-    { key: 'message', label: 'Message' },
+    // Written in the editor, so it is read back through it — the record panel
+    // draws the notice the way the office laid it out, rather than showing the
+    // tags to whoever opens the row.
+    { key: 'message', label: 'Message', rich: true },
     { key: 'audience', label: 'Audience' },
     { key: 'reach', label: 'Reach' },
     { key: 'status', label: 'Status' },

@@ -7,75 +7,118 @@ import {
   threadSubject,
 } from './thread.ts'
 
-test('messages are found under any of the candidate keys', () => {
-  for (const key of ['messages', 'conversation_messages', 'replies', 'items', 'posts']) {
-    const read = threadMessages({ [key]: [{ body: 'Hello' }] }, undefined)
-    assert.equal(read.length, 1, key)
-    assert.equal(read[0].body, 'Hello', key)
-  }
+/** The live answer, trimmed to what these read. Taken 2026-09-11. */
+const live = {
+  conversation: {
+    id: 36,
+    subject: 'Test',
+    status: 'open' as const,
+    student_id: null,
+    about: null,
+    with: [{ user_id: 351, name: 'Dr. IKECHUKWU AYOGU', role: 'Teacher' }],
+    last_message: 'This is a test message',
+    last_message_at: '9/11/26, 9:48 AM',
+    unread: 0,
+    messages: [
+      {
+        id: 61,
+        user_id: 1,
+        from: 'Chukwudi Aniegboka',
+        mine: true,
+        body: 'This is a test message',
+        sent_at: '9/11/26, 9:48 AM',
+      },
+    ],
+  },
+}
+
+test('the messages are read out of the envelope they arrive in', () => {
+  // The whole point of this file. `messages` is a field of `conversation`,
+  // not of the answer, and reading the top level found nothing — which drew
+  // every thread in every portal as one this app could not display.
+  const read = threadMessages(live, 1)
+  assert.equal(read.length, 1)
+  assert.equal(read[0].body, 'This is a test message')
+  assert.equal(read[0].senderName, 'Chukwudi Aniegboka')
+  assert.equal(read[0].at, '9/11/26, 9:48 AM')
+  assert.equal(read[0].key, '61')
 })
 
-test('the body is read for whichever field carries it', () => {
-  for (const key of ['body', 'message', 'content', 'text']) {
-    const [only] = threadMessages({ messages: [{ [key]: 'Good afternoon' }] }, undefined)
-    assert.equal(only.body, 'Good afternoon', key)
-  }
+test('a thread read off the top level is not a thread', () => {
+  assert.equal(isReadableThread({ messages: [] } as never), false)
+  assert.equal(isReadableThread(undefined), false)
+  assert.equal(isReadableThread({ conversation: { subject: 'x' } } as never), false)
+  assert.equal(isReadableThread({ conversation: { messages: [] } } as never), true)
 })
 
-test('a message written by the reader is theirs, and one by anybody else is not', () => {
-  const [mine, theirs] = threadMessages(
-    { messages: [{ user_id: 7, body: 'a' }, { user_id: 8, body: 'b' }] },
-    7,
-  )
+test("the school's own answer to whose message it is outranks ours", () => {
+  // It knows which login is calling; this device only knows which id the
+  // session happened to store. A reader with no id in the session would have
+  // had their own messages drawn as somebody else's.
+  const [only] = threadMessages(live, undefined)
+  assert.equal(only.mine, true)
+})
+
+test('without it, the sender is compared with the reader', () => {
+  const doc = {
+    conversation: {
+      messages: [
+        { id: 1, user_id: 7, body: 'a' },
+        { id: 2, user_id: 8, body: 'b' },
+      ],
+    },
+  } as never
+
+  const [mine, theirs] = threadMessages(doc, 7)
   assert.equal(mine.mine, true)
   assert.equal(theirs.mine, false)
-})
-
-test('with no reader id nothing is claimed as the reader’s own', () => {
-  const [only] = threadMessages({ messages: [{ user_id: 7, body: 'a' }] }, undefined)
-  assert.equal(only.mine, false)
-})
-
-test('an expanded sender is read for its id and its name', () => {
-  const [only] = threadMessages(
-    { messages: [{ sender: { id: 12, name: 'Ada Obi' }, body: 'a' }] },
-    12,
-  )
-  assert.equal(only.senderId, 12)
-  assert.equal(only.senderName, 'Ada Obi')
-  assert.equal(only.mine, true)
+  // And with nobody to compare against, nothing is claimed as the reader's.
+  assert.equal(threadMessages(doc, undefined)[0].mine, false)
 })
 
 test('the order the server sent is the order kept', () => {
   const read = threadMessages(
-    { messages: [{ id: 3, body: 'third' }, { id: 1, body: 'first' }] },
+    {
+      conversation: {
+        messages: [
+          { id: 3, body: 'third' },
+          { id: 1, body: 'first' },
+        ],
+      },
+    } as never,
     undefined,
   )
   assert.deepEqual(read.map((row) => row.body), ['third', 'first'])
 })
 
 test('a row with no id still gets a stable key', () => {
-  const read = threadMessages({ messages: [{ body: 'a' }, { body: 'b' }] }, undefined)
+  const read = threadMessages(
+    { conversation: { messages: [{ body: 'a' }, { body: 'b' }] } } as never,
+    undefined,
+  )
   assert.deepEqual(read.map((row) => row.key), ['row-0', 'row-1'])
 })
 
 test('a missing field reads as empty, never as the blank dash', () => {
-  const [only] = threadMessages({ messages: [{ body: 'a' }] }, undefined)
+  const [only] = threadMessages(
+    { conversation: { messages: [{ id: 1, body: 'a' }] } } as never,
+    undefined,
+  )
   assert.equal(only.at, '')
   assert.equal(only.senderName, '')
-})
-
-test('a shape with no message array anywhere is not a readable thread', () => {
-  assert.equal(isReadableThread({ conversation: { subject: 'x' } }), false)
-  assert.equal(isReadableThread(undefined), false)
-  assert.equal(isReadableThread({ messages: [] }), true)
-  assert.deepEqual(threadMessages({ conversation: {} }, 1), [])
+  assert.equal(only.senderId, undefined)
 })
 
 test('the subject and status fall back to what the inbox row already said', () => {
-  assert.equal(threadSubject({ messages: [] }, 'fee payment'), 'fee payment')
-  assert.equal(threadSubject({ subject: 'Homework' }, 'fee payment'), 'Homework')
-  assert.equal(threadStatus({ messages: [] }, 'open'), 'open')
-  assert.equal(threadStatus({ status: 'closed' }, 'open'), 'closed')
-  assert.equal(threadStatus({ status: 'anything else' }, 'open'), 'open')
+  assert.equal(threadSubject(live, 'fee payment'), 'Test')
+  assert.equal(
+    threadSubject({ conversation: { messages: [] } } as never, 'fee payment'),
+    'fee payment',
+  )
+  assert.equal(threadStatus(live, 'closed'), 'open')
+  assert.equal(threadStatus({ conversation: { messages: [] } } as never, 'open'), 'open')
+  assert.equal(
+    threadStatus({ conversation: { status: 'anything else' } } as never, 'open'),
+    'open',
+  )
 })

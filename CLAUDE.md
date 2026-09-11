@@ -151,8 +151,16 @@ Every mutation is applied locally at once and enqueued in the durable outbox (`s
   of work already numbered. The first loses a register; the second reorders one. Both are silent.
 - Ops send strictly in `seq` order across every collection. A retryable failure blocks the head; a
   terminal one fails that op and cascades to whatever depended on it.
-- 401/403 pauses the whole drain and burns no attempts. An expired token must not turn thirty saved
-  attendance marks into thirty permanent failures.
+- **401 pauses the whole drain and burns no attempts; 403 does not.** An expired token must not turn
+  thirty saved attendance marks into thirty permanent failures — but this API answers 401 for a
+  token it will not take and keeps 403 for what this account may not do to *this row*: a class you
+  do not teach, a child who is not yours, somebody not on your contacts list. Pausing on those wedged
+  the queue for the rest of the session behind one write the school was never going to accept, with
+  the banner still calling it "still being sent". A 403 fails its own op, with the school's sentence,
+  and the queue carries on.
+- **"Send now" means now.** The banner's button and the drawer's retry go through `sendNow()`, not
+  `drain()`: a plain drain returns at the auth pause and skips a head that is serving out a backoff,
+  which are exactly the states the button is shown in, so it did nothing in every one of them.
 - **Handlers are registered at boot, in `src/db/handlers/`, never by the portal that uses them.** A
   register marked on Tuesday afternoon is sent by whatever code is running on Wednesday morning, and
   a drain that ran before the teacher's bundle loaded would find the op naming a handler this build
@@ -273,8 +281,16 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   the existing `src/api/<domain>/service.ts` functions rather than re-implementing requests.
 - **Toasts are declarative.** A mutation says `meta: { success }` and the mutation cache in
   `src/lib/query-client.ts` raises it; `ownsError` suppresses the error toast where the screen shows
-  its own. The outbox raises the same sentence, adding "saved on this device" only when the write
-  actually had to wait.
+  its own. The outbox raises the same sentence, and **every write is owed exactly one** — whoever
+  speaks first takes the right to, so a write that was held and then landed cannot raise two that
+  contradict each other.
+- **"Saved on this device" is said when it is true, never on a stopwatch.** It used to be raised by
+  a 1.2s timer, and a round trip to this school is about a second on a good connection — so an
+  office with full signal was told its work had been held offline nearly every time it saved
+  anything. Slowness is not a failure. The sentence is raised at the two moments the write is
+  genuinely deferred: the device is offline when it is written, or the drain tried it and could not
+  reach the school. In between it is simply in flight, and the bar under the header is the thing
+  that says so.
 - **`Register` is augmented on `@tanstack/query-core`, not `@tanstack/react-query`.**
   `@tanstack/query-db-collection` augments it at its own home to add `queryMeta`, and once it does,
   an augmentation aimed at the re-exporting module is silently dropped — every `meta.success` goes
@@ -292,6 +308,20 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   are thirty ops, and thirty full resyncs would ask the school the same questions thirty times.
 - **A shell route must never throw.** Its error boundary replaces the shell, and a missing pending
   component blanks the page. Portal route loaders start their work and swallow the failure.
+- **A field somebody writes prose into is the editor, not a textarea.**
+  `RichTextEditor` (`src/components/editor/`) on the way in, `RichTextView` on the way back, both
+  lazy and both against the one schema in `extensions.ts` — which is also the sanitiser, since a
+  stored body is parsed against it rather than set as HTML on an element. A record form asks for one
+  with `rich: true`, and a field declared `rich` in a `form` must be declared `rich` in the `detail`
+  beside it or the panel draws the tags. What is *not* the editor: an address, a teller reference,
+  an arm's description — short structured values, where HTML is noise the API then has to store.
+  Three rules follow. **Emptiness is `hasText`, never a trim** — an emptied editor hands back
+  `<p></p>`, which is a non-empty string and passes every check made on one. **A preview is
+  `plainText`** — an inbox row, a notification, a search haystack; anything that clamps prose to a
+  line strips the markup rather than drawing it. And **a field that holds both asks which it is**
+  with `isRichText`: the same column carries the sentence somebody typed before the editor was put
+  there and the HTML written since, so drawing the first through the editor is harmless and drawing
+  the second as text shows `<p>` to a parent.
 - **`src/index.css` is the only source of design truth** — the hybrid token system, soft raised
   surfaces, and danger and success as the only colours beside brand.
 - **Tests are `node --test` on pure logic.** A module under test uses relative imports with explicit

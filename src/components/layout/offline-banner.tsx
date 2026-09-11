@@ -1,6 +1,6 @@
 import { AlertTriangle, WifiOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { drain, setDrawerOpener } from '@/db/drain'
+import { sendNow, setDrawerOpener } from '@/db/drain'
 import { useSyncStatus } from '@/db/status'
 import { PendingWork } from '@/features/sync/components/pending-work'
 import { syncMessage } from '@/features/sync/message'
@@ -57,9 +57,15 @@ export function OfflineBanner() {
           )}
 
           {online && held && needsAnswer === 0 && (
+            /*
+              `sendNow`, not `drain`. A plain drain returns at its own guards —
+              the auth pause, and the head of the queue serving out a backoff —
+              which are exactly the states this button is shown in, so it used
+              to do nothing at all in every one of them.
+            */
             <button
               type="button"
-              onClick={() => void drain()}
+              onClick={() => sendNow()}
               className="cursor-pointer rounded-md border border-white px-3.5 py-2 font-heading text-sm font-extrabold text-white"
             >
               Send now

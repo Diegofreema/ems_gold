@@ -27,8 +27,8 @@ import {
   TrendingUp,
   UserPlus,
   Users,
-} from 'lucide-react'
-import type { NavGroup } from '@/lib/portal'
+} from 'lucide-react';
+import type { NavGroup } from '@/lib/portal';
 
 export const adminNav: NavGroup[] = [
   {
@@ -36,7 +36,7 @@ export const adminNav: NavGroup[] = [
       { to: '/admin', label: 'Dashboard', icon: LayoutGrid },
       // One box across students, guardians and staff — for the telephone call
       // where whoever is being asked about could be any of the three.
-      { to: '/admin/search', label: 'Search everyone', icon: Search },
+      { to: '/admin/search', label: 'Search', icon: Search },
       { to: '/admin/notifications', label: 'Notifications', icon: Bell },
     ],
   },
@@ -71,7 +71,11 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/calendar', label: 'Sessions & terms', icon: CalendarDays },
       { to: '/admin/timetable', label: 'Timetable', icon: CalendarClock },
       { to: '/admin/results', label: 'Results', icon: ClipboardCheck },
-      { to: '/admin/result-queue', label: 'Result approvals', icon: SquareCheckBig },
+      {
+        to: '/admin/result-queue',
+        label: 'Result approvals',
+        icon: SquareCheckBig,
+      },
       { to: '/admin/class-sheet', label: 'Class broadsheet', icon: Table2 },
       { to: '/admin/performance', label: 'Performance', icon: TrendingUp },
     ],
@@ -101,4 +105,4 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/analytics', label: 'Analytics', icon: ChartColumn },
     ],
   },
-]
+];

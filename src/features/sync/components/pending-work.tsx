@@ -16,7 +16,14 @@ function describe(op: OutboxOp): { line: string; tone: 'waiting' | 'attention' }
   switch (op.state) {
     case 'queued':
     case 'sending':
-      return { line: 'Waiting to send', tone: 'waiting' }
+      // A waiting op that has already been refused once carries the reason,
+      // and saying only "Waiting to send" left the one screen that could
+      // explain the wait explaining nothing — a person looking at a message
+      // that would not go had no way to find out why not.
+      return {
+        line: op.lastError ? `Waiting to try again — ${op.lastError}` : 'Waiting to send',
+        tone: 'waiting',
+      }
     case 'needs-review':
       return {
         line: op.lastError ?? 'This may already have been saved. Check before sending it again.',

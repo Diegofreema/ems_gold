@@ -3,24 +3,19 @@ import { errorMessage } from '@/lib/errors'
 import type { MutationToast } from '@/lib/mutation-toast'
 
 /**
- * How long a write gets to reach the school before the reader is told it is
- * being kept on the device.
- *
- * The common case is somebody in the office with a connection, and for them
- * this should read exactly as it does today — one sentence, no mention of
- * queues or devices. So the queue waits a moment before saying anything about
- * itself.
- */
-export const GRACE_MS = 1_200
-
-/**
  * The suffix, built in one place rather than written into each definition.
  *
  * The sentence in front of it is the same one the mutation cache raises for
  * every write that has not been migrated — the definition still says
  * "Topic added" and nothing else.
+ *
+ * It no longer promises the connection specifically. This is raised when a
+ * write has actually been deferred, and there are two ways to get there: the
+ * device is offline, or the school could not be reached — a dead link behind a
+ * connection the browser still calls online, a 503, a socket that stopped
+ * answering. "When you are back online" was wrong for half of those.
  */
-const HELD = 'saved on this device. It will send when you are back online.'
+const HELD = 'saved on this device. It will send as soon as the school can be reached.'
 
 export function announceSaved(meta: MutationToast): void {
   toast.success(meta.success)

@@ -1,6 +1,6 @@
-import { Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import type { Contact } from '@/api/conversations/types'
+import { Search } from 'lucide-react';
+import { lazy, Suspense, useMemo, useState } from 'react';
+import type { Contact } from '@/api/conversations/types';
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import type { Option } from '@/features/collections/options'
-import { cn } from '@/lib/utils'
-import { contactOptions, matchesContact } from '../contacts'
-import { queueStart } from '../send'
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { Option } from '@/features/collections/options';
+import { cn } from '@/lib/utils';
+import { hasText } from '@/features/collections/rich-text';
+import { contactOptions, matchesContact } from '../contacts';
+import { queueStart } from '../send';
+
+/**
+ * Split out for the same reason the assignment brief splits it: the editor is
+ * a large dependency, and a portal whose reader never writes a message should
+ * not carry it. The dialog is only mounted once somebody opens it.
+ */
+const RichTextEditor = lazy(() =>
+  import('@/components/editor/rich-text-editor').then((module) => ({
+    default: module.RichTextEditor,
+  })),
+);
 
 /**
  * Starting a conversation.
@@ -38,52 +50,54 @@ export function ComposeDialog({
   childOptions,
   childLabel = 'About which child',
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  contacts: Contact[]
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  contacts: Contact[];
   /** Never synced on this device, so there is nobody to offer. */
-  contactsFailed: boolean
+  contactsFailed: boolean;
   /**
    * The guardian's own children, where the portal has them. Named
    * `childOptions` rather than `children` so it cannot be mistaken for what
    * React puts between the tags.
    */
-  childOptions?: Option[]
-  childLabel?: string
+  childOptions?: Option[];
+  childLabel?: string;
 }) {
-  const [term, setTerm] = useState('')
-  const [to, setTo] = useState<number | null>(null)
-  const [subject, setSubject] = useState('')
-  const [body, setBody] = useState('')
-  const [studentId, setStudentId] = useState('')
-  const [showErrors, setShowErrors] = useState(false)
+  const [term, setTerm] = useState('');
+  const [to, setTo] = useState<number | null>(null);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [showErrors, setShowErrors] = useState(false);
 
-  const options = useMemo(() => contactOptions(contacts), [contacts])
+  const options = useMemo(() => contactOptions(contacts), [contacts]);
   const shown = useMemo(
     () => options.filter((option) => matchesContact(option, term)),
     [options, term],
-  )
+  );
 
   const reset = () => {
-    setTerm('')
-    setTo(null)
-    setSubject('')
-    setBody('')
-    setStudentId('')
-    setShowErrors(false)
-  }
+    setTerm('');
+    setTo(null);
+    setSubject('');
+    setBody('');
+    setStudentId('');
+    setShowErrors(false);
+  };
 
   const close = (next: boolean) => {
-    if (!next) reset()
-    onOpenChange(next)
-  }
+    if (!next) reset();
+    onOpenChange(next);
+  };
 
-  const ready = to !== null && subject.trim().length > 0 && body.trim().length > 0
+  // `hasText` rather than a trim: an emptied editor still hands back `<p></p>`,
+  // which is a non-empty string and would pass every check made on one.
+  const ready = to !== null && subject.trim().length > 0 && hasText(body);
 
   const send = () => {
     if (!ready) {
-      setShowErrors(true)
-      return
+      setShowErrors(true);
+      return;
     }
     queueStart({
       to: to!,
@@ -92,26 +106,27 @@ export function ComposeDialog({
       // Left out entirely rather than sent empty: it records which child the
       // thread is about, and "no child" is not a child.
       ...(studentId ? { student_id: Number(studentId) } : {}),
-    })
-    close(false)
-  }
+    });
+    close(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={close}>
       {/* `sm:` because the dialog's own default is `sm:max-w-sm`, and an
-          unprefixed width loses to it at every size that matters. */}
-      <DialogContent className="sm:max-w-2xl">
+          unprefixed width loses to it at every size that matters. Widened
+          when the body became an editor: the toolbar is nineteen buttons, and
+          in the old width it wrapped onto three rows and ate the writing
+          area it sits above. */}
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>New message</DialogTitle>
           <DialogDescription>
-            The school decides who you may write to — these are the people your
-            own record reaches. Anything you send is kept on this device until
-            it has been delivered.
+            Start a new conversation or continue an existing one.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4.5 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
-          <div className="flex min-h-[18rem] flex-col rounded-lg border border-divider">
+          <div className="flex min-h-72 flex-col rounded-lg border border-divider">
             <div className="relative border-b border-divider p-2">
               <Search
                 className="pointer-events-none absolute top-1/2 left-4 size-3.5 -translate-y-1/2 text-muted-foreground"
@@ -223,14 +238,19 @@ export function ComposeDialog({
               >
                 Message
               </Label>
-              <textarea
-                id="compose-body"
-                value={body}
-                onChange={(event) => setBody(event.target.value)}
-                placeholder="Write your message"
-                aria-invalid={showErrors && !body.trim()}
-                className="min-h-[8rem] flex-1 resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
-              />
+              <Suspense
+                fallback={
+                  <div className="h-40 animate-ems-fade rounded-lg border border-input" />
+                }
+              >
+                <RichTextEditor
+                  id="compose-body"
+                  value={body}
+                  onChange={(html) => setBody(hasText(html) ? html : '')}
+                  placeholder="Write your message"
+                  invalid={showErrors && !hasText(body)}
+                />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -249,5 +269,5 @@ export function ComposeDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

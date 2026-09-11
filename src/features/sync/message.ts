@@ -48,5 +48,9 @@ export function syncMessage({ online, durable, waiting, needsAnswer }: SyncCopy)
       : 'You are offline. Your work is saved on this device and will send when the connection returns.'
   }
 
-  return `${count(waiting, 'change is', 'changes are')} still being sent to the school.`
+  // Not "to the school": at this point the device has it and is trying, and
+  // where the trying is what has gone wrong — a refusal, a backoff, a link
+  // that keeps dropping — naming the school reads as a delivery this sentence
+  // cannot promise.
+  return `${count(waiting, 'change is', 'changes are')} still being sent.`
 }

@@ -21,6 +21,7 @@ export function RichTextEditor({
   onBlur,
   placeholder,
   invalid,
+  minHeightClass = 'min-h-52',
 }: {
   id?: string
   value: string
@@ -28,6 +29,12 @@ export function RichTextEditor({
   onBlur?: () => void
   placeholder?: string
   invalid?: boolean
+  /**
+   * How tall the writing area starts. A record form wants a body's worth; the
+   * reply box at the foot of a conversation wants two lines, and a form-sized
+   * one there pushed the conversation itself off the screen.
+   */
+  minHeightClass?: string
 }) {
   // Held still across renders on purpose: tiptap compares the extensions it
   // was given one by one, so a fresh array every render reads as a different
@@ -39,7 +46,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         ...(id ? { id } : {}),
-        class: 'rich-text min-h-[13rem] px-3 py-2.5 outline-none',
+        class: `rich-text ${minHeightClass} px-3 py-2.5 outline-none`,
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -51,11 +58,21 @@ export function RichTextEditor({
     // throws rather than answering — which React's development double-mount
     // does reach: the instance this effect closed over is torn down before it
     // runs again.
-    if (!editor || editor.isDestroyed || editor.isFocused) return
+    if (!editor || editor.isDestroyed) return
     // An empty field is stored as the empty string while the editor's own way
     // of saying the same thing is `<p></p>`, so the two are compared as the
     // documents they are rather than as text.
     if (value === editor.getHTML() || (!value && editor.isEmpty)) return
+    /*
+     * A value arriving from outside while somebody is typing is not put in —
+     * replacing the document under them throws the caret to the top
+     * mid-sentence. An emptied one is the exception, and the reply box at the
+     * foot of a conversation is why: it sends on Ctrl+Enter without ever
+     * leaving the editor, so the box it had just emptied stayed full of the
+     * reply that had already gone. There is no sentence to keep the caret in
+     * when the new value is nothing.
+     */
+    if (editor.isFocused && value) return
     editor.commands.setContent(value, { emitUpdate: false })
   }, [editor, value])
 

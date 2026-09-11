@@ -2,27 +2,32 @@ import type {
   ConversationStatus,
   ConversationThread,
 } from '../../api/conversations/types.ts'
-import { looseId, looseText, pick } from '../collections/loose.ts'
 
 /**
- * Reading one thread, whose shape nobody has seen.
+ * Reading one thread.
  *
- * `GET /conversations/{id}` has never been fired on this deployment — the
- * inbox and the contacts list have, the thread has not — so which key holds
- * the messages and what a message calls its own fields is a guess. Rather
- * than pin one spelling and draw an empty thread for ever if it turns out to
- * be another, every field is read for the first candidate that actually
- * carries something, in one place, under test.
+ * This module used to read five candidate keys for the messages and four for
+ * a body, because `GET /conversations/{id}` had never been fired and the shape
+ * was a guess. A live answer was read on 2026-09-11 and the guessing is gone,
+ * along with the bug it was hiding: **the messages are nested**, under a
+ * `conversation` the guesswork never looked inside, so every thread in every
+ * portal drew as one this app could not display.
  *
- * This whole module is meant to be **deleted down to one spelling** the first
- * time somebody reads a real thread. Until then it is honest about being a
- * guess, and a thread that arrives in none of these shapes reads as a thread
- * this app cannot display — which is a sentence to show, not a blank panel.
+ * What the endpoint actually sends:
+ *
+ * ```json
+ * { "conversation": { "id": 36, "subject": "Test", "status": "open",
+ *   "student_id": null, "about": null, "with": [ ... ],
+ *   "last_message": "…", "last_message_at": "9/11/26, 9:48 AM", "unread": 0,
+ *   "messages": [ { "id": 61, "user_id": 1, "from": "Chukwudi Aniegboka",
+ *     "mine": true, "body": "…", "sent_at": "9/11/26, 9:48 AM" } ] } }
+ * ```
  */
 
 export type ThreadMessage = {
   /** Stable within the thread — the server's id where there is one. */
   key: string
+  /** HTML where it was written in the editor, a plain sentence where it was not. */
   body: string
   senderId: number | undefined
   senderName: string
@@ -34,36 +39,47 @@ export type ThreadMessage = {
   queued?: boolean
 }
 
-/** Where a thread's messages might live. First one carrying an array wins. */
-const MESSAGE_KEYS = ['messages', 'conversation_messages', 'replies', 'items', 'posts']
+/** The thread itself, out of the envelope it arrives in. */
+function conversationOf(doc: ConversationThread | undefined) {
+  return doc?.conversation
+}
 
 /**
- * The messages, oldest first — the order a conversation is read in.
+ * The messages, in the order the server sent them — which is the order a
+ * conversation is read in.
  *
- * The server's order is trusted as it arrives. Sorting on a stamp would mean
- * parsing one, and the inbox's own stamp is a pre-formatted `"9/8/26, 11:12
- * AM"` with no zone: parsing that is how a thread ends up in the wrong order
- * on a phone set to a different locale.
+ * Sorting on a stamp would mean parsing one, and `sent_at` is a pre-formatted
+ * `"9/11/26, 9:48 AM"` with no zone: parsing that is how a thread ends up in
+ * the wrong order on a phone set to a different locale.
  */
 export function threadMessages(
   doc: ConversationThread | undefined,
   meId: number | undefined,
 ): ThreadMessage[] {
-  const rows = pick(doc, ...MESSAGE_KEYS)
+  const rows = conversationOf(doc)?.messages
   if (!Array.isArray(rows)) return []
 
   return rows.map((row, index) => {
-    const record = (row ?? {}) as Record<string, unknown>
-    const senderId = looseId(
-      pick(record, 'user_id', 'sender_id', 'from_id', 'author_id', 'sender', 'from'),
-    )
+    const senderId = Number.isFinite(Number(row?.user_id)) && Number(row?.user_id) > 0
+      ? Number(row.user_id)
+      : undefined
+
     return {
-      key: String(pick(record, 'id', 'message_id') ?? `row-${index}`),
-      body: text(record, 'body', 'message', 'content', 'text'),
+      key: String(row?.id ?? `row-${index}`),
+      body: typeof row?.body === 'string' ? row.body : '',
       senderId,
-      senderName: text(record, 'sender_name', 'from_name', 'name', 'sender', 'posted_by', 'from'),
-      at: text(record, 'created', 'created_at', 'datecreated', 'sent_at', 'timestamp', 'date'),
-      mine: senderId !== undefined && meId !== undefined && senderId === meId,
+      senderName: typeof row?.from === 'string' ? row.from.trim() : '',
+      at: typeof row?.sent_at === 'string' ? row.sent_at : '',
+      /*
+       * The school's own answer first. It knows which login is calling, where
+       * this device only knows which id the session happened to store — and a
+       * reader whose id is missing from the session would have every message
+       * on the thread, including their own, drawn as somebody else's.
+       */
+      mine:
+        typeof row?.mine === 'boolean'
+          ? row.mine
+          : senderId !== undefined && meId !== undefined && senderId === meId,
     }
   })
 }
@@ -71,13 +87,13 @@ export function threadMessages(
 /**
  * Whether the answer looked like a thread at all.
  *
- * A thread with no messages is a real state — a conversation whose only
- * message is the one that started it may well arrive under a key this does
- * not know. Telling the two apart is what stops the screen saying "no
- * messages" over an answer it simply could not read.
+ * A thread with no messages is a real state — a conversation can be opened and
+ * left — so an empty array is readable and a missing one is not. Telling the
+ * two apart is what stops the screen saying "nothing has been said" over an
+ * answer it simply could not read.
  */
 export function isReadableThread(doc: ConversationThread | undefined): boolean {
-  return Array.isArray(pick(doc, ...MESSAGE_KEYS))
+  return Array.isArray(conversationOf(doc)?.messages)
 }
 
 /** The subject, falling back to what the inbox row already said. */
@@ -85,7 +101,7 @@ export function threadSubject(
   doc: ConversationThread | undefined,
   fallback: string,
 ): string {
-  const subject = pick(doc, 'subject', 'title')
+  const subject = conversationOf(doc)?.subject
   return typeof subject === 'string' && subject.trim() ? subject.trim() : fallback
 }
 
@@ -94,14 +110,6 @@ export function threadStatus(
   doc: ConversationThread | undefined,
   fallback: ConversationStatus,
 ): ConversationStatus {
-  const status = pick(doc, 'status', 'state')
+  const status = conversationOf(doc)?.status
   return status === 'closed' || status === 'open' ? status : fallback
-}
-
-/** A field read for the first candidate key that carries anything. */
-function text(record: Record<string, unknown>, ...keys: string[]): string {
-  const value = pick(record, ...keys)
-  if (value === undefined) return ''
-  const read = looseText(value)
-  return read === '—' ? '' : read
 }
