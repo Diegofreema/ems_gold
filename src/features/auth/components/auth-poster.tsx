@@ -1,31 +1,63 @@
-/** The full-height accent panel; dropped under 900px. */
+/**
+ * The blue half of the sign-in design: what the system is for, the student it
+ * is for, and the ripple she is sitting in.
+ *
+ * Hidden below lg. The design draws no narrow view, and a poster costs a phone
+ * a photograph to say something the form beside it already says — on the
+ * connections this app is for, that is a poster worth dropping.
+ */
 export function AuthPoster() {
   return (
-    <aside className="hidden flex-col justify-between border-r border-foreground/60 bg-brand p-10 text-white lg:flex">
-      <div className="flex items-center gap-3">
-        <div className="size-6.5 flex-none bg-white" />
-        <div className="font-heading text-base font-extrabold tracking-[-0.01em]">
-          NETPRO EMS
-        </div>
-      </div>
+    <aside className="relative hidden overflow-hidden bg-auth-blue lg:block">
+      <Ripple />
 
-      <div>
-        <div className="text-2xs uppercase tracking-kicker opacity-85">
-          Bronze edition
+      {/* Translucent rather than filled, so the ripple carries on through it —
+          the rings are one drawing, not two that have to line up at the edge. */}
+      <div className="absolute top-[6.5%] right-[10.5%] bottom-[5.3%] left-[9.7%] overflow-hidden rounded-[10px] border border-white/40 bg-white/25">
+        <div className="px-[6.3%] pt-24 text-white">
+          <h1 className="max-w-[9em] font-heading text-[46px] leading-[1.2] font-extrabold tracking-[-0.02em]">
+            One School one record
+          </h1>
+          <p className="mt-3 max-w-[27rem] text-base leading-[1.45]">
+            Fees, result, attendance and admission in one single system, the
+            office, staff room, and home all read from.
+          </p>
         </div>
-        <div className="mt-3.5 font-heading text-[46px] leading-[1.02] font-extrabold tracking-[-0.03em] text-pretty">
-          One school, one record.
-        </div>
-        <p className="mt-4 max-w-[34ch] text-base leading-normal opacity-90">
-          Fees, results, attendance and admissions in a single system the
-          office, the staff room and the home all read from.
-        </p>
-      </div>
 
-      <div className="border-t border-white/50 pt-4 text-2xs leading-normal opacity-90">
-        Trouble signing in? Call the school office on 0803 000 0000, Monday to
-        Friday, 8am–4pm.
+        {/* Decorative: the sentence above is what this panel says, and a
+            screen reader that announced a stock photograph of a student would
+            be announcing something the page does not mean. */}
+        <img
+          src="/auth-student.webp"
+          alt=""
+          className="absolute bottom-[1.6%] left-[50.7%] w-[57.4%] -translate-x-1/2"
+        />
       </div>
     </aside>
-  );
+  )
+}
+
+/**
+ * The rings, centred on the foot of the panel so they read as ripples under
+ * the student rather than a target behind her.
+ *
+ * Drawn rather than gradient-filled: `slice` scales one drawing to whatever
+ * shape the column ends up, so the rings keep their spacing on a laptop and a
+ * 27-inch screen alike, and the circles stay circles.
+ */
+function Ripple() {
+  return (
+    <svg
+      viewBox="0 0 568 756"
+      preserveAspectRatio="xMidYMax slice"
+      aria-hidden="true"
+      className="absolute inset-0 size-full"
+    >
+      <g fill="none" stroke="var(--auth-ring)">
+        <circle cx="288" cy="750" r="234" strokeWidth="52" />
+        <circle cx="288" cy="750" r="312" strokeWidth="54" />
+        <circle cx="288" cy="750" r="420" strokeWidth="66" />
+      </g>
+    </svg>
+  )
 }

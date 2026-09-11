@@ -89,7 +89,15 @@ export function ThreadView({
   const messages = [...threadMessages(data, meId), ...queued];
 
   return (
-    <div className="flex min-h-[28rem] flex-col rounded-xl border border-divider bg-raised shadow-card">
+    /*
+      `h-full` inside the page's bounded grid, so the conversation fills the
+      pane and scrolls its own messages — the reply box stays at the foot of
+      the panel where it can be reached, rather than at the foot of a page as
+      tall as the inbox is long. `min-h-0` is what actually lets the message
+      list shrink: a flex child will not go below its content without it, and
+      the panel would grow instead of scrolling.
+    */
+    <div className="flex min-h-112 flex-col overflow-hidden rounded-xl border border-divider bg-raised shadow-card lg:h-full lg:min-h-0">
       <header className="flex flex-wrap items-start gap-3 border-b border-divider px-4.5 py-3.5">
         <Button
           variant="outline"
@@ -124,7 +132,7 @@ export function ThreadView({
         )}
       </header>
 
-      <div className="flex-1 space-y-3.5 overflow-y-auto px-4.5 py-4.5">
+      <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4.5 py-4.5">
         {unsent ? (
           <Note>
             This message is still on this device, waiting for a connection. It

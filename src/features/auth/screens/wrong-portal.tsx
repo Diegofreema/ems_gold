@@ -3,6 +3,7 @@ import { Lock } from 'lucide-react'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '../auth.store'
+import { authButtonQuiet } from '../components/auth-button'
 import { AuthHeading } from '../components/auth-heading'
 import { IconSquare } from '../components/icon-square'
 import { PortalLinks } from '../components/portal-links'
@@ -24,7 +25,7 @@ export function WrongPortalScreen() {
       />
       <PortalLinks />
       <Rule />
-      <Button asChild variant="outline" onClick={reset}>
+      <Button asChild variant="outline" onClick={reset} className={authButtonQuiet}>
         <Link to="/sign-in">Sign in as someone else</Link>
       </Button>
     </>

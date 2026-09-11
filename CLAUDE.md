@@ -324,6 +324,15 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   the second as text shows `<p>` to a parent.
 - **`src/index.css` is the only source of design truth** — the hybrid token system, soft raised
   surfaces, and danger and success as the only colours beside brand.
+- **The sign-in screens are the one place that is not the portals' palette.** They are drawn to
+  their own design — a softer blue, flat greys, 46px controls on white — so `--auth-*` lives in
+  `index.css` beside the rest and nothing outside `src/features/auth/` reaches for it. Two things
+  follow. The fields are `AuthField`, not `TextField`: sharing one component between a record form
+  the office fills in forty of and a single field on a white page would mean a variant flag on
+  every rule in it. And the design has **no dark half**, so the layout carries `.auth-daylight`,
+  which re-declares the light tokens *and the shadcn aliases over them* — an alias is resolved
+  where it is declared, so a container that redeclares `--ems-ink` alone still inherits `<html>`'s
+  resolved `--muted-foreground`, which under a dark theme is pale grey on the sign-in page's white.
 - **Tests are `node --test` on pure logic.** A module under test uses relative imports with explicit
   `.ts` extensions, and no parameter properties (`erasableSyntaxOnly`). Anything risky in the local-
   first layer — failure classification, queue ordering, backoff, id substitution, the household

@@ -1,19 +1,24 @@
 import { CircleAlert } from 'lucide-react'
 
-/** A failed sign-in shakes; everything else about it matches the form banner. */
+/**
+ * A refusal that belongs to the whole form rather than to one field — a
+ * password that was wrong, a sign-in the office has switched off. Anything a
+ * single field can own is said under that field instead; see `AuthFieldError`.
+ */
 export function AuthAlert({ title, body }: { title: string; body: string }) {
   return (
     <div
       role="alert"
-      className="mb-5.5 flex animate-ems-shake gap-3 rounded-lg border border-danger/50 bg-danger-subtle px-4 py-3.5"
+      className="mt-7 flex animate-ems-shake items-start gap-2.5 rounded-md border border-auth-error/35 bg-auth-error/6 px-4 py-3.5"
     >
       <CircleAlert
-        className="mt-px size-4.5 flex-none text-danger-ink"
-        strokeWidth={2.2}
+        className="mt-0.75 size-4.5 flex-none fill-auth-error text-white"
+        strokeWidth={2}
+        aria-hidden="true"
       />
       <div>
-        <div className="font-heading text-sm font-extrabold">{title}</div>
-        <div className="mt-0.75 text-sm text-muted-foreground">{body}</div>
+        <div className="text-base font-medium">{title}</div>
+        <div className="mt-1 text-sm text-auth-muted">{body}</div>
       </div>
     </div>
   )

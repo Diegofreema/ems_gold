@@ -1,10 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { Lock, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { useLogin } from '@/api/auth/hooks'
-import { TextField } from '@/components/form/text-field'
-import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useRecordForm } from '@/hooks/use-record-form'
@@ -12,8 +11,9 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { endSession } from '@/stores/session.store'
 import { useAuthStore } from '../auth.store'
 import { AuthAlert } from '../components/auth-alert'
+import { authButton } from '../components/auth-button'
+import { AuthField, AuthPasswordField } from '../components/auth-field'
 import { AuthHeading } from '../components/auth-heading'
-import { PasswordInput } from '../components/password-input'
 import {
   DISABLED_BODY,
   DISABLED_TITLE,
@@ -42,6 +42,7 @@ export function SignInScreen() {
   const turnedAway = useAuthStore((state) => state.disabled)
   const clearDisabled = useAuthStore((state) => state.clearDisabled)
   const [failure, setFailure] = useState<Failure | null>(null)
+  const [visible, setVisible] = useState(false)
   const alert = failure ?? (turnedAway ? DISABLED_FAILURE : null)
 
   const form = useRecordForm<SignInValues>(signInSchema, {
@@ -97,11 +98,9 @@ export function SignInScreen() {
   return (
     <>
       <AuthHeading
-        kicker="Sign in"
-        title="Welcome back"
-        description="Sign in with the email address the school has on file to reach your account."
+        title="Welcome Back"
+        description="Kindly fill in your details to Login to your account"
       />
-      <Rule />
 
       {alert && <AuthAlert title={alert.title} body={alert.body} />}
 
@@ -109,54 +108,57 @@ export function SignInScreen() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-4.5"
+          className="mt-6.5 flex flex-col gap-6.5"
         >
-          <TextField<SignInValues>
+          <AuthField<SignInValues>
             name="username"
-            label="Email address"
-            placeholder="you@school.ng"
-            hint="The address the school has on file"
-            required
+            label="Email Address"
+            type="email"
+            placeholder="Enter email address"
+            icon={Mail}
+            autoComplete="username"
           />
 
-          <PasswordInput<SignInValues>
+          <AuthPasswordField<SignInValues>
             name="password"
             label="Password"
-            placeholder="Your password"
-            hint="Six characters or more"
+            placeholder="Enter Password"
+            icon={Lock}
+            autoComplete="current-password"
+            visible={visible}
+            onToggle={() => setVisible((previous) => !previous)}
           />
 
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm">
+          <div className="-mt-2 flex flex-wrap items-center justify-between gap-4">
+            <label className="flex cursor-pointer items-center gap-3 text-base">
               <Checkbox
                 checked={form.watch('remember')}
                 onCheckedChange={(checked) =>
                   form.setValue('remember', checked === true)
                 }
+                className="size-5 rounded-[4px] border-auth-hint/70 data-checked:border-auth-blue data-checked:bg-auth-blue"
               />
               <span>Keep me signed in on this device</span>
             </label>
-            <Button asChild variant="ghost" className="px-0 text-brand">
-              <Link to="/forgot-password">Forgotten password?</Link>
-            </Button>
+            <Link
+              to="/forgot-password"
+              className="text-base text-auth-blue hover:underline"
+            >
+              Forgot password
+            </Link>
           </div>
 
-          <Button
-            type="submit"
-            pending={isSubmitting}
-            className="w-fit justify-start"
-          >
-            {isSubmitting ? 'Signing you in…' : 'Sign in'}
+          <Button type="submit" pending={isSubmitting} className={`mt-3 ${authButton}`}>
+            {isSubmitting ? 'Signing you in…' : 'Login'}
           </Button>
         </form>
       </FormProvider>
 
-      <Rule />
-      <div className="text-xs leading-relaxed text-muted-foreground">
+      <p className="mt-7.5 text-[13px] leading-relaxed text-auth-muted">
         Accounts are created by the school office. If you are new and have no
         password yet, open the invitation email and use the link in it, or ask
         the office to send it again.
-      </div>
+      </p>
     </>
   )
 }

@@ -41,6 +41,8 @@ let openDrawer: () => void = () => {}
 export const setDrawerOpener = (open: () => void) => {
   openDrawer = open
 }
+/** For callers the registered opener cannot reach as a prop — the header chip. */
+export const openPendingWork = () => openDrawer()
 
 /**
  * Accepts a write on the device and puts it in line for the school.

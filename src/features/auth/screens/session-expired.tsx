@@ -3,6 +3,7 @@ import { Clock } from 'lucide-react'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '../auth.store'
+import { authButton, authButtonQuiet } from '../components/auth-button'
 import { AuthHeading } from '../components/auth-heading'
 import { DetailRows } from '../components/detail-rows'
 import { IconSquare } from '../components/icon-square'
@@ -28,11 +29,11 @@ export function SessionExpiredScreen() {
         ]}
       />
       <Rule />
-      <div className="flex flex-wrap gap-2.5">
-        <Button asChild>
+      <div className="flex flex-col gap-3">
+        <Button asChild className={authButton}>
           <Link to="/sign-in">Sign in again</Link>
         </Button>
-        <Button asChild variant="outline" onClick={reset}>
+        <Button asChild variant="outline" onClick={reset} className={authButtonQuiet}>
           <Link to="/sign-in">Use a different account</Link>
         </Button>
       </div>

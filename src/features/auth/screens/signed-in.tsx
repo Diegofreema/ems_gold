@@ -3,6 +3,7 @@ import { Check } from 'lucide-react'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '../auth.store'
+import { authButton } from '../components/auth-button'
 import { AuthHeading } from '../components/auth-heading'
 import { IconSquare } from '../components/icon-square'
 import { PORTALS, portalFor } from '../role'
@@ -31,7 +32,7 @@ export function SignedInScreen() {
       />
       <Rule />
 
-      <Button asChild>
+      <Button asChild className={authButton}>
         {portal ? (
           <Link to={portal.to}>Open the {portal.role.toLowerCase()} portal</Link>
         ) : (
@@ -39,7 +40,7 @@ export function SignedInScreen() {
         )}
       </Button>
 
-      <div className="mt-5.5 flex flex-wrap gap-4 text-xs">
+      <div className="mt-5.5 flex flex-wrap gap-4 text-[13px] text-auth-muted">
         {PORTALS.map((entry) => (
           <Link key={entry.to} to={entry.to}>
             {entry.label}

@@ -1,29 +1,28 @@
 import { useNavigate } from '@tanstack/react-router'
+import { Lock } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { useResetPassword } from '@/api/auth/hooks'
-import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { useAuthStore } from '../auth.store'
 import { AuthAlert } from '../components/auth-alert'
+import { authButton } from '../components/auth-button'
+import { AuthPasswordField } from '../components/auth-field'
 import { AuthHeading } from '../components/auth-heading'
-import { PasswordInput } from '../components/password-input'
 import { PasswordRules } from '../components/password-rules'
 import { PasswordStrength } from '../components/password-strength'
 import { resetPasswordSchema, type ResetPasswordValues } from '../schemas'
 
 const COPY = {
   reset: {
-    kicker: 'Reset',
     title: 'Set a new password',
     description:
       'Choose something you have not used here before. It takes effect straight away.',
     cta: 'Save the new password',
   },
   first: {
-    kicker: 'First sign in',
     title: 'Choose your password',
     description:
       'The office gave you a temporary password. Replace it now — the temporary one stops working as soon as you save.',
@@ -76,12 +75,7 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
 
   return (
     <>
-      <AuthHeading
-        kicker={copy.kicker}
-        title={copy.title}
-        description={copy.description}
-      />
-      <Rule />
+      <AuthHeading title={copy.title} description={copy.description} />
 
       {failure && (
         <AuthAlert
@@ -94,43 +88,46 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-4.5"
+          className="mt-6.5 flex flex-col gap-6.5"
         >
           {first && (
-            <PasswordInput<ResetPasswordValues>
+            <AuthPasswordField<ResetPasswordValues>
               name="temporaryPassword"
               label="Temporary password"
               placeholder="From your invitation email"
-              hint="The one the office gave you"
+              icon={Lock}
+              visible={visible}
+              onToggle={() => setVisible((previous) => !previous)}
             />
           )}
 
           <div>
-            <PasswordInput<ResetPasswordValues>
+            <AuthPasswordField<ResetPasswordValues>
               name="password"
               label="New password"
               placeholder="At least 10 characters"
+              icon={Lock}
+              autoComplete="new-password"
               visible={visible}
               onToggle={() => setVisible((previous) => !previous)}
             />
             <PasswordStrength password={password} />
           </div>
 
-          <PasswordInput<ResetPasswordValues>
-            name="confirmPassword"
-            label="Repeat the new password"
-            placeholder="Type it again"
-            hint="Both must be identical"
-            visible={visible}
-          />
+          <div>
+            <AuthPasswordField<ResetPasswordValues>
+              name="confirmPassword"
+              label="Repeat the new password"
+              placeholder="Type it again"
+              icon={Lock}
+              autoComplete="new-password"
+              visible={visible}
+              onToggle={() => setVisible((previous) => !previous)}
+            />
+            <PasswordRules password={password} />
+          </div>
 
-          <PasswordRules password={password} />
-
-          <Button
-            type="submit"
-            pending={isSubmitting}
-            className="w-full justify-start"
-          >
+          <Button type="submit" pending={isSubmitting} className={authButton}>
             {isSubmitting ? 'Saving…' : copy.cta}
           </Button>
         </form>

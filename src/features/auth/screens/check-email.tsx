@@ -3,15 +3,14 @@ import { Mail } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { useForgotPassword, useVerifyOtp } from '@/api/auth/hooks'
-import { TextField } from '@/components/form/text-field'
-import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { useAuthStore } from '../auth.store'
 import { AuthAlert } from '../components/auth-alert'
+import { authButton, authButtonQuiet } from '../components/auth-button'
+import { AuthField } from '../components/auth-field'
 import { AuthHeading } from '../components/auth-heading'
-import { IconSquare } from '../components/icon-square'
 import { verifyOtpSchema, type VerifyOtpValues } from '../schemas'
 
 /**
@@ -59,15 +58,14 @@ export function CheckEmailScreen() {
 
   return (
     <>
-      <IconSquare icon={Mail} />
       <AuthHeading
         title="Check your email"
         description="If an account uses that address, a six-digit code is on its way. It expires in fifteen minutes and can only be used once."
       />
-      <div className="mt-4.5 rounded-lg border border-divider px-4 py-3.5 font-heading text-sm font-extrabold">
+      <div className="mt-6 flex items-center gap-3 rounded-md bg-auth-field px-4 py-3.5 text-base font-medium">
+        <Mail className="size-5 flex-none text-auth-hint" strokeWidth={1.8} />
         {email || 'the address on your account'}
       </div>
-      <Rule />
 
       {failure && (
         <AuthAlert
@@ -80,33 +78,31 @@ export function CheckEmailScreen() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="flex flex-col gap-4.5"
+          className="mt-6.5 flex flex-col gap-5"
         >
-          <TextField<VerifyOtpValues>
+          <AuthField<VerifyOtpValues>
             name="otp"
             label="Six-digit code"
             placeholder="123456"
-            hint="From the email we just sent"
-            required
+            autoComplete="one-time-code"
           />
 
-          <div className="flex flex-wrap gap-2.5">
-            <Button type="submit" pending={isSubmitting}>
-              {isSubmitting ? 'Checking the code…' : 'Continue'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              pending={forgotPassword.isPending}
-              onClick={sendAgain}
-            >
-              {resent ? 'Sent again' : 'Send it again'}
-            </Button>
-          </div>
+          <Button type="submit" pending={isSubmitting} className={`mt-3 ${authButton}`}>
+            {isSubmitting ? 'Checking the code…' : 'Continue'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            pending={forgotPassword.isPending}
+            onClick={sendAgain}
+            className={authButtonQuiet}
+          >
+            {resent ? 'Sent again' : 'Send it again'}
+          </Button>
         </form>
       </FormProvider>
 
-      <div className="mt-4.5 text-xs leading-relaxed text-muted-foreground">
+      <div className="mt-9 text-[13px] leading-relaxed text-auth-muted">
         Nothing after a few minutes? Look in spam, then check the address with the
         school office.
       </div>

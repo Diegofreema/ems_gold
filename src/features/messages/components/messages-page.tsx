@@ -1,7 +1,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { MessageSquarePlus, Search } from 'lucide-react'
 import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useCloseConversation } from '@/api/conversations/hooks'
 import type { Contact, ConversationSummary } from '@/api/conversations/types'
 import { SegmentedControl } from '@/components/common/segmented-control'
@@ -18,6 +18,7 @@ import type { Option } from '@/features/collections/options'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useSessionStore } from '@/stores/session.store'
 import { filterCounts, THREAD_FILTERS, type ThreadFilter, visibleThreads } from '../inbox'
+import { FIRST_PAGE, hasMore, NEXT_PAGE, pageOf, windowFor } from '../paging'
 import { queuedReplies, queuedThreads } from '../queued'
 import { ComposeDialog } from './compose-dialog'
 import { ThreadList } from './thread-list'
@@ -85,8 +86,52 @@ export function MessagesPage({
 
   const counts = filterCounts(threads)
   const shown = visibleThreads(threads, state.status, state.q)
+
+  /*
+   * How many rows the list is drawing. The inbox itself is held whole — the
+   * endpoint sends it whole whatever it is asked for — so this pages the
+   * drawing rather than the fetching; see `../paging.ts`.
+   */
+  const [drawn, setDrawn] = useState(FIRST_PAGE)
+
+  /*
+   * A new filter or a new search term is a different list, and a window opened
+   * over the old one would drop the reader halfway down a result they have not
+   * scrolled. Reset while rendering rather than in an effect: this is state
+   * adjusted because the input changed, not React synchronised with anything
+   * outside it, and an effect would render the stale window first and then
+   * render again.
+   */
+  const listKey = `${state.status}|${state.q}`
+  const [lastKey, setLastKey] = useState(listKey)
+  if (listKey !== lastKey) {
+    setLastKey(listKey)
+    setDrawn(FIRST_PAGE)
+  }
+
+  const total = shown.length
+  const selectedIndex = shown.findIndex((thread) => String(thread.id) === state.thread)
+
+  // A thread opened from the URL — a reload, a shared link, the back button —
+  // may sit below the window, and its row belongs in the list beside the
+  // conversation it opened. Derived, not stored: there is nothing to remember.
+  const reach = windowFor(selectedIndex, drawn)
+  const page = pageOf(shown, reach)
+  const more = hasMore(total, reach)
+  /*
+   * The list says how many rows it is currently drawing and this adds to that,
+   * rather than adding to `drawn` — a window stretched to reach a deep-linked
+   * thread is wider than `drawn` says, and growing from the narrower number
+   * would ask for rows already on screen and fire the observer straight back.
+   *
+   * Taking it as an argument is also what keeps this callback one identity for
+   * the life of the page. It is the observer's dependency, and a new one every
+   * render would tear the observer down and rebuild it every render.
+   */
+  const drawMore = useCallback((rendered: number) => setDrawn(rendered + NEXT_PAGE), [])
+
   const selected =
-    shown.find((thread) => String(thread.id) === state.thread) ??
+    shown[selectedIndex] ??
     threads.find((thread) => String(thread.id) === state.thread) ??
     null
 
@@ -154,23 +199,55 @@ export function MessagesPage({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]">
+      {/*
+        Bounded, and the two panes scroll inside it.
+
+        It used to be an unbounded grid: the list was as tall as the inbox was
+        long, the conversation beside it stretched to match, and the reply box
+        went wherever the bottom of that landed — measured at 1156px of grid on
+        a 994px screen with ten threads, so the office was scrolling past every
+        conversation it had to answer any one of them. Now the page itself does
+        not grow with the inbox at all.
+
+        `dvh` rather than a subtraction from the header, because what sits above
+        this varies — the offline banner comes and goes, a portal may carry a
+        context bar — and a floor keeps it usable on a short laptop screen.
+        Narrow screens keep the ordinary page scroll: there is only ever one
+        pane there, so there is nothing to pin.
+      */}
+      <div className="grid gap-5 lg:h-[calc(100dvh-17.5rem)] lg:min-h-104 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]">
         {/* On a narrow screen the two panes are one: opening a thread replaces
             the list, and the thread's own back button returns to it. */}
         {(!narrow || !selected) && (
-          <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
-            <ThreadList
-              threads={shown}
-              selectedId={selected?.id ?? null}
-              onSelect={select}
-              emptyLine={
-                threads.length === 0
-                  ? 'No conversations yet. Start one with the button above.'
-                  : state.q
-                    ? `Nothing matches “${state.q}”.`
-                    : `Nothing ${LABELS[state.status].toLowerCase()} here.`
-              }
-            />
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
+            {/* What scrolls on a wide screen. On a narrow one there is only
+                ever one pane and the page scrolls instead, which is why the
+                foot of the list is watched against the viewport rather than
+                against this — see `ThreadList`. */}
+            <div data-thread-scroll className="min-h-0 flex-1 overflow-y-auto">
+              <ThreadList
+                threads={page}
+                selectedId={selected?.id ?? null}
+                onSelect={select}
+                hasMore={more}
+                onMore={drawMore}
+                emptyLine={
+                  threads.length === 0
+                    ? 'No conversations yet. Start one with the button above.'
+                    : state.q
+                      ? `Nothing matches “${state.q}”.`
+                      : `Nothing ${LABELS[state.status].toLowerCase()} here.`
+                }
+              />
+            </div>
+
+            {/* Counted off the whole filtered set, not off the window, so it
+                says what is there rather than what has been drawn so far. */}
+            {total > 0 && (
+              <div className="border-t border-divider px-4 py-2 text-2xs text-muted-foreground">
+                Showing {page.length} of {total}
+              </div>
+            )}
           </div>
         )}
 
@@ -189,7 +266,7 @@ export function MessagesPage({
               canClose={canClose}
             />
           ) : (
-            <div className="hidden place-items-center rounded-xl border border-dashed border-divider px-6 py-16 text-center lg:grid">
+            <div className="hidden min-h-0 place-items-center rounded-xl border border-dashed border-divider px-6 py-16 text-center lg:grid">
               <div className="max-w-[34ch]">
                 <div className="font-heading text-base font-extrabold">
                   Nothing open

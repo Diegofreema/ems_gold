@@ -10,6 +10,7 @@ import { useShellStore } from '@/stores/shell.store'
 import { AppHeader } from './header/app-header'
 import { OfflineBanner } from './offline-banner'
 import { Sidebar } from './sidebar/sidebar'
+import { SyncChip } from './sync-chip'
 
 function headingOf(match: {
   staticData: { title?: string; crumb?: string; crumbTo?: ListPath }
@@ -95,6 +96,7 @@ export function AppShell({ config }: { config: PortalConfig }) {
           status={config.headerStatus}
           narrow={narrow}
         >
+          <SyncChip />
           {config.messagesPath && <MessagesButton to={config.messagesPath} />}
           <NotificationBell
             notifications={notifications}

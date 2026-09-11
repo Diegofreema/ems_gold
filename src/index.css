@@ -14,8 +14,16 @@
 
    Naming note: the design system calls its brand colour "accent", but shadcn
    already uses --accent for subtle hover fills. The blue is `brand` here.
+
+   `.auth-daylight` shares this block rather than copying it. The sign-in
+   design is drawn in one palette and has no dark half — an office signing in
+   on a machine somebody left in dark mode would otherwise get its own white
+   page with the dark theme's pale text on it. Setting the light values on the
+   auth container overrides what it inherits from <html>, for it and
+   everything under it, without touching the theme the portals read.
    ───────────────────────────────────────────────────────────────────── */
-:root {
+:root,
+.auth-daylight {
   --ems-ground: #f2f2f4;
   --ems-surface: #e9e9ec;
   --ems-ink: #1c1d20;
@@ -71,6 +79,19 @@
   --ems-shadow-float:
     0 4px 10px rgb(16 24 40 / 0.08), 0 14px 34px rgb(16 24 40 / 0.12);
 
+  /* The sign-in design's own palette. It is not the portals' — its blue is
+     softer than --ems-brand and its greys are flatter — and it is deliberately
+     kept out of the ramps above so nothing but the auth screens can reach for
+     it. Sampled from the design itself rather than guessed at. */
+  --auth-blue: #356ead;
+  --auth-ring: #4c83b9;
+  --auth-ink: #202020;
+  --auth-muted: #575757;
+  --auth-hint: #8c8c8c;
+  --auth-field: #f8f8f8;
+  --auth-error: #eb4d48;
+  --auth-error-line: #ea3628;
+
   /* Multiplier for every duration below — the design's `motion` prop / 6.
        Set to 0 to disable animation entirely. */
   --ems-motion: 1;
@@ -113,9 +134,16 @@
     0 6px 16px rgb(0 0 0 / 0.45), 0 18px 44px rgb(0 0 0 / 0.5);
 }
 
-/* shadcn semantic names, aliased onto the tokens above. */
+/* shadcn semantic names, aliased onto the tokens above.
+
+   `.auth-daylight` is in the list for a reason that is easy to miss: these are
+   resolved where they are declared, so a container that redeclares --ems-ink
+   alone still inherits the *resolved* --muted-foreground from <html>. Under a
+   dark theme that is the pale grey, on the sign-in page's white. Declaring the
+   aliases on the container too re-resolves them against its own tokens. */
 :root,
-[data-ems-theme='dark'] {
+[data-ems-theme='dark'],
+.auth-daylight {
   --background: var(--ems-ground);
   --foreground: var(--ems-ink);
   --card: var(--ems-raised);
@@ -201,6 +229,15 @@
   --radius-2xl: 16px;
   --radius-3xl: 20px;
   --radius-4xl: 24px;
+
+  --color-auth-blue: var(--auth-blue);
+  --color-auth-ring: var(--auth-ring);
+  --color-auth-ink: var(--auth-ink);
+  --color-auth-muted: var(--auth-muted);
+  --color-auth-hint: var(--auth-hint);
+  --color-auth-field: var(--auth-field);
+  --color-auth-error: var(--auth-error);
+  --color-auth-error-line: var(--auth-error-line);
 
   --color-danger: var(--ems-danger);
   --color-danger-ink: var(--ems-danger-ink);
