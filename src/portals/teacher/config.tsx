@@ -7,6 +7,7 @@ export const teacherPortal: PortalConfig = {
   role: 'teacher',
   roleLabel: 'Teacher',
   basePath: '/teacher',
+  messagesPath: '/teacher/messages',
   nav: teacherNav,
   useNotifications: useMyNotifications,
   notFoundAudience: 'teachers',

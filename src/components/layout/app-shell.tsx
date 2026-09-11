@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useMatches } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import type { Heading } from '@/features/collections/resolve'
+import { MessagesButton } from '@/features/messages/components/messages-button'
 import { NotificationBell } from '@/features/notifications/components/notification-bell'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import type { ListPath } from '@/features/collections/types'
@@ -94,6 +95,7 @@ export function AppShell({ config }: { config: PortalConfig }) {
           status={config.headerStatus}
           narrow={narrow}
         >
+          {config.messagesPath && <MessagesButton to={config.messagesPath} />}
           <NotificationBell
             notifications={notifications}
             allPath={`${config.basePath}/notifications`}

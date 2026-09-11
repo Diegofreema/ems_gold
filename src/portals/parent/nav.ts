@@ -5,9 +5,10 @@ import {
   CreditCard,
   FileText,
   LayoutGrid,
-  // MessageSquare goes back in with the Messages group below.
+  MessageSquare,
   PenLine,
   SquareCheckBig,
+  TrendingUp,
   Users,
 } from 'lucide-react';
 import type { NavGroup } from '@/lib/portal';
@@ -24,16 +25,20 @@ export const parentNav: NavGroup[] = [
     items: [
       { to: '/parent/children', label: 'My children', icon: Users },
       { to: '/parent/results', label: 'Results', icon: SquareCheckBig },
+      { to: '/parent/performance', label: 'Progress', icon: TrendingUp },
       { to: '/parent/attendance', label: 'Attendance', icon: CalendarCheck },
       { to: '/parent/timetable', label: 'Timetables', icon: CalendarClock },
     ],
   },
-  // {
-  //   heading: 'Messages',
-  //   items: [
-  //     { to: '/parent/msg-school', label: 'Message the school', icon: MessageSquare },
-  //   ],
-  // },
+  {
+    heading: 'Messages',
+    items: [
+      // No badge: the count is live and this list is a module constant, so a
+      // number written in here would be the one believed when it went stale.
+      // The header's messages button carries the unread figure instead.
+      { to: '/parent/messages', label: 'Messages', icon: MessageSquare },
+    ],
+  },
   {
     heading: 'Assignments',
     items: [

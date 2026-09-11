@@ -38,6 +38,12 @@ export type PortalConfig = {
   /** Admin filters its long nav with a search box; the others do not. */
   searchableNav?: boolean
   /**
+   * Where the header's messages button goes, for the three portals that have
+   * one. The student portal sets none: the school gives a pupil no contacts,
+   * so a button there would open a page with nobody to write to.
+   */
+  messagesPath?: string
+  /**
    * Read as a hook, because a portal on live data has to ask for its feed and
    * a portal still on a fixture can hand one back without asking. The shell
    * calls it once per render and knows the difference nowhere.

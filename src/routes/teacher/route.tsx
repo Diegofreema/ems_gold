@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
+import { shellPending } from '@/components/feedback/shell-pending'
 import { AppShell } from '@/components/layout/app-shell'
 import { requirePortal } from '@/features/auth/guard'
+import { messageCollections } from '@/db/collections/messages'
 import { teachingCollections } from '@/db/collections/teaching'
 import { recordSearch } from '@/features/collections/resolve'
 import { teacherPortal } from '@/portals/teacher/config'
@@ -24,10 +26,18 @@ export const Route = createFileRoute('/teacher')({
    * device and the roll, the subjects and the marks are already there.
    */
   loader: () => {
-    for (const collection of teachingCollections) {
+    for (const collection of [...teachingCollections, ...messageCollections]) {
       void collection.preload().catch(() => undefined)
     }
   },
+  /*
+   * The first sign-in on a device waits here on `/users/me` — the guard has no
+   * cached account to open the portal over — so this is the one pending state
+   * a person actually reads. It draws this shell rather than the default page
+   * skeleton, which had no sidebar or header and so replaced itself with the
+   * whole application in a single frame.
+   */
+  pendingComponent: shellPending(teacherPortal),
   component: () => <AppShell config={teacherPortal} />,
   // A path that matched no route: the shell renders and this goes in its
   // outlet, so it is the page content rather than a second shell — nesting one

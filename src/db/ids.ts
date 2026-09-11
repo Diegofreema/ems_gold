@@ -61,6 +61,15 @@ export const SET = {
   /** `/notifications/mine` — token-scoped, so one id serves every portal. */
   myNotices: 'my.notices',
 
+  /**
+   * In-app messages. Token-scoped like the notice board, so one id each serves
+   * the office, the staff room and the guardian — a pupil reaches neither,
+   * because the school gives a pupil nobody to write to.
+   */
+  msgContacts: 'messages.contacts',
+  /** The whole `GET /conversations` answer: the threads and the unread total. */
+  msgInbox: 'messages.inbox',
+
   registerArms: 'attendance.arms',
   registerStatuses: 'attendance.statuses',
   registerDays: 'attendance.days',
@@ -130,6 +139,8 @@ export const WRITE = {
   updateQuestion: 'assessment.updateQuestion',
   removeQuestion: 'assessment.removeQuestion',
   gradeSubmission: 'assessment.gradeSubmission',
+  startConversation: 'messages.start',
+  replyToConversation: 'messages.reply',
   messageAdmin: 'teaching.messageAdmin',
   messageStudents: 'teaching.messageStudents',
   updateTeachingProfile: 'teaching.updateProfile',

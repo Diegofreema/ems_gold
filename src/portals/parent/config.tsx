@@ -9,6 +9,7 @@ export const parentPortal: PortalConfig = {
   role: 'parent',
   roleLabel: 'Parent',
   basePath: '/parent',
+  messagesPath: '/parent/messages',
   nav: parentNav,
   useNotifications: useMyNotifications,
   notFoundAudience: 'parents',

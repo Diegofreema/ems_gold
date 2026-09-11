@@ -18,10 +18,13 @@ import {
   LayoutGrid,
   List,
   Megaphone,
+  MessagesSquare,
+  Search,
   Shield,
   SlidersHorizontal,
   SquareCheckBig,
   Table2,
+  TrendingUp,
   UserPlus,
   Users,
 } from 'lucide-react'
@@ -31,6 +34,9 @@ export const adminNav: NavGroup[] = [
   {
     items: [
       { to: '/admin', label: 'Dashboard', icon: LayoutGrid },
+      // One box across pupils, guardians and staff — for the telephone call
+      // where whoever is being asked about could be any of the three.
+      { to: '/admin/search', label: 'Search everyone', icon: Search },
       { to: '/admin/notifications', label: 'Notifications', icon: Bell },
     ],
   },
@@ -67,12 +73,16 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/results', label: 'Results', icon: ClipboardCheck },
       { to: '/admin/result-queue', label: 'Result approvals', icon: SquareCheckBig },
       { to: '/admin/class-sheet', label: 'Class broadsheet', icon: Table2 },
+      { to: '/admin/performance', label: 'Performance', icon: TrendingUp },
     ],
   },
   {
     heading: 'School',
     items: [
       { to: '/admin/notices', label: 'Notice board', icon: Megaphone },
+      // No badge: the count is live and this list is a module constant. The
+      // header's messages button carries the unread figure instead.
+      { to: '/admin/messages', label: 'Messages', icon: MessagesSquare },
       { to: '/admin/library', label: 'Library', icon: Book },
       { to: '/admin/lending', label: 'Lending', icon: BookUp },
       { to: '/admin/logs', label: 'Activity log', icon: List },

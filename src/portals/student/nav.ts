@@ -9,6 +9,7 @@ import {
   // FileText,
   LayoutGrid,
   SquareCheckBig,
+  TrendingUp,
 } from 'lucide-react';
 import type { NavGroup } from '@/lib/portal';
 
@@ -42,6 +43,7 @@ export const studentNav: NavGroup[] = [
         icon: SquareCheckBig,
       },
       { to: '/student/results', label: 'My results', icon: ChartLine },
+      { to: '/student/performance', label: 'My progress', icon: TrendingUp },
     ],
   },
   {
