@@ -49,6 +49,7 @@ export function teacherFigures(dashboard: TeacherDashboard) {
         `Of ${stats.total_students} in the school`,
       ),
       icon: GraduationCap,
+      accent: 'green' as const,
       to: '/teacher/students',
     },
     {
@@ -58,6 +59,7 @@ export function teacherFigures(dashboard: TeacherDashboard) {
         stats.my_subjects ? 'Set by the school office' : 'None assigned yet',
       ),
       icon: BookOpen,
+      accent: 'blue' as const,
       to: '/teacher/subjects',
     },
     {
@@ -67,6 +69,7 @@ export function teacherFigures(dashboard: TeacherDashboard) {
         armNames(arms) || 'Not a class teacher this session',
       ),
       icon: Users,
+      accent: 'ink' as const,
       to: '/teacher/attendance',
     },
     {
@@ -80,6 +83,7 @@ export function teacherFigures(dashboard: TeacherDashboard) {
         stats.pending_assignments > 0,
       ),
       icon: ClipboardList,
+      accent: 'orange' as const,
       to: '/teacher/assignments',
     },
   ];

@@ -3,6 +3,7 @@ import { Bell } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useMarkAllNoticesRead, useUnreadNoticeCount } from '@/api/notifications/hooks'
 import { Button } from '@/components/ui/button'
+import { headerControl } from '@/components/layout/header/controls'
 import { useNotificationsStore } from '../notifications.store'
 import type { Notification } from '../types'
 import { NotificationRow } from './notification-row'
@@ -57,7 +58,7 @@ export function NotificationBell({
         title="Notifications"
         aria-label="Notifications"
         aria-expanded={open}
-        className="size-9"
+        className={headerControl}
       >
         <Bell className="size-4" strokeWidth={1.9} />
         {unread > 0 && (

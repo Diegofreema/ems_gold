@@ -1,15 +1,16 @@
 import {
+  // Monitor,
   Bell,
   BookOpen,
   CalendarCheck,
   CalendarClock,
   CalendarSearch,
+  ClipboardCheck,
   FileQuestion,
   LayoutGrid,
   List,
   MessageSquare,
   MessagesSquare,
-  // Monitor,
   PenLine,
   SquareCheckBig,
   TrendingUp,
@@ -27,6 +28,7 @@ export const teacherNav: NavGroup[] = [
   },
   {
     heading: 'Teaching',
+    icon: BookOpen,
     items: [
       { to: '/teacher/subjects', label: 'My subjects', icon: BookOpen },
       { to: '/teacher/students', label: 'My students', icon: Users },
@@ -53,6 +55,7 @@ export const teacherNav: NavGroup[] = [
   },
   {
     heading: 'Assessment',
+    icon: ClipboardCheck,
     items: [
       // No badge: nothing in the API counts an outstanding score sheet — a
       // sheet is a subject and an arm the teacher chooses, not a record that
@@ -72,6 +75,7 @@ export const teacherNav: NavGroup[] = [
   },
   {
     heading: 'Messages',
+    icon: MessagesSquare,
     items: [
       // The threads both sides can write to. The two below it are outbound
       // email that nobody can answer — a different thing, kept apart on

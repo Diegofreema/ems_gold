@@ -2,8 +2,10 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { CreditCard } from 'lucide-react'
 import { BarChart } from '@/components/charts/bar-chart'
 import { FigureTiles } from '@/components/common/figure-tiles'
-import { Rule } from '@/components/page/rule'
+import { Panel } from '@/components/page/panel'
 import { Button } from '@/components/ui/button'
+import { NotificationsPanel } from '@/features/notifications/components/notifications-panel'
+import { useMyNotifications } from '@/features/notifications/use-notice-feed'
 import { useFirstName } from '@/features/auth/session'
 import { greeting } from '@/lib/greeting'
 import { ActionQueue } from '@/portals/parent/features/action-queue'
@@ -25,6 +27,7 @@ function ParentDashboard() {
   const child = useSelectedChild()
   const queue = queueFor(family)
   const attendance = attendanceBarsFor(child)
+  const notifications = useMyNotifications()
 
   return (
     <>
@@ -39,34 +42,43 @@ function ParentDashboard() {
               : 'Nothing is outstanding across your family.'}
           </p>
         </div>
-        <Button asChild disabled={!queue.total}>
+        <Button asChild disabled={!queue.total} size="lg">
           <Link to="/parent/pay">
-            <CreditCard className="size-3.75" strokeWidth={2} />
+            <CreditCard className="size-4" strokeWidth={2} />
             Pay fees
           </Link>
         </Button>
       </div>
-      <Rule />
 
       {/* Keyed on the child so the figures count up again on a switch. */}
-      <FigureTiles key={child.id} figures={figuresFor(child, family)} />
+      <div className="mt-7">
+        <FigureTiles key={child.id} figures={figuresFor(child, family)} />
+      </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
-        <section>
-          <h4 className="mb-0.5 text-xl">What needs you</h4>
-          <p className="text-xs text-muted-foreground">
-            Every invoice still owing, largest first.
-          </p>
-          <ActionQueue items={queue.items} empty="Nothing is owed on any child right now." />
-        </section>
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.5fr_1fr]">
+        <div className="grid content-start gap-3.5">
+          <Panel
+            title="Attendance, last 6 weeks"
+            description={`${child.full}, days present out of days marked.`}
+          >
+            <BarChart key={child.id} bars={attendance.bars} peak={attendance.peak} />
+          </Panel>
 
-        <section>
-          <h4 className="mb-0.5 text-xl">Attendance, last 6 weeks</h4>
-          <p className="text-xs text-muted-foreground">
-            {child.full}, days present out of days marked.
-          </p>
-          <BarChart key={child.id} bars={attendance.bars} peak={attendance.peak} />
-        </section>
+          <Panel
+            title="What needs you"
+            description="Every invoice still owing, largest first."
+          >
+            <ActionQueue
+              items={queue.items}
+              empty="Nothing is owed on any child right now."
+            />
+          </Panel>
+        </div>
+
+        <NotificationsPanel
+          notifications={notifications}
+          allPath="/parent/notifications"
+        />
       </div>
     </>
   )

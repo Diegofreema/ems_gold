@@ -1,15 +1,17 @@
 import {
+  // FileText,
   Bell,
   BookMarked,
   BookOpen,
   CalendarCheck,
   CalendarDays,
   ChartLine,
+  ClipboardCheck,
   CreditCard,
-  // FileText,
   LayoutGrid,
   SquareCheckBig,
   TrendingUp,
+  Wallet,
 } from 'lucide-react';
 import type { NavGroup } from '@/lib/portal';
 
@@ -22,6 +24,7 @@ export const studentNav: NavGroup[] = [
   },
   {
     heading: 'Learning',
+    icon: BookOpen,
     items: [
       { to: '/student/courses', label: 'My subjects', icon: BookOpen },
       // { to: '/student/materials', label: 'Subject materials', icon: FileText },
@@ -36,6 +39,7 @@ export const studentNav: NavGroup[] = [
   },
   {
     heading: 'Assessment',
+    icon: ClipboardCheck,
     items: [
       {
         to: '/student/assignments',
@@ -48,6 +52,7 @@ export const studentNav: NavGroup[] = [
   },
   {
     heading: 'Finance',
+    icon: Wallet,
     items: [
       { to: '/student/invoices', label: 'My invoices', icon: CreditCard },
     ],

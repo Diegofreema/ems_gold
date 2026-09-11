@@ -36,6 +36,7 @@ export function figuresFor(child: Child, family: Child[]) {
         child.owing > 0,
       ),
       icon: Hourglass,
+      accent: 'green' as const,
       to: '/parent/invoices',
     },
     {
@@ -46,6 +47,7 @@ export function figuresFor(child: Child, family: Child[]) {
         owing > 0,
       ),
       icon: HeartHandshake,
+      accent: 'blue' as const,
       to: '/parent/pay',
     },
     {
@@ -55,6 +57,7 @@ export function figuresFor(child: Child, family: Child[]) {
         counted(settled, 'invoice', 'invoices') + ' settled',
       ),
       icon: Banknote,
+      accent: 'ink' as const,
       to: '/parent/invoices',
     },
     {
@@ -66,6 +69,7 @@ export function figuresFor(child: Child, family: Child[]) {
         : 'No register taken yet',
       hot: child.marked > 0 && child.present < child.marked,
       icon: CalendarCheck,
+      accent: 'orange' as const,
       to: '/parent/attendance',
     },
   ]

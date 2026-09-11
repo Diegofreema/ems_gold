@@ -8,7 +8,7 @@
  */
 export function AuthPoster() {
   return (
-    <aside className="relative hidden overflow-hidden bg-auth-blue lg:block">
+    <aside className="relative hidden overflow-hidden bg-ui-blue lg:block">
       <Ripple />
 
       {/* Translucent rather than filled, so the ripple carries on through it —
@@ -53,7 +53,7 @@ function Ripple() {
       aria-hidden="true"
       className="absolute inset-0 size-full"
     >
-      <g fill="none" stroke="var(--auth-ring)">
+      <g fill="none" stroke="var(--ui-ring)">
         <circle cx="288" cy="750" r="234" strokeWidth="52" />
         <circle cx="288" cy="750" r="312" strokeWidth="54" />
         <circle cx="288" cy="750" r="420" strokeWidth="66" />

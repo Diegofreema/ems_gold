@@ -63,6 +63,7 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
       // Never flagged: money already taken is not something a student can act on.
       hot: false,
       icon: Banknote,
+      accent: 'green' as const,
       to: '/student/invoices',
     },
     {
@@ -75,6 +76,7 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
         fees.unpaid > 0,
       ),
       icon: Hourglass,
+      accent: 'blue' as const,
       to: '/student/invoices',
     },
     {
@@ -86,6 +88,7 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
           : 'None approved yet',
       ),
       icon: Award,
+      accent: 'ink' as const,
       to: '/student/results',
     },
     {
@@ -97,6 +100,7 @@ export function studentFigures(stats: StudentStats, invoices: Invoice[]) {
           : 'Nothing shared yet',
       ),
       icon: BookOpen,
+      accent: 'orange' as const,
       to: '/student/materials',
     },
   ];

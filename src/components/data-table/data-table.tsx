@@ -40,7 +40,7 @@ export function DataTable<TRow>({
   const phone = useBreakpoint('phone')
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-divider bg-raised shadow-card">
+    <div className="overflow-x-auto">
       {phone ? (
         <CardView
           columns={columns}

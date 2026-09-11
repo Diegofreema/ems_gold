@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { accountOfRecord, isSuperAdmin, isSuperAdminRole, roleForAccount } from './role.ts'
+import { isSuperAdmin, isSuperAdminRole, namesSomebodyElse, roleForAccount } from './role.ts'
 import type { Account } from '../../api/auth/types.ts'
 
 const account = (role: { id: number; role_name: string } | null) =>
@@ -56,18 +56,17 @@ test('a guardian is a parent however their role has been named', () => {
   assert.equal(roleForAccount({ ...PARENT, profile_type: 'sparent' } as Account), 'Parent')
 })
 
-test('a me that names somebody else is not believed over the sign-in', () => {
-  // Bronze hands the school's Super Admin to every caller. Adopting it puts a
-  // parent who has just signed in into the admin portal.
-  assert.equal(accountOfRecord(PARENT, SUPER_ADMIN), PARENT)
-  assert.equal(roleForAccount(accountOfRecord(PARENT, SUPER_ADMIN)), 'Parent')
+test('a me naming a different person is a device that has lost track of who is using it', () => {
+  // Two tabs on a staff-room laptop, two people. The cached identity is the
+  // one that is wrong here: `me` answers for the token every request carries.
+  assert.equal(namesSomebodyElse(PARENT, SUPER_ADMIN), true)
 })
 
-test('a me for the same person is believed, and is the fresher record', () => {
+test('a me for the same person is not a mismatch, however the role is renamed', () => {
   const renamed = { ...PARENT, role: { id: 4, role_name: 'Guardian' } } as Account
-  assert.equal(accountOfRecord(PARENT, renamed), renamed)
+  assert.equal(namesSomebodyElse(PARENT, renamed), false)
 })
 
-test('with nobody signed in there is nothing to check against', () => {
-  assert.equal(accountOfRecord(null, SUPER_ADMIN), SUPER_ADMIN)
+test('with nobody cached there is nothing to disagree with', () => {
+  assert.equal(namesSomebodyElse(null, SUPER_ADMIN), false)
 })

@@ -17,7 +17,7 @@ export function AuthLayout() {
   const { pathname } = useLocation()
 
   return (
-    <div className="auth-daylight grid min-h-dvh bg-white text-auth-ink lg:grid-cols-[minmax(0,48.6%)_minmax(0,1fr)]">
+    <div className="auth-daylight grid min-h-dvh bg-white text-ui-ink lg:grid-cols-[minmax(0,48.6%)_minmax(0,1fr)]">
       <AuthPoster />
 
       <main className="flex min-w-0 justify-center px-6 py-14 lg:px-8 lg:pt-35 lg:pb-16">

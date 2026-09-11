@@ -4,7 +4,7 @@ import { ChartColumn } from 'lucide-react'
 import { ActivityList } from '@/components/common/activity-list'
 import { SectionHeading } from '@/components/common/section-heading'
 import { BarChart } from '@/components/charts/bar-chart'
-import { Rule } from '@/components/page/rule'
+import { Panel } from '@/components/page/panel'
 import { TileStrip } from '@/components/page/tile-strip'
 import { Button } from '@/components/ui/button'
 import { useFirstName } from '@/features/auth/session'
@@ -39,40 +39,37 @@ function AdminDashboard() {
             payments clear.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild size="lg">
           <Link to="/admin/analytics">
-            <ChartColumn className="size-3.75" strokeWidth={2} />
+            <ChartColumn className="size-4" strokeWidth={2} />
             Business intelligence
           </Link>
         </Button>
       </div>
-      <Rule />
 
-      <SectionHeading className="mb-3">Finance</SectionHeading>
+      <SectionHeading className="mt-7 mb-3.5">Finance</SectionHeading>
       <FigureTiles figures={data.money} />
 
-      <SectionHeading className="mt-7 mb-3">People</SectionHeading>
+      <SectionHeading className="mt-7 mb-3.5">People</SectionHeading>
       <FigureTiles figures={data.people} />
 
-      <SectionHeading className="mt-7 mb-3">School</SectionHeading>
-      <TileStrip tiles={data.school} />
+      <SectionHeading className="mt-7 mb-3.5">School</SectionHeading>
+      <TileStrip size="lg" tiles={data.school} />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.35fr_1fr]">
-        <section>
-          <h4 className="mb-0.5 text-xl">Fee collections</h4>
-          <p className="text-xs text-muted-foreground">
-            Naira settled per month, the last six months.
-          </p>
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.35fr_1fr]">
+        <Panel
+          title="Fee collections"
+          description="Naira settled per month, the last six months."
+        >
           <BarChart bars={data.collections.bars} peak={data.collections.peak} />
-        </section>
+        </Panel>
 
-        <section>
-          <h4 className="mb-0.5 text-xl">Latest activity</h4>
-          <p className="text-xs text-muted-foreground">
-            Everything is written to the audit log.
-          </p>
+        <Panel
+          title="Latest activity"
+          description="Everything is written to the audit log."
+        >
           <ActivityList entries={data.activity} />
-        </section>
+        </Panel>
       </div>
     </>
   )

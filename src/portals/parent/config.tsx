@@ -1,5 +1,4 @@
 import type { PortalConfig } from '@/lib/portal'
-import { CurrentTerm } from '@/components/layout/current-term'
 import { ChildBar } from './features/children/child-bar'
 import { FamilyContext } from './features/family/family-context'
 import { useMyNotifications } from '@/features/notifications/use-notice-feed'
@@ -21,5 +20,4 @@ export const parentPortal: PortalConfig = {
   ],
   context: <FamilyContext />,
   contextBar: <ChildBar />,
-  headerStatus: <CurrentTerm />,
 }

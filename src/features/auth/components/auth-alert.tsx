@@ -9,16 +9,16 @@ export function AuthAlert({ title, body }: { title: string; body: string }) {
   return (
     <div
       role="alert"
-      className="mt-7 flex animate-ems-shake items-start gap-2.5 rounded-md border border-auth-error/35 bg-auth-error/6 px-4 py-3.5"
+      className="mt-7 flex animate-ems-shake items-start gap-2.5 rounded-md border border-ui-error/35 bg-ui-error/6 px-4 py-3.5"
     >
       <CircleAlert
-        className="mt-0.75 size-4.5 flex-none fill-auth-error text-white"
+        className="mt-0.75 size-4.5 flex-none fill-ui-error text-white"
         strokeWidth={2}
         aria-hidden="true"
       />
       <div>
         <div className="text-base font-medium">{title}</div>
-        <div className="mt-1 text-sm text-auth-muted">{body}</div>
+        <div className="mt-1 text-sm text-ui-muted">{body}</div>
       </div>
     </div>
   )

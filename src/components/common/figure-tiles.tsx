@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { CountUp } from '@/components/common/count-up'
-import { TileStrip } from '@/components/page/tile-strip'
+import { TileStrip, type TileAccent } from '@/components/page/tile-strip'
 import { formatNaira } from '@/lib/format'
 
 export type DashboardFigure = {
@@ -12,6 +12,8 @@ export type DashboardFigure = {
   hot?: boolean
   /** The card's icon chip. */
   icon?: LucideIcon
+  /** Which colour that chip wears. Left off, it takes the next in order. */
+  accent?: TileAccent
   /** The page this figure summarises; the card lifts and opens it. */
   to?: string
   /** A real monthly series to pulse under the figure. */
@@ -36,6 +38,7 @@ export function FigureTiles({ figures }: { figures: DashboardFigure[] }) {
         delta: figure.delta,
         deltaTone: figure.hot ? 'alert' : 'muted',
         icon: figure.icon,
+        accent: figure.accent,
         to: figure.to,
         spark: figure.spark,
       }))}

@@ -1,18 +1,14 @@
-/** Accent mark, product name and the portal's role label. */
-export function SidebarBrand({ roleLabel }: { roleLabel: string }) {
+/**
+ * The school's mark, at the head of the rail.
+ *
+ * The portal's name used to sit under it. It has gone: every screen below
+ * already says which portal this is, and the design gives the mark the room
+ * instead.
+ */
+export function SidebarBrand() {
   return (
-    <div className="border-b border-divider px-4 pt-4.5 pb-3.5">
-      <div className="flex items-center gap-2.5">
-        <div className="size-6 flex-none rounded-sm bg-brand" />
-        <div>
-          <div className="font-heading text-base leading-none font-extrabold">
-            NETPRO EMS
-          </div>
-          <div className="mt-0.75 text-2xs uppercase tracking-kicker text-muted-foreground">
-            {roleLabel}
-          </div>
-        </div>
-      </div>
+    <div className="px-6 pt-7 pb-6">
+      <img src="/netpro-logo.webp" alt="netpro" className="h-9 w-auto" />
     </div>
   )
 }

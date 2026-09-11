@@ -9,7 +9,9 @@ export const adminPortal: PortalConfig = {
   basePath: '/admin',
   messagesPath: '/admin/messages',
   nav: adminNav,
-  searchableNav: true,
+  context: <CurrentTerm />,
+  searchPath: '/admin/search',
+  settingsPath: '/admin/settings',
   useNotifications: useOfficeNotifications,
   notFoundAudience: 'the office',
   notFoundLinks: [
@@ -18,5 +20,4 @@ export const adminPortal: PortalConfig = {
     { to: '/admin/students', label: 'Student register', hint: 'Every student on file' },
     { to: '/admin/logs', label: 'Activity log', hint: 'Who did what' },
   ],
-  headerStatus: <CurrentTerm />,
 }

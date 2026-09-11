@@ -16,7 +16,11 @@ function endOfTerm(stored: string | undefined): string | undefined {
 }
 
 /**
- * What the school is in, in the header of every admin page.
+ * What the school is in, at the top of the office's rail.
+
+ * It used to sit in the header, in small print on the right. The header is the
+ * search box's now, and the term reads better as a card above the nav — the
+ * same place the teacher's portal says which term it is marking into.
  *
  * Read from the one settings row rather than written down: this is the same
  * answer the Sessions and Terms registers change, and it was worth reading
@@ -33,11 +37,16 @@ export function CurrentTerm() {
 
   const ends = endOfTerm(calendar.current_term_ends)
   return (
-    <>
-      <div className="uppercase tracking-label">
+    <div className="mx-4 mb-4 rounded-lg bg-ui-field px-4 py-3">
+      <div className="text-2xs uppercase tracking-label text-muted-foreground">
+        The school is in
+      </div>
+      <div className="mt-1 font-heading text-sm font-extrabold">
         {[calendar.session, calendar.semester].filter(Boolean).join(' · ')}
       </div>
-      {ends && <div>Term ends {ends}</div>}
-    </>
+      {ends && (
+        <div className="mt-0.5 text-2xs text-muted-foreground">Term ends {ends}</div>
+      )}
+    </div>
   )
 }

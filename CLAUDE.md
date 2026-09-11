@@ -238,6 +238,17 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
 - **Offline start runs on the cached identity** for at most the token's own twelve hours —
   `src/api/token.ts` already drops an expired one, which is the ceiling. A token revoked server-side
   but not yet expired buys read access to data already on that device until it expires.
+- **The cached identity is kept wherever the token is kept**, and a `/users/me` naming somebody else
+  ends the session. Those are one rule seen twice. A sign-in with "remember this device" unticked
+  leaves its token in `sessionStorage`, which is one tab's alone, while the identity used to go to
+  `localStorage` whatever the token did — so two tabs on a staff-room laptop had a token each and
+  one identity between them, and reloading the older tab hydrated somebody else's identity over its
+  own token. The portal guard reads the cached role, so a student's tab opened the office's portal:
+  every request in it was refused by the school, but the device's own records were already on the
+  screen. `session.store.ts` now persists beside the token, `endSession` and a boot sweep clear what
+  is left of an identity with no token, and `namesSomebodyElse` in `role.ts` — which replaced
+  `accountOfRecord`, written when bronze's `me` ignored the header and handed back Super Admin —
+  ends the session rather than discarding the answer.
 - **A row that has not synced is read-only** until it does — `src/features/collections/unsynced.ts`,
   recognised by its `local:` id. This is what lets the queue avoid chained edits on records the
   school has never seen: an edit would name an id that does not exist yet, so the queue would need a
@@ -324,15 +335,27 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   the second as text shows `<p>` to a parent.
 - **`src/index.css` is the only source of design truth** — the hybrid token system, soft raised
   surfaces, and danger and success as the only colours beside brand.
-- **The sign-in screens are the one place that is not the portals' palette.** They are drawn to
-  their own design — a softer blue, flat greys, 46px controls on white — so `--auth-*` lives in
-  `index.css` beside the rest and nothing outside `src/features/auth/` reaches for it. Two things
-  follow. The fields are `AuthField`, not `TextField`: sharing one component between a record form
-  the office fills in forty of and a single field on a white page would mean a variant flag on
-  every rule in it. And the design has **no dark half**, so the layout carries `.auth-daylight`,
-  which re-declares the light tokens *and the shadcn aliases over them* — an alias is resolved
-  where it is declared, so a container that redeclares `--ems-ink` alone still inherits `<html>`'s
-  resolved `--muted-foreground`, which under a dark theme is pale grey on the sign-in page's white.
+- **The design's own greys are `--ui-*`, and the brand ramp is anchored on its blue.** They arrived
+  with the sign-in screens and now carry the shell and the office's pages too, which is why
+  `--ems-brand` is `#356ead`: two near-identical blues side by side is the one thing a half-applied
+  design always looks like. `--ui-field` fills an input, `--ui-line` fills a table's header band,
+  and both have a dark half — the rest of the set is either colour-agnostic or reached only from
+  `src/features/auth/`. Tile accents (`--tile-*`) are decoration and nothing else: they let somebody
+  find a figure by its colour, and no other component may reach for them.
+- **The sign-in screens are drawn light-only**, so the layout carries `.auth-daylight`, which
+  re-declares the light tokens *and the shadcn aliases over them* — an alias is resolved where it is
+  declared, so a container that redeclares `--ems-ink` alone still inherits `<html>`'s resolved
+  `--muted-foreground`, which under a dark theme is pale grey on the sign-in page's white. Their
+  fields are `AuthField`, not `TextField`: sharing one component between a record form the office
+  fills in forty of and a single field on a white page would mean a variant flag on every rule in it.
+- **A page is cards on a ground, and the shell is a rail and a bar.** The rail (264px) is the mark,
+  the portal's context card, sections that open onto their pages, and Tools — settings and the way
+  out — at its foot. The header is the search box and whoever is signed in; the page's own title is
+  **not** there any more, because every screen already opens with it and saying it twice cost the
+  width the search now has. `PageHeader`'s kicker is what is left of the breadcrumb. Everything
+  below sits in a `Panel`: flat white on the ground, no border — the ground is what separates one
+  card from the next, and a page of bordered cards is a page of lines. The register, its search row
+  and its pager are one card; a record form is one card; a dashboard is a card per figure.
 - **Tests are `node --test` on pure logic.** A module under test uses relative imports with explicit
   `.ts` extensions, and no parameter properties (`erasableSyntaxOnly`). Anything risky in the local-
   first layer — failure classification, queue ordering, backoff, id substitution, the household

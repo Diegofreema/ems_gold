@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   CreditCard,
   FileText,
+  GraduationCap,
   House,
   LayoutGrid,
   List,
@@ -21,12 +22,12 @@ import {
   MessagesSquare,
   Search,
   Shield,
-  SlidersHorizontal,
   SquareCheckBig,
   Table2,
   TrendingUp,
   UserPlus,
   Users,
+  Wallet,
 } from 'lucide-react';
 import type { NavGroup } from '@/lib/portal';
 
@@ -42,6 +43,7 @@ export const adminNav: NavGroup[] = [
   },
   {
     heading: 'Students',
+    icon: GraduationCap,
     items: [
       { to: '/admin/students', label: 'Enrolled', icon: Users },
       // No badge, for the reason above: the dashboard counts applicants from
@@ -53,6 +55,7 @@ export const adminNav: NavGroup[] = [
   },
   {
     heading: 'Staff',
+    icon: Briefcase,
     items: [
       { to: '/admin/staff', label: 'Manage staff', icon: Briefcase },
       { to: '/admin/staff-admin', label: 'Administrators', icon: Shield },
@@ -61,10 +64,12 @@ export const adminNav: NavGroup[] = [
   },
   {
     heading: 'Parents',
+    icon: Users,
     items: [{ to: '/admin/parents', label: 'All parents', icon: House }],
   },
   {
     heading: 'Academics',
+    icon: BookOpen,
     items: [
       { to: '/admin/classes', label: 'Classes & arms', icon: Building2 },
       { to: '/admin/subjects', label: 'Subjects', icon: BookOpen },
@@ -82,6 +87,7 @@ export const adminNav: NavGroup[] = [
   },
   {
     heading: 'School',
+    icon: Building2,
     items: [
       { to: '/admin/notices', label: 'Notice board', icon: Megaphone },
       // No badge: the count is live and this list is a module constant. The
@@ -90,11 +96,13 @@ export const adminNav: NavGroup[] = [
       { to: '/admin/library', label: 'Library', icon: Book },
       { to: '/admin/lending', label: 'Lending', icon: BookUp },
       { to: '/admin/logs', label: 'Activity log', icon: List },
-      { to: '/admin/settings', label: 'Settings', icon: SlidersHorizontal },
+      // Settings is not repeated here: the rail's Tools section carries it,
+      // which is where somebody looks for their own settings.
     ],
   },
   {
     heading: 'Finance',
+    icon: Wallet,
     items: [
       { to: '/admin/fees', label: 'Fee catalogue', icon: BadgeDollarSign },
       // No badge: the queue counts itself on the page, and a number here that

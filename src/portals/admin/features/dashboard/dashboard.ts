@@ -1,10 +1,14 @@
 import {
   Banknote,
+  BedDouble,
+  BookOpen,
+  Building2,
   GraduationCap,
   HeartHandshake,
   Hourglass,
   Presentation,
   ReceiptText,
+  Shield,
   UserPlus,
   Wallet,
 } from 'lucide-react'
@@ -201,10 +205,28 @@ export function peopleFigures(stats: DashboardStats) {
  */
 export function schoolTiles(stats: DashboardStats) {
   return [
-    { label: 'Classes', value: formatCount(stats.classes), to: '/admin/classes' },
-    { label: 'Subjects', value: formatCount(stats.subjects), to: '/admin/subjects' },
-    { label: 'Hostels', value: formatCount(stats.hostels) },
-    { label: 'Administrators', value: formatCount(stats.admins), to: '/admin/staff-admin' },
+    {
+      label: 'Classes',
+      value: formatCount(stats.classes),
+      icon: Building2,
+      accent: 'purple' as const,
+      to: '/admin/classes',
+    },
+    {
+      label: 'Subjects',
+      value: formatCount(stats.subjects),
+      icon: BookOpen,
+      accent: 'ink' as const,
+      to: '/admin/subjects',
+    },
+    { label: 'Hostels', value: formatCount(stats.hostels), icon: BedDouble, accent: 'rose' as const },
+    {
+      label: 'Administrators',
+      value: formatCount(stats.admins),
+      icon: Shield,
+      accent: 'violet' as const,
+      to: '/admin/staff-admin',
+    },
   ]
 }
 

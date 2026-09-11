@@ -2,6 +2,7 @@ import type { FieldValues, UseFormReturn } from 'react-hook-form'
 import { FormProvider } from 'react-hook-form'
 import type { ReactNode } from 'react'
 import { PageHeader } from '@/components/page/page-header'
+import { Panel } from '@/components/page/panel'
 import { Rule } from '@/components/page/rule'
 import { FormErrorBanner } from './form-error-banner'
 import { FormFooter } from './form-footer'
@@ -45,31 +46,33 @@ export function RecordForm<TValues extends FieldValues>({
   const errorCount = Object.keys(form.formState.errors).length
 
   return (
-    <div className="mx-auto w-full max-w-[780px]">
+    <div className="mx-auto w-full max-w-[980px]">
       {back}
-      <PageHeader kicker={kicker} title={title} description={description} />
-      <Rule />
 
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <FormErrorBanner count={errorCount} />
-          {children}
-          <Rule />
-          {blocked && (
-            <p className="mb-3.5 rounded-lg border border-divider bg-raised px-4 py-3.5 text-sm">
-              {blocked}
-            </p>
-          )}
-          <FormFooter
-            submitLabel={submitLabel}
-            onCancel={onCancel}
-            deleteLabel={deleteLabel}
-            onDelete={onDelete}
-            pending={form.formState.isSubmitting}
-            blocked={blocked}
-          />
-        </form>
-      </FormProvider>
+      <Panel className="mt-3 p-5 sm:p-8">
+        <PageHeader kicker={kicker} title={title} description={description} />
+
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="mt-7">
+            <FormErrorBanner count={errorCount} />
+            {children}
+            <Rule />
+            {blocked && (
+              <p className="mb-3.5 rounded-lg bg-ui-field px-4 py-3.5 text-sm">
+                {blocked}
+              </p>
+            )}
+            <FormFooter
+              submitLabel={submitLabel}
+              onCancel={onCancel}
+              deleteLabel={deleteLabel}
+              onDelete={onDelete}
+              pending={form.formState.isSubmitting}
+              blocked={blocked}
+            />
+          </form>
+        </FormProvider>
+      </Panel>
     </div>
   )
 }

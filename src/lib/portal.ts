@@ -16,6 +16,12 @@ export type NavItem = {
 export type NavGroup = {
   /** Omitted for the ungrouped block at the top of the sidebar. */
   heading?: string
+  /**
+   * The section's own glyph, on the row that opens it. A heading without one
+   * still renders — it simply sits where the icons are, which is what the
+   * ungrouped block at the top does anyway.
+   */
+  icon?: LucideIcon
   items: NavItem[]
 }
 
@@ -33,10 +39,18 @@ export type PortalConfig = {
   context?: ReactNode
   /** Strip under the header — the parent portal's child switcher. */
   contextBar?: ReactNode
-  /** Right-hand status text in the header. */
-  headerStatus?: ReactNode
-  /** Admin filters its long nav with a search box; the others do not. */
-  searchableNav?: boolean
+  /**
+   * Where the header's search box sends what was typed. Only the office has
+   * one: `GET /search` is admin-only, and the API gives a teacher, a guardian
+   * or a student nothing of their own to search across.
+   */
+  searchPath?: string
+  /**
+   * Where the rail's Tools section points for settings. Defaults to the
+   * portal's own profile page, which is what settings means to everybody but
+   * the office.
+   */
+  settingsPath?: string
   /**
    * Where the header's messages button goes, for the three portals that have
    * one. The student portal sets none: the school gives a student no contacts,

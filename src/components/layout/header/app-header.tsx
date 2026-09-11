@@ -1,82 +1,60 @@
-import { Link } from '@tanstack/react-router'
 import { Menu } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import type { CrumbLink } from '@/features/collections/types'
-import { cn } from '@/lib/utils'
 import { RouteProgress } from '@/components/layout/route-progress'
+import type { AccountSummary } from '@/lib/account'
 import { useShellStore } from '@/stores/shell.store'
+import { AccountChip } from './account-chip'
+import { HeaderSearch } from './header-search'
 import { ThemeToggle } from './theme-toggle'
 
-const CRUMB = 'truncate text-2xs uppercase tracking-kicker text-muted-foreground'
-
 /**
- * Sticky bar: breadcrumb over page title on the left, portal status and the
- * bell/theme controls on the right.
+ * Search on the left, the controls and whoever is signed in on the right.
+ *
+ * The page's own title used to live here, over a breadcrumb. It has gone to
+ * the page: every screen already opens with its title, so the header was
+ * saying it twice — and the second saying cost the width the search box now
+ * has. The one place it still earns its keep is a narrow viewport, where the
+ * menu button stands in its place.
  */
 export function AppHeader({
-  crumb,
-  crumbTo,
-  title,
-  status,
+  searchPath,
+  account,
+  profilePath,
   narrow,
   children,
 }: {
-  crumb: string
-  /** Where the crumb leads. Text where the crumb names no page of its own. */
-  crumbTo?: CrumbLink
-  title: string
-  status?: ReactNode
+  /** Set only by a portal with something to search. */
+  searchPath?: string
+  account: AccountSummary
+  profilePath: string
   narrow: boolean
-  /** Portal-agnostic slot for the notification bell. */
+  /** The sync chip, the messages door and the notification bell. */
   children?: ReactNode
 }) {
   const openDrawer = useShellStore((state) => state.openDrawer)
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3.5 border-b border-divider bg-background px-content py-3.5 relative">
+    <header className="sticky top-0 z-20 flex h-18 items-center gap-3 border-b border-divider bg-raised px-content">
       {narrow && (
         <Button
           variant="outline"
           size="icon"
           onClick={openDrawer}
           aria-label="Open the menu"
-          className="size-9"
+          className="size-10 flex-none rounded-lg"
         >
-          <Menu className="size-[17px]" strokeWidth={2} />
+          <Menu className="size-[18px]" strokeWidth={2} />
         </Button>
       )}
 
-      {/* One line each: a long record name would otherwise wrap into the
-          status beside it. The page below repeats the title in full. */}
-      <div className="min-w-0 flex-1">
-        {/* A crumb that names a page is the way up to it; one that names only
-            the section it sits in has nowhere to lead, and stays text. */}
-        {crumbTo ? (
-          <Link
-            {...crumbTo}
-            className={cn(CRUMB, 'block w-fit max-w-full hover:text-brand')}
-          >
-            {crumb}
-          </Link>
-        ) : (
-          <div className={CRUMB}>{crumb}</div>
-        )}
-        <div className="truncate font-heading text-lg leading-[1.15] font-extrabold">
-          {title}
-        </div>
-      </div>
+      {searchPath ? <HeaderSearch to={searchPath} /> : null}
 
-      {/* Below the design's phone breakpoint there is no room for both, and
-          the title is what tells you which page you are on. */}
-      {status && (
-        <div className="hidden flex-none text-right text-2xs text-muted-foreground sm:block">
-          {status}
-        </div>
-      )}
+      <div className="flex-1" />
 
       {children}
       <ThemeToggle />
+      <AccountChip account={account} profilePath={profilePath} />
 
       {/* Sits on the header's own bottom border, so it is in view however far
           a long register has been scrolled. See `RouteProgress`. */}

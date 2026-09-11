@@ -8,7 +8,7 @@ import { DataTable } from '@/components/data-table/data-table'
 import { Pagination } from '@/components/data-table/pagination'
 import { FilterBar } from '@/components/page/filter-bar'
 import { PageHeader } from '@/components/page/page-header'
-import { Rule } from '@/components/page/rule'
+import { Panel } from '@/components/page/panel'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hooks/use-confirm'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
@@ -69,19 +69,18 @@ export function CollectionList({
   // rows already there.
   if (!paged && (error || paused)) {
     return (
-      <>
+      <Panel>
         <PageHeader
           kicker={definition.kicker}
           title={definition.title}
           description={definition.description}
         />
-        <Rule />
         <EmptyState
           title="This list could not load"
           body={error ? errorMessage(error, OFFLINE_MESSAGE) : OFFLINE_MESSAGE}
           action={<Button onClick={retry}>Try again</Button>}
         />
-      </>
+      </Panel>
     )
   }
 
@@ -196,14 +195,13 @@ export function CollectionList({
     )
 
   return (
-    <>
+    <Panel className="p-5 sm:p-6">
       <PageHeader
         kicker={definition.kicker}
         title={definition.title}
         description={definition.description}
-        action={actions}
       />
-      <Rule />
+      <div className="mt-5" />
 
       {/* A search or a filter that matches nothing is the table's own state to
           show, not the collection's — an empty register is a different thing
@@ -221,6 +219,7 @@ export function CollectionList({
             onQueryChange={setQuery}
             placeholder={definition.searchHint}
             searchable={definition.searchable ?? true}
+            action={actions}
             count={
               total === undefined
                 ? `${paged.total} found`
@@ -302,6 +301,6 @@ export function CollectionList({
       )}
 
       <ConfirmDialog request={confirm.request} onOpenChange={confirm.setOpen} />
-    </>
+    </Panel>
   )
 }

@@ -4,9 +4,11 @@ import { PenLine } from 'lucide-react';
 import { ActivityList } from '@/components/common/activity-list';
 import { EmptyState } from '@/components/feedback/empty-state';
 import { FigureTiles } from '@/components/common/figure-tiles';
-import { Rule } from '@/components/page/rule';
+import { Panel } from '@/components/page/panel';
 import { Button } from '@/components/ui/button';
 import { DetailRows } from '@/features/auth/components/detail-rows';
+import { useMyNotifications } from '@/features/notifications/use-notice-feed';
+import { NotificationsPanel } from '@/features/notifications/components/notifications-panel';
 import { useFirstName } from '@/features/auth/session';
 import { greeting } from '@/lib/greeting';
 import { teacherDashboardQuery } from '@/portals/teacher/api/dashboard';
@@ -25,6 +27,7 @@ export const Route = createFileRoute('/teacher/')({
 function TeacherDashboard() {
   const name = useFirstName('there');
   const { data } = useSuspenseQuery(teacherDashboardQuery);
+  const notifications = useMyNotifications();
 
   return (
     <>
@@ -35,53 +38,57 @@ function TeacherDashboard() {
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">{data.note}</p>
         </div>
-        <Button asChild>
+        <Button asChild size="lg">
           <Link to="/teacher/scores">
-            <PenLine className="size-3.75" strokeWidth={2} />
+            <PenLine className="size-4" strokeWidth={2} />
             Enter scores
           </Link>
         </Button>
       </div>
-      <Rule />
 
-      <FigureTiles figures={data.figures} />
+      <div className="mt-7">
+        <FigureTiles figures={data.figures} />
+      </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
-        <section>
-          <h4 className="mb-0.5 text-xl">Assignments you have set</h4>
-          <p className="text-xs text-muted-foreground">
-            The most recent first, with the ones still open flagged.
-          </p>
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.5fr_1fr]">
+        <Panel
+          title="Assignments you have set"
+          description="The most recent first, with the ones still open flagged."
+        >
           {data.assignments.length ? (
             <ActivityList entries={data.assignments} />
           ) : (
-            <div className="mt-3.5">
-              <EmptyState
-                title="No assignments yet"
-                body="Assignments you set for your classes are listed here, with when they close."
-                action={
-                  <Button asChild>
-                    <Link to="/teacher/assignments">Set an assignment</Link>
-                  </Button>
-                }
-              />
-            </div>
+            <EmptyState
+              title="No assignments yet"
+              body="Assignments you set for your classes are listed here, with when they close."
+              action={
+                <Button asChild>
+                  <Link to="/teacher/assignments">Set an assignment</Link>
+                </Button>
+              }
+            />
           )}
-        </section>
+        </Panel>
 
-        <section>
-          <h4 className="mb-0.5 text-xl">Class you take</h4>
-          <p className="text-xs text-muted-foreground">
-            The classes the office has put you in front of.
-          </p>
-          {data.arms.length ? (
-            <DetailRows rows={data.arms} />
-          ) : (
-            <p className="mt-3.5 border-t border-divider-strong py-3 text-sm text-muted-foreground">
-              You are not class teacher this session.
-            </p>
-          )}
-        </section>
+        <div className="grid content-start gap-3.5">
+          <NotificationsPanel
+            notifications={notifications}
+            allPath="/teacher/notifications"
+          />
+
+          <Panel
+            title="Class you take"
+            description="The classes the office has put you in front of."
+          >
+            {data.arms.length ? (
+              <DetailRows rows={data.arms} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                You are not class teacher this session.
+              </p>
+            )}
+          </Panel>
+        </div>
       </div>
     </>
   );

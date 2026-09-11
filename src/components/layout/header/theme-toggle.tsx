@@ -1,6 +1,7 @@
 import { Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppearanceStore } from '@/stores/appearance.store'
+import { headerControl } from './controls'
 
 export function ThemeToggle() {
   const theme = useAppearanceStore((state) => state.theme)
@@ -15,7 +16,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       title={label}
       aria-label={label}
-      className="size-9"
+      className={headerControl}
     >
       <Icon className="size-4" strokeWidth={1.9} />
     </Button>

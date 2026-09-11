@@ -54,24 +54,6 @@ export function roleForAccount(account: Account): Role | null {
 }
 
 /**
- * Which account the app believes, when the one it signed in as and the one
- * `/users/me` describes are not the same person.
- *
- * They should never differ: `me` exists to answer for the token, and the token
- * was minted by the login that returned `signedInAs`. On bronze it does differ
- * — `GET /users/me` ignores the Authorization header entirely and hands the
- * school's Super Admin to every caller, token or none. Believing it puts a
- * guardian who has just signed in into the admin portal.
- *
- * So a `me` that names a different user is not adopted. It is the weaker claim
- * of the two: the login answer was made against credentials, and this one was
- * made against nothing. Anything else about the account — a renamed role, an
- * edited profile — is taken from `me` as usual, because there the ids agree
- * and `me` is the fresher record.
- *
- * With nothing signed in there is nothing to check against, so `me` stands.
- */
-/**
  * Whether the office has switched this sign-in off. The record, the trail and
  * the privileges all stay; only the access stops, which is what the staff
  * register's "Disable sign-in" does.
@@ -84,9 +66,36 @@ export function isDisabled(account: Account | null): boolean {
 export const DISABLED_TITLE = 'This account has been disabled'
 export const DISABLED_BODY = 'Ask the school office to turn it back on.'
 
-export function accountOfRecord(signedInAs: Account | null, fresh: Account): Account {
-  if (!signedInAs) return fresh
-  return signedInAs.user?.id === fresh.user?.id ? fresh : signedInAs
+/**
+ * Whether `/users/me` is describing somebody other than the account this
+ * device thinks is signed in.
+ *
+ * It should never be true. `me` answers for the token, and the token was
+ * minted by the login that stored the account — so a different `user.id` means
+ * the two have come apart, and on a shared machine there is a way for that to
+ * happen: two tabs, two people, one browser. The cached identity was kept
+ * where every tab could read it while the token was kept in the tab that
+ * earned it, so a reload could pick up somebody else's identity and open their
+ * portal with it.
+ *
+ * `me` is the truth of the two — it is the token's own answer, and the token
+ * is what every request carries. Nothing here decides what to *do* about a
+ * mismatch; `loadAccount` ends the session, because a device that cannot say
+ * who is using it has to ask again.
+ *
+ * This replaced `accountOfRecord`, which believed the login over `me` for the
+ * opposite reason: bronze used to ignore the Authorization header on this one
+ * endpoint and hand the school's Super Admin to every caller. That was fixed
+ * on 2026-09-01 — re-checked 2026-09-11, when a student token answered the
+ * student and a made-up one answered 401 — so keeping the old guard only meant
+ * discarding the one signal that would have corrected a stale identity.
+ */
+export function namesSomebodyElse(
+  signedInAs: Account | null,
+  fresh: Account,
+): boolean {
+  if (!signedInAs) return false
+  return signedInAs.user?.id !== fresh.user?.id
 }
 
 export function portalFor(role: Role): Portal {

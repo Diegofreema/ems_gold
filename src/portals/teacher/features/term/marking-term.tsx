@@ -21,7 +21,7 @@ export function MarkingTerm() {
   if (!term) return null
 
   return (
-    <div className="border-b border-divider px-4 pt-3.5 pb-2.5">
+    <div className="mx-4 mb-4 rounded-lg bg-ui-field px-4 py-3">
       <div className="text-2xs uppercase tracking-label text-muted-foreground">
         Marking for
       </div>

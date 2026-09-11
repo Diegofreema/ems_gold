@@ -9,9 +9,9 @@ import { endSession, useSessionStore } from '@/stores/session.store'
 import { accountSummary } from './account-summary'
 import { useAuthStore } from './auth.store'
 import {
-  accountOfRecord,
   isDisabled,
   isSuperAdmin,
+  namesSomebodyElse,
   type Portal,
   portalFor,
   type Role,
@@ -50,9 +50,9 @@ export function useSession(): Session {
  * failure, a 500 — is left to throw: not being able to check is not the same
  * as being signed out.
  *
- * The answer is checked against the account that signed in before it is
- * believed, because this API's `me` can name somebody else entirely —
- * `accountOfRecord` has the whole of it.
+ * The answer is checked against the account this device has cached before it
+ * is believed — not to overrule it, but because the two coming apart means the
+ * cached one belongs to somebody else. See `namesSomebodyElse`.
  */
 export async function loadAccount(queryClient: QueryClient): Promise<Account | null> {
   const account = await queryClient
@@ -67,7 +67,19 @@ export async function loadAccount(queryClient: QueryClient): Promise<Account | n
     return null
   }
 
-  const believed = accountOfRecord(useSessionStore.getState().account, account)
+  /*
+   * The token belongs to somebody other than the identity this device had
+   * cached. Ended rather than quietly adopted: the device has been showing one
+   * person's portal to another person's token, and everything under it — the
+   * collections, the queue, the chosen child — was opened for the account that
+   * is not here. Signing in again is what re-adopts the device properly.
+   */
+  if (namesSomebodyElse(useSessionStore.getState().account, account)) {
+    endSession(queryClient)
+    return null
+  }
+
+  const believed = account
 
   // The office can switch a sign-in off at any moment, including while the
   // person is holding a live token. Treated exactly like a refused one, so

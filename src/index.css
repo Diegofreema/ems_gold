@@ -24,20 +24,20 @@
    ───────────────────────────────────────────────────────────────────── */
 :root,
 .auth-daylight {
-  --ems-ground: #f2f2f4;
-  --ems-surface: #e9e9ec;
-  --ems-ink: #1c1d20;
-  --ems-brand: #156fb4;
+  --ems-ground: #fafafa;
+  --ems-surface: #f2f2f2;
+  --ems-ink: #202020;
+  --ems-brand: #356ead;
   /* Softened in the "alive" pass: hairlines carry structure, they no longer
      shout it. `strong` keeps the old weight for table-header rules. */
-  --ems-divider: color-mix(in srgb, #1c1d20 22%, transparent);
-  --ems-divider-strong: color-mix(in srgb, #1c1d20 42%, transparent);
+  --ems-divider: color-mix(in srgb, #202020 18%, transparent);
+  --ems-divider-strong: color-mix(in srgb, #202020 32%, transparent);
   /* Card surfaces sit above the ground now — white in light, a lifted grey
      in dark — which is most of what makes the soft cards read as cards. */
   --ems-raised: #ffffff;
 
-  --ems-neutral-100: #f4f5f8;
-  --ems-neutral-200: #e6e8ec;
+  --ems-neutral-100: #f6f6f6;
+  --ems-neutral-200: #ededed;
   --ems-neutral-300: #d2d4da;
   --ems-neutral-400: #b5b8bf;
   --ems-neutral-500: #96999f;
@@ -48,15 +48,15 @@
 
   /* Ramp anchored on --ems-brand itself at the 600 step, so buttons and
      headings draw from one hue instead of the two blues the old ramp mixed. */
-  --ems-brand-100: #eaf3fa;
-  --ems-brand-200: #d3e6f4;
-  --ems-brand-300: #a9cfe9;
-  --ems-brand-400: #6faed7;
-  --ems-brand-500: #3389c4;
-  --ems-brand-600: #156fb4;
-  --ems-brand-700: #10578d;
-  --ems-brand-800: #0d4269;
-  --ems-brand-900: #0b2e47;
+  --ems-brand-100: #eef4fa;
+  --ems-brand-200: #d8e6f3;
+  --ems-brand-300: #b0cbe6;
+  --ems-brand-400: #7aa8d3;
+  --ems-brand-500: #4c85c0;
+  --ems-brand-600: #356ead;
+  --ems-brand-700: #2a5989;
+  --ems-brand-800: #204568;
+  --ems-brand-900: #16304a;
 
   /* Danger is the one colour added to the palette: destructive actions and
      error states must not wear the brand blue. Split roles — `danger` is a
@@ -79,25 +79,54 @@
   --ems-shadow-float:
     0 4px 10px rgb(16 24 40 / 0.08), 0 14px 34px rgb(16 24 40 / 0.12);
 
-  /* The sign-in design's own palette. It is not the portals' — its blue is
-     softer than --ems-brand and its greys are flatter — and it is deliberately
-     kept out of the ramps above so nothing but the auth screens can reach for
-     it. Sampled from the design itself rather than guessed at. */
-  --auth-blue: #356ead;
-  --auth-ring: #4c83b9;
-  --auth-ink: #202020;
-  --auth-muted: #575757;
-  --auth-hint: #8c8c8c;
-  --auth-field: #f8f8f8;
-  --auth-error: #eb4d48;
-  --auth-error-line: #ea3628;
+  /* The design's own flat greys, sampled from the mockups rather than guessed
+     at. They began on the sign-in screens and are now the shell's too, so the
+     names are the product's rather than the auth folder's. `--ems-brand` is
+     the same blue, which is why the two halves of the app finally agree.
+     `field` fills an input, `line` fills a table header and any other quiet
+     band, `hint` is placeholder text. */
+  --ui-blue: #356ead;
+  --ui-ring: #4c83b9;
+  --ui-ink: #202020;
+  --ui-muted: #575757;
+  --ui-hint: #8c8c8c;
+  --ui-field: #f8f8f8;
+  --ui-line: #f6f6f6;
+  --ui-error: #eb4d48;
+  --ui-error-line: #ea3628;
+
+  /* Tile accents. A dashboard tile carries a coloured square so a reader can
+     find the figure they came for by its colour before they have read a word
+     of it — which is the one job these have. Nothing else may use them. */
+  --tile-blue: #467cf6;
+  --tile-green: #65c266;
+  --tile-orange: #f09045;
+  --tile-red: #ea465a;
+  --tile-purple: #8a2478;
+  --tile-violet: #5d5bec;
+  --tile-ink: #000000;
+  --tile-rose: #ea3628;
 
   /* Multiplier for every duration below — the design's `motion` prop / 6.
        Set to 0 to disable animation entirely. */
+  /* The design's body grey. Dark flips it below. */
+  --ems-muted: #575757;
+
   --ems-motion: 1;
 }
 
 [data-ems-theme='dark'] {
+  --ems-muted: color-mix(in srgb, #f2f2f4 62%, transparent);
+
+  /* The two fills that are a shade of white in the light design — an input's
+     ground and a table's header band — have to be a shade of the dark ground
+     here, or a form at night is a page of white slabs. The rest of the --ui-*
+     set is either a colour that works on both (the blue) or only ever used on
+     the sign-in screens, which are daylight-only by design. */
+  --ui-field: #24272d;
+  --ui-line: #22252b;
+  --ui-hint: #8f9299;
+
   --ems-ground: #15161a;
   --ems-surface: #1f2126;
   --ems-ink: #f2f2f4;
@@ -158,7 +187,7 @@
   --secondary: var(--ems-neutral-200);
   --secondary-foreground: var(--ems-ink);
   --muted: var(--ems-neutral-100);
-  --muted-foreground: color-mix(in srgb, var(--ems-ink) 55%, transparent);
+  --muted-foreground: var(--ems-muted);
   --accent: var(--ems-neutral-200);
   --accent-foreground: var(--ems-ink);
   --destructive: var(--ems-danger);
@@ -230,14 +259,24 @@
   --radius-3xl: 20px;
   --radius-4xl: 24px;
 
-  --color-auth-blue: var(--auth-blue);
-  --color-auth-ring: var(--auth-ring);
-  --color-auth-ink: var(--auth-ink);
-  --color-auth-muted: var(--auth-muted);
-  --color-auth-hint: var(--auth-hint);
-  --color-auth-field: var(--auth-field);
-  --color-auth-error: var(--auth-error);
-  --color-auth-error-line: var(--auth-error-line);
+  --color-ui-blue: var(--ui-blue);
+  --color-ui-ring: var(--ui-ring);
+  --color-ui-ink: var(--ui-ink);
+  --color-ui-muted: var(--ui-muted);
+  --color-ui-hint: var(--ui-hint);
+  --color-ui-field: var(--ui-field);
+  --color-ui-line: var(--ui-line);
+  --color-ui-error: var(--ui-error);
+  --color-ui-error-line: var(--ui-error-line);
+
+  --color-tile-blue: var(--tile-blue);
+  --color-tile-green: var(--tile-green);
+  --color-tile-orange: var(--tile-orange);
+  --color-tile-red: var(--tile-red);
+  --color-tile-purple: var(--tile-purple);
+  --color-tile-violet: var(--tile-violet);
+  --color-tile-ink: var(--tile-ink);
+  --color-tile-rose: var(--tile-rose);
 
   --color-danger: var(--ems-danger);
   --color-danger-ink: var(--ems-danger-ink);

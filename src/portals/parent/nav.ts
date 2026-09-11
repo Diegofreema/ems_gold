@@ -6,10 +6,12 @@ import {
   FileText,
   LayoutGrid,
   MessageSquare,
+  NotebookPen,
   PenLine,
   SquareCheckBig,
   TrendingUp,
   Users,
+  Wallet,
 } from 'lucide-react';
 import type { NavGroup } from '@/lib/portal';
 
@@ -22,6 +24,7 @@ export const parentNav: NavGroup[] = [
   },
   {
     heading: 'My children',
+    icon: Users,
     items: [
       { to: '/parent/children', label: 'My children', icon: Users },
       { to: '/parent/results', label: 'Results', icon: SquareCheckBig },
@@ -32,6 +35,7 @@ export const parentNav: NavGroup[] = [
   },
   {
     heading: 'Messages',
+    icon: MessageSquare,
     items: [
       // No badge: the count is live and this list is a module constant, so a
       // number written in here would be the one believed when it went stale.
@@ -41,6 +45,7 @@ export const parentNav: NavGroup[] = [
   },
   {
     heading: 'Assignments',
+    icon: NotebookPen,
     items: [
       {
         to: '/parent/assignments',
@@ -51,6 +56,7 @@ export const parentNav: NavGroup[] = [
   },
   {
     heading: 'Finance',
+    icon: Wallet,
     items: [
       // No badge: the dashboard counts what is owing from the ledger, and a
       // number written in here would be the one believed when they disagreed.

@@ -62,8 +62,8 @@ export function CheckEmailScreen() {
         title="Check your email"
         description="If an account uses that address, a six-digit code is on its way. It expires in fifteen minutes and can only be used once."
       />
-      <div className="mt-6 flex items-center gap-3 rounded-md bg-auth-field px-4 py-3.5 text-base font-medium">
-        <Mail className="size-5 flex-none text-auth-hint" strokeWidth={1.8} />
+      <div className="mt-6 flex items-center gap-3 rounded-md bg-ui-field px-4 py-3.5 text-base font-medium">
+        <Mail className="size-5 flex-none text-ui-hint" strokeWidth={1.8} />
         {email || 'the address on your account'}
       </div>
 
@@ -102,7 +102,7 @@ export function CheckEmailScreen() {
         </form>
       </FormProvider>
 
-      <div className="mt-9 text-[13px] leading-relaxed text-auth-muted">
+      <div className="mt-9 text-[13px] leading-relaxed text-ui-muted">
         Nothing after a few minutes? Look in spam, then check the address with the
         school office.
       </div>

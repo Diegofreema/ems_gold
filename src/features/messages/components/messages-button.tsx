@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { headerControl } from '@/components/layout/header/controls'
 import { msgInbox } from '@/db/collections/messages'
 import { useHeldDocument } from '@/db/live'
 import { inboxUnread } from '../inbox'
@@ -26,7 +27,7 @@ export function MessagesButton({ to }: { to: string }) {
       asChild
       variant="outline"
       size="icon"
-      className="relative size-9"
+      className={headerControl}
       title={unread > 0 ? `Messages — ${unread} unread` : 'Messages'}
     >
       <Link to={to} aria-label={unread > 0 ? `Messages, ${unread} unread` : 'Messages'}>

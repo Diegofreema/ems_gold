@@ -12,7 +12,7 @@ export function AuthHeading({
         {title}
       </h2>
       {description && (
-        <p className="mt-2 text-base leading-normal text-auth-muted">
+        <p className="mt-2 text-base leading-normal text-ui-muted">
           {description}
         </p>
       )}

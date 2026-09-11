@@ -136,13 +136,13 @@ export function SignInScreen() {
                 onCheckedChange={(checked) =>
                   form.setValue('remember', checked === true)
                 }
-                className="size-5 rounded-[4px] border-auth-hint/70 data-checked:border-auth-blue data-checked:bg-auth-blue"
+                className="size-5 rounded-[4px] border-ui-hint/70 data-checked:border-ui-blue data-checked:bg-ui-blue"
               />
               <span>Keep me signed in on this device</span>
             </label>
             <Link
               to="/forgot-password"
-              className="text-base text-auth-blue hover:underline"
+              className="text-base text-ui-blue hover:underline"
             >
               Forgot password
             </Link>
@@ -154,7 +154,7 @@ export function SignInScreen() {
         </form>
       </FormProvider>
 
-      <p className="mt-7.5 text-[13px] leading-relaxed text-auth-muted">
+      <p className="mt-7.5 text-[13px] leading-relaxed text-ui-muted">
         Accounts are created by the school office. If you are new and have no
         password yet, open the invitation email and use the link in it, or ask
         the office to send it again.

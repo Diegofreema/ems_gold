@@ -92,6 +92,33 @@ function load(): void {
   }
 }
 
+/**
+ * Which browser store this device's token is in, or null when there is none.
+ *
+ * The point of asking is that the answer is not always the same store, and
+ * anything else kept *about the person* has to follow it: a token left in a tab
+ * (`sessionStorage`) belongs to that tab alone, while a remembered one
+ * (`localStorage`) belongs to the machine. The cached identity used to sit in
+ * `localStorage` whichever it was, so two tabs signed in as two people shared
+ * one identity and a reload could pick up the wrong one. See
+ * `session.store.ts`.
+ */
+export function tokenStore(): Storage | null {
+  for (const store of stores()) {
+    try {
+      if (store.getItem(STORAGE_KEY)) return store
+    } catch {
+      // As above.
+    }
+  }
+  return null
+}
+
+/** Both of them, for anything that has to be cleared wherever it landed. */
+export function everyStore(): Storage[] {
+  return stores()
+}
+
 function stores(): Storage[] {
   try {
     return [globalThis.localStorage, globalThis.sessionStorage]

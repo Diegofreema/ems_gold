@@ -28,7 +28,7 @@ export function StudentContext() {
     .join(' · ')
 
   return (
-    <div className="border-b border-divider-strong px-4 pt-3.5 pb-3">
+    <div className="mx-4 mb-4 rounded-lg bg-ui-field px-4 py-3">
       <div className="font-heading text-sm font-extrabold">
         {[student.fname, student.lname].filter(Boolean).join(' ')}
       </div>

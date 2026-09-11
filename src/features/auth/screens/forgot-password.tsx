@@ -66,7 +66,7 @@ export function ForgotPasswordScreen() {
 
       <p className="mt-8 text-center text-base">
         Remember Password?{' '}
-        <Link to="/sign-in" className="font-semibold text-auth-blue hover:underline">
+        <Link to="/sign-in" className="font-semibold text-ui-blue hover:underline">
           Sign In
         </Link>
       </p>

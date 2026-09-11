@@ -92,7 +92,7 @@ export function AuthPasswordField<TValues extends FieldValues>({
         type="button"
         onClick={onToggle}
         aria-label={visible ? 'Hide password' : 'Show password'}
-        className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-auth-hint transition-colors hover:text-auth-muted"
+        className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-ui-hint transition-colors hover:text-ui-muted"
       >
         <EyeGlyph off={!visible} />
       </button>
@@ -121,7 +121,7 @@ function AuthFieldShell({
       <div className="relative">
         {Icon && (
           <Icon
-            className="pointer-events-none absolute inset-y-0 left-4 my-auto size-5 text-auth-hint"
+            className="pointer-events-none absolute inset-y-0 left-4 my-auto size-5 text-ui-hint"
             strokeWidth={1.8}
             aria-hidden="true"
           />
@@ -138,10 +138,10 @@ export function AuthFieldError({ children }: { children: ReactNode }) {
   return (
     <div
       role="alert"
-      className="mt-2 flex animate-ems-fade items-start gap-2 text-base text-auth-error"
+      className="mt-2 flex animate-ems-fade items-start gap-2 text-base text-ui-error"
     >
       <CircleAlert
-        className="mt-0.75 size-4.5 flex-none fill-auth-error text-white"
+        className="mt-0.75 size-4.5 flex-none fill-ui-error text-white"
         strokeWidth={2}
         aria-hidden="true"
       />
@@ -157,10 +157,10 @@ export function AuthFieldError({ children }: { children: ReactNode }) {
  */
 function fieldClasses(hasIcon: boolean, hasToggle: boolean, invalid: boolean) {
   return cn(
-    'h-11.5 w-full rounded-md border bg-auth-field text-base text-auth-ink transition-colors outline-none placeholder:text-auth-hint focus-visible:border-auth-blue',
+    'h-11.5 w-full rounded-md border bg-ui-field text-base text-ui-ink transition-colors outline-none placeholder:text-ui-hint focus-visible:border-ui-blue',
     hasIcon ? 'pl-12' : 'pl-4',
     hasToggle ? 'pr-12' : 'pr-4',
-    invalid ? 'border-auth-error-line bg-white' : 'border-transparent',
+    invalid ? 'border-ui-error-line bg-white' : 'border-transparent',
   )
 }
 
