@@ -213,6 +213,7 @@ export function useCollectionRows(definition: CollectionDef) {
         ? {
             rows: data.items,
             total: pagination.total,
+            pages: pagination.pages,
             from: pagination.total ? start + 1 : 0,
             to: start + data.items.length,
             isFirstPage: pagination.page <= 1,

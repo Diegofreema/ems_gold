@@ -62,6 +62,22 @@ export function isDisabled(account: Account | null): boolean {
   return account?.user.userstatus === 'Disabled'
 }
 
+/**
+ * Whether this account is still signing in with the password the office gave
+ * it — `isdefaultpassword` on `/users/me` and on the login answer alike.
+ *
+ * Read strictly rather than for truthiness, because the API sends the *word*:
+ * `"true"` and `"false"` are both non-empty strings, so `Boolean(flag)` would
+ * lock out every account on the deployment. A deployment that does not send
+ * the field at all is a no — a portal must never be shut on a question the
+ * school was never asked.
+ */
+export function usingDefaultPassword(account: Account | null | undefined): boolean {
+  const flag = account?.user?.isdefaultpassword
+  if (typeof flag === 'boolean') return flag
+  return typeof flag === 'string' && flag.trim().toLowerCase() === 'true'
+}
+
 /** What a person turned away for it is told, on the form they land on. */
 export const DISABLED_TITLE = 'This account has been disabled'
 export const DISABLED_BODY = 'Ask the school office to turn it back on.'

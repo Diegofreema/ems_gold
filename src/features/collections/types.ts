@@ -38,7 +38,6 @@ export type ListPath =
   | '/admin/logs'
   | '/teacher/subjects'
   | '/teacher/students'
-  | '/teacher/topics'
   | '/teacher/eclasses'
   | '/teacher/uploads'
   | '/teacher/results'
@@ -431,6 +430,21 @@ export type DetailTab = {
     search?: Record<string, string>
   }
   /**
+   * A way to add to what the tab shows, for rows that are written from here
+   * rather than only read from somewhere else. `collection` names the
+   * definition whose create form opens and `values` seeds it, so a topic
+   * added from a subject's page arrives with that subject already chosen.
+   *
+   * Beside `action` rather than a shape of it: one hands the reader over to
+   * the register that owns these rows, the other starts a new one here —
+   * which is the whole point for a record that has no register of its own.
+   */
+  add?: (recordId: string) => {
+    label: string
+    collection: string
+    values?: Record<string, string>
+  }
+  /**
    * Where one row of the tab leads. A tab whose rows are worked on rather than
    * read — a submission is marked — sends the teacher to the row they picked
    * instead of to the list it is in, which is the same page reached two clicks
@@ -444,6 +458,13 @@ export type DetailTab = {
     recordId: string,
     row: Row,
   ) => { to: ListPath; search?: Record<string, string> }
+  /**
+   * The same, for a tab whose rows *are* records — one opens its own page
+   * rather than a register narrowed to it. `rowTo` cannot say this: it names
+   * a `ListPath`, and a topic has no register to be narrowed. Beside it
+   * rather than a shape of it, so nothing already written has to change.
+   */
+  rowRecord?: (recordId: string, row: Row) => { collection: string; recordId: string }
 }
 
 /**
@@ -453,6 +474,14 @@ export type DetailTab = {
 export type CollectionDef = {
   id: string
   path: ListPath
+  /**
+   * What the way back to `path` is called, where `path` is not this
+   * collection's own register. Topics are read and written from the subject
+   * they were taught for and have no register of their own, so "Back to
+   * topics taught" would name a page that does not exist — the way back is
+   * the subjects the topics hang off.
+   */
+  homeLabel?: string
   kicker: string
   title: string
   description: string

@@ -1,29 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Paged } from '@/hooks/use-list-query'
 import { cn } from '@/lib/utils'
-
-/** How many numbered buttons before the run is cut with an ellipsis. */
-const WINDOW = 3
-
-/**
- * The pages, as numbers rather than as Previous and Next.
- *
- * A register of forty pages is one somebody jumps around in — page 1 to check
- * the newest, the last page to check the oldest — and two arrows make that
- * thirty-nine clicks. The window is the first few pages, the page you are on,
- * and the last, with the gap between them shown as a gap.
- */
-function pages(current: number, last: number): (number | 'gap')[] {
-  if (last <= WINDOW + 2) {
-    return Array.from({ length: last }, (_, index) => index + 1)
-  }
-  const head = Array.from({ length: WINDOW }, (_, index) => index + 1)
-  const out: (number | 'gap')[] = [...head]
-  if (current > WINDOW && current < last) out.push('gap', current)
-  else out.push('gap')
-  out.push(last)
-  return out
-}
+import { pageWindow } from './page-window'
 
 export function Pagination<T>({
   page,
@@ -37,7 +15,15 @@ export function Pagination<T>({
   footer?: string
   onPageChange: (page: number) => void
 }) {
-  const last = Math.max(1, Math.ceil(paged.total / Math.max(paged.to - paged.from + 1, 1)))
+  /*
+   * The count is the one the list itself worked out, never re-derived here.
+   * It used to be `total / (to - from + 1)` — the rows on screen taken for the
+   * page size — which is only right on a full page: the last page of twelve
+   * rows holds four, and four into twelve is three pages, so page 2 of 2 drew
+   * a button for a page 3 that does not exist. Every register in the app is
+   * paged by this one component, so that was every register.
+   */
+  const last = Math.max(1, paged.pages)
 
   return (
     <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -56,7 +42,7 @@ export function Pagination<T>({
           <ChevronLeft className="size-4.5" strokeWidth={2} />
         </Step>
 
-        {pages(page, last).map((entry, index) =>
+        {pageWindow(page, last).map((entry, index) =>
           entry === 'gap' ? (
             <span
               key={`gap-${index}`}

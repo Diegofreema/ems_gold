@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   FileQuestion,
   LayoutGrid,
-  List,
   MessageSquare,
   MessagesSquare,
   PenLine,
@@ -28,6 +27,8 @@ export const teacherNav: NavGroup[] = [
     heading: 'Teaching',
     icon: BookOpen,
     items: [
+      // Topics taught has no row of its own: a topic belongs to a subject, so
+      // the scheme of work is read and written from the subject's own page.
       { to: '/teacher/subjects', label: 'My subjects', icon: BookOpen },
       { to: '/teacher/students', label: 'My students', icon: Users },
       // No badge: nothing counts an untaken register school-wide — coverage is
@@ -47,7 +48,6 @@ export const teacherNav: NavGroup[] = [
         label: 'Class timetables',
         icon: CalendarClock,
       },
-      { to: '/teacher/topics', label: 'Topics taught', icon: List },
       // { to: '/teacher/eclasses', label: 'E-classes', icon: Monitor },
     ],
   },

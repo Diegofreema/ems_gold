@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { DefaultPasswordGate } from '@/features/auth/components/default-password-gate'
 import { useAccountSummary } from '@/features/auth/session'
 import { MessagesButton } from '@/features/messages/components/messages-button'
 import { NotificationBell } from '@/features/notifications/components/notification-bell'
@@ -32,6 +33,12 @@ export function AppShell({ config }: { config: PortalConfig }) {
 
   return (
     <div className="flex min-h-dvh bg-background text-foreground">
+      {/* Here rather than in each portal's shell: every one of the four is
+          this component with a different config, and a gate that has to be
+          remembered four times is one that will be remembered three. It draws
+          nothing at all for an account the school has not flagged. */}
+      <DefaultPasswordGate />
+
       {(!narrow || drawerVisible) && (
         <Sidebar config={config} asDrawer={narrow} />
       )}

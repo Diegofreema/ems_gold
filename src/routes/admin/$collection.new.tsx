@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { adminPortal } from '@/portals/admin/config'
+import { presetSearch } from '@/features/collections/preset'
 import { primaryActionKind } from '@/features/collections/primary-action'
 import { adminCollectionRoutes } from '@/portals/admin/collections/routes'
 import { loadCollection } from '@/portals/admin/collections/resolve'
@@ -8,6 +9,8 @@ import { CollectionForm } from '@/portals/admin/components/collection-form'
 import { adminFlows } from '@/portals/admin/features/actions/defs'
 
 export const Route = createFileRoute('/admin/$collection/new')({
+  // Whatever the page that opened this form had already decided.
+  validateSearch: presetSearch,
   loader: ({ params }) => {
     const loaded = loadCollection(params.collection)
     if (!loaded) throw notFound()
@@ -33,6 +36,7 @@ export const Route = createFileRoute('/admin/$collection/new')({
  */
 function NewRecord() {
   const loaded = Route.useLoaderData()
+  const preset = Route.useSearch()
   if (!loaded) return null
-  return <CollectionForm definition={loaded.definition} />
+  return <CollectionForm definition={loaded.definition} preset={preset} />
 }

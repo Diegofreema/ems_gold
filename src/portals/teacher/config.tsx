@@ -17,7 +17,7 @@ export const teacherPortal: PortalConfig = {
     { to: '/teacher', label: 'Dashboard', hint: 'Your counters and the assignments you set' },
     { to: '/teacher/scores', label: 'Enter scores', hint: 'Mark a class, subject by subject' },
     { to: '/teacher/students', label: 'My students', hint: 'The students on your roll' },
-    { to: '/teacher/topics', label: 'Topics taught', hint: 'What the office reads' },
+    { to: '/teacher/subjects', label: 'My subjects', hint: 'What you teach, and the topics filed under each' },
   ],
   context: <MarkingTerm />,
   // No `headerStatus`. The design's "Week 9 of 13 · Results due 05 Dec" wants

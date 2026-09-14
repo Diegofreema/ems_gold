@@ -135,11 +135,24 @@ export function CollectionForm({
   definition,
   record,
   routes,
+  preset,
 }: {
   definition: CollectionDef
   /** Absent when creating. */
   record?: Row
   routes: CollectionRoutes
+  /**
+   * Fields already decided by wherever the form was opened from, read off the
+   * URL. A topic added from a subject's page arrives with that subject
+   * chosen, because it is the page's whole subject — asking again would be
+   * asking a question the reader has just answered by being there.
+   *
+   * Seeds the form and no more: the field is still the teacher's to change,
+   * which is what stops a link with the wrong id in it becoming a record
+   * filed in the wrong place with no way to say so. Ignored on an edit, where
+   * the record itself is what the form opens on.
+   */
+  preset?: Record<string, string>
 }) {
   const navigate = useNavigate()
   const router = useRouter()
@@ -152,7 +165,7 @@ export function CollectionForm({
     for (const field of section.fields) {
       // A blank is how the record reads, not what it holds — typing over an
       // em dash, or saving one back, is nobody's intent.
-      const held = record?.[field.key]
+      const held = record?.[field.key] ?? (record ? undefined : preset?.[field.key])
       if (field.multi) {
         // A row holds strings, so a set of ids travels as one comma-joined
         // cell and is split back out here. Getting this wrong on an edit is
@@ -241,7 +254,7 @@ export function CollectionForm({
         back={
           <BackLink
             to={definition.path}
-            label={`Back to ${definition.title.toLowerCase()}`}
+            label={`Back to ${definition.homeLabel ?? definition.title.toLowerCase()}`}
           />
         }
         kicker={`${definition.kicker} · ${definition.title}`}

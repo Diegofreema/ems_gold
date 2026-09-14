@@ -150,6 +150,7 @@ export function AttendanceReportPage() {
             paged={{
               rows,
               total,
+              pages,
               from: total ? start + 1 : 0,
               to: start + rows.length,
               isFirstPage: page <= 1,

@@ -79,11 +79,11 @@ export function CollectionDetail({
   const navigate = useNavigate()
   const confirm = useConfirm()
   const rowAction = useRowAction(definition, confirm)
+  // What `path` is called. Usually this collection's own register; for one
+  // that has none — a topic lives under its subject — the definition says.
+  const home = definition.homeLabel ?? definition.title.toLowerCase()
   const back = inModal ? null : (
-    <BackLink
-      to={definition.path}
-      label={`Back to ${definition.title.toLowerCase()}`}
-    />
+    <BackLink to={definition.path} label={`Back to ${home}`} />
   )
 
   // The page is the right page; the data is not there. Saying so in the shell
@@ -97,7 +97,7 @@ export function CollectionDetail({
           body={definition.missingBody ?? `This ${definition.noun} is not on the register.`}
           action={
             <Button asChild>
-              <Link to={definition.path}>Back to {definition.title.toLowerCase()}</Link>
+              <Link to={definition.path}>Back to {home}</Link>
             </Button>
           }
         />
@@ -333,7 +333,7 @@ export function CollectionDetail({
           tabs.length > 0 && '@3xl/page:grid-cols-[1.6fr_1fr]',
         )}
       >
-        <DetailTabPanel tabs={tabs} recordId={record.id} />
+        <DetailTabPanel tabs={tabs} recordId={record.id} routes={routes} />
 
         <aside>
           <SectionHeading className="mb-3.5">Record</SectionHeading>

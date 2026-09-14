@@ -21,6 +21,18 @@ export type User = {
   passport: string | null
   useruniquid: string | null
   userstatus: UserStatus
+  /**
+   * Whether this login is still on the password the office issued it.
+   *
+   * Sent as the *string* `"true"` rather than a boolean, which is why nothing
+   * may test it for truthiness — `"false"` is a non-empty string and passes
+   * every check made on one. `usingDefaultPassword` in `features/auth/role.ts`
+   * is the only reader.
+   *
+   * Optional because a deployment older than the field simply leaves it out,
+   * and a missing answer must never lock somebody out of their own portal.
+   */
+  isdefaultpassword?: string | boolean | null
   role?: Role
   /**
    * Expanded by `GET /users/admins/{id}` only. The same join is why that

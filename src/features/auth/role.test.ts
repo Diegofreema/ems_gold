@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { isSuperAdmin, isSuperAdminRole, namesSomebodyElse, roleForAccount } from './role.ts'
+import {
+  isSuperAdmin,
+  isSuperAdminRole,
+  namesSomebodyElse,
+  roleForAccount,
+  usingDefaultPassword,
+} from './role.ts'
 import type { Account } from '../../api/auth/types.ts'
 
 const account = (role: { id: number; role_name: string } | null) =>
@@ -69,4 +75,30 @@ test('a me for the same person is not a mismatch, however the role is renamed', 
 
 test('with nobody cached there is nothing to disagree with', () => {
   assert.equal(namesSomebodyElse(null, SUPER_ADMIN), false)
+})
+
+/** As bronze answers it: the word, not the boolean. */
+const withFlag = (isdefaultpassword: unknown) =>
+  ({ user: { id: 1, fname: 'Chukwudi', isdefaultpassword } }) as unknown as Account
+
+test('the default-password flag is read as a word, not for truthiness', () => {
+  assert.ok(usingDefaultPassword(withFlag('true')))
+  assert.ok(usingDefaultPassword(withFlag('True')))
+  assert.ok(usingDefaultPassword(withFlag(true)))
+  // The half of it that `Boolean(flag)` gets wrong, and the reason this is a
+  // function at all: "false" is a non-empty string, so a truthiness test would
+  // put the change-your-password gate in front of every account on the school.
+  assert.ok(!usingDefaultPassword(withFlag('false')))
+  assert.ok(!usingDefaultPassword(withFlag(false)))
+  assert.ok(!usingDefaultPassword(withFlag('')))
+})
+
+test('a school that was never asked the question is not shut out of its portal', () => {
+  // A deployment older than the field sends no flag at all, and neither does
+  // an account read off a device that cached one before the field existed.
+  assert.ok(!usingDefaultPassword(withFlag(undefined)))
+  assert.ok(!usingDefaultPassword(withFlag(null)))
+  assert.ok(!usingDefaultPassword({ user: {} } as unknown as Account))
+  assert.ok(!usingDefaultPassword(null))
+  assert.ok(!usingDefaultPassword(undefined))
 })

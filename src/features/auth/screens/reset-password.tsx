@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Lock } from 'lucide-react'
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
 import { useResetPassword } from '@/api/auth/hooks'
+import { getToken } from '@/api/token'
 import { Button } from '@/components/ui/button'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
@@ -14,6 +16,7 @@ import { AuthHeading } from '../components/auth-heading'
 import { PasswordRules } from '../components/password-rules'
 import { PasswordStrength } from '../components/password-strength'
 import { resetPasswordSchema, type ResetPasswordValues } from '../schemas'
+import { refreshAccount } from '../session'
 
 const COPY = {
   reset: {
@@ -33,6 +36,7 @@ const COPY = {
 /** Serves both the reset link and the first-sign-in variant. */
 export function ResetPasswordScreen({ first }: { first: boolean }) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [visible, setVisible] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
   const userId = useAuthStore((state) => state.userId)
@@ -65,6 +69,15 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
         })
       }
       completeReset()
+      /*
+       * Somebody who came here from the default-password gate is still signed
+       * in, and the account this device holds still says they are on the
+       * password the office issued. `me` is cached for five minutes, so
+       * without this the gate would go on standing in front of a portal whose
+       * password has just been changed. Asked again rather than edited: the
+       * school is the one that decides when the flag drops.
+       */
+      if (getToken() !== null) await refreshAccount(queryClient).catch(() => undefined)
       await navigate({ to: '/signed-in' })
     } catch (error) {
       setFailure(errorMessage(error, OFFLINE_MESSAGE))

@@ -85,6 +85,12 @@ export function useListQuery(filterKeys: readonly string[] = []) {
 export type Paged<T> = {
   rows: T[]
   total: number
+  /**
+   * How many pages the whole list comes to. Carried rather than worked out
+   * from the rows on screen, which is only the page size while the page is
+   * full — see the note in `pagination.tsx`.
+   */
+  pages: number
   from: number
   to: number
   isFirstPage: boolean

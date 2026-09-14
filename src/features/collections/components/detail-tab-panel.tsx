@@ -7,7 +7,7 @@ import { SegmentedControl } from '@/components/common/segmented-control'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { TableView } from '@/components/data-table/table-view'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
-import type { DetailTab, Row } from '../types'
+import type { CollectionRoutes, DetailTab, Row } from '../types'
 import { toTableColumns } from './collection-columns'
 
 /** How many rows the tab shimmers while it loads. */
@@ -17,13 +17,15 @@ function TabTable({
   tab,
   rows,
   recordId,
+  routes,
 }: {
   tab: DetailTab
   rows: Row[]
   recordId: string
+  routes: CollectionRoutes
 }) {
   const navigate = useNavigate()
-  const { rowTo } = tab
+  const { rowTo, rowRecord } = tab
 
   // `TableView` draws a header and nothing else for an empty list, which reads
   // as a table that has not loaded rather than one with nothing in it.
@@ -46,7 +48,12 @@ function TabTable({
               const { to, search } = rowTo(recordId, row)
               void navigate({ to, search })
             }
-          : undefined
+          : rowRecord
+            ? (row) => void navigate({
+                to: routes.record,
+                params: rowRecord(recordId, row),
+              })
+            : undefined
       }
     />
   )
@@ -58,10 +65,12 @@ function LiveTab({
   tab,
   recordId,
   source,
+  routes,
 }: {
   tab: DetailTab
   recordId: string
   source: NonNullable<DetailTab['source']>
+  routes: CollectionRoutes
 }) {
   const { data } = useSuspenseQuery({
     queryKey: ['detail-tab', tab.label, recordId],
@@ -71,7 +80,7 @@ function LiveTab({
     // tab sits on its skeleton for as long as the device is offline.
     networkMode: 'always',
   })
-  return <TabTable tab={tab} rows={data} recordId={recordId} />
+  return <TabTable tab={tab} rows={data} recordId={recordId} routes={routes} />
 }
 
 /**
@@ -122,9 +131,17 @@ class TabBoundary extends Component<
 export function DetailTabPanel({
   tabs,
   recordId,
+  routes,
 }: {
   tabs: DetailTab[]
   recordId: string
+  /**
+   * Where this portal mounts its record and create pages — a tab's row leads
+   * to one and its `add` button to the other. A read-only portal publishes no
+   * create route, which is also where a tab offering to add something would
+   * be a button with nowhere to go.
+   */
+  routes: CollectionRoutes
 }) {
   const [active, setActive] = useState(0)
   // Bumped by the boundary's "Try again": a new key remounts the tab, and a
@@ -137,6 +154,8 @@ export function DetailTabPanel({
   if (!tab) return null
 
   const action = tab.action?.(recordId)
+  const createPath = routes.create
+  const add = createPath ? tab.add?.(recordId) : undefined
 
   return (
     // `min-w-0`: a grid item sizes to its content by default, so a wide tab
@@ -158,12 +177,30 @@ export function DetailTabPanel({
         ) : (
           <SectionHeading className="mb-3.5">{tab.label}</SectionHeading>
         )}
-        {action && (
-          <Button asChild variant="outline" size="sm" className="mb-3.5">
-            <Link to={action.to} search={action.search}>
-              {action.label}
-            </Link>
-          </Button>
+        {(action || add) && (
+        <div className="mb-3.5 flex flex-wrap gap-2.5">
+          {action && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={action.to} search={action.search}>
+                {action.label}
+              </Link>
+            </Button>
+          )}
+          {/* The record in front of the reader is what the new row belongs to,
+              so it travels to the form as a value rather than being chosen
+              again — the one thing about it that is already decided. */}
+          {add && createPath && (
+            <Button asChild size="sm">
+              <Link
+                to={createPath}
+                params={{ collection: add.collection }}
+                search={add.values}
+              >
+                {add.label}
+              </Link>
+            </Button>
+          )}
+        </div>
         )}
       </div>
 
@@ -172,9 +209,19 @@ export function DetailTabPanel({
           <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>
             <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
               {tab.source ? (
-                <LiveTab tab={tab} recordId={recordId} source={tab.source} />
+                <LiveTab
+                  tab={tab}
+                  recordId={recordId}
+                  source={tab.source}
+                  routes={routes}
+                />
               ) : (
-                <TabTable tab={tab} rows={tab.rows ?? []} recordId={recordId} />
+                <TabTable
+                  tab={tab}
+                  rows={tab.rows ?? []}
+                  recordId={recordId}
+                  routes={routes}
+                />
               )}
             </div>
           </Suspense>

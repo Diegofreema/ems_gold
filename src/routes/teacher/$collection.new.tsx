@@ -1,10 +1,13 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
+import { presetSearch } from '@/features/collections/preset'
 import { portalNotFound } from '@/components/feedback/portal-not-found'
 import { teacherPortal } from '@/portals/teacher/config'
 import { CollectionForm } from '@/portals/teacher/components/collection-form'
 import { loadCollection } from '@/portals/teacher/collections/resolve'
 
 export const Route = createFileRoute('/teacher/$collection/new')({
+  // Whatever the page that opened this form had already decided.
+  validateSearch: presetSearch,
   loader: ({ params }) => {
     const loaded = loadCollection(params.collection)
     if (!loaded) throw notFound()
@@ -22,6 +25,7 @@ export const Route = createFileRoute('/teacher/$collection/new')({
  */
 function NewRecord() {
   const loaded = Route.useLoaderData()
+  const preset = Route.useSearch()
   if (!loaded) return null
-  return <CollectionForm definition={loaded.definition} />
+  return <CollectionForm definition={loaded.definition} preset={preset} />
 }

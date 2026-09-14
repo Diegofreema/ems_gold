@@ -371,6 +371,22 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   `ensureQueryData`. Writes that move money also call `dropMoneyReads`.
   The outbox drain drops them **once at the end of a pass**, not per op — thirty attendance marks
   are thirty ops, and thirty full resyncs would ask the school the same questions thirty times.
+- **A portal opened on the password the office issued is gated, not merely warned.**
+  `/users/me` carries `isdefaultpassword` on every answer, so it is read off the stored account
+  rather than remembered from the sign-in — `usingDefaultPassword` in `features/auth/role.ts`, and
+  `DefaultPasswordGate` in `AppShell`, once for all four portals. Two things about the flag are
+  load-bearing. It is the *word* `"true"`, so `Boolean(flag)` would gate the whole school on
+  `"false"`; and a deployment that does not send it at all is a no, because a portal must never be
+  shut on a question the school was never asked. Nothing dismisses the gate — no Escape, no scrim,
+  no close button — but it offers the way out as well as the way through, since somebody at a
+  shared staff-room machine who cannot reach their email has to be able to hand the laptop back.
+  The way through is the recovery flow the app already has, started from the gate so nobody retypes
+  the username they just signed in with: **this API has no signed-in change-password endpoint** —
+  `users/change-password` wants the verification key from an invitation email and
+  `users/reset-password` wants the OTP ticket, which is also why the profile page's own form still
+  writes nothing and why `/first-sign-in` goes nowhere. One consequence is written down rather than
+  discovered: a flagged account with no connection cannot get through the gate at all, because
+  there is no offline way to set a password the school will accept.
 - **A shell route must never throw.** Its error boundary replaces the shell, and a missing pending
   component blanks the page. Portal route loaders start their work and swallow the failure.
 - **A field somebody writes prose into is the editor, not a textarea.**
@@ -454,6 +470,21 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   breakpoints for what genuinely fills the window — the landing page, the sign-in split, a dialog.
   Type is left alone on this axis: the portal reads at 15px with 24px titles, and the fix for a
   crowded 14-inch screen is the chrome around the words, not smaller words.
+- **A record that belongs inside another one is read and written from that one, not from a register
+  of its own.** A topic is taught in a subject, so the scheme of work lives on the subject's page:
+  a `Topics taught` tab, filtered off the device — `GET /teachers/me/topics` takes no subject and
+  the whole set is held anyway, which is also what lets the tab fill in a classroom with no signal —
+  and an **Add topic** button beside it. There is no `/teacher/topics` any more, and nothing in the
+  rail offers one. Three things carry it, all on the shared definition so the next one costs
+  nothing: `DetailTab.add` opens the create form for another collection with the record in front of
+  the reader already chosen (`presetSearch`, tested, on both portals' create routes — a preset seeds
+  the form and no more, so a link carrying the wrong id is still the teacher's to correct);
+  `DetailTab.rowRecord` opens a row's own record page, which `rowTo` cannot say because it names a
+  `ListPath` and there is no longer a list; and `homeLabel` names the way back, since "Back to
+  topics taught" would promise a page that does not exist. A definition rehomed this way wants a
+  `scope` as well — `path` is part of the key its rows cache under, and it now shares one.
+  The subject's record stopped being a modal in the same change: a modal draws no sub-tables, by
+  design, because a register thin enough for one has no real tabs to show.
 - **A row's action lives in the menu at the end of the row, not as a button on it.** `RowMenu`:
   the way into the record first — "Open the {noun}" — then whatever this row can be made to do. The
   button it replaced was a word that changed per row (Suspend beside Reinstate beside nothing at
@@ -465,6 +496,14 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   itself by it, and both default to danger — which was invisible while only the dialog read it, and
   is not once a red crossed-circle sits beside "Enable sign-in". Every toggling action now says which
   direction takes something away and which puts it back.
+- **A register's page count is the list's own figure, never re-derived from the rows on screen.**
+  `Paged` carries `pages`, and `Pagination` draws its run from that. It used to work the count
+  back out as `total / (to - from + 1)` — the rows in front of you taken for the page size — which
+  is right only while the page is full: eleven students at eight to a page put four rows on page 2,
+  four into eleven is three, and the pager offered a page 3 and a page 4 that hold nothing. One
+  component pages every register in the app, so that was every register, and it appeared only once
+  somebody left page 1. The window itself is `pageWindow` in `page-window.ts`, pure and tested,
+  because the run it draws is a claim about how much the school holds.
 - **A register's primary action sits beside the title, not in the filter row.** It was tried in the
   filter row, on the reasoning that the eye is already there having just read the title. The
   reasoning did not survive the screen: a register carries a search box and four filters, which on a

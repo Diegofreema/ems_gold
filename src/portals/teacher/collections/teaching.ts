@@ -8,6 +8,7 @@ import {
   teacherTopics,
 } from '@/db/collections/teaching';
 import { pageRows } from '@/features/collections/api';
+import { plainText } from '@/features/collections/rich-text';
 import { localFirst } from '@/features/collections/local-first';
 import type { CollectionDef, Row } from '@/features/collections/types';
 import { myArms, myEClasses, myMarks, myStudents, mySubjects, myTopics } from './mine';
@@ -31,6 +32,19 @@ const topicRows = async (): Promise<Row[]> => {
   return topics.map((topic) => topicRow(topic, names));
 };
 
+/** How much of a topic's body the subject's tab shows before the row opens. */
+const PREVIEW = 90;
+
+/**
+ * The body as a line. The editor stores HTML, so a cell given it raw draws the
+ * tags; and a scheme of work runs to paragraphs, so a cell given all of it
+ * makes one row as tall as the table.
+ */
+const preview = (contents: string): string => {
+  const words = plainText(contents);
+  return words.length > PREVIEW ? `${words.slice(0, PREVIEW).trimEnd()}…` : words;
+};
+
 const eclassRows = async (): Promise<Row[]> =>
   (await myEClasses()).map(eclassRow);
 
@@ -40,8 +54,13 @@ const studentRows = async (): Promise<Row[]> =>
 export const subjects: CollectionDef = {
   id: 'subjects',
   path: '/teacher/subjects',
-  // Five fields and no sub-tables: the record opens over the register.
-  modal: true,
+  /*
+   * A page rather than a modal over the register, which it was while the
+   * record was five fields and nothing else. It carries the topics taught in
+   * it now — the scheme of work is read and written from the subject it
+   * belongs to, not from a register of every topic the teacher has ever
+   * filed — and a sub-table is the one thing the modal does not draw.
+   */
   kicker: 'Teaching',
   title: 'My subjects',
   description:
@@ -82,6 +101,36 @@ export const subjects: CollectionDef = {
   // the register already asked for.
   record: async (recordId) =>
     (await subjectRows()).find((subject) => subject.id === String(recordId)),
+  tabs: [
+    {
+      label: 'Topics taught',
+      columns: [
+        { key: 'title', label: 'Topic' },
+        { key: 'covered', label: 'What was covered' },
+      ],
+      /*
+       * Filtered here rather than asked for: `GET /teachers/me/topics` takes
+       * no subject, and the whole set is on the device anyway — which is also
+       * what lets this tab fill in a classroom with no signal, where a scheme
+       * of work is actually written up.
+       */
+      source: async (recordId) =>
+        (await topicRows())
+          .filter((topic) => topic.subject_id === String(recordId))
+          .map((topic) => ({ ...topic, covered: preview(topic.contents) })),
+      empty: 'Nothing recorded for this subject yet.',
+      // A topic is a record, so the row opens it — there is no register of
+      // topics for it to lead to any more.
+      rowRecord: (_subjectId, row) => ({ collection: 'topics', recordId: row.id }),
+      // The way the scheme is written up at all, now that topics have no
+      // register of their own. The subject is the page, so it travels with it.
+      add: (recordId) => ({
+        label: 'Add topic',
+        collection: 'topics',
+        values: { subject_id: recordId },
+      }),
+    },
+  ],
 };
 
 export const students: CollectionDef = {
@@ -166,9 +215,20 @@ export const students: CollectionDef = {
 
 export const topics: CollectionDef = {
   id: 'topics',
-  path: '/teacher/topics',
-  // Three fields and no sub-tables: the record opens over the register.
-  modal: true,
+  /*
+   * Topics have no register of their own. Every topic is taught in a subject,
+   * so they are read and written from the subject's own page — the tab above
+   * — and this is where a topic's record and its form go back to.
+   *
+   * The record is a page rather than the modal it used to be for the same
+   * reason: a modal is opened over the register a record belongs to, and
+   * there is no longer one to open it over.
+   */
+  path: '/teacher/subjects',
+  homeLabel: 'my subjects',
+  // Which is also why it needs one of these: `path` is part of the key a
+  // collection's rows are cached under, and the subjects share it now.
+  scope: 'topics',
   kicker: 'Teaching',
   title: 'Topics taught',
   description:
@@ -213,8 +273,8 @@ export const topics: CollectionDef = {
    * connection is doing, and the pending-work drawer is where they can see it
    * is still waiting.
    *
-   * Unlike the register and the mark sheet, a queued topic does not appear in
-   * the list below until the school has it. Those two are marked in bulk and
+   * Unlike the register and the mark sheet, a queued topic does not appear on
+   * the subject's tab until the school has it. Those two are marked in bulk and
    * read back all day, so they overlay the queue on screen; this is one record
    * written once, and a ghost row that could not be opened or corrected would
    * cost more than it explained. The toast says it is saved, and the drawer
@@ -255,7 +315,7 @@ export const topics: CollectionDef = {
           label: 'Subject',
           required: true,
           optionsFrom: 'my-subjects',
-          hint: 'One of your own subjects. Chosen when the topic is added and not changed afterwards.',
+          hint: 'Filled in from the subject you opened this from. It is chosen when the topic is added and not changed afterwards, so correct it here if it is wrong.',
         },
         {
           key: 'title',
