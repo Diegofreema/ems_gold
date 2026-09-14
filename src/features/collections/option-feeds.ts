@@ -260,8 +260,19 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // Imported here so the world's states land in a chunk of their own,
     // fetched when a staff form is opened and not before.
     const { countryOptions, stateOptions } = await import('./countries')
+    const { STATES_KNOWN_FOR } = await import('./country-ids')
     if (key === 'countries') return countryOptions()
-    return dependsOn ? stateOptions(dependsOn) : []
+    /*
+     * A states field that names no country at all means Nigeria, because the
+     * school can number no other country's states — see `country-ids.ts`.
+     * The staff form's field is the one that names none, having stopped
+     * asking which country; the student form still asks, and is untouched by
+     * this. Note that it is untouched even before a country is picked: a
+     * field declaring a `dependsOn` does not run this feed until that field
+     * is filled (`enabled: !waiting` in `remote-select-field.tsx`), so an
+     * empty `dependsOn` reaches here only from a field that never had one.
+     */
+    return stateOptions(dependsOn || STATES_KNOWN_FOR)
   }
 
   if (key === 'payment-methods') {

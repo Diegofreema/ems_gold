@@ -175,8 +175,13 @@ export async function resyncCollections(ids?: readonly string[]): Promise<void> 
  * cache — a register read off a collection is not behind any key an
  * invalidation can drop. Registered as this module is imported, which is as
  * soon as there is a collection to resync and never before.
+ *
+ * Returned rather than fired, so `dropDerivedReads` can drop the reads built
+ * *out of* these sets once the sets have actually caught up. Fired, the two
+ * raced and the refetch won, re-reading the rows the write had just made
+ * stale — see the note there.
  */
-alsoDropOnWrite(() => void resyncCollections())
+alsoDropOnWrite(() => resyncCollections())
 
 /**
  * The one way to put a school endpoint on the device.

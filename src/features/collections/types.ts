@@ -401,10 +401,38 @@ export type FormSectionSpec = {
   when?: (values: Record<string, unknown>) => boolean
 }
 
+/**
+ * How a tab is drawn when its rows are bodies rather than figures.
+ *
+ * A table is the right shape for a column of marks and the wrong one for a
+ * column of prose: the useful field is the one an ellipsis cuts, and a cell
+ * wide enough not to cut it scrolls the frame sideways on a phone. Naming the
+ * keys here turns the tab into panels that open instead.
+ */
+export type AccordionSpec = {
+  /** Row key for the panel's heading — the whole heading, and it wraps. */
+  title: string
+  /** Row key for the body it opens onto. Rich text is drawn as written. */
+  body: string
+  /** Row key for a quieter line under the heading — a date, a count. */
+  meta?: string
+  /** What an empty body says, in place of the panel's contents. */
+  empty?: string
+  /** What the link to the row's own record is called, where it has one. */
+  openLabel?: string
+}
+
 /** A sub-table shown beside a record's fields on its detail page. */
 export type DetailTab = {
   label: string
-  columns: ColumnSpec[]
+  /**
+   * Optional only because an `accordion` tab draws no columns. A tab with
+   * neither draws an empty table, which is a definition with something
+   * missing rather than a shape anything wants.
+   */
+  columns?: ColumnSpec[]
+  /** Draws the rows as panels that open rather than as a table. */
+  accordion?: AccordionSpec
   /** Shown when the tab has no `source`; the fixture rows. */
   rows?: Row[]
   /** Reads the tab from the API for the record being looked at. */

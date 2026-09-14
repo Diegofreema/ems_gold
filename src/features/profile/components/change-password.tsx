@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { PasswordInput } from '@/features/auth/components/password-input'
 import { PasswordRules } from '@/features/auth/components/password-rules'
 import { PasswordStrength } from '@/features/auth/components/password-strength'
+import { MINIMUM_LENGTH } from '@/features/auth/password'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { changePasswordSchema, type ChangePasswordValues } from '../schema'
 
@@ -52,7 +53,7 @@ export function ChangePassword() {
             <PasswordInput<ChangePasswordValues>
               name="next"
               label="New password"
-              placeholder="At least 10 characters"
+              placeholder={`At least ${MINIMUM_LENGTH} characters`}
               visible={visible}
               onToggle={() => setVisible((previous) => !previous)}
             />

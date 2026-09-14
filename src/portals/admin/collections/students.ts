@@ -152,13 +152,25 @@ const IDENTITY: FormSectionSpec = {
     { key: 'religion', label: 'Religion', required: true, options: [...RELIGIONS] },
     // The student's own, not the household's — that one is on the guardian
     // record, and this is the address the student signs in with.
+    /*
+     * Not required: a child enrolling at a Nigerian school very often has no
+     * address of their own, and the office was inventing one to get past the
+     * form. `studentBody` drops an empty box rather than sending a blank.
+     *
+     * The hint no longer claims this *is* the login. It usually becomes one,
+     * but not always and not for ever: of four students read off this school,
+     * two sign in with an address that is not the one on their record, and
+     * the test login on file is a registration number. The school issues the
+     * username itself and the enrol endpoint does not report it back — unlike
+     * a guardian's, which answers with the login beside the record — so what
+     * a student actually signs in with is read off their record afterwards.
+     */
     {
       key: 'email',
       label: 'Email',
-      required: true,
       email: true,
       placeholder: 'student@example.com',
-      hint: 'The student signs in with this.',
+      hint: 'Where the school can reach the student. Their sign-in is usually made from it, so leaving it empty means checking the record afterwards for what they sign in with.',
     },
     { key: 'phone', label: 'Phone', required: true, numeric: true, placeholder: '0705 883 1190' },
     {

@@ -316,22 +316,23 @@ function isTeaching(values: Record<string, unknown>): boolean {
 /**
  * Where they live, which only the teaching record takes — `POST /admins/new-admin`
  * accepts neither field, so the office form does not ask for them.
+ *
+ * The state alone. There was a Country above it, and it was a choice with one
+ * answer: the school numbers countries its own way, publishes no catalogue,
+ * and the only states anybody has been able to number are Nigeria's — so
+ * every other country in that list led to an empty State box, and the two
+ * hundred-odd of them bought the office nothing but a step. The country is
+ * implied by the state now, and `teacherBody` sends the school's id for it.
  */
 const PLACE: FormSectionSpec = {
   title: 'Where they live',
   when: isTeaching,
   fields: [
     {
-      key: 'country',
-      label: 'Country',
-      hint: 'The school’s server keeps its own list of countries and publishes no catalogue, so only the ones it has been seen to hold can be saved. Anything else is stored without a country.',
-      optionsFrom: 'countries',
-    },
-    {
       key: 'state',
       label: 'State',
       optionsFrom: 'states',
-      dependsOn: 'country',
+      hint: 'The school’s server keeps its own list and publishes no catalogue, so only the states it has been read to hold can be saved.',
     },
   ],
 }

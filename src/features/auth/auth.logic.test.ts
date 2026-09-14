@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { MINIMUM_SCORE, passwordScore, strengthLabel } from './password.ts'
+import {
+  MINIMUM_LENGTH,
+  MINIMUM_SCORE,
+  passwordScore,
+  strengthLabel,
+} from './password.ts'
 import { isDisabled, roleForAccount } from './role.ts'
 
 /** Only the parts of a sign-in the portal decision reads. */
@@ -36,13 +41,24 @@ test('an account with no profile_type falls back to its role name', () => {
 })
 
 test('length can never be traded away for other rules', () => {
-  // Upper+lower, a number and a symbol, but only nine characters.
-  assert.equal(passwordScore('Ab1!efghi'), 1)
-  assert.ok(passwordScore('Ab1!efghij') >= MINIMUM_SCORE)
+  // Upper+lower, a number and a symbol, but a character short of the bar.
+  assert.equal(passwordScore('Ab1!e'), 1)
+  assert.ok(passwordScore('Ab1!ef') >= MINIMUM_SCORE)
+})
+
+test('the shortest password the school takes is the one it signs in with', () => {
+  // Six, because that is what the sign-in field has always accepted. A reset
+  // screen asking for more would lock an account out of its own portal.
+  assert.equal(MINIMUM_LENGTH, 6)
+  // Three of the four rules is the bar, and six plain characters reach it
+  // without a symbol — which is the whole point of lowering the length.
+  assert.ok(passwordScore('Abc123') >= MINIMUM_SCORE)
+  assert.ok(passwordScore('Abc12') < MINIMUM_SCORE)
 })
 
 test('strength wording tracks the score', () => {
   assert.equal(strengthLabel(''), 'Nothing typed yet')
+  // Five characters and one rule passed of the other three: capped at 0.
   assert.equal(strengthLabel('short'), 'Too short to accept')
   assert.equal(strengthLabel('Abcdefghij1!'), 'Strong')
 })

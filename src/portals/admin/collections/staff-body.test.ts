@@ -57,7 +57,8 @@ const TEACHING_FORM = {
   gender: 'Male',
   address: 'OWERRI IMO STATE',
   phone: '08000000000',
-  country: 'NG',
+  // No country: the form stopped asking, because the only states the school
+  // can number are Nigeria's and the country follows from the state.
   state: '2647',
   department_id: '1',
   qualification: 'BSc',
@@ -85,10 +86,16 @@ test('the teacher body is exactly what POST /teachers documents', () => {
   })
 })
 
-test('a country the school has no id for is left off rather than guessed', () => {
-  // The form holds an ISO code; the number belongs to the school's own table,
-  // and sending somebody else's numbering would file the teacher elsewhere.
-  const body = teacherBody({ ...TEACHING_FORM, country: 'FR', state: '' })
+test('the country comes off the state, from the school\u2019s own table', () => {
+  // Not written as a number here: it is looked up by the same ISO code the
+  // state ids are generated for, so the two can never name different places.
+  assert.equal(teacherBody(TEACHING_FORM).country_id, 160)
+})
+
+test('no state means no country either, rather than a country on its own', () => {
+  // An address saying "Nigeria" and nothing else says less than one saying
+  // neither, and it would be this form inventing a fact nobody entered.
+  const body = teacherBody({ ...TEACHING_FORM, state: '' })
   assert.equal(body.country_id, undefined)
   assert.equal(body.state_id, undefined)
   // Everything else still goes.

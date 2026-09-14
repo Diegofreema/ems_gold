@@ -116,9 +116,11 @@ export type StudentBody = {
   fname: string
   lname: string
   /**
-   * Null where the student has none. Sent rather than dropped, because it
-   * is the only field on the enrol form that may be left empty, and a key
-   * the edit leaves out is one the record keeps — see `studentBody`.
+   * Null where the student has none, rather than dropped. A key the edit
+   * leaves out is one the record keeps — see `studentBody` — so a name the
+   * office has cleared would read back with the old one still on it. The
+   * other fields nobody has to answer are dropped instead, which means an
+   * email can be added later but not taken off.
    */
   mname?: string | null
   /** YYYY-MM-DD. */

@@ -371,6 +371,41 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   `ensureQueryData`. Writes that move money also call `dropMoneyReads`.
   The outbox drain drops them **once at the end of a pass**, not per op — thirty attendance marks
   are thirty ops, and thirty full resyncs would ask the school the same questions thirty times.
+  **The reads are dropped twice: once at once, and again after the device's own sets have caught
+  up.** A derived read built *out of* a collection — a record's sub-table counting `heldRows`, a
+  count tile, a register still on the query path — is a snapshot of what the set held when it last
+  ran, not a live query, so starting the resync and the invalidation together let the refetch beat
+  the sync: it re-read the rows the write had just made stale, wrote them back as fresh, and
+  nothing ran again when the school's answer landed. A teacher who filed a topic had to reload the
+  page to see it. The prompt pass stays because most derived reads are not built on a set at all —
+  the dashboards, the audit log, the pickers — and should not wait on a sync they have nothing to
+  do with; the second costs only what is on screen, since an invalidated query with no observer
+  refetches nothing. `alsoDropOnWrite` hands back a promise for this, and a refusal drops the reads
+  too: a device that could not reach the school still has to stop showing what the write replaced.
+- **A form does not ask a question with one answer.** The teacher form used to offer a country above
+  the state; the school numbers countries its own way, publishes no catalogue, and the only states
+  anybody has been able to number are Nigeria's — so every other country in that list led to an
+  empty State box. The state stands alone now and `teacherBody` sends the country the state ids
+  were generated for, never a number written out here, so the two cannot name different places. No
+  state means no country either: an address reading "Nigeria" and nothing else is this form
+  inventing a fact nobody entered. The `states` feed reads an absent scope as Nigeria, which
+  reaches only a field that never declared a `dependsOn` — one that declares an empty one does not
+  run the feed at all — so the student form, which still asks, is untouched.
+- **A student's email is optional, and it is not reliably their login.** It usually becomes one, but
+  of four students read off this school two sign in with an address that is not the one on their
+  record, and the test login on file is a registration number. The school issues the username itself
+  and `POST /students` does not report it back — unlike a guardian's create, which answers with the
+  login beside the record — so what a student signs in with is read off the record afterwards. An
+  empty box is dropped rather than sent blank, which also means an email can be added later but not
+  taken off: only `mname` and `previousschool` go as null.
+- **The shortest password the app accepts is `MINIMUM_LENGTH` in `features/auth/password.ts`, and
+  it is written nowhere else.** Six, which is what the sign-in field has always taken: a reset
+  screen may not set a bar higher than the door it lets people back through, or somebody locked out
+  of their own portal would be asked for a password they could then never sign in with. The
+  checklist's own label is built from the constant for the same reason — it used to say "Ten
+  characters or more" beside a validator that was free to change under it. Three of the four rules
+  is still the bar (`MINIMUM_SCORE`), and six plain characters reach it without a symbol; the reset
+  screen, the first-sign-in screen and the profile page's form all read the one figure.
 - **A portal opened on the password the office issued is gated, not merely warned.**
   `/users/me` carries `isdefaultpassword` on every answer, so it is read off the stored account
   rather than remembered from the sign-in — `usingDefaultPassword` in `features/auth/role.ts`, and
@@ -470,6 +505,15 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   breakpoints for what genuinely fills the window — the landing page, the sign-in split, a dialog.
   Type is left alone on this axis: the portal reads at 15px with 24px titles, and the fix for a
   crowded 14-inch screen is the chrome around the words, not smaller words.
+- **A tab whose rows are prose is panels, not a table.** `DetailTab.accordion` names the row keys —
+  the heading, the body it opens onto, optionally a quieter line under the heading — and the tab
+  draws `Accordion` instead of `TableView`. Topics taught is the case that forced it: as columns the
+  useful half was the one an ellipsis cut, and a cell wide enough to hold a scheme of work scrolled
+  the frame sideways on a phone. The first panel opens on arrival, because a tab holding one topic
+  that says nothing until it is clicked reads as an empty tab. The body is asked whether it is rich
+  text rather than assumed either way — the same column holds sentences typed before the editor
+  existed and HTML written since — and `columns` is optional on a tab that declares one of these,
+  since it draws none.
 - **A record that belongs inside another one is read and written from that one, not from a register
   of its own.** A topic is taught in a subject, so the scheme of work lives on the subject's page:
   a `Topics taught` tab, filtered off the device — `GET /teachers/me/topics` takes no subject and

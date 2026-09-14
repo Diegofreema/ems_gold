@@ -15,6 +15,7 @@ import { AuthPasswordField } from '../components/auth-field'
 import { AuthHeading } from '../components/auth-heading'
 import { PasswordRules } from '../components/password-rules'
 import { PasswordStrength } from '../components/password-strength'
+import { MINIMUM_LENGTH } from '../password'
 import { resetPasswordSchema, type ResetPasswordValues } from '../schemas'
 import { refreshAccount } from '../session'
 
@@ -118,7 +119,7 @@ export function ResetPasswordScreen({ first }: { first: boolean }) {
             <AuthPasswordField<ResetPasswordValues>
               name="password"
               label="New password"
-              placeholder="At least 10 characters"
+              placeholder={`At least ${MINIMUM_LENGTH} characters`}
               icon={Lock}
               autoComplete="new-password"
               visible={visible}

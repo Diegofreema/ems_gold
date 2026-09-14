@@ -8,6 +8,7 @@ import { TableSkeleton } from '@/components/feedback/table-skeleton'
 import { TableView } from '@/components/data-table/table-view'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import type { CollectionRoutes, DetailTab, Row } from '../types'
+import { DetailAccordion } from './detail-accordion'
 import { toTableColumns } from './collection-columns'
 
 /** How many rows the tab shimmers while it loads. */
@@ -27,6 +28,18 @@ function TabTable({
   const navigate = useNavigate()
   const { rowTo, rowRecord } = tab
 
+  // Rows whose substance is prose are read in panels that open, not in cells.
+  if (tab.accordion)
+    return (
+      <DetailAccordion
+        rows={rows}
+        spec={tab.accordion}
+        tab={tab}
+        recordId={recordId}
+        routes={routes}
+      />
+    )
+
   // `TableView` draws a header and nothing else for an empty list, which reads
   // as a table that has not loaded rather than one with nothing in it.
   if (rows.length === 0) {
@@ -39,7 +52,7 @@ function TabTable({
 
   return (
     <TableView
-      columns={toTableColumns(tab.columns)}
+      columns={toTableColumns(tab.columns ?? [])}
       rows={rows}
       rowKey={(row) => row.id}
       onRowClick={

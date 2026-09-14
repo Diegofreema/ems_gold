@@ -8,7 +8,6 @@ import {
   teacherTopics,
 } from '@/db/collections/teaching';
 import { pageRows } from '@/features/collections/api';
-import { plainText } from '@/features/collections/rich-text';
 import { localFirst } from '@/features/collections/local-first';
 import type { CollectionDef, Row } from '@/features/collections/types';
 import { myArms, myEClasses, myMarks, myStudents, mySubjects, myTopics } from './mine';
@@ -30,19 +29,6 @@ const topicRows = async (): Promise<Row[]> => {
   const [topics, subjects] = await Promise.all([myTopics(), mySubjects()]);
   const names = subjectNames(subjects);
   return topics.map((topic) => topicRow(topic, names));
-};
-
-/** How much of a topic's body the subject's tab shows before the row opens. */
-const PREVIEW = 90;
-
-/**
- * The body as a line. The editor stores HTML, so a cell given it raw draws the
- * tags; and a scheme of work runs to paragraphs, so a cell given all of it
- * makes one row as tall as the table.
- */
-const preview = (contents: string): string => {
-  const words = plainText(contents);
-  return words.length > PREVIEW ? `${words.slice(0, PREVIEW).trimEnd()}…` : words;
 };
 
 const eclassRows = async (): Promise<Row[]> =>
@@ -104,10 +90,19 @@ export const subjects: CollectionDef = {
   tabs: [
     {
       label: 'Topics taught',
-      columns: [
-        { key: 'title', label: 'Topic' },
-        { key: 'covered', label: 'What was covered' },
-      ],
+      /*
+       * Panels rather than a table. A topic is a title and the prose under it,
+       * and as columns the prose was cut to whatever fitted on one line —
+       * which is the half the office actually reads — while the frame scrolled
+       * sideways on a phone. Here the title is the heading and the scheme is
+       * read where it was written.
+       */
+      accordion: {
+        title: 'title',
+        body: 'contents',
+        empty: 'This topic was filed without anything written under it.',
+        openLabel: 'Open the topic',
+      },
       /*
        * Filtered here rather than asked for: `GET /teachers/me/topics` takes
        * no subject, and the whole set is on the device anyway — which is also
@@ -115,11 +110,9 @@ export const subjects: CollectionDef = {
        * of work is actually written up.
        */
       source: async (recordId) =>
-        (await topicRows())
-          .filter((topic) => topic.subject_id === String(recordId))
-          .map((topic) => ({ ...topic, covered: preview(topic.contents) })),
+        (await topicRows()).filter((topic) => topic.subject_id === String(recordId)),
       empty: 'Nothing recorded for this subject yet.',
-      // A topic is a record, so the row opens it — there is no register of
+      // A topic is a record, so the panel offers it — there is no register of
       // topics for it to lead to any more.
       rowRecord: (_subjectId, row) => ({ collection: 'topics', recordId: row.id }),
       // The way the scheme is written up at all, now that topics have no

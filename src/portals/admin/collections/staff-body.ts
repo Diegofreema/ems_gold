@@ -1,7 +1,10 @@
 import type { CreateStaffBody, UpdateStaffBody } from '../../../api/teachers/types.ts'
 import type { CreateAdminBody, UpdateAdminRecordBody } from '../../../api/admins/types.ts'
 import { isoDate } from '../../../features/collections/birthday.ts'
-import { schoolCountryId } from '../../../features/collections/country-ids.ts'
+import {
+  schoolCountryId,
+  STATES_KNOWN_FOR,
+} from '../../../features/collections/country-ids.ts'
 
 /** The form's values, all strings from the inputs and selects. */
 export type FormValues = Record<string, unknown>
@@ -52,11 +55,15 @@ export function teacherBody(values: FormValues): CreateStaffBody {
     // Onto the login behind the record — the teaching row has no birthday of
     // its own — as the date the office picked, not the one the browser read.
     dob: isoDate(values.dob),
-    // The form holds the ISO code, which is the one thing about a country that
-    // does not depend on whose list you are reading. The number the API wants
-    // is the school's own, and is looked up here — a country it has no id for
-    // is left off rather than sent as somebody else's number.
-    country_id: schoolCountryId(values.country),
+    /*
+     * The form no longer asks which country, because the only states this
+     * school can number are Nigeria's — see `country-ids.ts` — so a state
+     * chosen at all is a Nigerian one and the country follows from it. Sent
+     * from the same table the state ids come out of rather than written as a
+     * number here, and left off entirely where no state was picked: an
+     * address with a country and no state says less than one with neither.
+     */
+    country_id: asId(values.state) ? schoolCountryId(STATES_KNOWN_FOR) : undefined,
     state_id: asId(values.state),
   }
 }

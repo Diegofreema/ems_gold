@@ -59,14 +59,32 @@ const DERIVED = [
  * would hand this refetch the same rows straight back.
  */
 export function dropDerivedReads(queryClient: QueryClient): Promise<unknown> {
-  alsoDrop?.()
-  return Promise.all(
-    DERIVED.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-  )
+  const drop = () =>
+    Promise.all(DERIVED.map((queryKey) => queryClient.invalidateQueries({ queryKey })))
+
+  /*
+   * Twice, and the second time is the one that matters for anything built out
+   * of the device's own sets.
+   *
+   * A derived read that reads a collection — a record's sub-table counting
+   * `heldRows`, a count tile, a register still on the query path — is a
+   * snapshot of what the set held when it last ran, not a live query. The
+   * resync and the invalidation used to be started together, so the refetch
+   * raced the sync and won: it re-read the same rows, wrote them back as
+   * fresh, and nothing ran again when the school's answer finally landed. A
+   * teacher who filed a topic had to reload the page to see it.
+   *
+   * The first pass stays because most derived reads are not built on a set at
+   * all — the dashboards, the audit log, the pickers — and those should not
+   * wait on a sync they have nothing to do with. The second costs only what
+   * is actually on screen: an invalidated query with no observer refetches
+   * nothing, and at the moment of a write the reader is on one page.
+   */
+  return Promise.all([drop(), Promise.resolve(alsoDrop?.()).then(drop, drop)])
 }
 
 /** What else a write has to reach; see `alsoDropOnWrite`. */
-let alsoDrop: (() => void) | undefined
+let alsoDrop: (() => unknown) | undefined
 
 /**
  * Adds something to what every write drops.
@@ -81,7 +99,11 @@ let alsoDrop: (() => void) | undefined
  * collections need the query client; the invalidation must not need the
  * collections, or the two modules import each other in a circle for the sake
  * of one call.
+ *
+ * What it hands back is awaited — a refusal included, since a device that
+ * could not reach the school still has to drop what it derived. See the note
+ * in `dropDerivedReads` for why the second pass exists at all.
  */
-export function alsoDropOnWrite(drop: () => void): void {
+export function alsoDropOnWrite(drop: () => unknown): void {
   alsoDrop = drop
 }
