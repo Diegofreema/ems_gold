@@ -90,15 +90,18 @@ export function StudentsMessageForm() {
   const armId = arms.find((arm) => arm.value === chosenArm)?.value ?? arms[0].value
   const students = recipientsIn(data, Number(armId))
 
-  const submit = form.handleSubmit((values) => {
-    // Accepted on the device and queued — the toast is the queue's own, and
-    // says "saved on this device" only when the send actually has to wait.
-    enqueue({
+  const submit = form.handleSubmit(async (values) => {
+    // Sent to the school, and kept on the device only if it could not be — the
+    // toast is the queue's own, and says "saved on this device" only then.
+    const outcome = await enqueue({
       handler: WRITE.messageStudents,
       payload: values,
       toast: { success: 'Message sent to your students' },
       label: 'Message to your students',
     })
+    // A message the school refused is still on the screen that wrote it, with
+    // the words in it. Emptying the form would be the one unrecoverable answer.
+    if (outcome === 'refused') return
     form.reset(EMPTY)
     void setQuery('')
   })

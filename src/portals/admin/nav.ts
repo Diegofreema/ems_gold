@@ -1,6 +1,5 @@
 import {
   BadgeDollarSign,
-  Bell,
   Book,
   BookOpen,
   BookUp,
@@ -20,7 +19,6 @@ import {
   List,
   Megaphone,
   MessagesSquare,
-  Search,
   Shield,
   SquareCheckBig,
   Table2,
@@ -35,10 +33,6 @@ export const adminNav: NavGroup[] = [
   {
     items: [
       { to: '/admin', label: 'Dashboard', icon: LayoutGrid },
-      // One box across students, guardians and staff — for the telephone call
-      // where whoever is being asked about could be any of the three.
-      { to: '/admin/search', label: 'Search', icon: Search },
-      { to: '/admin/notifications', label: 'Notifications', icon: Bell },
     ],
   },
   {

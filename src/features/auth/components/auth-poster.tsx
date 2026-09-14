@@ -5,20 +5,34 @@
  * Hidden below lg. The design draws no narrow view, and a poster costs a phone
  * a photograph to say something the form beside it already says — on the
  * connections this app is for, that is a poster worth dropping.
+ *
+ * Held to the height of the screen and stuck there. The two columns are one
+ * grid row, so a tall form — the reset screen carries three password fields, a
+ * strength bar and a list of rules — used to stretch the poster with it, and
+ * the panel drawn at 6.5%/5.3% of a row half again as tall as the window sat
+ * with its headline off the top of the screen. Sticking it means the poster is
+ * the window's own height whatever the form does, and scrolling the form moves
+ * nothing on the left.
  */
 export function AuthPoster() {
   return (
-    <aside className="relative hidden overflow-hidden bg-ui-blue lg:block">
+    <aside className="relative hidden overflow-hidden bg-ui-blue lg:sticky lg:top-0 lg:block lg:h-dvh lg:self-start">
       <Ripple />
 
       {/* Translucent rather than filled, so the ripple carries on through it —
-          the rings are one drawing, not two that have to line up at the edge. */}
-      <div className="absolute top-[6.5%] right-[10.5%] bottom-[5.3%] left-[9.7%] overflow-hidden rounded-[10px] border border-white/40 bg-white/25">
-        <div className="px-[6.3%] pt-24 text-white">
-          <h1 className="max-w-[9em] font-heading text-[46px] leading-[1.2] font-extrabold tracking-[-0.02em]">
+          the rings are one drawing, not two that have to line up at the edge.
+
+          A column rather than a text block with a photograph placed under it:
+          on a 14-inch laptop the student was drawn over the sentence, because
+          she was sized against the panel's width and anchored to its foot
+          while the panel itself had lost 200px of height. As the last item in
+          a column she takes the room the words leave and no more. */}
+      <div className="absolute top-[6.5%] right-[10.5%] bottom-[5.3%] left-[9.7%] flex flex-col overflow-hidden rounded-[10px] border border-white/40 bg-white/25">
+        <div className="flex-none px-[6.3%] pt-(--auth-poster-lead) text-white">
+          <h1 className="max-w-[9em] font-heading text-(length:--auth-poster-title) leading-[1.2] font-extrabold tracking-[-0.02em]">
             One School one record
           </h1>
-          <p className="mt-3 max-w-[27rem] text-base leading-[1.45]">
+          <p className="mt-3 max-w-[27rem] text-(length:--auth-poster-body) leading-[1.45]">
             Fees, result, attendance and admission in one single system, the
             office, staff room, and home all read from.
           </p>
@@ -26,11 +40,15 @@ export function AuthPoster() {
 
         {/* Decorative: the sentence above is what this panel says, and a
             screen reader that announced a stock photograph of a student would
-            be announcing something the page does not mean. */}
+            be announcing something the page does not mean.
+
+            `contain` rather than a width alone, so the room left over is what
+            bounds her on a short screen and her own width on a tall one — she
+            shrinks instead of climbing over the paragraph. */}
         <img
           src="/auth-student.webp"
           alt=""
-          className="absolute bottom-[1.6%] left-[50.7%] w-[57.4%] -translate-x-1/2"
+          className="mt-6 min-h-0 w-[57.4%] flex-1 self-center object-contain object-bottom"
         />
       </div>
     </aside>

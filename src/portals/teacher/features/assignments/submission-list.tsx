@@ -1,3 +1,4 @@
+import { SquarePen } from 'lucide-react'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { DataTable } from '@/components/data-table/data-table'
 import type { Column } from '@/components/data-table/types'
@@ -57,8 +58,13 @@ export function SubmissionList({
           rows={rows}
           rowKey={(row) => row.id}
           onRowClick={(row) => onOpen(row.id)}
+          // No `openLabel` beside it: opening the submission *is* the
+          // action, and a menu whose two items do the same thing is a menu
+          // somebody has to read twice to find that out.
           action={{
             label: (row) => (row.state === 'To mark' ? 'Mark' : 'Review'),
+            danger: () => false,
+            icon: SquarePen,
             onSelect: (row) => onOpen(row.id),
           }}
         />

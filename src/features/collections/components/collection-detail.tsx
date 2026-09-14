@@ -118,7 +118,10 @@ export function CollectionDetail({
   const actionLabel = rowAction.spec?.label(record)
   // The same control the register offers on the row, for the one record.
   const rowLink = definition.rowLink
-  const linkLabel = rowLink?.label(record)
+  // Withheld while the record is still in the queue, like everything else on
+  // this page: the link carries the record's id to a page that asks the school
+  // about it, and the school has not issued one.
+  const linkLabel = waiting ? undefined : rowLink?.label(record)
   const linkButton =
     rowLink && linkLabel ? (
       <Button
@@ -131,17 +134,33 @@ export function CollectionDetail({
         {linkLabel}
       </Button>
     ) : null
-  const tabs = inModal
-    ? []
-    : (definition.tabs ?? (definition.source ? [] : [ACTIVITY])).filter(
-        (tab) => tab.when?.(record.id) ?? true,
-      )
+  /*
+   * A record still in the queue has no tabs.
+   *
+   * Every one of them is a request naming this record's id — a student's fee
+   * ledger, their results, the activity filed against them — and the id is
+   * `local:<uuid>`, which the school has never issued. The panel answered
+   * "No API endpoint matches GET /students/local:7ec2…/invoices", which is a
+   * true sentence about a question nobody should have asked.
+   *
+   * The register withholds the door for the same reason (`canOpen` in
+   * `collection-list.tsx`); this is the far end of it, for a reader who has
+   * the address anyway — a reload, the back button, a bookmark.
+   */
+  const tabs =
+    inModal || waiting
+      ? []
+      : (definition.tabs ?? (definition.source ? [] : [ACTIVITY])).filter(
+          (tab) => tab.when?.(record.id) ?? true,
+        )
   const flowRoute = routes.flow
 
   // Where a flow is the only thing the page offers, it is the page's main
   // verb. A record can be in more than one — a teacher is given subjects and
-  // is written to — and each is offered only where it applies.
-  const flowButtons = !flowRoute
+  // is written to — and each is offered only where it applies. None is offered
+  // on a record still in the queue: allocating a fee or setting privileges
+  // writes against an id the school has never issued.
+  const flowButtons = !flowRoute || waiting
     ? []
     : (flows ?? [])
         .filter((one) => (one.allowed?.(record) ?? true) && (one.when?.(record) ?? true))
@@ -311,7 +330,7 @@ export function CollectionDetail({
       <div
         className={cn(
           'grid gap-8.5',
-          tabs.length > 0 && 'lg:grid-cols-[1.6fr_1fr]',
+          tabs.length > 0 && '@3xl/page:grid-cols-[1.6fr_1fr]',
         )}
       >
         <DetailTabPanel tabs={tabs} recordId={record.id} />

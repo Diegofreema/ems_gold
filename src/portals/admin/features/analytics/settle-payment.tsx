@@ -78,7 +78,7 @@ export function SettlePayment() {
   const rrrForm = useRecordForm<RrrValues>(RRR, { rrr: '' })
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid gap-5 @3xl/page:grid-cols-2">
       <SettleCard
         title="Re-check an Interswitch payment"
         description="Asks Interswitch about a reference and settles it here if the amount matches."

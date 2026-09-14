@@ -54,26 +54,26 @@ export const shellPending = (config: PortalConfig) => () => {
 
         <nav className="flex-1 space-y-1.5 overflow-hidden px-4 pb-6">
           {Array.from({ length: items }, (_, index) => (
-            <div key={index} className="flex h-11 items-center gap-3 px-3">
+            <div key={index} className="flex h-(--rail-row) items-center gap-3 px-3">
               <Shimmer className="size-5 flex-none rounded-md" delay={index * 40} />
               <Shimmer className="h-3 flex-1 rounded-sm" delay={index * 40} />
             </div>
           ))}
 
           {groups.map((group, index) => (
-            <div key={group.heading ?? index} className="flex h-11 items-center gap-3 px-3">
+            <div key={group.heading ?? index} className="flex h-(--rail-row) items-center gap-3 px-3">
               <Shimmer className="size-5 flex-none rounded-md" delay={(items + index) * 40} />
               <Shimmer className="h-3 w-28 rounded-sm" delay={(items + index) * 40} />
             </div>
           ))}
         </nav>
 
-        <div className="px-4 pb-6">
-          <div className="flex h-11 items-center gap-3 px-3">
+        <div className="px-4 pb-(--rail-foot)">
+          <div className="flex h-(--rail-row) items-center gap-3 px-3">
             <Shimmer className="size-5 flex-none rounded-md" />
             <Shimmer className="h-3 w-20 rounded-sm" delay={60} />
           </div>
-          <div className="flex h-11 items-center gap-3 px-3">
+          <div className="flex h-(--rail-row) items-center gap-3 px-3">
             <Shimmer className="size-5 flex-none rounded-md" delay={80} />
             <Shimmer className="h-3 w-16 rounded-sm" delay={120} />
           </div>
@@ -81,7 +81,7 @@ export const shellPending = (config: PortalConfig) => () => {
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col bg-ground">
-        <header className="sticky top-0 z-20 flex h-18 items-center gap-3 border-b border-divider bg-raised px-content">
+        <header className="sticky top-0 z-20 flex h-(--shell-header) items-center gap-3 border-b border-divider bg-raised px-content">
           {/* The drawer button, which only exists at the narrow breakpoint. */}
           <Shimmer className="size-10 flex-none rounded-lg min-[900px]:hidden" />
 

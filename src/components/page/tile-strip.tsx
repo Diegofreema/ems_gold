@@ -73,14 +73,26 @@ const DELTA_TONE: Record<NonNullable<Tile['deltaTone']>, string> = {
  * The stat cards: a label, the figure, a line of context, and a coloured
  * square holding the icon.
  *
- * Flat white on the page's ground rather than bordered and shadowed — the
- * ground is what separates them now, and a border around every card on a page
- * of cards is a grid of lines nobody reads. A card given `to` is a link and
- * says so by lifting.
+ * Each one is its own card — `--ems-figure` with a hairline and a shadow —
+ * rather than flat on whatever is behind it. Flat was the earlier reading of
+ * "the ground separates the cards", and it only holds where there *is* a
+ * ground: the four figures over a register sit inside a panel, so they were
+ * white on white and read as loose text, and on a dashboard white on the
+ * ground is a 2% difference that a dark theme does not have at all. The token
+ * carries the difference in both themes; see `index.css`. A card given `to` is
+ * a link and says so by lifting.
  *
  * Four across on a wide screen, two on a tablet, one on a phone: the figures
  * are the first thing on most of these pages and must not need scrolling
  * sideways to read.
+ *
+ * How many fit is worked out from the room the strip actually has, not from
+ * the size of the window. The two are 312px apart inside a portal — the rail
+ * and the page's padding — and asking the window got it wrong in the middle of
+ * the range a laptop sits in: at a 1279px window the four headline figures of
+ * every dashboard and register were drawn as two cards 476px wide, and at 1281
+ * as four. `auto-fit` has no such edge, and it never leaves a hole: fewer
+ * tiles than tracks and the empty tracks collapse.
  */
 export function TileStrip({
   tiles,
@@ -97,7 +109,7 @@ export function TileStrip({
       className={cn(
         'grid gap-3.5',
         size === 'lg'
-          ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'
+          ? 'grid-cols-[repeat(auto-fit,minmax(230px,1fr))]'
           : 'grid-cols-[repeat(auto-fit,minmax(210px,1fr))]',
         className,
       )}
@@ -161,10 +173,10 @@ export function TileStrip({
           </>
         )
         const look = cn(
-          'block min-w-0 animate-ems-up rounded-xl bg-raised',
+          'block min-w-0 animate-ems-up rounded-xl bg-figure shadow-figure ring-1 ring-figure-edge',
           size === 'lg' ? 'p-5' : 'px-4 py-3.5',
           tile.to &&
-            'transition hover:-translate-y-0.5 hover:shadow-card focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden',
+            'transition hover:-translate-y-0.5 hover:shadow-float focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-hidden',
         )
         const style = { animationDelay: `${index * 40}ms` }
 

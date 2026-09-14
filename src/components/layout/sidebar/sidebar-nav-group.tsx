@@ -48,7 +48,7 @@ export function SidebarNavGroup({
         onClick={onToggle}
         aria-expanded={!collapsed}
         className={cn(
-          'flex h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors',
+          'flex h-(--rail-row) w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors',
           holdsOpenPage && collapsed
             ? 'bg-brand/10 font-medium text-brand-700'
             : 'hover:bg-neutral-100',

@@ -264,7 +264,7 @@ export const classes: CollectionDef = {
     const body = classBody(values)
     const named = text(body.name) || 'Untitled class'
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateClass,
         payload: { id: recordId, body },
         collectionId: SET.refClassCensus,
@@ -272,9 +272,8 @@ export const classes: CollectionDef = {
         toast: { success: 'Class updated' },
         label: `Class “${named}”`,
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createClass,
       payload: body,
       collectionId: SET.refClassCensus,
@@ -454,7 +453,7 @@ export const arms: CollectionDef = {
     const body = armBody(values)
     const named = text(body.arm_name) || 'Untitled arm'
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateArm,
         payload: { id: recordId, body },
         collectionId: SET.refArms,
@@ -462,9 +461,8 @@ export const arms: CollectionDef = {
         toast: { success: 'Arm updated' },
         label: `Arm “${named}”`,
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createArm,
       payload: body,
       collectionId: SET.refArms,
@@ -625,7 +623,7 @@ export const subjects: CollectionDef = {
     const body = subjectBody(values)
     const named = text(body.name) || 'Untitled subject'
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateSubject,
         payload: { id: recordId, body },
         collectionId: SET.refSubjects,
@@ -633,9 +631,8 @@ export const subjects: CollectionDef = {
         toast: { success: 'Subject updated' },
         label: `Subject “${named}”`,
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createSubject,
       payload: body,
       collectionId: SET.refSubjects,

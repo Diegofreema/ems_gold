@@ -8,6 +8,7 @@ import { refreshAccount } from '@/features/auth/session'
 import { queryClient } from '@/lib/query-client'
 import type { UpdateProfileBody } from '@/api/users/types'
 import { SET, WRITE } from '../ids'
+import { idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -24,6 +25,7 @@ import { registerHandler } from '../registry'
 registerHandler<CreateStaffBody>(WRITE.createTeacher, {
   send: (body) => teachersService.create(body),
   idempotent: false,
+  newId: idUnder('teacher'),
   collectionId: SET.refTeachers,
 })
 
@@ -42,6 +44,7 @@ registerHandler<Id>(WRITE.removeTeacher, {
 registerHandler<CreateAdminBody>(WRITE.createAdmin, {
   send: (body) => adminsService.create(body),
   idempotent: false,
+  newId: idUnder('admin'),
   collectionId: SET.refAdmins,
 })
 

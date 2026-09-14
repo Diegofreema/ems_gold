@@ -2,6 +2,7 @@ import { conversationsService } from '@/api/conversations/service'
 import type { ReplyBody, StartConversationBody } from '@/api/conversations/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { noNewId } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -32,6 +33,11 @@ import { registerHandler } from '../registry'
 registerHandler<StartConversationBody>(WRITE.startConversation, {
   send: (body) => conversationsService.start(body),
   idempotent: false,
+  // Unfired: bronze has never run this endpoint, so its answer is typed
+  // `unknown` and there is no key to name here. A reply queued against a
+  // thread this device started would need it — see the note on the reply
+  // below, which is why the compose screen does not offer one.
+  newId: noNewId,
   collectionId: SET.msgInbox,
 })
 
@@ -45,5 +51,8 @@ registerHandler<StartConversationBody>(WRITE.startConversation, {
 registerHandler<{ id: Id; body: ReplyBody }>(WRITE.replyToConversation, {
   send: ({ id, body }) => conversationsService.reply(id, body),
   idempotent: false,
+  // A reply creates a message, but nothing on the device ever names one:
+  // the thread is the row, and it already has the school's id.
+  newId: noNewId,
   collectionId: SET.msgInbox,
 })

@@ -131,6 +131,8 @@ export function termDeleteBody(row: Row | undefined): string {
 export function currentAction(noun: 'session' | 'term') {
   return {
     label: (row: Row) => (row.state === 'Current' ? undefined : 'Make current'),
+    // Nothing is taken away: the outgoing one keeps everything filed under it.
+    tone: () => 'brand' as const,
     title: () => `Make this the current ${noun}?`,
     cta: () => 'Make it current',
     confirm: (row: Row) =>

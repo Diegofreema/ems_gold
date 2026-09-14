@@ -1,3 +1,5 @@
+import type { Id } from '../api/types.ts'
+
 /**
  * What each queued write actually does when its turn comes.
  *
@@ -11,23 +13,9 @@
  * wants to be writable offline has to register here; there is no other way to
  * get into the queue.
  */
-export type OutboxHandler<P = never> = {
+type Sends<P> = {
   /** Sends it. The existing `src/api/<domain>/service.ts` function. */
   send: (payload: P) => Promise<unknown>
-  /**
-   * Whether sending the same payload twice is the same as sending it once.
-   *
-   * True for an upsert keyed on something the client already knows — taking a
-   * register for an arm and a date, entering a mark for a student and a
-   * subject. False for anything that creates a new row with a server-issued
-   * id, because a replay makes a second one.
-   *
-   * It decides what happens to an op that was in flight when the tab died: an
-   * idempotent one is simply sent again, and anything else has to be put to
-   * the person, because this API has no idempotency keys and nothing on the
-   * device can tell whether the school heard it.
-   */
-  idempotent: boolean
   /** The collection to refetch once it lands, so the row comes back as saved. */
   collectionId?: string
   /**
@@ -40,6 +28,44 @@ export type OutboxHandler<P = never> = {
    */
   note?: (answer: unknown) => string | undefined
 }
+
+/**
+ * A write, and — where it creates a row — where the school's id for that row
+ * is in the answer.
+ *
+ * `newId` is required of everything that is not idempotent and refused of
+ * everything that is, which is the same line drawn twice: a write that makes
+ * a new row is exactly the write whose id the device could not know in
+ * advance. It is a required field rather than an optional one because the
+ * reader it replaced guessed — it read `answer.id`, no create on this API
+ * answers in that shape, and so every queued create landed at the school and
+ * recorded nothing, silently, for as long as nothing happened to need the id.
+ * Now the next create added to this file does not compile until somebody has
+ * looked at what the endpoint actually says. See `new-id.ts`.
+ */
+export type OutboxHandler<P = never> =
+  | (Sends<P> & {
+      /**
+       * Sending the same payload twice is the same as sending it once — an
+       * upsert keyed on something the client already knows, like taking a
+       * register for an arm and a date. An op of this kind that was in flight
+       * when the tab died is simply sent again.
+       */
+      idempotent: true
+      /** Nothing is created, so there is no id for the device to learn. */
+      newId?: never
+    })
+  | (Sends<P> & {
+      /**
+       * This makes a new row with a server-issued id, so a replay makes a
+       * second one. An op of this kind that was in flight when the tab died
+       * has to be put to a person: the API has no idempotency keys, and
+       * nothing on the device can tell whether the school heard it.
+       */
+      idempotent: false
+      /** Where the id the school just issued is. See `new-id.ts`. */
+      newId: (answer: unknown) => Id | undefined
+    })
 
 const handlers = new Map<string, OutboxHandler<never>>()
 

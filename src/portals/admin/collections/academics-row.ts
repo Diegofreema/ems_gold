@@ -158,6 +158,7 @@ export function subjectDeleteBody(row: Row | undefined): string {
  */
 export const withdrawAction = {
   label: (row: Row) => (row.status === 'Active' ? 'Withdraw' : 'Offer again'),
+  tone: (row: Row) => (row.status === 'Active' ? ('danger' as const) : ('brand' as const)),
   // Only one direction is asked about: putting a subject back on the
   // timetable takes nothing away.
   confirm: (row: Row) =>

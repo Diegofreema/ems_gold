@@ -98,10 +98,10 @@ export function QuestionsPage() {
   const composed = composeQuestions(written, ops, assignmentId)
   const marks = totalMarks(composed.map((one) => one.question))
 
-  const save = (values: QuestionValues) => {
+  const save = async (values: QuestionValues) => {
     const body = questionBody(values)
     if (editing === 'new') {
-      enqueue({
+      const outcome = await enqueue({
         handler: WRITE.addQuestion,
         payload: { assignment_id: assignmentId, body },
         collectionId: SET.teachingQuestions,
@@ -109,14 +109,17 @@ export function QuestionsPage() {
         toast: { success: 'Question added' },
         label: `A question for “${record?.title?.trim() || `assignment ${assignmentId}`}”`,
       })
+      // Refused: the editor stays open on the question as it was typed.
+      if (outcome === 'refused') return
     } else {
-      enqueue({
+      const outcome = await enqueue({
         handler: WRITE.updateQuestion,
         payload: { assignment_id: assignmentId, question_id: editing, body },
         collectionId: SET.teachingQuestions,
         toast: { success: 'Question saved' },
         label: `A question of “${record?.title?.trim() || `assignment ${assignmentId}`}”`,
       })
+      if (outcome === 'refused') return
     }
     setEditing(null)
   }

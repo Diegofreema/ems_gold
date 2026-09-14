@@ -168,7 +168,7 @@ export const notices: CollectionDef = {
     const named = body.title?.trim() || 'Untitled notice'
 
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.editNotice,
         payload: { id: recordId, body },
         collectionId: SET.refBoard,
@@ -176,10 +176,9 @@ export const notices: CollectionDef = {
         toast: { success: 'Notice updated' },
         label: `Notice “${named}”`,
       })
-      return
     }
 
-    enqueue({
+    return enqueue({
       handler: WRITE.postNotice,
       payload: body,
       collectionId: SET.refBoard,

@@ -7,8 +7,8 @@
  */
 export function SidebarBrand() {
   return (
-    <div className="px-6 pt-7 pb-6">
-      <img src="/netpro-logo.webp" alt="netpro" className="h-9 w-auto" />
+    <div className="px-6 pt-(--rail-mark-top) pb-(--rail-mark-bottom)">
+      <img src="/netpro-logo.webp" alt="netpro" className="h-8 w-auto xl:h-9" />
     </div>
   )
 }

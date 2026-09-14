@@ -145,6 +145,7 @@ export const results: CollectionDef = {
     `This deletes ${row.name}’s ${row.subject} mark for ${row.term}. Nothing is kept, and the mark has to be entered again.`,
   rowAction: {
     label: (row) => (row.state === STATE_LABEL.approved ? 'Withdraw' : 'Release'),
+    tone: (row) => (row.state === STATE_LABEL.approved ? ('danger' as const) : ('brand' as const)),
     title: (row) =>
       row.state === STATE_LABEL.approved ? 'Withdraw this mark?' : 'Release this mark?',
     confirm: (row) =>

@@ -6,6 +6,7 @@ import { subjectsService } from '@/api/subjects/service'
 import type { SubjectBody } from '@/api/subjects/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -24,6 +25,7 @@ import { registerHandler } from '../registry'
 registerHandler<ClassArmBody>(WRITE.createArm, {
   send: (body) => classArmsService.create(body),
   idempotent: false,
+  newId: idUnder('class_arm'),
   collectionId: SET.refArms,
 })
 
@@ -42,6 +44,7 @@ registerHandler<Id>(WRITE.removeArm, {
 registerHandler<SubjectBody>(WRITE.createSubject, {
   send: (body) => subjectsService.create(body),
   idempotent: false,
+  newId: idUnder('subject'),
   collectionId: SET.refSubjects,
 })
 
@@ -86,6 +89,7 @@ registerHandler<{ id: Id; offered: boolean }>(WRITE.setSubjectStatus, {
 registerHandler<DepartmentBody>(WRITE.createClass, {
   send: (body) => departmentsService.create(body),
   idempotent: false,
+  newId: idUnder('department'),
   collectionId: SET.refClassCensus,
 })
 

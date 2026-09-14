@@ -56,7 +56,7 @@ function StudentDashboard() {
         <FigureTiles figures={home.figures} />
       </div>
 
-      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.5fr_1fr]">
+      <div className="mt-3.5 grid gap-3.5 @3xl/page:grid-cols-[1.5fr_1fr]">
         <div className="grid content-start gap-3.5">
           <Panel
             title="Your bills"

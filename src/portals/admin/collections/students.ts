@@ -392,7 +392,7 @@ export const students: CollectionDef = {
   },
   queue: async (values, recordId) => {
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateStudent,
         payload: { id: recordId, body: studentBody(values) },
         collectionId: SET.refStudents,
@@ -400,7 +400,6 @@ export const students: CollectionDef = {
         toast: { success: 'Student updated' },
         label: `Student record`,
       })
-      return
     }
 
     // A new student joins the session the school is currently running. Editing
@@ -408,7 +407,7 @@ export const students: CollectionDef = {
     // it is read off the device, which is what lets an enrolment be written
     // with no connection at all.
     const session = await currentSessionId()
-    enqueue({
+    return enqueue({
       handler: WRITE.enrolStudent,
       payload: {
         ...studentBody(values, session),

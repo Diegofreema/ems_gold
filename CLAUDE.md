@@ -113,7 +113,32 @@ answer and honest about it.
 
 ### Writes
 
-Every mutation is applied locally at once and enqueued in the durable outbox (`src/db/outbox.ts`).
+**The wire first, and the device when the wire is not there.** `enqueue` in `src/db/drain.ts` sends
+the write to the school and waits for the answer; only a write that could not be sent goes into the
+durable outbox (`src/db/outbox.ts`). It returns a `WriteOutcome` and never throws — `sent`, `held`,
+or `refused` — and the screen that made the write reads it.
+
+This is the way round it is for one reason: **a refusal belongs on the screen that caused it.** The
+queue-first version accepted everything, so a save the school was never going to take became a row
+on a register saying "Waiting to send", the form closed over the typing that caused it, and the
+school's actual sentence went to a drawer the writer had no reason to open. Now a `refused` write
+queues nothing, raises the school's own words, and leaves the form open with everything still in it
+— and **every caller that clears what somebody typed must check for it first**: the register's
+marks, a score sheet, a message, a question, the record forms. `grep` for `'refused'`.
+
+What this costs, written down so nobody rediscovers it: between pressing Save and the school
+answering, the write is in flight and nowhere durable, so a tab closed in that second loses it.
+That was the queue-first design's one real advantage and it is genuinely gone. A poor connection is
+not a special case — it is a slow send that ends in `held` when `request()`'s own 30s bound gives
+up, and the writer waits that long before being told. Nothing races that bound: aborting a create
+early and queueing it is how the same student gets enrolled twice.
+
+Two things stay the queue's, in `mayGoStraight` (`src/db/straight.ts`, tested):
+**nothing overtakes work already in line** — ops send strictly by `seq` because writes depend on
+each other, so while anything is still expected to land, a new write joins the back of the queue
+rather than jumping it — and **401 keeps the work**, pausing the drain and holding the write rather
+than losing it. A `failed` op blocks nothing: it is waiting on a person, and letting it hold up
+every write made after it would wedge the app on one refusal.
 
 - The handler is registered **by name** in `src/db/registry.ts`. A queued write outlives the module
   that made it — marked on Tuesday, sent on Wednesday — so it cannot hold a closure.
@@ -134,12 +159,16 @@ Every mutation is applied locally at once and enqueued in the durable outbox (`s
 - **The guardrail covers row actions too**, not just edit and delete: making a session current is a
   school setting pointing at a row, and it cannot point at one the school has never issued. The row
   action's label is withheld for an unsynced row, so no button is offered at all.
-- **A queued write is called straight from the form, never through a mutation.** It is accepted on
-  the device and returns at once; wrapping that in a `useMutation` put the mutation cache, the
-  router's loaders and react-hook-form's own submitting state in front of something synchronous, and
-  the form sat with its button spinning over a write that was already safe. `definition.queue` and
-  `definition.queueRemove` are called directly; the queue raises its own toast, so a queued
+- **A write is called straight from the form, never through a mutation.** The mutation cache, the
+  router's loaders and react-hook-form's own submitting state in front of one write was three
+  machines too many. `definition.queue` and `definition.queueRemove` are called directly and
+  awaited, and they hand back the `WriteOutcome`; the queue raises its own toast, so a queued
   definition takes no `meta`.
+- **Nothing that lands is awaited by the writer.** The write is finished when the school answers.
+  Refetching the set and dropping what the write made stale are this app catching up with a fact,
+  and awaiting them held the record form open for a second full round trip after the save had
+  already succeeded. They are fired and their failures swallowed: a set that could not be refetched
+  is a stale list, not a lost record.
 - **A form that cannot be queued says so before it is filled in**, not after
   (`src/features/collections/blocked.ts`). The two kinds that stay on the wire are there for a
   reason: a form carrying a file has no body the queue could hold, and a create that reads the
@@ -173,6 +202,18 @@ Every mutation is applied locally at once and enqueued in the durable outbox (`s
   the school's own answer replaces it. `day.ts` and `scores/queued.ts` are the two worked examples,
   both pure and both tested. Only ops still expected to land are drawn — a `failed` one would tell a
   teacher a child was marked when the school refused it, and that op belongs to the drawer.
+- **A create tells the drain where its new id is**, with `newId` on the handler — required of every
+  non-idempotent write and refused of the rest, which is one line drawn twice: the write that makes
+  a row is the write whose id the device could not know in advance. It reads the key the endpoint
+  nests the record under (`{student}`, `{sparent}`, `{class_arm}`, `{semester}` — `new-id.ts`),
+  never `answer.id`, which is the shape **no** create on this API answers in: the old reader guessed
+  it, found nothing, and so every queued create in the app's history landed at the school and
+  recorded no id at all — silently, because nothing yet passes `dependsOn` and so nothing had asked.
+  Nor can the wrapper be unwrapped by taking its only key: a guardian answers
+  `{sparent, username, password}`, since the school issues the login at the same time and
+  `loginNote` reads it out. Where the shape is genuinely unknown — the notice board's create is
+  typed `unknown`, the two conversation endpoints have never been run — the handler says `noNewId`
+  and says why, so the blank is a decision somebody took rather than one nobody noticed.
 - **A queued write's answer comes back to the drain, not to the page that made it.** Anything the
   endpoint says about what it did — which student ids it ignored — has nowhere else to go, so the
   handler declares a `note` and the drain raises it.
@@ -254,7 +295,14 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   school has never seen: an edit would name an id that does not exist yet, so the queue would need a
   dependency graph, resolved at send time and unpicked when the create it depended on failed. One
   rule removes all of it. The edit route and the delete button are withheld, and both write hooks
-  refuse such an id loudly in case something gets past them.
+  refuse such an id loudly in case something gets past them. **It does not open, either** — the row
+  takes no click, draws no chevron and offers no "Open the …" (`canOpen` on the data table), because
+  every panel behind a record is a request naming its id: opening a queued enrolment asked the school
+  for `/students/local:7ec2…/invoices` and got back "No API endpoint matches", which is a true
+  sentence about a question nobody should have asked. The detail page withholds its tabs, its flows
+  and its row link for the same record, since a reader can arrive by address whatever the register
+  does — **every door off a queued record is shut, not just the first one.** The row link is
+  withheld in `collection-list.tsx` rather than in each definition, so nobody has to remember.
 - **Two tabs share one queue, and only one of them sends.** The persistence coordinator
   (`BrowserCollectionCoordinator`, Web Locks + BroadcastChannel) elects one tab per collection so a
   single SQLite file has a single writer and the tabs see each other's rows. That says nothing about
@@ -295,7 +343,13 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   its own. The outbox raises the same sentence, and **every write is owed exactly one** — whoever
   speaks first takes the right to, so a write that was held and then landed cannot raise two that
   contradict each other.
-- **"Saved on this device" is said when it is true, never on a stopwatch.** It used to be raised by
+- **"Saved on this device" is said when it is true, never on a stopwatch.** It is now knowable
+  rather than guessable at the moment the write settles, because the send has already been tried:
+  the device was offline, or the school could not be reached.
+- **A write held after a failed attempt starts its backoff, not at zero.** Otherwise the drain picks
+  it straight back up and spends a second attempt on the connection that had just failed — two
+  failures milliseconds apart, the second overwriting the school's reason with the same reason.
+- **The old stopwatch, for the record.** It used to be raised by
   a 1.2s timer, and a round trip to this school is about a second on a good connection — so an
   office with full signal was told its work had been held offline nearly every time it saved
   anything. Slowness is not a failure. The sentence is raised at the two moments the write is
@@ -348,14 +402,75 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   `--muted-foreground`, which under a dark theme is pale grey on the sign-in page's white. Their
   fields are `AuthField`, not `TextField`: sharing one component between a record form the office
   fills in forty of and a single field on a white page would mean a variant flag on every rule in it.
+- **The sign-in page is measured against the height of the screen, not the width of it.** Its
+  spacing, its two headlines and the height of a field are `--auth-*` clamps in `index.css` and are
+  set nowhere else — `clamp(2.5rem, 13vh, 8.75rem)` above the mark, and so on down. Height is the
+  axis a laptop is short on: the design was drawn tall, and read literally it put the Login button
+  under the fold of a 14-inch laptop, whose viewport is nearer 660px than 900 once the browser's own
+  chrome comes off. Clamps rather than a breakpoint, so a screen an inch shorter is an inch tighter
+  rather than a different layout, and `vh` rather than `dvh`, or the page would breathe with a
+  phone's address bar. Two things follow from the same fact: the poster is `h-dvh` and sticky, so a
+  form taller than the window — the reset screen is three password fields, a strength bar and a list
+  of rules — no longer stretches the blue panel past the top of the screen; and the student is the
+  last item in a flex column rather than a photograph placed at the panel's foot, so the room the
+  words leave is what bounds her. Sized against the panel's width alone, she was drawn over the
+  sentence.
 - **A page is cards on a ground, and the shell is a rail and a bar.** The rail (264px) is the mark,
   the portal's context card, sections that open onto their pages, and Tools — settings and the way
   out — at its foot. The header is the search box and whoever is signed in; the page's own title is
   **not** there any more, because every screen already opens with it and saying it twice cost the
-  width the search now has. `PageHeader`'s kicker is what is left of the breadcrumb. Everything
-  below sits in a `Panel`: flat white on the ground, no border — the ground is what separates one
-  card from the next, and a page of bordered cards is a page of lines. The register, its search row
-  and its pager are one card; a record form is one card; a dashboard is a card per figure.
+  width the search now has. `PageHeader`'s kicker is what is left of the breadcrumb.
+  **Search and Notifications are the header's, not the rail's.** Each already had a door in the bar
+  — the box on the left and the bell on the right — so a row for either in the rail was a second
+  way to the same page, taking a line from the menu on every screen. The header's box is now a
+  door too rather than a field: typing the surname there and landing on a page with its own box,
+  autofocused and beneath the one still holding the term, meant two boxes and only one of them
+  right. Every portal's `/notifications` route stays exactly where it was; the bell is how it is
+  reached. Everything
+  below sits in a `Panel`: white on the ground with a soft shadow and no border. The shadow is
+  there because the ground alone could not do the job it was given — `--ems-ground` and
+  `--ems-raised` are #fafafa and #ffffff, a 2% difference that reads as one flat page rather than a
+  card standing on it — and a border is still refused, since a page of bordered cards is a page of
+  lines. The register, its search row and its pager are one card; a record form is one card; a
+  dashboard is a card per figure. **A figure card carries `--ems-figure`, not the panel's white**:
+  the counted tiles over a register sit *inside* a panel, so flat made them white on white and they
+  read as loose text. The token is declared in both themes because the themes need opposite tools —
+  in daylight an edge and a shadow, at night a fill lifted above whatever it stands on, since a
+  shadow on near-black is nothing.
+- **The shell is measured against the height of the screen; a page is measured against the width of
+  its own column.** Two halves of one rule, and each is the axis that squeezes.
+  The rail and the header are pinned to the viewport, so whatever they take the page does not get:
+  their sizes are `--shell-header` and the `--rail-*` clamps in `index.css` and are set nowhere
+  else. On a 14-inch laptop at 1366x660 the rail was spending 321 of 660 on its mark, the term card
+  and Tools, leaving a 323px window onto a 622px menu — half the office's navigation under the fold
+  on every page. `shell-pending.tsx` draws the same clamps, or the shell changes size as it fills in.
+  The page is the other axis, and **the width that matters is the content column's, not the
+  window's**: they are 312px apart inside a portal — the rail plus the page's padding — so a
+  `lg:`/`xl:` on anything under `AppShell` is asking about a box the content is not in. Measured, it
+  was wrong exactly where a laptop sits: at a 1279px window the four headline figures of every
+  dashboard were two cards 476px wide, and at 1281 they were four. So the content column carries
+  `@container/page` and pages query *it* (`@3xl/page:grid-cols-…`); a strip of equal things skips
+  the query and asks for `repeat(auto-fit, minmax(…))`, which has no edge to fall off. Keep viewport
+  breakpoints for what genuinely fills the window — the landing page, the sign-in split, a dialog.
+  Type is left alone on this axis: the portal reads at 15px with 24px titles, and the fix for a
+  crowded 14-inch screen is the chrome around the words, not smaller words.
+- **A row's action lives in the menu at the end of the row, not as a button on it.** `RowMenu`:
+  the way into the record first — "Open the {noun}" — then whatever this row can be made to do. The
+  button it replaced was a word that changed per row (Suspend beside Reinstate beside nothing at
+  all), so a column of them read as a column of different buttons and the width came off the columns
+  holding the record. A register that only opens keeps its plain chevron, because a menu of one item
+  is a worse door than an arrow, and a row with nothing to offer draws no menu at all. The phone's
+  card layout keeps its buttons: a card has the room a row does not.
+  **A row action states its `tone`.** The menu colours the item by it and the confirm dialog dresses
+  itself by it, and both default to danger — which was invisible while only the dialog read it, and
+  is not once a red crossed-circle sits beside "Enable sign-in". Every toggling action now says which
+  direction takes something away and which puts it back.
+- **A register's primary action sits beside the title, not in the filter row.** It was tried in the
+  filter row, on the reasoning that the eye is already there having just read the title. The
+  reasoning did not survive the screen: a register carries a search box and four filters, which on a
+  laptop is already more than one line's worth, so the one button somebody came to press was the
+  thing that wrapped — landing *under* the filters. `FilterBar` takes no `action`; `PageHeader`
+  does.
 - **Tests are `node --test` on pure logic.** A module under test uses relative imports with explicit
   `.ts` extensions, and no parameter properties (`erasableSyntaxOnly`). Anything risky in the local-
   first layer — failure classification, queue ordering, backoff, id substitution, the household

@@ -265,11 +265,14 @@ function ReplyBox({
 }) {
   const [body, setBody] = useState('');
 
-  const send = () => {
+  const send = async () => {
     // An emptied editor still hands back `<p></p>`, which a trim would call a
     // reply and send as one.
     if (!hasText(body)) return;
-    queueReply(threadId, { body }, subject);
+    const outcome = await queueReply(threadId, { body }, subject);
+    // Emptied only where the reply is safe somewhere. A refusal leaves what
+    // was typed in the box, which is the only copy of it.
+    if (outcome === 'refused') return;
     setBody('');
   };
 

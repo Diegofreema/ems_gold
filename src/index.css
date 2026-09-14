@@ -76,6 +76,21 @@
      still uses borders. Dark theme swaps these for deeper black shadows. */
   --ems-shadow-card:
     0 1px 2px rgb(16 24 40 / 0.05), 0 2px 6px rgb(16 24 40 / 0.04);
+
+  /* A figure card: the counted tiles over a register, and a dashboard's
+     figures. It has to read as a card on the page's ground *and* on a panel's
+     white, and the two themes need opposite tools for it.
+
+     In daylight the fill cannot do the work — a tile dark enough to show on
+     white would disappear on the ground, and one light enough to show on the
+     ground is white — so what separates it is an edge and a shadow. At night
+     a shadow on near-black is nothing at all, and what reads is a fill lifted
+     above whatever surface it is standing on. Both are declared in both
+     themes; each theme leans on the half that works there. */
+  --ems-figure: #ffffff;
+  --ems-figure-edge: rgb(16 24 40 / 0.08);
+  --ems-figure-shadow:
+    0 1px 2px rgb(16 24 40 / 0.06), 0 4px 12px rgb(16 24 40 / 0.05);
   --ems-shadow-float:
     0 4px 10px rgb(16 24 40 / 0.08), 0 14px 34px rgb(16 24 40 / 0.12);
 
@@ -158,6 +173,13 @@
   --ems-success-ink: #7fd8a4;
   --ems-success-subtle: color-mix(in srgb, #7fd8a4 12%, transparent);
 
+  /* Lifted above --ems-raised (#22252b), which is what a tile is standing on
+     inside a panel, and well above the ground behind a dashboard. */
+  --ems-figure: #2a2e36;
+  --ems-figure-edge: rgb(255 255 255 / 0.07);
+  --ems-figure-shadow:
+    0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.28);
+
   --ems-shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 8px rgb(0 0 0 / 0.3);
   --ems-shadow-float:
     0 6px 16px rgb(0 0 0 / 0.45), 0 18px 44px rgb(0 0 0 / 0.5);
@@ -195,6 +217,73 @@
   --input: var(--ems-divider);
   --ring: var(--ems-brand);
   --radius: 6px;
+}
+
+/* The sign-in page's own measurements, and the only place they are decided.
+
+   Each one is a clamp against the *height* of the screen, because height is
+   the axis a laptop is short on. The design was drawn tall and its fixed
+   numbers — 140px above the mark, 26px between the fields, a 46px headline —
+   put the Login button under the fold of a 14-inch laptop, where the viewport
+   is nearer 660px than 900 once the browser's own chrome comes off. Width is
+   in the poster's two clamps as well, since its column narrows with the
+   window; the form column does not, being 428px at every width that draws a
+   poster at all.
+
+   Clamps rather than a breakpoint so the page has no step in it: a screen an
+   inch shorter should be an inch tighter, not a different layout. And `vh`
+   rather than `dvh` — the padding would otherwise breathe in and out with a
+   phone's address bar as the page scrolls. */
+.auth-daylight {
+  /* Above the mark, and the mark to the title. */
+  --auth-lead: clamp(2.5rem, 13vh, 8.75rem);
+  --auth-mark: clamp(1.25rem, 3.8vh, 2.125rem);
+  /* The title's own size, the title to the form, and field to field. */
+  --auth-title: clamp(1.375rem, 2.9vh, 1.625rem);
+  --auth-gap: clamp(1.125rem, 2.9vh, 1.625rem);
+  /* The foot of a screen to the note under it. */
+  --auth-tail: clamp(1.25rem, 3.4vh, 1.875rem);
+  /* A field and the button that shares its shape. */
+  --auth-control: clamp(2.625rem, 5.6vh, 2.875rem);
+
+  /* The poster: the drop above its headline, the headline, and the line
+     under it. */
+  --auth-poster-lead: clamp(2rem, 9vh, 6rem);
+  --auth-poster-title: clamp(1.75rem, 1.1vw + 2.6vh, 2.875rem);
+  --auth-poster-body: clamp(0.875rem, 0.55vw + 0.55vh, 1rem);
+}
+
+/* The shell's chrome, measured against the height of the screen — and the
+   opposite axis from the pages it frames.
+
+   The rail and the header are the one part of a portal that cannot scroll its
+   way out of a short screen: they are pinned to the viewport, so whatever they
+   take, the page below them does not get. Measured on a 14-inch laptop at
+   1366x660 — 660px being what a 768px panel leaves once the browser's own
+   chrome comes off — the rail was spending 321 of those 660 on its mark, the
+   term card and Tools, leaving a 323px window onto a menu 622px long. Half the
+   office's navigation was under the fold on every page in the portal.
+
+   Same clamps for the same reason as the sign-in page: a screen an inch
+   shorter is an inch tighter, not a different layout.
+
+   What scrolls is measured the other way — by the width it has to fill, and
+   the width that matters is the content column's, not the window's. That is a
+   container query, not a breakpoint: see `app-shell.tsx`. */
+:root {
+  /* The header band. */
+  --shell-header: clamp(3.5rem, 9.6vh, 4.5rem);
+
+  /* A row of the rail, and a row inside an opened section. */
+  --rail-row: clamp(2.25rem, 6.2vh, 2.75rem);
+  --rail-subrow: clamp(1.875rem, 5.2vh, 2.25rem);
+
+  /* The mark's own block, the term card above the nav, and the padding under
+     Tools at the rail's foot. */
+  --rail-mark-top: clamp(1rem, 3.4vh, 1.75rem);
+  --rail-mark-bottom: clamp(0.75rem, 2.9vh, 1.5rem);
+  --rail-card: clamp(0.5rem, 1.6vh, 0.75rem);
+  --rail-foot: clamp(0.625rem, 2.4vh, 1.5rem);
 }
 
 @theme inline {
@@ -286,6 +375,9 @@
   --color-success-ink: var(--ems-success-ink);
   --color-success-subtle: var(--ems-success-subtle);
 
+  --color-figure: var(--ems-figure);
+  --color-figure-edge: var(--ems-figure-edge);
+  --shadow-figure: var(--ems-figure-shadow);
   --shadow-card: var(--ems-shadow-card);
   --shadow-float: var(--ems-shadow-float);
 

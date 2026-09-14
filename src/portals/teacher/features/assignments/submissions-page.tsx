@@ -119,11 +119,11 @@ export function SubmissionsPage() {
     const marked = Boolean(head?.graded_at) || head?.total_score != null
     const student = head?.student?.trim() || 'This student'
 
-    const save = (values: MarkingValues) => {
-      // Accepted on the device and queued. `regrade` is right either way: a
-      // second grade queued behind a first is a regrade by the time it sends,
-      // since the queue lands strictly in order.
-      enqueue({
+    const save = async (values: MarkingValues) => {
+      // Sent to the school, and kept on the device if it could not be. `regrade`
+      // is right either way: a second grade queued behind a first is a regrade
+      // by the time it sends, since the queue lands strictly in order.
+      const outcome = await enqueue({
         handler: WRITE.gradeSubmission,
         payload: {
           submission_id: submissionId,
@@ -133,6 +133,9 @@ export function SubmissionsPage() {
         toast: { success: 'Marks saved' },
         label: `Marks for ${student}`,
       })
+      // The script stays open where the school refused the marks, so they are
+      // not retyped from the paper.
+      if (outcome === 'refused') return
       void setSubmission(null)
     }
 

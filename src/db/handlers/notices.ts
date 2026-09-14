@@ -2,6 +2,7 @@ import { noticesService } from '@/api/notifications/service'
 import type { NoticeBody, NoticeEditBody } from '@/api/notifications/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { noNewId } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -24,6 +25,13 @@ import { registerHandler } from '../registry'
 registerHandler<NoticeBody>(WRITE.postNotice, {
   send: (body) => noticesService.post(body),
   idempotent: false,
+  // `POST /notifications` is typed `unknown` — nobody has written down what
+  // it answers with, so there is no key to read the new notice's id out of.
+  // Nothing asks for it today: the queued notice is drawn from the op and
+  // replaced by the school's own copy when the board refetches. The day
+  // something queues a write against a notice not yet posted, this is the
+  // line that has to be filled in.
+  newId: noNewId,
   collectionId: SET.refBoard,
 })
 

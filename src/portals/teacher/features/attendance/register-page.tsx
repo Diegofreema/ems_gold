@@ -135,16 +135,23 @@ export function RegisterPage() {
    * where they were on screen — through a page turn, a reload, a closed
    * browser and three days with no signal.
    */
-  const submit = () => {
+  const submit = async () => {
     if (count === 0 || future) return;
-    enqueue({
+    const outcome = await enqueue({
       handler: WRITE.takeRegister,
       payload: { class_arm_id: armId, date: day.date, marks: changed },
       collectionId: SET.registerDays,
       toast: { success: 'Register saved' },
       label: `Register for ${armLabel}, ${day.date}`,
     });
-    setEdits({});
+    /*
+     * Cleared only where the marks are safe somewhere — at the school, or in
+     * the queue on their way there. A refusal keeps them on the sheet exactly
+     * as the teacher left them: the register is half an hour of somebody's
+     * morning, and wiping it because the school said no would be the single
+     * worst thing this screen could do.
+     */
+    if (outcome !== 'refused') setEdits({});
   };
 
   return (

@@ -16,7 +16,8 @@ export function useStudentProfileSave(): ProfileSave {
   return {
     pending: false,
     save: async (values) => {
-      enqueue({
+      // Awaited: the button spins until the school has answered.
+      await enqueue({
         handler: WRITE.updateStudentRecord,
         payload: studentContactBody(values),
         toast: { success: 'Your details were saved' },

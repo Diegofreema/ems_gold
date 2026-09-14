@@ -215,7 +215,7 @@ export function MessagesPage({
         Narrow screens keep the ordinary page scroll: there is only ever one
         pane there, so there is nothing to pin.
       */}
-      <div className="grid gap-5 lg:h-[calc(100dvh-17.5rem)] lg:min-h-104 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]">
+      <div className="grid gap-5 lg:h-[calc(100dvh-17.5rem)] lg:min-h-104 @3xl/page:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]">
         {/* On a narrow screen the two panes are one: opening a thread replaces
             the list, and the thread's own back button returns to it. */}
         {(!narrow || !selected) && (

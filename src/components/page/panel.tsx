@@ -5,8 +5,12 @@ import { cn } from '@/lib/utils'
  * A white card on the page's ground: the unit everything on a page is made of
  * now — a register, a chart, a form section, a list of activity.
  *
- * No border. The ground behind it is what separates one card from the next,
- * and a page of bordered cards is a page of lines.
+ * No border, but a shadow. The ground was meant to be what separates one card
+ * from the next, and in daylight it does not: `--ems-ground` and
+ * `--ems-raised` are #fafafa and #ffffff, a 2% difference that reads as one
+ * flat page rather than a card standing on it. The shadow is what makes it a
+ * card, in both themes and on either ground, without the border a page of
+ * bordered cards would turn into a page of lines.
  */
 export function Panel({
   title,
@@ -25,7 +29,7 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <section className={cn('rounded-xl bg-raised p-5', className)}>
+    <section className={cn('rounded-xl bg-raised p-5 shadow-card', className)}>
       {(title || action) && (
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">

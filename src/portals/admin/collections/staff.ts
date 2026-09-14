@@ -1,4 +1,5 @@
 import { enqueue } from '@/db/drain'
+import type { WriteOutcome } from '@/db/write-outcome'
 import { SET, WRITE } from '@/db/ids'
 import { DRAWN_STATES, isLocalKey, newLocalKey, type OutboxOp } from '@/db/outbox'
 import { outbox } from '@/db/store'
@@ -213,7 +214,7 @@ function saveStaff(kind?: 'teacher' | 'admin') {
 
     if (recordId) {
       const { id } = parseStaffKey(recordId)
-      enqueue({
+      return enqueue({
         handler: office ? WRITE.updateAdmin : WRITE.updateTeacher,
         payload: { id, body: office ? adminUpdate(values) : teacherUpdate(values) },
         collectionId: office ? SET.refAdmins : SET.refTeachers,
@@ -221,10 +222,9 @@ function saveStaff(kind?: 'teacher' | 'admin') {
         toast: { success: office ? 'Administrator updated' : 'Teacher updated' },
         label: `Staff record “${named}”`,
       })
-      return
     }
 
-    enqueue({
+    return enqueue({
       handler: office ? WRITE.createAdmin : WRITE.createTeacher,
       payload: office ? adminBody(values) : teacherBody(values),
       collectionId: office ? SET.refAdmins : SET.refTeachers,
@@ -240,10 +240,10 @@ function saveStaff(kind?: 'teacher' | 'admin') {
  * permanent, and the API refuses the first administrator and your own account
  * outright — which the dialog says before the button rather than after it.
  */
-function removeStaff(recordId: string): void {
+function removeStaff(recordId: string): Promise<WriteOutcome> {
   const { kind, id } = parseStaffKey(recordId)
   const office = kind === 'admin'
-  enqueue({
+  return enqueue({
     handler: office ? WRITE.removeAdmin : WRITE.removeTeacher,
     payload: id,
     collectionId: office ? SET.refAdmins : SET.refTeachers,
@@ -619,6 +619,7 @@ export const staffAdmin = staffSlice(
     // and is the answer to almost everything a delete is reached for.
     rowAction: {
       label: (row) => (row.account === 'Disabled' ? 'Enable sign-in' : 'Disable sign-in'),
+      tone: (row) => (row.account === 'Disabled' ? ('brand' as const) : ('danger' as const)),
       title: (row) =>
         row.account === 'Disabled' ? 'Let them sign in again?' : 'Stop them signing in?',
       cta: (row) => (row.account === 'Disabled' ? 'Enable the sign-in' : 'Disable the sign-in'),

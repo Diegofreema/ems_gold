@@ -94,12 +94,12 @@ export function ComposeDialog({
   // which is a non-empty string and would pass every check made on one.
   const ready = to !== null && subject.trim().length > 0 && hasText(body);
 
-  const send = () => {
+  const send = async () => {
     if (!ready) {
       setShowErrors(true);
       return;
     }
-    queueStart({
+    const outcome = await queueStart({
       to: to!,
       subject: subject.trim(),
       body: body.trim(),
@@ -107,6 +107,10 @@ export function ComposeDialog({
       // thread is about, and "no child" is not a child.
       ...(studentId ? { student_id: Number(studentId) } : {}),
     });
+    // The dialog closes on a message that is sent or safely held, and stays
+    // open on one the school refused — with the recipient, the subject and
+    // everything written still in it.
+    if (outcome === 'refused') return;
     close(false);
   };
 

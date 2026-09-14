@@ -93,6 +93,7 @@ export function parentDeleteBody(row: Row | undefined): string {
  */
 export const accessAction = {
   label: (row: Row) => (row.status === 'Deactivated' ? 'Allow sign-in' : 'Block sign-in'),
+  tone: (row: Row) => (row.status === 'Deactivated' ? ('brand' as const) : ('danger' as const)),
   title: (row: Row) =>
     row.status === 'Deactivated' ? 'Let them sign in again?' : 'Stop them signing in?',
   cta: (row: Row) =>

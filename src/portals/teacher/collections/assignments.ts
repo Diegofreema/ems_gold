@@ -202,7 +202,7 @@ export const assignments: CollectionDef = {
       const current = (await heldRows(setAssignments)).find(
         (assignment) => String(assignment.id) === recordId,
       );
-      enqueue({
+      return enqueue({
         handler: WRITE.updateAssignment,
         payload: { id: recordId, body: assignmentBody(values, current?.status ?? undefined) },
         collectionId: SET.teachingAssignments,
@@ -210,9 +210,8 @@ export const assignments: CollectionDef = {
         toast: { success: 'Assignment saved' },
         label: `Assignment “${String(values.title ?? '').trim() || recordId}”`,
       });
-      return;
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createAssignment,
       payload: assignmentBody(values),
       collectionId: SET.teachingAssignments,

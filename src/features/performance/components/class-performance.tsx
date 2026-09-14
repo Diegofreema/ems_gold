@@ -331,7 +331,7 @@ function MoversView({
             data && !data.risers.length && !data.fallers.length ? data.message : null
           }
         >
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 @3xl/page:grid-cols-2">
             <MoverColumn
               title="Went up"
               tone="good"
@@ -434,7 +434,7 @@ function RiskView({ scope }: { scope: Scope }) {
         </span>
       </div>
 
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-3 @xl/page:grid-cols-2">
         {students.map((student) => (
           <li
             key={student.key}

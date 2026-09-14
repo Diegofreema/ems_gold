@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
+import { ArrowUpRight } from 'lucide-react'
 import { collectFeeKeys } from '@/api/collect-fees/keys'
 import { collectFeesService } from '@/api/collect-fees/service'
 import { BackLink } from '@/components/page/back-link'
@@ -224,6 +225,10 @@ function StudentLedger({
           // no button rather than one that answers 404.
           label: (row) =>
             row.payable ? 'Take payment' : row.receipt ? 'Receipt' : undefined,
+          // Both jobs are somewhere to go rather than something taken away, so
+          // neither wears the danger colour the menu gives an action by default.
+          danger: () => false,
+          icon: ArrowUpRight,
           onSelect: (row) =>
             void navigate(
               row.payable

@@ -26,6 +26,7 @@ import { BLANK } from '../blank'
 import { schemaFromSections } from '../schema'
 import { useRemoveRecord } from '../use-remove-record'
 import { useSaveRecord } from '../use-save-record'
+import type { WriteOutcome } from '@/db/write-outcome'
 import type {
   CollectionDef,
   CollectionRoutes,
@@ -261,12 +262,17 @@ export function CollectionForm({
            * write that was already safe. The queue raises its own toast.
            */
           if (definition.queue) {
-            // Awaited: queueing is synchronous in itself, but a write can need
-            // something off the device before it has a body — an enrolment
-            // reads which session is current — and the form must not close
-            // before the op is written down.
+            /*
+             * Awaited, and now for two reasons. It was always possible for a
+             * write to need something off the device before it had a body — an
+             * enrolment reads which session is current — and the form could not
+             * close before that was written down. Now the write itself goes to
+             * the school first and this waits for the answer, which is what
+             * lets a refusal land on the form that caused it.
+             */
+            let outcome: WriteOutcome | void
             try {
-              await definition.queue(values, record?.id)
+              outcome = await definition.queue(values, record?.id)
             } catch (error) {
               // The read the write needed refused — a set this device has
               // never synced, on a device with no connection to sync it now.
@@ -275,6 +281,14 @@ export function CollectionForm({
               toast.error(errorMessage(error, OFFLINE_MESSAGE))
               return
             }
+            /*
+             * The school heard it and said no. The queue has raised the
+             * school's own sentence, and the form stays exactly as it is —
+             * closing it would throw away the typing over a refusal the writer
+             * can very often fix in one field. `held` and `sent` both close:
+             * one is on its way, the other has arrived.
+             */
+            if (outcome === 'refused') return
             back()
             return
           }

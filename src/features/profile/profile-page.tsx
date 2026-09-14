@@ -58,7 +58,7 @@ export function ProfilePage({
       />
       <Rule />
 
-      <div className="grid items-start gap-8.5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid items-start gap-8.5 @3xl/page:grid-cols-[1.4fr_1fr]">
         <section>
           <PersonalDetails
             form={form}

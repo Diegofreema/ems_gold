@@ -137,13 +137,13 @@ export function AdminSearchPage() {
           </div>
         </div>
       ) : isPending ? (
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 @xl/page:grid-cols-2 @4xl/page:grid-cols-3">
           {[0, 1, 2].map((index) => (
             <Shimmer key={index} className="h-64 w-full rounded-xl" delay={index * 80} />
           ))}
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 @xl/page:grid-cols-2 @4xl/page:grid-cols-3">
           {found.map((group) => (
             <GroupCard key={group.register} group={group} term={settled} />
           ))}

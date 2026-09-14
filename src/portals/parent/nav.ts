@@ -1,5 +1,4 @@
 import {
-  Bell,
   CalendarCheck,
   CalendarClock,
   CreditCard,
@@ -19,7 +18,6 @@ export const parentNav: NavGroup[] = [
   {
     items: [
       { to: '/parent', label: 'Dashboard', icon: LayoutGrid },
-      { to: '/parent/notifications', label: 'Notifications', icon: Bell },
     ],
   },
   {

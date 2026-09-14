@@ -9,6 +9,7 @@ import type {
 } from '@/api/teaching/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idUnder, noNewId } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -39,6 +40,7 @@ registerHandler<EnterScoreBody>(WRITE.enterScore, {
 registerHandler<CreateTopicBody>(WRITE.addTopic, {
   send: (body) => teachingService.addTopic(body),
   idempotent: false,
+  newId: idUnder('topic'),
   collectionId: SET.teachingTopics,
 })
 
@@ -60,11 +62,13 @@ registerHandler<{ id: Id; body: UpdateTopicBody }>(WRITE.updateTopic, {
 registerHandler<MessageAdminBody>(WRITE.messageAdmin, {
   send: (body) => teachingService.messageAdmin(body),
   idempotent: false,
+  newId: noNewId,
 })
 
 registerHandler<MessageStudentsBody>(WRITE.messageStudents, {
   send: (body) => teachingService.messageStudents(body),
   idempotent: false,
+  newId: noNewId,
 })
 
 /**

@@ -157,7 +157,7 @@ export function AuthFieldError({ children }: { children: ReactNode }) {
  */
 function fieldClasses(hasIcon: boolean, hasToggle: boolean, invalid: boolean) {
   return cn(
-    'h-11.5 w-full rounded-md border bg-ui-field text-base text-ui-ink transition-colors outline-none placeholder:text-ui-hint focus-visible:border-ui-blue',
+    'h-(--auth-control) w-full rounded-md border bg-ui-field text-base text-ui-ink transition-colors outline-none placeholder:text-ui-hint focus-visible:border-ui-blue',
     hasIcon ? 'pl-12' : 'pl-4',
     hasToggle ? 'pr-12' : 'pr-4',
     invalid ? 'border-ui-error-line bg-white' : 'border-transparent',

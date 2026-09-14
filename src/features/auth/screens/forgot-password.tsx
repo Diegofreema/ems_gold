@@ -48,7 +48,7 @@ export function ForgotPasswordScreen() {
       />
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="mt-6.5">
+        <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="mt-(--auth-gap)">
           <AuthField<ForgotPasswordValues>
             name="email"
             label="Email Address"
@@ -58,13 +58,13 @@ export function ForgotPasswordScreen() {
             autoComplete="username"
           />
 
-          <Button type="submit" pending={isSubmitting} className={`mt-8 ${authButton}`}>
+          <Button type="submit" pending={isSubmitting} className={`mt-(--auth-tail) ${authButton}`}>
             {isSubmitting ? 'Sending the code…' : 'Send Code'}
           </Button>
         </form>
       </FormProvider>
 
-      <p className="mt-8 text-center text-base">
+      <p className="mt-(--auth-tail) text-center text-base">
         Remember Password?{' '}
         <Link to="/sign-in" className="font-semibold text-ui-blue hover:underline">
           Sign In

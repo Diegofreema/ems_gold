@@ -241,7 +241,7 @@ export const parents: CollectionDef = {
   queue: (values, recordId) => {
     const body = parentBody(values)
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateParent,
         payload: { id: recordId, body },
         collectionId: SET.refParents,
@@ -249,9 +249,8 @@ export const parents: CollectionDef = {
         toast: { success: 'Parent updated' },
         label: 'A household',
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createParent,
       payload: body,
       collectionId: SET.refParents,

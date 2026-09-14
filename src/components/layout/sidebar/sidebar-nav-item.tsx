@@ -24,7 +24,7 @@ export function SidebarNavItem({
       onClick={onNavigate}
       activeOptions={{ exact: isPortalHome(item.to) }}
       className={cn(
-        'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors',
+        'flex h-(--rail-row) w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors',
         'hover:bg-neutral-100 data-[status=active]:bg-brand data-[status=active]:font-medium data-[status=active]:!text-white',
       )}
     >
@@ -57,7 +57,7 @@ export function SidebarSubItem({
       onClick={onNavigate}
       activeOptions={{ exact: isPortalHome(item.to) }}
       className={cn(
-        'relative flex h-9 items-center rounded-md pl-5 text-sm text-muted-foreground transition-colors',
+        'relative flex h-(--rail-subrow) items-center rounded-md pl-5 text-sm text-muted-foreground transition-colors',
         // The tick joining this row to the section's own line.
         'before:absolute before:top-1/2 before:left-0 before:h-px before:w-3 before:bg-divider',
         'hover:text-foreground data-[status=active]:font-medium data-[status=active]:!text-brand',

@@ -35,7 +35,7 @@ export function AppHeader({
   const openDrawer = useShellStore((state) => state.openDrawer)
 
   return (
-    <header className="sticky top-0 z-20 flex h-18 items-center gap-3 border-b border-divider bg-raised px-content">
+    <header className="sticky top-0 z-20 flex h-(--shell-header) items-center gap-3 border-b border-divider bg-raised px-content">
       {narrow && (
         <Button
           variant="outline"

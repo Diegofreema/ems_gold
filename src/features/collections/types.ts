@@ -3,6 +3,7 @@ import type { Paginated } from '../../api/types.ts'
 import type { LocalFirstBinding } from './local-first.ts'
 import type { Choice, OptionsKey , SearchKey } from './options.ts'
 import type { Align, CardRole } from '@/lib/table.ts'
+import type { WriteOutcome } from '../../db/write-outcome.ts'
 
 /**
  * Every static list route across the portals. Spelling them out keeps
@@ -236,7 +237,7 @@ export type RowActionSpec = {
    * action on a register that cannot be read with no connection is a button on
    * a row nobody can see.
    */
-  queueRun?: (row: Row) => void
+  queueRun?: (row: Row) => WriteOutcome | void | Promise<WriteOutcome | void>
 }
 
 /**
@@ -555,7 +556,10 @@ export type CollectionDef = {
    * student reads which session the school is in — and the form must not close
    * before the op is written down.
    */
-  queue?: (values: Record<string, unknown>, recordId?: string) => void | Promise<void>
+  queue?: (
+    values: Record<string, unknown>,
+    recordId?: string,
+  ) => WriteOutcome | void | Promise<WriteOutcome | void>
   /**
    * Deletes a record, from its row and from its edit form. A collection
    * without one keeps the prototype's toast, since it has no endpoint yet.
@@ -565,7 +569,7 @@ export type CollectionDef = {
    * Deletes through the durable outbox, as `queue` writes through it. Present
    * instead of `remove`, never beside it.
    */
-  queueRemove?: (recordId: string) => void
+  queueRemove?: (recordId: string) => WriteOutcome | void | Promise<WriteOutcome | void>
   /**
    * Whether this record may be deleted by the person signed in. Only the API
    * can enforce it; this is what stops the button being offered where it will

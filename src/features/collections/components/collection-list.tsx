@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 // `Download` and `toast` go back in with the buttons commented out below.
-import { Plus, X } from 'lucide-react'
+import { ArrowUpRight, Plus, X } from 'lucide-react'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { EmptyState } from '@/components/feedback/empty-state'
 import { ListSkeleton } from '@/components/feedback/list-skeleton'
@@ -15,7 +15,7 @@ import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { CollectionDef, CollectionRoutes, FlowSpec, Row } from '../types'
 import { primaryActionKind } from '../primary-action'
-import { canChange } from '../unsynced'
+import { canChange, isUnsynced } from '../unsynced'
 import { useCollectionRows } from '../use-collection-rows'
 import { useRemoveRecord } from '../use-remove-record'
 import { useRowAction } from '../use-row-action'
@@ -49,12 +49,26 @@ export function CollectionList({
         label: rowAction.spec.label,
         onSelect: rowAction.ask,
         pending: rowAction.pending,
+        // The same reading the confirm gets, so the menu item and the dialog
+        // it opens are the same colour. `tone` is undefined on most specs and
+        // means danger there — see `RowActionSpec`.
+        danger: (row: Row) => (rowAction.spec?.tone?.(row) ?? 'danger') === 'danger',
       }
     : rowLink
       ? {
-          label: rowLink.label,
+          /*
+           * Withheld for a record still in the queue, the same as a row action
+           * is (`use-row-action.ts`), and here rather than in each definition
+           * so nobody has to remember: the link carries this row's id to a page
+           * that asks the school about it, and a `local:` id is not one the
+           * school can answer for.
+           */
+          label: (row: Row) => (isUnsynced(row) ? undefined : rowLink.label(row)),
           onSelect: (row: Row) =>
             void navigate({ to: rowLink.to, search: rowLink.search?.(row) }),
+          // A link takes nothing away; it is the page it lands on that decides.
+          danger: () => false,
+          icon: ArrowUpRight,
         }
       : undefined
   const remove = useRemoveRecord(definition)
@@ -200,6 +214,7 @@ export function CollectionList({
         kicker={definition.kicker}
         title={definition.title}
         description={definition.description}
+        action={actions}
       />
       <div className="mt-5" />
 
@@ -219,7 +234,6 @@ export function CollectionList({
             onQueryChange={setQuery}
             placeholder={definition.searchHint}
             searchable={definition.searchable ?? true}
-            action={actions}
             count={
               total === undefined
                 ? `${paged.total} found`
@@ -275,6 +289,15 @@ export function CollectionList({
               // per row, so it is told which rows may take one. The desktop
               // table offers no inline edit; its rows open the record, which
               // withholds the control itself.
+              // A record this device wrote has no page at the school to open:
+              // every panel behind it — a student's fees, their results — is a
+              // request naming an id the school has never issued, and each one
+              // came back as "No API endpoint matches GET
+              // /students/local:7ec2…/invoices". So the row does not open at
+              // all until the queue has sent it, which is the same rule as
+              // `canEdit` below arriving at the same place from the other
+              // direction: nothing can be built on a record until it is real.
+              canOpen={(row) => !isUnsynced(row)}
               canEdit={(row) => canChange(row)}
               // Only where the API can actually delete. Without a `remove` the
               // row used to offer Delete and answer with a toast saying the
@@ -286,6 +309,7 @@ export function CollectionList({
               // everybody until it sends; see `unsynced.ts`.
               canDelete={(row) => canChange(row, definition.removeWhen)}
               action={rowControl}
+              openLabel={`Open the ${definition.noun}`}
               searchQuery={query}
               onClearSearch={() => setQuery('')}
             />

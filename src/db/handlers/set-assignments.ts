@@ -2,6 +2,7 @@ import { setAssignmentsService } from '@/api/set-assignments/service'
 import type { AssignmentBody, GradeBody, QuestionBody } from '@/api/set-assignments/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idOfAnswer, idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -19,6 +20,7 @@ import { registerHandler } from '../registry'
 registerHandler<AssignmentBody>(WRITE.createAssignment, {
   send: (body) => setAssignmentsService.create(body).then((answer) => answer.paper),
   idempotent: false,
+  newId: idOfAnswer,
   collectionId: SET.teachingAssignments,
 })
 
@@ -45,6 +47,7 @@ registerHandler<{ assignment_id: Id; body: QuestionBody }>(WRITE.addQuestion, {
   send: ({ assignment_id, body }) =>
     setAssignmentsService.addQuestion(assignment_id, body).then((answer) => answer.question),
   idempotent: false,
+  newId: idUnder('question'),
   collectionId: SET.teachingQuestions,
 })
 

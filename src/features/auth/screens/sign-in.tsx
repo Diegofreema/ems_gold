@@ -108,7 +108,7 @@ export function SignInScreen() {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           noValidate
-          className="mt-6.5 flex flex-col gap-6.5"
+          className="mt-(--auth-gap) flex flex-col gap-(--auth-gap)"
         >
           <AuthField<SignInValues>
             name="username"
@@ -154,7 +154,7 @@ export function SignInScreen() {
         </form>
       </FormProvider>
 
-      <p className="mt-7.5 text-[13px] leading-relaxed text-ui-muted">
+      <p className="mt-(--auth-tail) text-[13px] leading-relaxed text-ui-muted">
         Accounts are created by the school office. If you are new and have no
         password yet, open the invitation email and use the link in it, or ask
         the office to send it again.

@@ -4,6 +4,7 @@ import { studentsService } from '@/api/students/service'
 import type { StudentBody } from '@/api/students/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -21,6 +22,7 @@ import { registerHandler } from '../registry'
 registerHandler<StudentBody>(WRITE.enrolStudent, {
   send: (body) => studentsService.create(body),
   idempotent: false,
+  newId: idUnder('student'),
   collectionId: SET.refStudents,
 })
 

@@ -161,6 +161,7 @@ export const fees: CollectionDef = {
   // it is the safe alternative to deleting: what is already invoiced stays.
   rowAction: {
     label: (row) => activateAction(row.status).label,
+    tone: (row) => (row.status === 'Active' ? ('danger' as const) : ('brand' as const)),
     confirm: (row) =>
       row.status === 'Active'
         ? 'It stops being charged from now on. Invoices already raised against it stay intact and payable.'
@@ -203,7 +204,7 @@ export const fees: CollectionDef = {
     const body = feeBody(values)
     const named = String(body.name ?? '').trim() || 'Untitled fee'
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateFee,
         payload: { id: recordId, body },
         collectionId: SET.refFees,
@@ -211,9 +212,8 @@ export const fees: CollectionDef = {
         toast: { success: 'Fee updated' },
         label: `Fee “${named}”`,
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createFee,
       payload: body,
       collectionId: SET.refFees,

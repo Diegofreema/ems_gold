@@ -13,11 +13,13 @@ export function DataTable<TRow>({
   rows,
   rowKey,
   onRowClick,
+  canOpen,
   onEdit,
   onDelete,
   canEdit,
   canDelete,
   action,
+  openLabel,
   compact,
   searchQuery,
   onClearSearch,
@@ -26,13 +28,24 @@ export function DataTable<TRow>({
   rows: TRow[]
   rowKey: (row: TRow) => string
   onRowClick?: (row: TRow) => void
+  /**
+   * Which rows have a record to open. Every one of them without it.
+   *
+   * Separate from `canEdit`, and not the same question: a row can be perfectly
+   * readable and still not editable — an office record this account may not
+   * touch. This one is about whether there is anything at the other end at
+   * all, which for a record still in the outbox there is not.
+   */
+  canOpen?: (row: TRow) => boolean
   onEdit?: (row: TRow) => void
   onDelete?: (row: TRow) => void
   /** Which rows may actually be edited. Every one of them without it. */
   canEdit?: (row: TRow) => boolean
   canDelete?: (row: TRow) => boolean
-  /** A button on every row, beside the link into the record. */
+  /** What a row can be made to do. Drawn in the row's menu; see `RowMenu`. */
   action?: RowAction<TRow>
+  /** What that menu's first item says, e.g. "Open the student". */
+  openLabel?: string
   compact?: boolean
   searchQuery?: string
   onClearSearch?: () => void
@@ -47,6 +60,7 @@ export function DataTable<TRow>({
           rows={rows}
           rowKey={rowKey}
           onRowClick={onRowClick}
+          canOpen={canOpen}
           onEdit={onEdit}
           onDelete={onDelete}
           canEdit={canEdit}
@@ -59,7 +73,9 @@ export function DataTable<TRow>({
           rows={rows}
           rowKey={rowKey}
           onRowClick={onRowClick}
+          canOpen={canOpen}
           action={action}
+          openLabel={openLabel}
           compact={compact}
         />
       )}

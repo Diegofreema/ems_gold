@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { parseAsString, useQueryStates } from 'nuqs'
 import { useCallback } from 'react'
+import { ArrowUpRight } from 'lucide-react'
 import { BackLink } from '@/components/page/back-link'
 import { SectionHeading } from '@/components/common/section-heading'
 import { DataTable } from '@/components/data-table/data-table'
@@ -146,6 +147,8 @@ export function CollectionsReportPage() {
         // Where a bursar reconciling the day finds the slip to reprint.
         action={{
           label: (row) => (row.invoiceId ? 'Receipt' : undefined),
+          danger: () => false,
+          icon: ArrowUpRight,
           onSelect: (row) =>
             void navigate({
               to: '/admin/collect/receipt/$invoiceId',

@@ -3,6 +3,7 @@ import { parentsService } from '@/api/parents/service'
 import type { ParentBody } from '@/api/parents/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -21,6 +22,7 @@ import { registerHandler } from '../registry'
 registerHandler<ParentBody>(WRITE.createParent, {
   send: (body) => parentsService.create(body),
   idempotent: false,
+  newId: idUnder('sparent'),
   collectionId: SET.refParents,
   note: loginNote,
 })

@@ -41,7 +41,7 @@ export function GradesPanel({
             : undefined
         }
       >
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 @3xl/page:grid-cols-2">
           <section>
             <h4 className="mb-0.5 text-xl">This session</h4>
             <BarChart bars={current} peak={peak} />

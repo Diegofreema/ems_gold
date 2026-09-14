@@ -1,6 +1,5 @@
 import {
   // Monitor,
-  Bell,
   BookOpen,
   CalendarCheck,
   CalendarClock,
@@ -23,7 +22,6 @@ export const teacherNav: NavGroup[] = [
   {
     items: [
       { to: '/teacher', label: 'Dashboard', icon: LayoutGrid },
-      { to: '/teacher/notifications', label: 'Notifications', icon: Bell },
     ],
   },
   {

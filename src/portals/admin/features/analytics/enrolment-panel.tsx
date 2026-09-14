@@ -52,7 +52,7 @@ export function EnrolmentPanel() {
     <Panel pending={intelligence.isPending} error={intelligence.error}>
       <TileStrip tiles={tiles} size="lg" />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.35fr_1fr]">
+      <div className="mt-8 grid gap-8 @3xl/page:grid-cols-[1.35fr_1fr]">
         <section>
           <h4 className="mb-0.5 text-xl">Students per class</h4>
           <p className="text-xs text-muted-foreground">

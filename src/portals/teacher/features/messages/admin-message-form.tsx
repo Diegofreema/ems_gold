@@ -29,17 +29,19 @@ const EMPTY: Values = { subject: '', message: '' }
 export function AdminMessageForm() {
   const form = useRecordForm<Values>(schema, EMPTY)
 
-  const submit = form.handleSubmit((values) => {
-    // Accepted on the device and queued, so a note written with no signal
-    // goes when the signal comes back rather than being thrown away at the
-    // button. The queue's toast says "saved on this device" only when the
-    // send actually has to wait.
-    enqueue({
+  const submit = form.handleSubmit(async (values) => {
+    // Sent to the school; kept on the device where there is no signal, so a
+    // note written in a corridor goes when the signal comes back rather than
+    // being thrown away at the button. The queue's toast says "saved on this
+    // device" only then.
+    const outcome = await enqueue({
       handler: WRITE.messageAdmin,
       payload: values,
       toast: { success: 'Message sent to the office' },
       label: 'Message to the office',
     })
+    // Refused: the words stay in the box rather than being cleared over it.
+    if (outcome === 'refused') return
     form.reset(EMPTY)
   })
 

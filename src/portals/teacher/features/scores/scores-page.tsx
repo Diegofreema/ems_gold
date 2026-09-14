@@ -134,10 +134,17 @@ export function ScoresPage() {
    * durable. The sheet reads the queue as well as the school, so the marks stay
    * exactly where they were on screen.
    */
-  const submit = () => {
+  const submit = async () => {
     if (!term) return
+    /*
+     * One at a time, awaited. Each mark is its own write, and firing a sheet
+     * of thirty at the school at once would both swamp it and defeat the
+     * fallback: the second mark only knows to join the queue because the first
+     * one is already in it, and it cannot know that while both are in flight.
+     */
+    let refused = false
     for (const mark of changedMarks(rows, subject.id, term)) {
-      enqueue({
+      const outcome = await enqueue({
         handler: WRITE.enterScore,
         payload: mark,
         collectionId: SET.teachingResults,
@@ -146,7 +153,11 @@ export function ScoresPage() {
           rows.find((row) => row.student_id === mark.student_id)?.name ?? 'a student'
         }`,
       })
+      if (outcome === 'refused') refused = true
     }
+    // The same rule as the register: marks the school would not take stay on
+    // the sheet, where whoever entered them can see which and try again.
+    if (refused) return
     setEdits({})
   }
 

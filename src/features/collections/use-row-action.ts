@@ -74,14 +74,16 @@ export function useRowAction(
       if (isUnsynced(row)) return
 
       /*
-       * A queued action is accepted on the device and returns at once, so it is
-       * called straight rather than through a mutation — the same reason the
-       * save form does. The queue raises its own toast, so this one does not.
+       * Called straight rather than through a mutation — the same reason the
+       * save form does — and awaited, because it now goes to the school before
+       * it comes back: the confirm's button spins for the round trip, and the
+       * router is not invalidated until there is something new to read. The
+       * queue raises its own toast either way, so this one does not.
        */
       const queued = spec?.queueRun
       const takeIt = queued
         ? async () => {
-            queued(row)
+            await queued(row)
             await router.invalidate()
           }
         : () => mutation.mutateAsync(row)

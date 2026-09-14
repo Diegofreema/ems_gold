@@ -96,9 +96,13 @@ export function SettingsForm() {
       description="Who the school is on every invoice, receipt and result sheet, and the dates the term runs to."
       submitLabel="Save settings"
       onSubmit={async (values) => {
-        // Accepted on the device and queued; the queue raises its own toast,
-        // adding "saved on this device" only when the send has to wait.
-        enqueue({
+        /*
+         * Awaited, so the button spins for the round trip rather than saying
+         * done before the school has heard. Nothing is cleared or navigated
+         * either way, so a refusal simply leaves the page as it is — with the
+         * school's own reason in a toast over it.
+         */
+        await enqueue({
           handler: WRITE.updateSettings,
           payload: settingsBody(values),
           collectionId: SET.refSettings,

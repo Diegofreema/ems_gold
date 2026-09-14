@@ -3,7 +3,7 @@ import { LogOut, Settings } from 'lucide-react'
 import { useLogout } from '@/api/auth/hooks'
 
 const ROW =
-  'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-neutral-100'
+  'flex h-(--rail-row) w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-neutral-100'
 
 /**
  * The foot of the rail. Two things somebody looks for by name rather than by
@@ -26,7 +26,7 @@ export function SidebarTools({
   // nav runs out mid-row right under the Tools heading and the two read as one
   // list.
   return (
-    <div className="mt-auto border-t border-divider px-4 pt-4 pb-6">
+    <div className="mt-auto border-t border-divider px-4 pt-(--rail-card) pb-(--rail-foot)">
       <div className="px-3 pb-2 font-heading text-2xs font-extrabold uppercase tracking-kicker text-muted-foreground">
         Tools
       </div>

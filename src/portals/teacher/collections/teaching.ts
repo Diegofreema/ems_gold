@@ -224,7 +224,7 @@ export const topics: CollectionDef = {
     const named = String(values.title ?? '').trim() || 'Untitled topic';
 
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.updateTopic,
         payload: { id: recordId, body: topicUpdate(values) },
         collectionId: SET.teachingTopics,
@@ -232,10 +232,9 @@ export const topics: CollectionDef = {
         toast: { success: 'Topic updated' },
         label: `Topic "${named}"`,
       });
-      return;
     }
 
-    enqueue({
+    return enqueue({
       handler: WRITE.addTopic,
       payload: topicBody(values),
       collectionId: SET.teachingTopics,

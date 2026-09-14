@@ -37,7 +37,7 @@ export function CurrentTerm() {
 
   const ends = endOfTerm(calendar.current_term_ends)
   return (
-    <div className="mx-4 mb-4 rounded-lg bg-ui-field px-4 py-3">
+    <div className="mx-4 mb-(--rail-card) rounded-lg bg-ui-field px-4 py-(--rail-card)">
       <div className="text-2xs uppercase tracking-label text-muted-foreground">
         The school is in
       </div>

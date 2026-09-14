@@ -1,6 +1,5 @@
 import {
   // FileText,
-  Bell,
   BookMarked,
   BookOpen,
   CalendarCheck,
@@ -19,7 +18,6 @@ export const studentNav: NavGroup[] = [
   {
     items: [
       { to: '/student', label: 'Dashboard', icon: LayoutGrid },
-      { to: '/student/notifications', label: 'Notifications', icon: Bell },
     ],
   },
   {

@@ -5,6 +5,7 @@ import type { SettingsBody } from '@/api/settings/types'
 import { queryClient } from '@/lib/query-client'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -24,6 +25,7 @@ import { registerHandler } from '../registry'
 registerHandler<CalendarBody>(WRITE.createSession, {
   send: (body) => sessionsService.create(body),
   idempotent: false,
+  newId: idUnder('session'),
   collectionId: SET.refSessions,
 })
 
@@ -47,6 +49,7 @@ registerHandler<Id>(WRITE.removeSession, {
 registerHandler<CalendarBody>(WRITE.createTerm, {
   send: (body) => termsService.create(body),
   idempotent: false,
+  newId: idUnder('semester'),
   collectionId: SET.refTerms,
 })
 

@@ -2,6 +2,7 @@ import { feesService } from '@/api/fees/service'
 import type { FeeBody } from '@/api/fees/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
+import { idUnder } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -16,6 +17,7 @@ import { registerHandler } from '../registry'
 registerHandler<FeeBody>(WRITE.createFee, {
   send: (body) => feesService.create(body),
   idempotent: false,
+  newId: idUnder('fee'),
   collectionId: SET.refFees,
 })
 

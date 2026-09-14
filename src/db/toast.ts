@@ -38,6 +38,18 @@ export function announceFailed(label: string, error: unknown, onOpen: () => void
 }
 
 /**
+ * The school heard the write and refused it, while the writer was still there.
+ *
+ * Different from `announceFailed` in the one way that matters: there is no
+ * drawer to send anybody to, because nothing was queued. The school's own
+ * sentence is the whole of the news, and the screen that made the write still
+ * has what was typed on it.
+ */
+export function announceRefused(label: string, error: unknown): void {
+  toast.error(`${label} was not saved: ${errorMessage(error, 'the school refused it.')}`)
+}
+
+/**
  * What the school said it did, where that is not simply "saved".
  *
  * Neither a success nor a failure: the write landed, and the answer carried

@@ -17,7 +17,8 @@ export function useTeacherProfileSave(): ProfileSave {
   return {
     pending: false,
     save: async (values) => {
-      enqueue({
+      // Awaited: the button spins until the school has answered.
+      await enqueue({
         handler: WRITE.updateTeachingProfile,
         payload: teacherContactBody(values),
         toast: { success: 'Your details were saved' },

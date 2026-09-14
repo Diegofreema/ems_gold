@@ -8,7 +8,7 @@ export function AuthHeading({
 }) {
   return (
     <>
-      <h2 className="font-heading text-[26px] leading-[1.2] font-extrabold tracking-[-0.01em]">
+      <h2 className="font-heading text-(length:--auth-title) leading-[1.2] font-extrabold tracking-[-0.01em]">
         {title}
       </h2>
       {description && (

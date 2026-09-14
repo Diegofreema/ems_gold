@@ -56,7 +56,7 @@ function AdminDashboard() {
       <SectionHeading className="mt-7 mb-3.5">School</SectionHeading>
       <TileStrip size="lg" tiles={data.school} />
 
-      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.35fr_1fr]">
+      <div className="mt-3.5 grid gap-3.5 @3xl/page:grid-cols-[1.35fr_1fr]">
         <Panel
           title="Fee collections"
           description="Naira settled per month, the last six months."

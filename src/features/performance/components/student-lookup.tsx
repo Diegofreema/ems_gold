@@ -55,7 +55,7 @@ export function StudentLookup({
   const chosen = options.find((one) => one.value === student)
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]">
+    <div className="grid gap-5 @3xl/page:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]">
       <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
         <div className="relative border-b border-divider p-2">
           <Search

@@ -4,10 +4,18 @@ import { dropDerivedReads } from '@/features/collections/invalidate'
 import { backoffFor, classify } from './classify'
 import { refetchCollection } from './collection'
 import { cascadeFrom, nextOp, substitute, unresolved, type OutboxOp } from './outbox'
+import { mayGoStraight } from './straight'
 import { onlyOneTab } from './one-tab'
-import { handlerFor } from './registry'
+import { handlerFor, type OutboxHandler } from './registry'
+import type { WriteOutcome } from './write-outcome'
 import { idMap, isStoreReady, outbox, resolvedIds, storeReady } from './store'
-import { announceFailed, announceHeld, announceNote, announceSaved } from './toast'
+import {
+  announceFailed,
+  announceHeld,
+  announceNote,
+  announceRefused,
+  announceSaved,
+} from './toast'
 
 export type EnqueueSpec = {
   /** A name registered in `registry.ts`. */
@@ -45,13 +53,32 @@ export const setDrawerOpener = (open: () => void) => {
 export const openPendingWork = () => openDrawer()
 
 /**
- * Accepts a write on the device and puts it in line for the school.
+ * Sends a write, and keeps it on the device only if it could not be sent.
  *
- * Returns as soon as it is written down, not when it is sent — that is the
- * whole point. The toast decides for itself which sentence to use, once it
- * knows whether this was a moment's wait or a trip to the queue.
+ * **The wire first.** A write with a connection behind it goes straight to the
+ * school and this returns when the school has answered, so a refusal is a
+ * refusal on the screen that made it — with the form still open and the typing
+ * still in it — rather than a row that sat on a register saying "Waiting to
+ * send" over a save the school was never going to accept. The queue is what
+ * happens when the wire is not there, which is what it was built for.
+ *
+ * It never throws. The three outcomes are all ordinary, all announced, and the
+ * caller reads the one it got: `collection-form.tsx` keeps the form open on
+ * `refused` and closes on the other two.
+ *
+ * Two things are still the queue's, and they are not exceptions to the rule so
+ * much as the rule meeting facts that are older than it:
+ *
+ *  - **Nothing overtakes work already in line.** Ops send strictly by `seq`
+ *    because writes depend on each other — a child is enrolled before an
+ *    invoice is raised against them — so while anything is still waiting, this
+ *    write joins the back of the queue rather than jumping it. The common case
+ *    is an empty queue, and then there is nothing to jump.
+ *  - **A refusal of the token keeps the work.** 401 pauses the drain and
+ *    queues this write rather than losing it: the work is fine, the session is
+ *    not, and the two are not the same news.
  */
-export function enqueue(spec: EnqueueSpec): OutboxOp {
+export async function enqueue(spec: EnqueueSpec): Promise<WriteOutcome> {
   // The boot path and every sign-in await `storeReady()`, so by the time a
   // screen exists to call this, the queue has loaded. If that ever stops being
   // true this has to fail loudly: numbering an op against a half-loaded queue
@@ -60,8 +87,104 @@ export function enqueue(spec: EnqueueSpec): OutboxOp {
     throw new Error('A write was queued before the device had finished loading its queue.')
   }
 
+  const handler = handlerFor(spec.handler)
+
+  if (handler && straightToSchool()) {
+    let answer: unknown
+
+    /*
+     * Only the send is in the `try`. What follows it is housekeeping — telling
+     * the reader, refetching the set — and a refetch that fails is not a write
+     * that failed: catching it here would classify a refused *read* as a
+     * refused write and leave a saved record looking rejected.
+     */
+    try {
+      answer = await handler.send(spec.payload as never)
+    } catch (error) {
+      const verdict = classify(error)
+
+      if (verdict === 'terminal') {
+        // The school heard it and said no. Queueing it would only ask the same
+        // question again and put the answer somewhere the writer is not.
+        announceRefused(spec.label, error)
+        return 'refused'
+      }
+
+      if (verdict === 'auth') pausedForAuth = true
+      hold(spec, { tried: true, why: reasonOf(error) })
+      return 'held'
+    }
+
+    landedOnTheWire(spec, handler, answer)
+    return 'sent'
+  }
+
+  hold(spec, { tried: false })
+  return 'held'
+}
+
+/** This device's answer to `mayGoStraight`, read off the world it lives in. */
+function straightToSchool(): boolean {
+  return mayGoStraight(navigator.onLine, pausedForAuth, outbox().toArray)
+}
+
+/**
+ * Keeps the write: write it down, say so, and let the drain carry it.
+ *
+ * `tried` is whether this write has already had its go on the wire. One that
+ * has starts its backoff at the first step rather than at zero, because the
+ * drain would otherwise pick it straight back up and spend a second attempt
+ * on the connection that had just failed — two failures a few milliseconds
+ * apart, and the school's reason overwritten by the same reason.
+ */
+function hold(spec: EnqueueSpec, attempt: { tried: boolean; why?: string }): OutboxOp {
+  const op = queueOp(spec, attempt)
+  // Said here rather than left to the drain. By the time this is called the
+  // write has already been tried and could not be sent, or there was nothing
+  // to try it over — either way it is genuinely being kept, which is the one
+  // thing worth saying about it.
+  announceHeld(spec.toast)
+  void drain()
+  return op
+}
+
+const reasonOf = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error)
+
+/**
+ * Everything `landed` does for a queued op, for one that never queued.
+ *
+ * Deliberately not awaited by the caller. The write is finished the moment the
+ * school answers; refetching the set it belongs to and dropping what it made
+ * stale are this app catching up with a fact, and the person who pressed Save
+ * should not be kept in front of a form waiting for a *read* to come back.
+ * Awaiting it held the record form open for a second full round trip after the
+ * save had already succeeded.
+ */
+function landedOnTheWire(
+  spec: EnqueueSpec,
+  handler: OutboxHandler<never>,
+  answer: unknown,
+): void {
+  announceSaved(spec.toast)
+
+  // Anything the school said about what it actually did. Unlike the drain's,
+  // this reaches the person who wrote it, on the screen they wrote it from.
+  const note = handler.note?.(answer)
+  if (note) announceNote(note)
+
+  const collectionId = handler.collectionId ?? spec.collectionId
+  // Swallowed: the write landed, and a set that could not be refetched is a
+  // stale list, not a lost record. The next sync picks it up.
+  if (collectionId) void refetchCollection(collectionId).catch(() => undefined)
+  void dropDerivedReads(queryClient)
+}
+
+/** Writes the op down. The queue's own bookkeeping, and nothing else. */
+function queueOp(spec: EnqueueSpec, attempt: { tried: boolean; why?: string }): OutboxOp {
   const seqs = outbox().toArray.map((op) => op.seq)
   const now = Date.now()
+  const attempts = attempt.tried ? 1 : 0
 
   const op: OutboxOp = {
     id: crypto.randomUUID(),
@@ -72,16 +195,15 @@ export function enqueue(spec: EnqueueSpec): OutboxOp {
     targetKey: spec.targetKey ?? null,
     dependsOn: spec.dependsOn ?? [],
     createdAt: now,
-    attempts: 0,
-    nextAttemptAt: now,
+    attempts,
+    nextAttemptAt: attempts > 0 ? now + backoffFor(attempts) : now,
     state: 'queued',
-    lastError: null,
+    lastError: attempt.why ?? null,
     toast: spec.toast,
     label: spec.label,
   }
 
   outbox().insert(op)
-  announce(op)
 
   /*
    * A write accepted on the device makes what is derived from it stale *now*,
@@ -91,67 +213,29 @@ export function enqueue(spec: EnqueueSpec): OutboxOp {
    * showing the school's last answer beside a row the office had just changed.
    */
   void dropDerivedReads(queryClient)
-  void drain()
 
   return op
 }
 
 /**
- * Every write is owed exactly one sentence, and this decides which.
+ * Every write is owed exactly one sentence, and it is said the moment the
+ * write settles — which, now that the wire comes first, is before the screen
+ * that made it has gone anywhere.
+ *
+ * `enqueue` says all three: "saved" when the school took it, "saved on this
+ * device" when it had to be kept, and the school's own refusal when it was
+ * refused. The drain says nothing about a write it inherited except when one
+ * finally fails for good, because by then the reader is somewhere else and
+ * `announceFailed` has to name what it was.
  *
  * It used to be decided by a stopwatch: the queue waited 1.2 seconds and, if
  * the write had not landed by then, told the reader it was being kept on the
- * device. That read the wrong thing off the clock. A round trip to this school
- * takes about a second on a perfectly good connection and longer for anything
- * that writes, so an office with full signal was told its work had been held
- * offline nearly every time it saved anything — which is both untrue and
- * exactly the sentence that makes somebody distrust the rest of the screen.
- * Worse, the op was never taken off the pending list, so when it did land a
- * second toast said the opposite of the first.
- *
- * Slowness is not a failure. So nothing is said about the device until the
- * write has actually been deferred, which is knowable rather than guessable:
- * the device is offline when it is written, or the drain tried it and could
- * not reach the school. In between, the write is simply in flight — and the
- * bar under the header is already saying so, which is the right place for a
- * sentence about work that has not settled yet.
- *
- * A screen that shows its own error keeps `ownsError` for the prompt case. Once
- * a write is in the queue there is no screen left to own anything, so a later
- * failure is announced by the drain regardless.
+ * device. That read the wrong thing off the clock — a round trip to this
+ * school takes about a second on a perfectly good connection — so an office
+ * with full signal was told its work had been held offline nearly every time
+ * it saved anything. Slowness is not a failure, and it is not the device's
+ * doing either.
  */
-function announce(op: OutboxOp): void {
-  // Known now, and nothing is going to be attempted: say so at once rather
-  // than leaving somebody with no answer at all.
-  if (!navigator.onLine) {
-    announceHeld(op.toast)
-    return
-  }
-
-  // Otherwise it is owed one, and what happens to it decides which: `landed`
-  // says it was sent, `deferred` says it is being kept.
-  pendingAnnouncements.add(op.id)
-}
-
-/**
- * Ops still owed their one sentence.
- *
- * Membership is the right to speak, and it is taken by whoever speaks first —
- * which is what stops a write that was held and then landed raising two
- * toasts that contradict each other.
- */
-const pendingAnnouncements = new Set<string>()
-
-/**
- * Says the write is being kept, at the moment that becomes true.
- *
- * Only once. A queue serving out a backoff tries the same op every few
- * seconds, and a reader does not need telling each time that the school is
- * still out of reach — the bar under the header is holding that thought.
- */
-function deferred(op: OutboxOp): void {
-  if (pendingAnnouncements.delete(op.id)) announceHeld(op.toast)
-}
 
 /**
  * Sends what it can, in the order it was done, and stops at the first thing it
@@ -216,7 +300,7 @@ async function sendWhatWeCan(): Promise<void> {
 
       try {
         const answer = await handler.send(substitute(op.payload, ids) as never)
-        await landed(op, handler.collectionId ?? op.collectionId, answer)
+        await landed(op, handler, answer)
         // Anything the school said about what it actually did with this. The
         // page that wrote it is long gone, so the drain is the only place left
         // that can pass it on.
@@ -240,19 +324,23 @@ async function sendWhatWeCan(): Promise<void> {
 /** Records the school's own id for a row this device named, then clears the op. */
 async function landed(
   op: OutboxOp,
-  collectionId: string | null | undefined,
+  handler: OutboxHandler<never>,
   answer: unknown,
 ): Promise<void> {
+  const collectionId = handler.collectionId ?? op.collectionId
+
   if (op.targetKey?.startsWith('local:')) {
-    const real = readId(answer)
+    // The handler's own reader, never a guess at the shape. Every create on
+    // this API nests the record under a key of its own — `{student}`,
+    // `{sparent}`, `{semester}` — so the id was read off `answer.id` and found
+    // nowhere, for every queued create there has ever been. See `new-id.ts`.
+    const real = handler.newId?.(answer)
     if (real !== undefined) {
       idMap().insert({ id: op.targetKey, real, at: Date.now() })
     }
   }
 
   outbox().delete(op.id)
-
-  if (pendingAnnouncements.delete(op.id)) announceSaved(op.toast)
 
   // The school's version of the row, rather than ours. Targeted, and per op,
   // because this is the set the op was actually about; everything else a write
@@ -282,9 +370,6 @@ function handleFailure(op: OutboxOp, error: unknown): boolean {
       draft.state = 'queued'
       draft.lastError = message
     })
-    // The school could not be reached, so the write is now genuinely being
-    // kept on the device — which is the one moment worth saying so.
-    deferred(op)
     return false
   }
 
@@ -305,19 +390,12 @@ function fail(op: OutboxOp, message: string): void {
 }
 
 function settle(op: OutboxOp, state: OutboxOp['state'], message: string): void {
-  pendingAnnouncements.delete(op.id)
   outbox().update(op.id, (draft) => {
     draft.state = state
     draft.lastError = message
   })
 }
 
-/** The id the school issued, from whichever shape the endpoint answered in. */
-function readId(answer: unknown): string | number | undefined {
-  if (answer === null || typeof answer !== 'object') return undefined
-  const id = (answer as { id?: unknown }).id
-  return typeof id === 'string' || typeof id === 'number' ? id : undefined
-}
 
 /**
  * Puts back anything that was in flight when the tab died.
@@ -433,5 +511,4 @@ export function stopDrain(): void {
   if (timer !== null) clearInterval(timer)
   timer = null
   draining = false
-  pendingAnnouncements.clear()
 }

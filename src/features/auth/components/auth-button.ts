@@ -4,10 +4,14 @@
  * would mean re-declaring both.
  */
 
-/** Full width, 46px, the auth blue. Every screen's main action. */
+/**
+ * Full width, the auth blue, and the same height as a field — which is
+ * `--auth-control`, a clamp on the height of the screen rather than the
+ * design's flat 46px. See `index.css`.
+ */
 export const authButton =
-  'h-11.5 w-full rounded-md bg-ui-blue text-base font-medium text-white hover:bg-ui-blue/90 focus-visible:ring-ui-blue/40'
+  'h-(--auth-control) w-full rounded-md bg-ui-blue text-base font-medium text-white hover:bg-ui-blue/90 focus-visible:ring-ui-blue/40'
 
 /** The same shape for the second way out of a screen, where there is one. */
 export const authButtonQuiet =
-  'h-11.5 w-full rounded-md border-ui-hint/40 bg-white text-base font-medium text-ui-ink hover:bg-ui-field'
+  'h-(--auth-control) w-full rounded-md border-ui-hint/40 bg-white text-base font-medium text-ui-ink hover:bg-ui-field'

@@ -50,7 +50,7 @@ function TeacherDashboard() {
         <FigureTiles figures={data.figures} />
       </div>
 
-      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.5fr_1fr]">
+      <div className="mt-3.5 grid gap-3.5 @3xl/page:grid-cols-[1.5fr_1fr]">
         <Panel
           title="Assignments you have set"
           description="The most recent first, with the ones still open flagged."

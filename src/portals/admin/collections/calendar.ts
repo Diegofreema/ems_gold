@@ -161,7 +161,7 @@ export const sessions: CollectionDef = {
   queue: (values, recordId) => {
     const body = calendarBody(values)
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.renameSession,
         payload: { id: recordId, body },
         collectionId: SET.refSessions,
@@ -169,9 +169,8 @@ export const sessions: CollectionDef = {
         toast: { success: 'Session updated' },
         label: `Session “${body.name}”`,
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createSession,
       payload: body,
       collectionId: SET.refSessions,
@@ -273,7 +272,7 @@ export const terms: CollectionDef = {
   queue: (values, recordId) => {
     const body = calendarBody(values)
     if (recordId) {
-      enqueue({
+      return enqueue({
         handler: WRITE.renameTerm,
         payload: { id: recordId, body },
         collectionId: SET.refTerms,
@@ -281,9 +280,8 @@ export const terms: CollectionDef = {
         toast: { success: 'Term updated' },
         label: `Term “${body.name}”`,
       })
-      return
     }
-    enqueue({
+    return enqueue({
       handler: WRITE.createTerm,
       payload: body,
       collectionId: SET.refTerms,
