@@ -146,7 +146,22 @@ export type StudentPerformance = {
  */
 export type ClassSubjectPerformance = Record<string, unknown>
 
-/** How many students fall in one grade band. Unverified; `grades` was empty. */
+/**
+ * How many students fall in each grade band.
+ *
+ * **Verified now that this school has approved marks**, and it is not the
+ * array of rows this file guessed while every reading came back empty: the
+ * endpoint sends a plain map of band to count, `{"-": 2, "A": 5, "B": 1}`,
+ * on `overall` and on every subject alike. The `-` band is the marks the
+ * school has recorded no letter for, and it is a real band with a real count,
+ * not a blank to drop.
+ *
+ * The row shape is kept beside it because `gradeLines` still reads one, and
+ * because a bucket is the one thing here cheap enough to tolerate twice.
+ */
+export type GradeCounts = Record<string, number>
+
+/** One band as a row, which is the shape this was written against. */
 export type GradeBucket = Record<string, unknown>
 
 export type ClassPerformanceParams = {
@@ -174,7 +189,7 @@ export type ClassPerformance = {
     marks_counted: number
     average: number | null
     pass_rate: number | null
-    grades: GradeBucket[]
+    grades: GradeCounts
   }
   pending_excluded: number
   duplicates: PerformanceDuplicate[]

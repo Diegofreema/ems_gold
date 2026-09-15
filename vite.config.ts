@@ -36,7 +36,9 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#863bff',
+        // --ems-brand in index.css. The splash screen and the task-switcher
+        // chrome of an installed app are drawn from this.
+        theme_color: '#356ead',
         orientation: 'portrait-primary',
         icons: [
           { src: '/pwa-192.png', sizes: '192x192', type: 'image/png' },

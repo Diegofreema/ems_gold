@@ -1,7 +1,8 @@
-import { Menu } from 'lucide-react'
+import { Menu, PanelLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { RouteProgress } from '@/components/layout/route-progress'
+import { cn } from '@/lib/utils'
 import type { AccountSummary } from '@/lib/account'
 import { useShellStore } from '@/stores/shell.store'
 import { AccountChip } from './account-chip'
@@ -33,10 +34,17 @@ export function AppHeader({
   children?: ReactNode
 }) {
   const openDrawer = useShellStore((state) => state.openDrawer)
+  const railShut = useShellStore((state) => state.railShut)
+  const toggleRail = useShellStore((state) => state.toggleRail)
 
   return (
     <header className="sticky top-0 z-20 flex h-(--shell-header) items-center gap-3 border-b border-divider bg-raised px-content">
-      {narrow && (
+      {/* One button, one place, two jobs — because they are the same job seen
+          at two widths. Narrow, there is no rail and this opens the drawer
+          over the page; wide, it folds the rail down to its icons. Here rather
+          than on the rail itself: a control that moves with the thing it
+          controls is a control somebody has to find twice. */}
+      {narrow ? (
         <Button
           variant="outline"
           size="icon"
@@ -45,6 +53,23 @@ export function AppHeader({
           className="size-10 flex-none rounded-lg"
         >
           <Menu className="size-[18px]" strokeWidth={2} />
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleRail}
+          aria-label={railShut ? 'Widen the menu' : 'Narrow the menu'}
+          aria-pressed={railShut}
+          className="size-10 flex-none rounded-lg"
+        >
+          <PanelLeft
+            className={cn(
+              'size-[18px] transition-transform duration-200',
+              railShut && 'rotate-180',
+            )}
+            strokeWidth={2}
+          />
         </Button>
       )}
 

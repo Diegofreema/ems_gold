@@ -3,7 +3,7 @@ import { LogOut, Settings } from 'lucide-react'
 import { useLogout } from '@/api/auth/hooks'
 
 const ROW =
-  'flex h-(--rail-row) w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-neutral-100'
+  'flex h-(--rail-row) w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-neutral-100 group-data-[rail=shut]:justify-center group-data-[rail=shut]:gap-0'
 
 /**
  * The foot of the rail. Two things somebody looks for by name rather than by
@@ -27,13 +27,13 @@ export function SidebarTools({
   // list.
   return (
     <div className="mt-auto border-t border-divider px-4 pt-(--rail-card) pb-(--rail-foot)">
-      <div className="px-3 pb-2 font-heading text-2xs font-extrabold uppercase tracking-kicker text-muted-foreground">
+      <div className="rail-wordy px-3 pb-2 font-heading text-2xs font-extrabold uppercase tracking-kicker text-muted-foreground">
         Tools
       </div>
 
-      <Link to={settingsPath} onClick={onNavigate} className={ROW}>
+      <Link to={settingsPath} onClick={onNavigate} className={ROW} title="Settings">
         <Settings className="size-5 flex-none" strokeWidth={1.9} />
-        <span className="flex-1 truncate">Settings</span>
+        <span className="rail-label flex-1">Settings</span>
       </Link>
 
       <button
@@ -45,9 +45,10 @@ export function SidebarTools({
           await navigate({ to: '/sign-in' })
         }}
         className={`${ROW} cursor-pointer !text-danger-ink hover:bg-danger-subtle`}
+        title="Logout"
       >
         <LogOut className="size-5 flex-none" strokeWidth={1.9} />
-        <span className="flex-1 truncate">
+        <span className="rail-label flex-1">
           {logout.isPending ? 'Signing out…' : 'Logout'}
         </span>
       </button>

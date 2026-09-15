@@ -172,7 +172,7 @@ type Scope = {
 function SubjectsView({ scope }: { scope: Scope }) {
   const { data, isPending, error } = useClassPerformance(scope)
   const subjects = classSubjectLines(data?.subjects ?? [])
-  const grades = gradeLines(data?.overall.grades ?? [])
+  const grades = gradeLines(data?.overall.grades)
   const overall = data?.overall
 
   return (

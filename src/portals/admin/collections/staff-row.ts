@@ -1,6 +1,5 @@
 import type { ActivityLog } from '../../../api/admins/types.ts'
 import { isLocalKey } from '../../../db/outbox.ts'
-import type { Place } from '../../../api/types.ts'
 import type { Teacher, TeacherSubject } from '../../../api/teachers/types.ts'
 import type { Admin } from '../../../api/users/types.ts'
 import { birthday, isoBirthday } from '../../../features/collections/birthday.ts'
@@ -120,11 +119,12 @@ export function teacherRow(teacher: Teacher): Row {
     // so the panel says which rather than only that there is one; a teacher
     // who takes none reads "No arm".
     adviser: arms.length ? arms.map((arm) => arm.label).join(', ') : 'No arm',
-    // Two different things under two keys on purpose. `place` is for reading —
-    // the street with the state and country after it — and `address` is the
-    // API's own field, which the edit form writes straight back: prefilling
-    // the composed line there would have saved the country into the street.
-    place: text(placeOf(teacher)),
+    // The API's own field, and now the only one: the panel used to draw a
+    // composed line with the state and the country after the street, and a
+    // record page is asked for an address, not for a country everybody in the
+    // school shares. On this school it read "10 Wilfred Okereke street Obinze
+    // Owerri Imo state, Imo, Nigeria" — the state twice and the country for
+    // nothing. This is also what the edit form writes straight back.
     address: text(teacher.address),
     // The birthday lives on the login, not the teaching row. Read twice —
     // once to show, once to open the picker — like every other date field.
@@ -163,34 +163,15 @@ export function teacherRow(teacher: Teacher): Row {
   }
 }
 
-/**
- * Where they live, as one line.
- *
- * The API expands `state_id` and `country_id` independently and never checks
- * that they agree, so a record can come back as a state in one country beside
- * the name of another — one teacher on bronze reads "Andaman and Nicobar
- * Islands" under Nigeria. A state that does not belong to the country on the
- * record is dropped: a wrong address is worse than a short one.
- *
- * Written against the three fields rather than against a teacher, because an
- * administrator keeps the address on the office record and the country and
- * state on the login behind it.
+/*
+ * `placeOf` was here: it joined the street, the state and the country into the
+ * line the record panels drew, dropping a state whose `country_id` disagreed
+ * with the country beside it — bronze holds a teacher filed in Nigeria whose
+ * `state_id` points into India, and printing both made the address wrong.
+ * That care is not needed once nothing is composed. The disagreement is still
+ * in the school's data, so anything that reads these two fields together has
+ * to check them again rather than assume they agree.
  */
-function placeOf(place: {
-  address: string | null | undefined
-  state?: Place | null
-  country?: Place | null
-}): string {
-  const country = place.country?.name
-  const state =
-    place.state && place.state.country_id === place.country?.id
-      ? place.state.name
-      : undefined
-  return [place.address, state, country]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(', ')
-}
 
 /**
  * One subject on a teacher's record. The class comes expanded on the subject
@@ -228,15 +209,9 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     qualification: BLANK,
     adviser: BLANK,
     // The office record holds the address; the login holds the country and the
-    // state, and only the detail expands them. Read as one line under `place`;
-    // `address` stays the API's own field, which the edit form writes back.
-    place: text(
-      placeOf({
-        address: admin.address,
-        state: admin.user?.state,
-        country: admin.user?.country,
-      }),
-    ),
+    // state, and only the detail expands them. Neither is drawn any more — see
+    // the note on the teaching row — so the street stands on its own, which is
+    // also the field the edit form writes back.
     address: text(admin.address),
     joined: asDate(admin.date_created),
 
@@ -260,8 +235,13 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     dob: isoBirthday(admin.dob),
     username: text(admin.user?.username),
     user_id: String(admin.user_id),
-    // The job as the office writes it — "ICT Director", "Registrar".
-    title: text(admin.profile),
+    /*
+     * No `title`. The register drew `admin.profile` under a "Job" heading, and
+     * across this school one office record of three has anything in it — the
+     * words "old teacher". Nothing writes the field either: the form's About
+     * box belongs to the teaching half. Unread and unwritable, so it is not
+     * carried; the column it fed is an Email now.
+     */
 
     // Only the privileges endpoint expands these; a row off the list carries
     // none, which is why the record page asks for them separately.

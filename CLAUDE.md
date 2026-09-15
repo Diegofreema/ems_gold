@@ -106,6 +106,22 @@ filtered rather than filtered away at the fetch. And the feeds' own react-query 
 running the function, so a dependent feed the office had not already opened — an arm feed is keyed by
 the class chosen — stayed on "Loading…" for as long as the device was offline.
 
+**The school's own shape asks the school every time** — classes, arms, subjects, sessions and
+terms. It is the reference data a school changes while the office is working — an arm opened on the registrar's machine at ten
+is wanted on the bursar's at two, and until this device happened to resync it was simply not on the
+list. `ALWAYS_ASK` in `option-feeds.ts` names them, their `optionsQuery` carries `staleTime: 0`, and
+`asked()` refetches the collection before reading it. Through the collection rather than the service
+directly, deliberately: there is still one answer on the device, so a class the dropdown offers is a
+class the register beside it knows about, and the collection's own fetcher already decides what to
+do when the school cannot be reached. So freshness is the normal case and the stored copy is the
+outage — a device with no connection still fills its dropdowns from what the school last said,
+because a form that cannot be filled in offline is the thing this whole layer exists to prevent.
+Measured: opening Add teacher fires `GET /departments`, choosing a class fires `GET /class-arms`,
+opening Performance fires `departments`, `subjects`, `semesters` and `sessions`, and a class that
+appears only in the endpoint's answer is offered without a reload. The directories stay on the
+device: students and guardians run to hundreds of rows, and the two searched feeds already ask the
+school by their own route.
+
 The two **searched** feeds (`searchFrom`) still ask the school first: they exist for registers too
 long to hold, and the endpoint searches the whole of one where this device holds the first couple of
 hundred. A refusal falls back to searching what the device keeps, which is narrower than the school's
@@ -391,6 +407,66 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   inventing a fact nobody entered. The `states` feed reads an absent scope as Nigeria, which
   reaches only a field that never declared a `dependsOn` — one that declares an empty one does not
   run the feed at all — so the student form, which still asks, is untouched.
+- **A staff member's email is their `username`; there is no email field on this API.** Checked
+  against the live school: `GET /teachers` and `GET /admins` carry none, and neither does the login
+  expanded beside them — and all six staff usernames on file are addresses, which is why the staff
+  form has always labelled that field Email. So the registers draw `username` under an Email
+  heading rather than inventing a column the endpoints cannot fill.
+  Two columns went to make room, each for its own reason. The administrators' **Job** read
+  `admin.profile`, which nothing in the app writes — the About box belongs to the teaching half of
+  the form — and which one office record of three has anything in at all, the words "old teacher";
+  the row no longer carries it. The teachers' **Role** is a constant: `teacherRow` sets it to
+  "Teacher", so on a register of nothing but teachers it read the same word down the page. It earns
+  its place on the mixed staff register, which is the one definition that still uses the shared
+  columns, and the teachers' slice now spells out its own.
+- **`/performance` sends its grade breakdown as a map, not as rows.** `{"-": 2, "A": 5, "B": 1}`,
+  band to count, on `overall` and on every subject alike — read off this school the moment it had
+  approved marks to count, which is the first time any `/performance` row had been seen filled at
+  all. `gradeLines` was written against an array of `{grade, count}` rows while every live answer
+  came back empty, so `.map` threw `rows.map is not a function` straight through the class
+  performance page's render and the route boundary reported it as **"We could not reach the school
+  system"** — about an answer the school had given in full, 200, with every figure in it. It takes
+  both shapes now, the map being the one anybody will meet. Two things to carry from it: a `-` band
+  is a real band with a real count, the marks the school recorded no letter for, not a blank to
+  drop; and the readers were swept against the live answers once there were marks to read.
+  That sweep found two more. A subject's gap is **`gap_to_own_average`**, which none of the
+  candidate spellings had, so the column was being recomputed from the student's own average
+  instead of read from the school's own arithmetic. And a term row carries **both** `semester`
+  ("First Term") and `term` ("First Term 2025/2026") with an id that repeats across years, so the
+  chart labelled every year's first term identically and keyed them all on `semester_id` — two
+  years of history drew one bar. `classSubjectLines`, `riskLines` and `studentPointLines` were
+  already right. **`moverLines` is the one still unverified**: `movers`, `risers` and `fallers` are
+  empty on every scope this school can answer for, so its keys are still guesses and it is the
+  shape most likely to break the way `grades` did.
+- **A teacher's class arm is offered only once a class is chosen, narrowed by it.** `optionsFrom:
+  'arms'` with `dependsOn: 'department_id'` — the box is disabled and reads "Pick a class first"
+  until then. Narrowed **on the device**, not at the endpoint: `arms` filters the held set by
+  `department_id`, which is the same answer `class-arms/for-department/{id}` gives and costs no
+  request, so the dropdown still fills with no connection. Measured: choosing a class and opening
+  the arm list made zero requests. It used to offer `all-arms`, every arm in the school at once.
+  The consequence is written down because the data really does contain it: this school has
+  teachers whose arm belongs to another class — one is filed under JSS III and is class teacher of
+  JSS 1B — so their edit form opens with the arm box empty, that arm not being among the ones now
+  offered. Nothing is lost by it: `teacherBody` drops an empty `class_arm_id` rather than sending
+  null, so a save that touched another field leaves them seated where they are, and the record
+  panel's "Form arm" still names every arm they hold. Tested both ways round.
+- **A staff record's address is the street the school stored, and nothing appended.** The three
+  staff panels drew a composed line — street, then state, then country — which needed `placeOf` to
+  drop a state whose `country_id` disagreed with the country beside it, because bronze holds a
+  teacher filed in Nigeria whose `state_id` points into India. None of that is needed once nothing
+  is composed, and the line was worse than the parts: one teacher read "10 Wilfred Okereke street
+  Obinze Owerri Imo state, Imo, Nigeria" — the state twice and a country every row in the school
+  shares. It also disagreed with itself, since `GET /admins` expands neither field and
+  `GET /users/admins/{id}` expands both, so the same office record read two different addresses
+  depending on which page you opened it from. One key now, `address`, which is the API's own field
+  and the one the edit form already wrote back. The state/country disagreement is still in the
+  school's data: anything that reads those two together has to check them rather than assume.
+- **An office record is not asked which class.** A class is what a teacher stands in front of;
+  `department_id` is optional on `POST /admins/new-admin`, and the office was answering it only
+  because it was asked. Gone from the administrators' form, the other-staff form and the office
+  half of the mixed one. An edit made without the field does not clear a class already on file —
+  `common` in `staff-body.ts` drops an absent key rather than sending it empty — and the record
+  panel still shows one where the school holds it.
 - **A student's email is optional, and it is not reliably their login.** It usually becomes one, but
   of four students read off this school two sign in with an address that is not the one on their
   record, and the test login on file is a registration number. The school issues the username itself
@@ -488,6 +564,33 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   read as loose text. The token is declared in both themes because the themes need opposite tools —
   in daylight an edge and a shadow, at night a fill lifted above whatever it stands on, since a
   shadow on near-black is nothing.
+- **The rail folds to its icons, and a folded rail peeks rather than pushes.** Two widths,
+  `--rail-open` and `--rail-shut` in `index.css` with the rest of the shell's sizes, and the fold is
+  remembered on the device beside the sections a reader has opened (`shell.store.ts`).
+  The structure is the point: a slot in the shell's flex row holds the width the page is measured
+  against, and the rail sits *inside* it, positioned, so it can be wider than its slot. Shutting the
+  rail narrows both and the page slides over to take the room; **hovering a shut rail widens only
+  the inner one**, so the register being read does not reflow every time the pointer crosses the
+  mark — the rail floats over it with a shadow (`[data-rail='peek']`) and goes again. Measured:
+  hovered, the rail is 264 and the page still reserves 72.
+  The peek is on focus as well as hover, or a keyboard reader tabbing into a folded rail would move
+  through labels nobody can see, and Escape drops it. It is derived — `shut && peeking` — rather
+  than stored, so opening the rail ends a peek without anything having to remember to.
+  `data-rail` on the aside is what the whole collapsed styling hangs off, one attribute rather than
+  a `shut` prop threaded through four components: `.rail-label` fades and loses its width so the
+  words go rather than vanish, `.rail-wordy` removes what has no icon to shrink to (the term card,
+  the sub-items, the badges, the Tools heading), and the wordmark cross-fades to the globe.
+  **That globe is cut from the wordmark itself** — `public/netpro-mark.png` is the last glyph of
+  `netpro-logo.webp`, trimmed to its own edges and centred on a square at its native 114px, never
+  scaled up. So the folded rail and the full one cannot drift apart, and it is the same mark the
+  browser tab carries. The old `favicon.svg` was a purple lightning bolt from another brand
+  entirely; the PWA icons and `apple-touch-icon.png` still are, and re-cutting those needs a
+  higher-resolution original than the wordmark holds. The swing is `calc(260ms * var(--ems-motion))`, so a reader who has
+  turned motion off gets the new width at once rather than a crawl.
+  Two things this must not break, both found by breaking them: the **drawer** takes `w-0` for its
+  slot, since the sheet is `fixed` and a slot holding 264px open would push the page out from under
+  it; and `shell-pending.tsx` reads the same fold, or the shell arrives one width and settles at
+  another — the jump-cut that file exists to prevent.
 - **The shell is measured against the height of the screen; a page is measured against the width of
   its own column.** Two halves of one rule, and each is the axis that squeezes.
   The rail and the header are pinned to the viewport, so whatever they take the page does not get:

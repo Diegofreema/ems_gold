@@ -191,6 +191,20 @@ test('a subject teacher who takes no arm is saved without one', () => {
   assert.equal(teacherUpdate({ ...TEACHING_FORM, class_arm_id: '9' }).class_arm_id, '9')
 })
 
+test('an arm outside the chosen class is not sent, and so is not taken away', () => {
+  /*
+   * This one is reachable without anybody touching the field. The arm feed is
+   * narrowed by the class now, and this school has teachers whose arm belongs
+   * to another class — one is filed under JSS III and is class teacher of JSS
+   * 1B — so their edit form opens with the arm box empty, because that arm is
+   * not among the ones offered. Empty must mean "leave it alone" and not "no
+   * arm", or saving a phone number would unseat them.
+   */
+  const openedEmpty = { ...TEACHING_FORM, department_id: '5', class_arm_id: '' }
+  assert.equal('class_arm_id' in JSON.parse(JSON.stringify(teacherBody(openedEmpty))), false)
+  assert.equal('class_arm_id' in JSON.parse(JSON.stringify(teacherUpdate(openedEmpty))), false)
+})
+
 test('a teacher birthday goes onto the login as ISO, and drops when empty', () => {
   // The teaching record keeps no birthday; the endpoint files it on the login.
   assert.equal(teacherBody({ ...TEACHING_FORM, dob: new Date(1990, 11, 25) }).dob, '1990-12-25')

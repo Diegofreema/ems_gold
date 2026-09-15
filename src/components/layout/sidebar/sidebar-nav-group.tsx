@@ -52,16 +52,23 @@ export function SidebarNavGroup({
           holdsOpenPage && collapsed
             ? 'bg-brand/10 font-medium text-brand-700'
             : 'hover:bg-neutral-100',
+          'group-data-[rail=shut]:justify-center group-data-[rail=shut]:gap-0',
         )}
+        title={group.heading}
       >
         {Icon && <Icon className="size-5 flex-none" strokeWidth={1.9} />}
-        <span className="flex-1 truncate">{group.heading}</span>
-        <Chevron className="size-4 flex-none text-muted-foreground" strokeWidth={2} />
+        <span className="rail-label flex-1">{group.heading}</span>
+        {/* No chevron on a narrowed rail: there is nothing it could open onto
+            until the rail is wide enough to hold a list of words. */}
+        <Chevron
+          className="rail-wordy size-4 flex-none text-muted-foreground"
+          strokeWidth={2}
+        />
       </button>
 
       {!collapsed && (
         // The line the ticks hang off, aligned under the section's own icon.
-        <div className="relative mt-1 ml-5.5 space-y-0.5 border-l border-divider pl-0">
+        <div className="rail-wordy relative mt-1 ml-5.5 space-y-0.5 border-l border-divider pl-0">
           {group.items.map((item) => (
             <SidebarSubItem key={item.to} item={item} onNavigate={onNavigate} />
           ))}

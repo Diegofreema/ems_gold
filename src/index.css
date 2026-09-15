@@ -278,6 +278,14 @@
   --rail-row: clamp(2.25rem, 6.2vh, 2.75rem);
   --rail-subrow: clamp(1.875rem, 5.2vh, 2.25rem);
 
+  /* The rail's two widths, and how long it takes to move between them.
+     Shut is icons alone; open is the 264px the design draws. The swing is
+     scaled by --ems-motion like every animation here, so a reader who has
+     turned motion off gets the new width immediately rather than a crawl. */
+  --rail-open: 16.5rem;
+  --rail-shut: 4.5rem;
+  --rail-swing: calc(260ms * var(--ems-motion));
+
   /* The mark's own block, the term card above the nav, and the padding under
      Tools at the rail's foot. */
   --rail-mark-top: clamp(1rem, 3.4vh, 1.75rem);
@@ -678,6 +686,44 @@
    back. One block for both, so a heading is the same size on the page as it
    was in the form. Tailwind's reset strips lists and quotes of everything, so
    these are put back by hand rather than pulled from a typography plugin. */
+/* The rail sliding between its two widths, and the labels going with it.
+   Two durations on purpose: the words leave before the rail has finished
+   narrowing and arrive after it has finished widening, so nothing is ever
+   drawn clipped mid-word. `width` is the only property that can animate this
+   — a grid-template or a transform would move the page's own column with it,
+   and the page must not move when the rail is merely being hovered. */
+.rail-swing {
+  transition: width var(--rail-swing) cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.rail-label {
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    opacity calc(var(--rail-swing) * 0.55) ease,
+    max-width var(--rail-swing) cubic-bezier(0.2, 0.7, 0.3, 1);
+  opacity: 1;
+  max-width: 14rem;
+}
+
+[data-rail='shut'] .rail-label {
+  opacity: 0;
+  max-width: 0;
+}
+
+/* Everything with no icon to stand in for it simply goes. A sub-item is a
+   word and a tick; drawn at 72px it is a tick beside nothing. */
+[data-rail='shut'] .rail-wordy {
+  display: none;
+}
+
+/* The rail floats over the page while it is being hovered rather than pushing
+   it aside, so reading a register does not reflow every time the pointer
+   crosses the mark. The shadow is what says it is above rather than beside. */
+[data-rail='peek'] {
+  box-shadow: var(--ems-shadow-float);
+}
+
 .rich-text {
   line-height: 1.6;
 }

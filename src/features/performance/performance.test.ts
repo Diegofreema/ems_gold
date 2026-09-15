@@ -65,6 +65,26 @@ test('a grade bucket with no count reads as none, not as missing', () => {
   assert.deepEqual([only.name, only.count], ['A', 0])
 })
 
+test('the grade breakdown is the map the school actually sends', () => {
+  // Read off this school once it had approved marks: band to count, not the
+  // array of rows this module guessed while every answer came back empty.
+  // `.map` on it threw straight through the page's render, and the page then
+  // said it could not reach a school that had answered in full.
+  const lines = gradeLines({ '-': 2, A: 5, B: 1 })
+  assert.deepEqual(
+    lines.map((line) => [line.name, line.count]),
+    [['-', 2], ['A', 5], ['B', 1]],
+  )
+  // Each band needs a key of its own, or React draws one row for three bands.
+  assert.equal(new Set(lines.map((line) => line.key)).size, 3)
+})
+
+test('no grades at all is no rows, however the school spells nothing', () => {
+  for (const nothing of [undefined, null, {}, []]) {
+    assert.deepEqual(gradeLines(nothing), [])
+  }
+})
+
 test('a mover’s change is worked out from the two ends where it is not sent', () => {
   const [only] = moverLines([{ name: 'Ada Obi', from: 48, to: 61 }])
   assert.equal(only.change, 13)
@@ -132,4 +152,109 @@ test('a change is always signed', () => {
   assert.equal(signed(-4.26), '-4.3')
   assert.equal(signed(0), '0')
   assert.equal(signed(undefined), '—')
+})
+
+/*
+ * Everything below is written against answers read off the live school once it
+ * had approved marks, rather than against the candidate spellings this module
+ * was built from. The rows are copied from those answers as they arrived.
+ */
+
+/** `GET /performance/student/{id}` → `terms[0]`, verbatim. */
+const LIVE_TERM = {
+  session_id: 12,
+  session: '2025/2026',
+  semester_id: 1,
+  semester: 'First Term',
+  term: 'First Term 2025/2026',
+  subjects_counted: 2,
+  average: 76.5,
+  best: 85,
+  worst: 68,
+  passed: 2,
+  change: null,
+}
+
+/** The same answer's `subjects[0]`. */
+const LIVE_SUBJECT = {
+  subject_id: 10,
+  subject: 'INTEGRATED SCIENCE',
+  terms_counted: 1,
+  average: 85,
+  best: 85,
+  worst: 85,
+  gap_to_own_average: 8.5,
+  standing: 'stronger',
+  passed: true,
+}
+
+/** `GET /performance/class` → `subjects[0]`. */
+const LIVE_CLASS_SUBJECT = {
+  subject_id: 1,
+  subject: 'ENGLISH LANGUAGE',
+  pupils: 3,
+  marks_counted: 3,
+  average: 75,
+  highest: 85,
+  lowest: 68,
+  spread: 7.26,
+  passed: 3,
+  failed: 0,
+  pass_rate: 100,
+  grades: { A: 2, B: 1 },
+}
+
+test('a term is named by the label that says which year it was', () => {
+  // The row carries both. `semester` is "First Term", which is the same words
+  // for every year the student has been here; `term` names the year too.
+  const [only] = termLines([LIVE_TERM])
+  assert.equal(only.name, 'First Term 2025/2026')
+  assert.equal(only.average, 76.5)
+})
+
+test('two years of the same term are two bars, not one', () => {
+  // `semester_id` is 1 for the First Term of every year, and it was the whole
+  // key — so React drew one bar for two terms and a year of history vanished.
+  const lastYear = { ...LIVE_TERM, session_id: 11, session: '2024/2025', term: 'First Term 2024/2025', average: 61 }
+  const lines = termLines([lastYear, LIVE_TERM])
+  assert.equal(new Set(lines.map((line) => line.key)).size, 2)
+  assert.deepEqual(lines.map((line) => line.average), [61, 76.5])
+})
+
+test('a subject gap is the school\u2019s own figure, not one worked out here', () => {
+  // `gap_to_own_average` is the spelling the endpoint uses, and none of the
+  // candidates had it — so this column was being recomputed every time.
+  const [only] = subjectLines([LIVE_SUBJECT], 76.5)
+  assert.equal(only.gap, 8.5)
+  assert.equal(only.name, 'INTEGRATED SCIENCE')
+  // And it is still worked out where the school sends no gap at all.
+  const { gap_to_own_average: _none, ...without } = LIVE_SUBJECT
+  assert.equal(subjectLines([without], 76.5)[0].gap, 8.5)
+})
+
+test('a class subject row reads every column off the live answer', () => {
+  const [only] = classSubjectLines([LIVE_CLASS_SUBJECT])
+  assert.deepEqual(
+    [only.name, only.average, only.highest, only.lowest, only.spread, only.passRate, only.counted],
+    ['ENGLISH LANGUAGE', 75, 85, 68, 7.26, 100, 3],
+  )
+})
+
+test('a flagged student and a scatter point read off the live answers', () => {
+  // `GET /performance/at-risk` → `pupils[0]`, and the same shape on
+  // `attendance-vs-marks`, which is why one fixture serves both.
+  const pupil = {
+    student_id: 111,
+    name: 'Ogechi Obi',
+    average: 238,
+    subjects_counted: 1,
+    subjects_failing: 0,
+    attendance_rate: 50,
+    reasons: ['Present for 50% of the 2 day(s) marked.'],
+  }
+  const [risk] = riskLines([pupil])
+  assert.deepEqual([risk.name, risk.average, risk.attendance], ['Ogechi Obi', 238, 50])
+  assert.deepEqual(risk.reasons, ['Present for 50% of the 2 day(s) marked.'])
+  const [point] = studentPointLines([pupil])
+  assert.deepEqual([point.name, point.attendance, point.average], ['Ogechi Obi', 50, 238])
 })

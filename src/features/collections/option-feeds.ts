@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
-import { heldDocument, heldRows as held } from '@/db/collection'
+import { heldDocument, heldRows as held, refetchCollection } from '@/db/collection'
 import {
   refArms,
   refBoard,
@@ -18,6 +18,7 @@ import {
   refTerms,
 } from '@/db/collections/reference'
 import { teacherArms, teacherSubjects } from '@/db/collections/teaching'
+import { SET } from '@/db/ids'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
 import { guardianOption } from './guardian-option'
@@ -25,24 +26,82 @@ import { audienceOptions } from '@/portals/admin/collections/notice-row'
 import { distinct, type Option, type OptionsKey, type SearchKey } from './options'
 
 /**
- * Every feed here reads a set on the device rather than an endpoint.
+ * Every feed here reads a set on the device, and the two that matter most ask
+ * the school first.
  *
- * That is what makes a form fillable with no connection — a dropdown that had
- * to be fetched is a form that cannot be filled in — and it is why the ones
- * that used to ask the API for a narrowed answer now ask for the whole set and
- * narrow it here. A set narrowed at the fetch cannot be widened later without a
- * second request, and there may be no connection to make one over.
+ * Reading the device is what makes a form fillable with no connection — a
+ * dropdown that had to be fetched is a form that cannot be filled in — and it
+ * is why the ones that used to ask the API for a *narrowed* answer now ask for
+ * the whole set and narrow it here. A set narrowed at the fetch cannot be
+ * widened later without a second request, and there may be no connection to
+ * make one over.
+ *
+ * Classes and arms are the exception, because they are the only reference data
+ * a school changes while the office is working: an arm opened on the
+ * registrar's machine at ten is wanted on the bursar's at two, and until this
+ * device happened to resync it was not on the list. Those feeds refetch on
+ * every open — see `ALWAYS_ASK` — and fall back to the stored copy only when
+ * the school cannot be reached. Freshness is the normal case; the device's own
+ * answer is the outage.
  *
  * The react-query wrapper below stays: it is what the select components
- * already speak, and it now dedupes the reading rather than the request.
+ * already speak.
  */
+
+/**
+ * The feeds that ask the school every time they are opened.
+ *
+ * The school's own shape: the classes and arms it runs, the subjects it
+ * offers, the sessions and terms it keeps time by. All of it is created on
+ * whichever machine the office happened to be sitting at — an arm opened on
+ * the registrar's at ten is wanted on the bursar's at two — and a dropdown
+ * that cannot offer it is a form nobody can fill in correctly.
+ *
+ * Everything else here is either not created mid-session or is far too large
+ * to re-ask for on the opening of a field: the student and guardian
+ * directories run to hundreds of rows each, and the two searched feeds already
+ * ask the school by their own route.
+ */
+const ALWAYS_ASK: readonly OptionsKey[] = [
+  'classes',
+  'arms',
+  'all-arms',
+  'subjects',
+  'sessions',
+  'terms',
+]
+
+/**
+ * Asks the school for a set and then reads it back.
+ *
+ * Through the collection rather than the service directly, for two reasons.
+ * There is one answer on the device, so a class the dropdown can offer is a
+ * class the register beside it also knows about — two readers of the same
+ * endpoint would be two lists that can disagree. And the collection's own
+ * fetcher already decides what to do when the school cannot be reached: it
+ * hands back the last thing the school said. So this is "ask every time" with
+ * the device's copy as the answer of last resort, not as the source.
+ */
+async function asked<T extends object>(
+  id: string,
+  collection: { preload: () => Promise<void>; toArrayWhenReady: () => Promise<T[]> },
+): Promise<T[]> {
+  // Never throws for a device that has synced this set before; a device that
+  // has not is left to `held` below, which says so.
+  await refetchCollection(id).catch(() => undefined)
+  return held(collection)
+}
 
 export function optionsQuery(key: OptionsKey, dependsOn: string) {
   return queryOptions({
     queryKey: ['options', key, dependsOn],
     queryFn: () => fetchOptions(key, dependsOn),
-    // Reference data: it changes when the school is reorganised, not mid-form.
-    staleTime: 5 * 60_000,
+    /*
+     * Reference data changes when the school is reorganised, not mid-form —
+     * except for the two the office really does create mid-session, which are
+     * asked for afresh every time a field holding them is opened.
+     */
+    staleTime: ALWAYS_ASK.includes(key) ? 0 : 5 * 60_000,
     /**
      * Deliberately `always`, not the app's default.
      *
@@ -59,7 +118,7 @@ export function optionsQuery(key: OptionsKey, dependsOn: string) {
 
 async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[]> {
   if (key === 'classes') {
-    const items = await held(refClasses)
+    const items = await asked(SET.refClasses, refClasses)
     return distinct(
       items.map((department) => ({
         value: String(department.id),
@@ -86,7 +145,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // different answer per class and so cannot be a set on the device. An arm
     // carries the class it belongs to, so the same answer is this set filtered
     // — and filtered without a request.
-    const arms = (await held(refArms)).filter(
+    const arms = (await asked(SET.refArms, refArms)).filter(
       (arm) => String(arm.department_id) === String(dependsOn),
     )
     // The endpoint's own label reads "JSS 1 - JSS1 A" — class and arm together,
@@ -102,7 +161,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // Unlike `arms`, this is not narrowed by a class: a teacher's arm has
     // nothing to do with the department they teach, so the whole school's arms
     // are offered, each labelled with its class to keep an "A" from every "A".
-    const items = await held(refArms)
+    const items = await asked(SET.refArms, refArms)
     return items.map((arm) => ({
       value: String(arm.id),
       label: [arm.department, arm.arm_name].filter(Boolean).join(' \u00b7 ') || arm.arm_name,
@@ -165,7 +224,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     // Withdrawn subjects are left out: a class cannot be taught one, and the
     // register keeps them only so old results still read. Filtered here for the
     // same reason as the fees above.
-    const items = (await held(refSubjects)).filter(
+    const items = (await asked(SET.refSubjects, refSubjects)).filter(
       (subject) => Number(subject.status) === 1,
     )
     return items.map((subject) => ({
@@ -245,7 +304,10 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
      * taken from the endpoint's order: a collection is keyed and hands its rows
      * back in key order however they arrived.
      */
-    const items = await held(key === 'sessions' ? refSessions : refTerms)
+    const items =
+      key === 'sessions'
+        ? await asked(SET.refSessions, refSessions)
+        : await asked(SET.refTerms, refTerms)
     return [...items]
       .sort((one, two) => (key === 'sessions' ? two.id - one.id : one.id - two.id))
       .map((record) => ({ value: String(record.id), label: record.name }))

@@ -343,10 +343,20 @@ const CLASS_FIELD: FieldSpec = { key: 'department_id', label: 'Class', optionsFr
 /**
  * Class and the arm the teacher takes, in one place.
  *
- * The arm sits beside the class because that is where the office looks for it,
- * though the two are not tied: a teacher's arm is any arm in the school, not
- * one of the class they teach, so the feed is every arm and does not depend on
- * the class chosen above it.
+ * The arm is scoped by the class above it: nothing is offered until a class is
+ * chosen, and then only that class's arms. It used to offer every arm in the
+ * school, on the reasoning that a teacher's arm is any arm — which is true of
+ * this school's data, where two of the four teachers who take an arm take one
+ * outside their own class — but a list of every arm in a school is a list
+ * nobody can pick from, and the office picking a class first is how they
+ * actually think about it.
+ *
+ * One consequence, guarded rather than left to be found: editing a teacher
+ * whose arm lies outside the class on their record opens with the arm box
+ * empty, because that arm is not among the ones now offered. It is not lost —
+ * `teacherBody` drops an empty `class_arm_id` rather than sending it null, so
+ * a save that touched another field leaves them seated where they are — but
+ * the panel beside the form is the honest reading of which arms they hold.
  */
 const TEACHER_CLASS: FormSectionSpec = {
   title: 'Class',
@@ -356,25 +366,26 @@ const TEACHER_CLASS: FormSectionSpec = {
     {
       key: 'class_arm_id',
       label: 'Class arm',
-      optionsFrom: 'all-arms',
-      hint: 'The arm they are class teacher of, if any. Leave empty for a subject teacher who takes no arm.',
+      // Narrowed on the device, not at the endpoint. `arms` filters the held
+      // set by `department_id`, which is the same answer
+      // `class-arms/for-department/{id}` gives and costs no request — so the
+      // dropdown fills with no connection. See the feed in `option-feeds.ts`.
+      optionsFrom: 'arms',
+      dependsOn: 'department_id',
+      hint: 'The arm they are class teacher of, if any. Pick the class first; leave empty for a subject teacher who takes no arm.',
     },
   ],
 }
 
-/**
- * An office record's class, with no arm — an administrator is not a class
- * teacher. Ungated for the pinned office registers, which are only ever office
- * records; the mixed register uses the gated one below instead.
+/*
+ * An office record has no class section any more, on either register. A class
+ * is what a teacher teaches; an administrator is not in front of one, and the
+ * endpoint never insisted — `department_id` is optional on
+ * `POST /admins/new-admin`, and the office was answering it because it was
+ * asked. An edit made without the field does not clear a class already on
+ * file: `common` drops an absent key rather than sending it empty, and the
+ * record panel still shows one where the school holds it.
  */
-const OFFICE_CLASS: FormSectionSpec = { title: 'Class', fields: [CLASS_FIELD] }
-
-/** The same, gated to the office half of the mixed register. */
-const OFFICE_CLASS_MIXED: FormSectionSpec = {
-  title: 'Class',
-  when: (values) => values.kind === ADMINISTRATORS,
-  fields: [CLASS_FIELD],
-}
 
 const TEACHING: FormSectionSpec = {
   title: 'Teaching',
@@ -414,7 +425,7 @@ const STAFF_DETAIL = [
   { key: 'gender', label: 'Gender' },
   { key: 'born', label: 'Date of birth' },
   { key: 'phone', label: 'Phone' },
-  { key: 'place', label: 'Address' },
+  { key: 'address', label: 'Address' },
   { key: 'qualification', label: 'Qualification' },
   { key: 'adviser', label: 'Form arm' },
   { key: 'department', label: 'Class' },
@@ -528,7 +539,6 @@ export const staff: CollectionDef = {
     },
     IDENTITY,
     TEACHER_CLASS,
-    OFFICE_CLASS_MIXED,
     ACCOUNT,
     PLACE,
     TEACHING,
@@ -596,9 +606,17 @@ export const staffAdmin = staffSlice(
       { label: ADMINISTRATORS, count: countAdmins },
       { label: 'Signed in with', count: countLogins },
     ],
+    /*
+     * Email rather than the Job column that was here. "Job" read
+     * `admin.profile`, and across this whole school exactly one office record
+     * has anything in it — the word "old teacher" — so the column was a
+     * heading over three empty cells. The address they sign in with is the
+     * thing the office actually looks a colleague up by, and it is on every
+     * one of them.
+     */
     columns: [
       { key: 'name', label: 'Name', cardRole: 'title' },
-      { key: 'title', label: 'Job', cardRole: 'subtitle' },
+      { key: 'username', label: 'Email', cardRole: 'subtitle' },
       { key: 'role', label: 'Account' },
       { key: 'phone', label: 'Phone' },
       { key: 'account', label: 'Sign-in', tag: true, cardRole: 'tag' },
@@ -612,7 +630,7 @@ export const staffAdmin = staffSlice(
       { key: 'phone', label: 'Phone' },
       { key: 'gender', label: 'Gender' },
       { key: 'born', label: 'Date of birth' },
-      { key: 'place', label: 'Address' },
+      { key: 'address', label: 'Address' },
       { key: 'department', label: 'Class' },
       { key: 'joined', label: 'On record since' },
     ],
@@ -667,7 +685,7 @@ export const staffAdmin = staffSlice(
       },
       ...(ACTIVITY_TAB ?? []),
     ],
-    form: [IDENTITY, OFFICE_CLASS, ACCOUNT],
+    form: [IDENTITY, ACCOUNT],
   },
 )
 
@@ -687,7 +705,7 @@ const TEACHER_DETAIL = [
   { key: 'adviser', label: 'Form arm' },
   { key: 'department', label: 'Class' },
   { key: 'subjectCount', label: 'Subjects' },
-  { key: 'place', label: 'Address' },
+  { key: 'address', label: 'Address' },
   { key: 'about', label: 'About' },
   { key: 'joined', label: 'On record since' },
 ]
@@ -699,6 +717,21 @@ export const staffTeachers = staffSlice(
   'Everyone who carries a subject. These accounts see the teacher portal and enter scores.',
   {
     action: 'Add teacher',
+    /*
+     * Its own columns, because the shared set carries Role — and on a register
+     * that is nothing but teachers, Role reads "Teacher" on every line. It
+     * earns its place on the mixed register, where it tells a teacher from a
+     * bursar, and nowhere else. Email takes it: `user.username` is the address
+     * the office types to reach them, and every teaching record on file
+     * carries one.
+     */
+    columns: [
+      { key: 'name', label: 'Name', cardRole: 'title' },
+      { key: 'username', label: 'Email', cardRole: 'subtitle' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'gender', label: 'Gender' },
+      { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
+    ],
     noun: 'teacher',
     missingTitle: 'Record not found',
     missingBody: 'This teaching record is not on the register.',
@@ -740,7 +773,7 @@ export const staffOther = staffSlice(
     counts: undefined,
     // Adding one here writes the office record the empty state points at, so
     // the button does what the page says rather than nothing.
-    form: [IDENTITY, OFFICE_CLASS, ACCOUNT],
+    form: [IDENTITY, ACCOUNT],
     queue: saveStaff('admin'),
   },
 )

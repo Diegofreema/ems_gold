@@ -211,11 +211,21 @@ test('the office record and the sign-in are two different states', () => {
   assert.equal(adminRow(off, ROLES).account, 'Disabled')
 })
 
-test('the job and the sign-in address are read for the record panel', () => {
+test('the sign-in address is read, and is what the register calls their email', () => {
   const row = adminRow(OFFICER, ROLES)
-  assert.equal(row.title, 'ICT Director')
+  // There is no email field on an office record, on a teaching one, or on the
+  // login behind either — checked against the live school, where all six staff
+  // usernames are addresses. `username` is the email, which is also what the
+  // staff form has always called it.
   assert.equal(row.username, 'francis.okorie@claretianuniversity.edu.ng')
   assert.equal(row.user_id, '30')
+})
+
+test('the job the register used to draw is not carried at all', () => {
+  // It was `admin.profile` under a "Job" heading. Nothing writes that field —
+  // the form's About box is the teaching half's — and one office record of
+  // three on this school has anything in it.
+  assert.equal(adminRow(OFFICER, ROLES).title, undefined)
 })
 
 test('privileges are named where they were expanded, and blank where not', () => {
@@ -318,15 +328,18 @@ test('a teacher with no subjects reads none, not unknown', () => {
   assert.equal(teacherRow({ ...TEACHING, subjects: [] }).subjectCount, '0')
 })
 
-test('a state belonging to another country is left off the address', () => {
-  // Bronze holds one teacher whose state_id points into India while the
-  // country reads Nigeria. Printing both makes the address wrong.
-  assert.equal(teacherRow(TEACHING).place, 'Address, Ebonyi, Nigeria')
+test('the address is the street the school stored, and nothing appended', () => {
+  // It used to be the street joined to the state and the country. A record
+  // page is asked for an address, not for a country every row shares — and on
+  // this school the state was usually written into the street already.
+  assert.equal(teacherRow(TEACHING).address, 'Address')
+  assert.equal(teacherRow(TEACHING).place, undefined)
+  // The state and country are still on the record; nothing draws them.
   const mismatched = {
     ...TEACHING,
     state: { id: 1, name: 'Andaman and Nicobar Islands', country_id: 101 },
   }
-  assert.equal(teacherRow(mismatched).place, 'Address, Nigeria')
+  assert.equal(teacherRow(mismatched).address, 'Address')
 })
 
 test('a subject names the class it is taught in, off the subject itself', () => {
@@ -347,9 +360,11 @@ test('the panel counts privileges and the tab names them', () => {
   assert.equal(adminRow(listed as Admin, ROLES).privilegeCount, '—')
 })
 
-test('an administrator’s address is the record’s, placed by the login', () => {
+test('an administrator’s address is the office record’s street, on its own', () => {
   // `GET /users/admins/{id}` expands country and state on the login, never on
-  // the office record, which is where the street address lives.
+  // the office record, which is where the street address lives. The panel used
+  // to append both; a row off the list expanded neither, so the same record
+  // read two different addresses depending on which page you opened it from.
   const detailed = {
     ...OFFICER,
     user: {
@@ -358,9 +373,8 @@ test('an administrator’s address is the record’s, placed by the login', () =
       state: { id: 2663, name: 'Imo', country_id: 160 },
     },
   } as Admin
-  assert.equal(adminRow(detailed, ROLES).place, 'Nekede Imo State, Imo, Nigeria')
-  // The list expands neither, so a register row still reads the street alone.
-  assert.equal(adminRow(OFFICER, ROLES).place, 'Nekede Imo State')
+  assert.equal(adminRow(detailed, ROLES).address, 'Nekede Imo State')
+  assert.equal(adminRow(OFFICER, ROLES).address, 'Nekede Imo State')
 })
 
 test('the detail names the role itself, so no lookup is needed to read one', () => {
@@ -371,10 +385,10 @@ test('the detail names the role itself, so no lookup is needed to read one', () 
   assert.equal(adminRow(detailed).role, 'Super Admin')
 })
 
-test('the form writes back the API’s own address, not the line the panel reads', () => {
-  // Prefilling the composed line would have saved the country into the street.
+test('the form and the panel now read the one field, so they cannot disagree', () => {
+  // There were two keys, and prefilling the composed one would have saved the
+  // country into the street. One field, so there is nothing left to get wrong.
   const row = teacherRow(TEACHING)
-  assert.equal(row.place, 'Address, Ebonyi, Nigeria')
   assert.equal(row.address, 'Address')
   assert.equal(adminRow(OFFICER, ROLES).address, 'Nekede Imo State')
 })
