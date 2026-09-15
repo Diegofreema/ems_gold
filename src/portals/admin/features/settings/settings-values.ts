@@ -20,6 +20,12 @@ export type SettingsValues = {
   registrarcerts: string
   regnoformat: string
   application_no_prefix: string
+  /**
+   * The library's late fee, held as the digits somebody typed rather than a
+   * number — `MoneyField` stores the unformatted string, so the separators
+   * never reach the endpoint.
+   */
+  regfee: string
   /** Absent where the school has not set one; the picker holds a real Date. */
   currenttermends?: Date
   nexttermbegins?: Date
@@ -70,6 +76,10 @@ export function settingsValues(settings: SchoolSettings | undefined): SettingsVa
     registrarcerts: text(settings?.registrarcerts),
     regnoformat: text(prefixes.regno_format),
     application_no_prefix: text(prefixes.application_no),
+    // A figure on the way in, a string in the box. Zero is a real answer — a
+    // school that charges nothing for a late book — so it is not treated as
+    // absent.
+    regfee: settings?.regfee == null ? '' : String(settings.regfee),
     currenttermends: fromStoredDate(calendar.current_term_ends),
     nexttermbegins: fromStoredDate(calendar.next_term_begins),
   }
@@ -102,6 +112,15 @@ export function settingsBody(values: SettingsValues): SettingsBody {
   if (ends) body.currenttermends = ends
   const begins = toStoredDate(values.nexttermbegins)
   if (begins) body.nexttermbegins = begins
+
+  /*
+   * The late fee follows the dates rather than the text fields: an empty money
+   * box is a figure nobody has typed, not an instruction to charge nothing.
+   * Opening this page and saving must not quietly wipe what the library
+   * charges. A deliberate **0** is a real answer and is sent.
+   */
+  const fee = Number(values.regfee.trim())
+  if (values.regfee.trim() !== '' && Number.isFinite(fee) && fee >= 0) body.regfee = fee
 
   return body
 }

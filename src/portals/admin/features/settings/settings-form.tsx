@@ -7,6 +7,7 @@ import { Shimmer } from '@/components/feedback/shimmer'
 import { DateField } from '@/components/form/date-field'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
+import { MoneyField } from '@/components/form/money-field'
 import { TextField } from '@/components/form/text-field'
 import { Rule } from '@/components/page/rule'
 import { collectionError, refetchCollection } from '@/db/collection'
@@ -34,6 +35,10 @@ const schema = z.object({
   registrarcerts: z.string(),
   regnoformat: z.string(),
   application_no_prefix: z.string(),
+  // The mask on a money field already refuses letters, so the only way to
+  // reach this rule is an empty box — which is allowed, and means "leave what
+  // the library charges alone". See `settingsBody`.
+  regfee: z.string(),
   currenttermends: z.date().optional(),
   nexttermbegins: z.date().optional(),
 }) satisfies z.ZodType<SettingsValues>
@@ -164,6 +169,16 @@ export function SettingsForm() {
           label="Application number prefix"
           placeholder="APP"
           hint="Goes in front of every new application."
+        />
+      </FormSection>
+
+      <FormSection title="The library">
+        <MoneyField<SettingsValues>
+          name="regfee"
+          label="Late fee"
+          span={2}
+          placeholder="0"
+          hint="Charged to a pupil who brings a book back after the day it was due. The school keeps this on its own row, under the name regfee — nothing to do with registration."
         />
       </FormSection>
 

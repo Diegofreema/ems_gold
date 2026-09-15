@@ -16,6 +16,7 @@ const SETTINGS: SchoolSettings = {
   address: 'Maryland, Nekede Imo State',
   email: 'info@netpro.africa',
   phone: '07036614567',
+  regfee: 1700,
   rector: 'Fr. Dr. Wence Madu',
   rectorcerts: 'PhD',
   registrar: 'Rev Fr. John Ezenwankwo',
@@ -112,4 +113,36 @@ test('the next term starting before this one ends is caught', () => {
   // One date alone is not out of order with anything.
   assert.equal(datesOutOfOrder(ends, undefined), false)
   assert.equal(datesOutOfOrder(undefined, begins), false)
+})
+
+/*
+ * The library's late fee, which the API calls `regfee`. It behaves like the
+ * dates rather than like the text fields, and the two tests below are the
+ * whole of why: an empty money box is a figure nobody typed, and a zero is a
+ * school that has decided not to charge. Telling those apart is the only
+ * thing standing between opening this page and wiping what the library
+ * charges.
+ */
+test('the late fee is read off the row and typed into the box as digits', () => {
+  assert.equal(settingsValues(SETTINGS).regfee, '1700')
+  assert.equal(settingsBody(settingsValues(SETTINGS)).regfee, 1700)
+})
+
+test('a fee of nought is a decision, and is sent', () => {
+  const values = { ...settingsValues(SETTINGS), regfee: '0' }
+  assert.equal(settingsBody(values).regfee, 0)
+})
+
+test('an empty fee box leaves what the library charges alone', () => {
+  const values = { ...settingsValues(SETTINGS), regfee: '   ' }
+  assert.equal('regfee' in settingsBody(values), false)
+})
+
+test('a row with no fee on it opens an empty box rather than a nought', () => {
+  // Nought would be a claim — that the school charges nothing — made by a
+  // page that was only opened.
+  const { regfee, ...rest } = SETTINGS
+  void regfee
+  assert.equal(settingsValues(rest).regfee, '')
+  assert.equal('regfee' in settingsBody(settingsValues(rest)), false)
 })
