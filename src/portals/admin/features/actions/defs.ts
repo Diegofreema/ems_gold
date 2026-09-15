@@ -31,7 +31,7 @@ import {
   type MoveValues,
   studentMove,
 } from '@/portals/admin/collections/student-move';
-import { optionLabels } from '@/features/collections/option-feeds';
+import { searchedLabel } from '@/features/collections/option-feeds';
 import { formatDate, formatNaira, parseNaira } from '@/lib/format';
 import { queryClient } from '@/lib/query-client';
 import type { ActionDef } from './types';
@@ -386,10 +386,22 @@ function dueDate(days = LOAN_DAYS): Date {
   return due;
 }
 
-/** The picked title's own name, off the same feed the select showed. */
-async function bookLabel(values?: Record<string, unknown>): Promise<string> {
-  const books = await optionLabels('books');
-  return books.get(String(values?.book_id ?? '')) ?? 'The book';
+/**
+ * The picked title's own name, out of the searches the office ran to find it.
+ *
+ * It used to read the whole catalogue through `optionLabels('books')` and look
+ * the id up in it. That was fine while the field was a dropdown of every
+ * title — the list was loaded anyway — and is exactly what the searched field
+ * exists to stop doing, so naming the book must not be what loads the
+ * catalogue back in. `searchedLabel` reads the answers already in the query
+ * cache, which by construction include the row that was picked.
+ *
+ * "The book" where it cannot: a flow left open until the cache was swept still
+ * lends the copy, and a sentence that names the wrong title would be worse
+ * than one that names none.
+ */
+function bookLabel(values?: Record<string, unknown>): string {
+  return searchedLabel('books', String(values?.book_id ?? '')) ?? 'The book';
 }
 
 /**
@@ -416,8 +428,15 @@ function lend(): ActionDef {
         label: 'Book',
         required: true,
         wide: true,
-        optionsFrom: 'books',
-        hint: 'Titles the library currently lends. Whether a copy is on the shelf is checked when you press the button.',
+        // Searched rather than listed. A catalogue is the one library list
+        // that only grows, and opening a dropdown of every title to lend one
+        // of them is the whole of it fetched to use a single row — so the
+        // title is typed and `booktitle` narrows it at the endpoint. The term
+        // is kept in the page's URL, so a reload at the counter does not lose
+        // the search somebody is halfway through.
+        searchFrom: 'books',
+        searchParam: 'q',
+        hint: 'Type a title to search what the library lends. Whether a copy is on the shelf is checked when you press the button.',
       },
       {
         key: 'student_id',
@@ -468,7 +487,7 @@ function lend(): ActionDef {
         body: blocked
           ? 'Their borrowing record says they may not take a book right now — one is still out against them, or a fine is owing. You can press on, and the library will answer with its own reason.'
           : 'The copy is written out against their name and counts against the library until it is brought back.',
-        subject: [await bookLabel(values), name, due ? `due ${due}` : undefined]
+        subject: [bookLabel(values), name, due ? `due ${due}` : undefined]
           .filter(Boolean)
           .join(' · '),
         cta: blocked ? 'Try anyway' : 'Issue the book',
@@ -478,12 +497,12 @@ function lend(): ActionDef {
     run: async (values) => {
       const due = toApiDate(values.datetoreturn as Date | undefined);
       if (!due) throw new Error('Pick the date the book is due back.');
-      await libraryService.lend({
-        studentId: Number(values.student_id),
-        bookId: Number(values.book_id),
-        toreturn: due,
+      // The book is the path and the student is the body — see `LendBody`.
+      await libraryService.lend(Number(values.book_id), {
+        student_id: Number(values.student_id),
+        datetoreturn: due,
       });
-      const title = await bookLabel(values);
+      const title = bookLabel(values);
       dropCatalogue();
       return { message: `${title} is out on loan.` };
     },
@@ -491,16 +510,28 @@ function lend(): ActionDef {
 }
 
 /**
- * Drops the catalogue outright rather than marking it stale.
+ * Drops the catalogue outright rather than marking it stale — the shelf that
+ * reads it, and both pickers that offer it.
  *
  * Invalidating would now be enough — the shelf reads through
  * `queryClient.query`, which refetches what a write has invalidated — but a
  * title's standing is the one thing a librarian checks immediately after
  * changing it, and removing the entry means the next read waits for the API
  * rather than painting the old answer first.
+ *
+ * The pickers were dropped at two of the seven call sites and not the other
+ * five, which was survivable while they were dropdowns with a five-minute
+ * life. It is not now: the lending field searches the endpoint and holds each
+ * answer under the term it was typed with, so a title retired on the shelf
+ * would go on being offered at the counter for every term already searched.
+ * All of it goes from one place, called wherever the catalogue is written.
  */
 function dropCatalogue() {
   queryClient.removeQueries({ queryKey: ['library'] });
+  queryClient.removeQueries({ queryKey: ['options', 'all-books'] });
+  // Every term searched, not one: the office types a word at a time, so a
+  // retired title sits in a dozen cached answers rather than one.
+  queryClient.removeQueries({ queryKey: ['search', 'books'] });
 }
 
 /**
@@ -570,11 +601,9 @@ function addTitle(): ActionDef {
         callno: field('callno'),
         department_id: Number(values.department_id) || undefined,
       });
-      // The shelf page reads its cache imperatively, and the issue flow's book
-      // picker caches the catalogue for five minutes; a title added to be
-      // issued should not wait either of them out.
+      // The shelf page and the lending counter both read the catalogue; a
+      // title added in order to be issued should wait out neither.
       dropCatalogue();
-      queryClient.removeQueries({ queryKey: ['options', 'books'] });
       return { message: `${title ?? 'The title'} is in the catalogue.` };
     },
   };
@@ -678,8 +707,6 @@ function editTitle(row?: Row): ActionDef {
       // The shelf page and both pickers read the catalogue; a rename or a
       // retirement should not wait out their caches.
       dropCatalogue();
-      queryClient.removeQueries({ queryKey: ['options', 'books'] });
-      queryClient.removeQueries({ queryKey: ['options', 'all-books'] });
       return {
         message: `${typed('title') || book.title} now reads as corrected.`,
       };
@@ -742,7 +769,18 @@ function takeBack(row?: Row): ActionDef {
     }),
     run: async (values) => {
       if (!row) throw new Error('That loan could not be loaded.');
-      await libraryService.returnLoan(row.id, {
+      /*
+       * The book, not the loan: returning is keyed on the title the same way
+       * lending is. The row carries both, and a row that names no book id is
+       * refused here rather than posted to a path with a hole in it — a loan
+       * read off a shape that spells the title some third way would otherwise
+       * return whatever `/admins/books/undefined/return` happens to mean.
+       */
+      const bookId = String(row.book_id ?? '').trim();
+      if (!bookId) {
+        throw new Error('That loan does not say which title it is of.');
+      }
+      await libraryService.returnLoan(bookId, {
         status: String(values.status ?? '').trim(),
       });
       dropCatalogue();

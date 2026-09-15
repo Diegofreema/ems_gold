@@ -103,18 +103,38 @@ export type BookStock = {
 }
 
 /**
- * `POST /loanedbooks`. `toreturn` left out lends for the school's own
- * `Library.loanDays`. Refused with 409 — and a reason — where the student
- * already has a book out, owes a fine, or no copy is on the shelf.
+ * `POST /admins/books/{bookId}/lend` — the body alone; the copy being lent is
+ * the path.
+ *
+ * Which is worth writing down, because it was wrong: this used to post
+ * `{studentId, bookId, toreturn}` to `/loanedbooks`, the register's own
+ * collection endpoint, which is where a loan is *read* from and not where one
+ * is made. Lending hangs off the book in this API, as returning and paying a
+ * fine hang off the loan.
+ *
+ * Both fields are required here rather than optional. The shape is known from
+ * one example and nothing else, and whether the endpoint would fall back to
+ * the school's own `Library.loanDays` with the date left out has never been
+ * seen — the flow asks for a date and defaults it to a fortnight, so nothing
+ * needs to find out by guessing. Still refused with 409 — and a reason — where
+ * the student already has a book out, owes a fine, or no copy is on the shelf.
  */
 export type LendBody = {
-  studentId: number
-  bookId: number
+  student_id: number
   /** YYYY-MM-DD. */
-  toreturn?: string
+  datetoreturn: string
 }
 
-/** `POST /loanedbooks/{loanId}/return`. 409 where already returned. */
+/**
+ * `POST /admins/books/{bookId}/return` — keyed on the book, as lending is, and
+ * not on the loan. 409 where the copy is already back.
+ *
+ * `status` is the condition the book came back in, which is the one field the
+ * desk is asked for. What else this endpoint takes has not been seen: the
+ * shape published for the loan-keyed version allowed a `returned_on` backdate,
+ * and whether this one does — or whether it wants the student named, which a
+ * book id alone does not settle when two copies are out — is unverified.
+ */
 export type ReturnLoanBody = {
   /** The condition the book came back in. */
   status?: string

@@ -14,4 +14,4 @@ export const authButton =
 
 /** The same shape for the second way out of a screen, where there is one. */
 export const authButtonQuiet =
-  'h-(--auth-control) w-full rounded-md border-ui-hint/40 bg-white text-base font-medium text-ui-ink hover:bg-ui-field'
+  'h-(--auth-control) w-full rounded-md border-ui-hint/40 bg-ui-paper text-base font-medium text-ui-ink hover:bg-ui-field'

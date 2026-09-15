@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import type { Loan } from '../../../api/library/types.ts'
 import {
   loanBook,
+  loanBookId,
   loanDeleteBody,
   loanFine,
   loanPaid,
@@ -41,6 +42,34 @@ test('a loan reads by the names the contract flattens onto it', () => {
   assert.equal(row.fine, '—')
   assert.equal(row.paid, '—')
   assert.equal(row.due_raw, '2026-09-10')
+  assert.equal(row.book_id, '14')
+})
+
+/*
+ * The title's id, which the row carries for one reason: returning a book is
+ * `POST /admins/books/{bookId}/return`, keyed on the book as lending is. The
+ * row's own `id` is the loan's, so reaching for it would post the return to
+ * whichever *title* happens to share that number.
+ */
+test('the loan names which title it is of, however the row spells it', () => {
+  assert.equal(loanBookId(LOAN), '14')
+  assert.equal(loanBookId({ id: 7, book: { id: 14, title: 'Things Fall Apart' } }), '14')
+  // Flat wins over nested where a row somehow carries both, so the two
+  // readings of one loan cannot disagree about which copy is coming back.
+  assert.equal(loanBookId({ id: 7, book_id: 14, book: { id: 99 } }), '14')
+})
+
+test('a loan that names no title says so rather than guessing one', () => {
+  // Empty, not "undefined" — the return flow refuses on this and tells the
+  // desk, instead of posting to `/admins/books/undefined/return`.
+  assert.equal(loanBookId({ id: 7, book_title: 'Things Fall Apart' }), '')
+  assert.equal(loanBookId({ id: 7, book: { title: 'Things Fall Apart' } }), '')
+  assert.equal(loanRow({ id: 7 }, TODAY).book_id, '')
+})
+
+// A zero is a real id to this reader — falsy, and not the same as absent.
+test('book id zero is an id, not a blank', () => {
+  assert.equal(loanBookId({ id: 7, book_id: 0 }), '0')
 })
 
 test('names nested as records still read', () => {

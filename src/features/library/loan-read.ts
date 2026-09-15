@@ -39,6 +39,19 @@ export function loanBook(loan: Loan): string {
   )
 }
 
+/**
+ * Which title this loan is of, as an id rather than a name.
+ *
+ * Needed because returning is keyed on the **book**, not the loan
+ * (`POST /admins/books/{bookId}/return`), so the register's row has to carry
+ * the id and not only the words. Empty where the row names no book: the flow
+ * says so rather than posting to a path with a hole in it.
+ */
+export function loanBookId(loan: Loan): string {
+  const id = loan.book_id ?? loan.book?.id
+  return id == null ? '' : String(id)
+}
+
 /** The fine as a figure, off whichever key carries it. NaN where none does. */
 export function loanFine(loan: Loan): number {
   const raw = loan.fine ?? loan.penalty

@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { searchOptionsQuery } from '@/features/collections/option-feeds'
 import type { SearchKey } from '@/features/collections/options'
 import { useDebounced } from '@/hooks/use-debounced'
+import { useUrlTerm } from '@/hooks/use-url-term'
 import { cn } from '@/lib/utils'
 import { FieldShell, type FieldSpan } from './field-shell'
 
@@ -29,6 +30,11 @@ const WORDING: Record<
     input: 'Student’s name',
     empty: 'No student by that name.',
   },
+  books: {
+    trigger: 'Search for a book',
+    input: 'Book title',
+    empty: 'No title the library lends matches that.',
+  },
 }
 
 /**
@@ -48,17 +54,14 @@ const WORDING: Record<
  *
  * On an edit the id is already set but its name is not in any loaded page, so
  * the label the record carried is shown until the office picks another.
+ *
+ * Where the typing is kept is the caller's to decide. By default it is this
+ * component's own state, which is right for a field somebody fills in once;
+ * `UrlSearchSelectField` below hands it the URL instead. Either way the box
+ * shows every keystroke and only the settled term is asked for — the two
+ * differ in where that settled term is written down, not in how long it waits.
  */
-export function SearchSelectField<TValues extends FieldValues>({
-  name,
-  label,
-  from,
-  hint,
-  required,
-  span,
-  placeholder,
-  initialLabel,
-}: {
+export type SearchSelectFieldProps<TValues extends FieldValues> = {
   name: Path<TValues>
   label: string
   from: SearchKey
@@ -68,15 +71,47 @@ export function SearchSelectField<TValues extends FieldValues>({
   placeholder?: string
   /** The chosen record's name as the row already knew it, for an edit. */
   initialLabel?: string
-}) {
+}
+
+/** The typing, where something other than this component is keeping it. */
+type HeldTerm = {
+  /** What has settled and is being asked for. */
+  query: string
+  /** What the box shows. */
+  text: string
+  setText: (text: string) => void
+  clear: () => void
+}
+
+export function SearchSelectField<TValues extends FieldValues>({
+  name,
+  label,
+  from,
+  hint,
+  required,
+  span,
+  placeholder,
+  initialLabel,
+  url,
+}: SearchSelectFieldProps<TValues> & { url?: HeldTerm }) {
   const { control } = useFormContext<TValues>()
   const { field, fieldState } = useController({ control, name })
   const error = fieldState.error?.message
 
   const [open, setOpen] = useState(false)
-  const [term, setTerm] = useState('')
   const [chosen, setChosen] = useState(initialLabel ?? '')
-  const settled = useDebounced(term)
+
+  /*
+   * Both are declared whatever the caller passed — the number of hooks a
+   * render makes cannot depend on a prop — and the unused half simply sits
+   * there holding an empty string, which costs one `useState` and one timer
+   * that never fires.
+   */
+  const [ownTerm, setOwnTerm] = useState('')
+  const ownSettled = useDebounced(ownTerm)
+  const term = url ? url.text : ownTerm
+  const setTerm = url ? url.setText : setOwnTerm
+  const settled = url ? url.query : ownSettled
 
   // Asked for only while the popover is open, and re-asked as the settled term
   // changes under it — a closed field costs nothing.
@@ -127,7 +162,12 @@ export function SearchSelectField<TValues extends FieldValues>({
     field.onChange(value)
     setChosen(optionLabel)
     setOpen(false)
-    setTerm('')
+    // Emptied rather than left behind: the trigger now names what was chosen,
+    // and a term still in the address bar after the choosing would say the
+    // office was looking for something it has already found. `clear` writes
+    // that through at once rather than on the next tick of the timer.
+    if (url) url.clear()
+    else setOwnTerm('')
   }
 
   /*
@@ -253,4 +293,26 @@ export function SearchSelectField<TValues extends FieldValues>({
       </Popover>
     </FieldShell>
   )
+}
+
+/**
+ * The same field with its typing kept in the page's URL.
+ *
+ * For a search somebody is in the middle of rather than one they do once: the
+ * term survives a reload, comes back with the back button, and travels in a
+ * link — the lending form opened at `?q=achebe` opens with that search already
+ * run. The route has to declare the key in its own `validateSearch` or the
+ * router strips it, since nuqs writes through the router here.
+ *
+ * A separate component rather than a flag, because the hook that reads the URL
+ * cannot be called conditionally and a field that does not want the URL must
+ * not write to it. One key, one field: two fields on a form sharing a
+ * parameter would type over each other.
+ */
+export function UrlSearchSelectField<TValues extends FieldValues>({
+  param,
+  ...props
+}: SearchSelectFieldProps<TValues> & { param: string }) {
+  const url = useUrlTerm(param)
+  return <SearchSelectField<TValues> {...props} url={url} />
 }

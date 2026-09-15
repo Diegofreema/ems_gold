@@ -3,6 +3,7 @@ import { BLANK } from '../../../features/collections/blank.ts'
 import {
   first,
   loanBook,
+  loanBookId,
   loanDue,
   loanFine,
   loanPaid,
@@ -23,7 +24,7 @@ function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
 }
 
-export { loanBook, loanFine, loanPaid, loanStanding, loanStudent }
+export { loanBook, loanBookId, loanFine, loanPaid, loanStanding, loanStudent }
 
 export function loanRow(loan: Loan, today = new Date()): Row {
   const fine = loanFine(loan)
@@ -39,6 +40,10 @@ export function loanRow(loan: Loan, today = new Date()): Row {
     // Read by the record panel and the flows, not by the table.
     // The date as the API wrote it, for the correction form to open on.
     due_raw: loanDue(loan),
+    // The title's own id. The row's `id` is the loan's, and returning is keyed
+    // on the book — so without this the return flow has the words for a title
+    // and no way to name it.
+    book_id: loanBookId(loan),
     borrowed: when(first(loan.borrowed_on, loan.date_created, loan.dateadded) || null),
     returned_on: when(loan.returned_on),
     condition: text(first(loan.condition, loan.status) || null),

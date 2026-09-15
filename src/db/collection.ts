@@ -4,6 +4,7 @@ import { alsoDropOnWrite } from '@/features/collections/invalidate'
 import { queryClient } from '@/lib/query-client'
 import { classify } from './classify'
 import { OfflineError, ShapeError } from './errors'
+import { askAgain, type AskableSet } from './freshen'
 import { readSnapshot, writeSnapshot } from './snapshot'
 
 export type SchoolCollectionSpec<T extends object, K extends string | number> = {
@@ -143,6 +144,23 @@ export async function heldRows<T extends object>(collection: {
 /** Refetches one collection by id, if this build has it. */
 export async function refetchCollection(id: string): Promise<void> {
   await refetchers.get(id)?.()
+}
+
+/**
+ * Readies the sets a page draws and asks the school for them again.
+ *
+ * What a route loader calls instead of `preload()` alone, and the reason is in
+ * `freshen.ts`: `preload()` starts a sync and starting one already started
+ * does nothing, so a portal asked the school once and then never again. This
+ * resolves as soon as the device can answer and lets the school's answer
+ * arrive into a page that is already drawn — `asked` runs after it lands, for
+ * the reads that are derived from a set rather than live over it.
+ */
+export function freshen(
+  sets: readonly (AskableSet | undefined)[],
+  asked?: () => unknown,
+): Promise<void> {
+  return askAgain(refetchCollection, sets, asked)
 }
 
 /**

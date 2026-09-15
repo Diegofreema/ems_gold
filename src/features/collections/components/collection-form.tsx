@@ -12,7 +12,10 @@ import { FileField } from '@/components/form/file-field'
 import { fromApiDate } from '../date-range'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
-import { SearchSelectField } from '@/components/form/search-select-field'
+import {
+  SearchSelectField,
+  UrlSearchSelectField,
+} from '@/components/form/search-select-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
 import { toOptions } from '@/features/collections/options'
@@ -86,18 +89,27 @@ function renderField(field: FieldSpec, record?: Row) {
         />
       </Suspense>
     )
-  if (field.searchFrom)
-    return (
-      <SearchSelectField<Values>
+  if (field.searchFrom) {
+    const searched = {
+      ...shared,
+      from: field.searchFrom,
+      placeholder: field.placeholder,
+      initialLabel: field.searchLabelKey
+        ? (record?.[field.searchLabelKey] ?? undefined)
+        : undefined,
+    }
+    // Two components rather than a flag on one: the hook that keeps the term
+    // in the URL cannot be called conditionally. See `search-select-field.tsx`.
+    return field.searchParam ? (
+      <UrlSearchSelectField<Values>
         key={field.key}
-        {...shared}
-        from={field.searchFrom}
-        placeholder={field.placeholder}
-        initialLabel={
-          field.searchLabelKey ? (record?.[field.searchLabelKey] ?? undefined) : undefined
-        }
+        {...searched}
+        param={field.searchParam}
       />
+    ) : (
+      <SearchSelectField<Values> key={field.key} {...searched} />
     )
+  }
   if (field.optionsFrom)
     return (
       <RemoteSelectField<Values>

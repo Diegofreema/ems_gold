@@ -1,11 +1,9 @@
 import { parseAsInteger, parseAsString, useQueryState, useQueryStates } from 'nuqs'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useUrlTerm } from './use-url-term'
 
 /** The design paginates every list at 8 rows. */
 export const PAGE_SIZE = 8
-
-/** How long the search box waits after the last keystroke before asking. */
-const SETTLE_MS = 300
 
 const asText = parseAsString.withDefault('')
 
@@ -19,7 +17,6 @@ const asText = parseAsString.withDefault('')
  * search costs one request rather than one per keystroke.
  * */
 export function useListQuery(filterKeys: readonly string[] = []) {
-  const [query, setQueryState] = useQueryState('q', asText)
   const [page, setPageState] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const parsers = useMemo(
@@ -28,23 +25,12 @@ export function useListQuery(filterKeys: readonly string[] = []) {
   )
   const [filters, setFilters] = useQueryStates(parsers)
 
-  const [text, setText] = useState(query)
-  const [settled, setSettled] = useState(query)
-  // The URL moved on its own — the back button, or a link into a search. The
-  // box follows it; adjusting state during render, as React documents.
-  if (query !== settled) {
-    setSettled(query)
-    setText(query)
-  }
-
-  useEffect(() => {
-    if (text === query) return
-    const timer = setTimeout(() => {
-      void setQueryState(text || null)
-      void setPageState(null)
-    }, SETTLE_MS)
-    return () => clearTimeout(timer)
-  }, [text, query, setQueryState, setPageState])
+  // A new term is a different list, so page 4 of the old one means nothing.
+  const toFirstPage = useCallback(() => void setPageState(null), [setPageState])
+  // The box and the URL, shared with the lending form's title search — one
+  // implementation of "the box shows the typing and the URL holds what was
+  // asked for". See `use-url-term.ts`.
+  const { query, text, setText, clear: clearTerm } = useUrlTerm('q', toFirstPage)
 
   return {
     query,
@@ -74,8 +60,7 @@ export function useListQuery(filterKeys: readonly string[] = []) {
      * which three things were narrowing it.
      */
     clear: () => {
-      setText('')
-      void setQueryState(null)
+      clearTerm()
       void setFilters(Object.fromEntries(filterKeys.map((key) => [key, null])))
       void setPageState(null)
     },

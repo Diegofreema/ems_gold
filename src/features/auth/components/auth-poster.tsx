@@ -6,6 +6,12 @@
  * a photograph to say something the form beside it already says — on the
  * connections this app is for, that is a poster worth dropping.
  *
+ * `--ui-poster` rather than `--ui-blue`: the same colour in daylight, and two
+ * colours at night. Half a screen of full-strength brand blue beside a dark
+ * form is what makes a page look as though only one of its halves was themed,
+ * so the poster deepens — while the button keeps the blue that carries white
+ * text, which is a different job and a different token.
+ *
  * Held to the height of the screen and stuck there. The two columns are one
  * grid row, so a tall form — the reset screen carries three password fields, a
  * strength bar and a list of rules — used to stretch the poster with it, and
@@ -16,7 +22,7 @@
  */
 export function AuthPoster() {
   return (
-    <aside className="relative hidden overflow-hidden bg-ui-blue lg:sticky lg:top-0 lg:block lg:h-dvh lg:self-start">
+    <aside className="relative hidden overflow-hidden bg-ui-poster lg:sticky lg:top-0 lg:block lg:h-dvh lg:self-start">
       <Ripple />
 
       {/* Translucent rather than filled, so the ripple carries on through it —
@@ -27,7 +33,7 @@ export function AuthPoster() {
           she was sized against the panel's width and anchored to its foot
           while the panel itself had lost 200px of height. As the last item in
           a column she takes the room the words leave and no more. */}
-      <div className="absolute top-[6.5%] right-[10.5%] bottom-[5.3%] left-[9.7%] flex flex-col overflow-hidden rounded-[10px] border border-white/40 bg-white/25">
+      <div className="absolute top-[6.5%] right-[10.5%] bottom-[5.3%] left-[9.7%] flex flex-col overflow-hidden rounded-[10px] border border-white/40 bg-white/25 dark:border-white/25 dark:bg-white/14">
         <div className="flex-none px-[6.3%] pt-(--auth-poster-lead) text-white">
           <h1 className="max-w-[9em] font-heading text-(length:--auth-poster-title) leading-[1.2] font-extrabold tracking-[-0.02em]">
             One School one record

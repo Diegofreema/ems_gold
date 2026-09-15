@@ -9,7 +9,10 @@ import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
-import { SearchSelectField } from '@/components/form/search-select-field'
+import {
+  SearchSelectField,
+  UrlSearchSelectField,
+} from '@/components/form/search-select-field'
 import { SelectField } from '@/components/form/select-field'
 import { toOptions } from '@/features/collections/options'
 import { TextField } from '@/components/form/text-field'
@@ -127,15 +130,24 @@ function renderField(field: ActionField) {
         <RichTextField {...shared} span={2} placeholder={field.placeholder} />
       </Suspense>
     )
-  if (field.searchFrom)
-    return (
-      <SearchSelectField<Values>
+  if (field.searchFrom) {
+    const searched = {
+      ...shared,
+      from: field.searchFrom,
+      placeholder: field.placeholder,
+    }
+    // Two components rather than a flag on one: the hook that keeps the term
+    // in the URL cannot be called conditionally. See `search-select-field.tsx`.
+    return field.searchParam ? (
+      <UrlSearchSelectField<Values>
         key={field.key}
-        {...shared}
-        from={field.searchFrom}
-        placeholder={field.placeholder}
+        {...searched}
+        param={field.searchParam}
       />
+    ) : (
+      <SearchSelectField<Values> key={field.key} {...searched} />
     )
+  }
   if (field.optionsFrom)
     return (
       <RemoteSelectField<Values>

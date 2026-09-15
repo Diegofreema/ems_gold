@@ -324,9 +324,12 @@ export type FieldSpec = {
   optionsFrom?: OptionsKey
   dependsOn?: string
   /**
-   * Like `optionsFrom`, but the feed is searched with a `q` rather than opened
-   * whole — for a list too long to scroll, e.g. every guardian. The field
-   * submits the record's id all the same.
+   * Like `optionsFrom`, but the feed is searched a keystroke at a time rather
+   * than opened whole — for a list too long to scroll, e.g. every guardian, or
+   * one whose whole point is that it is not loaded whole, e.g. the book
+   * catalogue at a lending counter. The field submits the record's id all the
+   * same, and which parameter the endpoint is asked with is the feed's own
+   * business (`q` for people, `booktitle` for the catalogue).
    */
   searchFrom?: SearchKey
   /**
@@ -334,6 +337,15 @@ export type FieldSpec = {
    * search that would find it has been run. Only meaningful with `searchFrom`.
    */
   searchLabelKey?: string
+  /**
+   * Keeps what is typed into a searched field in the page's URL, under this
+   * key — so the search survives a reload and can be linked to.
+   *
+   * The route must declare the key in its own `validateSearch` or the router
+   * strips it back out, and no two fields on one form may share a key. Only
+   * meaningful with `searchFrom`.
+   */
+  searchParam?: string
   /**
    * Many of the feed at once, held as an array of ids — the fees a class is
    * charged. Only meaningful with `optionsFrom`.

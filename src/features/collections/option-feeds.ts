@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
+import { libraryService } from '@/api/library/service'
 import { parentsService } from '@/api/parents/service'
 import { studentsService } from '@/api/students/service'
 import { heldDocument, heldRows as held, refetchCollection } from '@/db/collection'
@@ -57,10 +58,28 @@ import { distinct, type Option, type OptionsKey, type SearchKey } from './option
  * the registrar's at ten is wanted on the bursar's at two — and a dropdown
  * that cannot offer it is a form nobody can fill in correctly.
  *
+ * The fee list and the catalogue are here for a second reason as well as that
+ * one, and it is the stronger of the two. Both are added to and retired by
+ * whoever is at the machine, so they have the arms' problem — but each is also
+ * offered through a *filter on its own status*: the fee picker shows only
+ * `status === 1`, and the lending counter only `isavailable === 'Available'`.
+ * That is the office's own state rather than a fact about the school, and the
+ * counter is exactly where a stale copy shows. A fee retired this morning was
+ * still offered to be charged; a book withdrawn this morning was still offered
+ * to be lent. **A picker that filters on a mutable status cannot be read off a
+ * copy of unknown age** — it does not merely lag, it offers something the
+ * school will refuse, and it does it on a form that looks complete.
+ *
+ * The catalogue's own entry here is `all-books`, the edit flow's unfiltered
+ * list, since the list a librarian corrects is the one that must be current.
+ * The lending field no longer appears in this list at all: it searches the
+ * endpoint a keystroke at a time (`searchFeed`), which asks the school by
+ * definition and never holds a catalogue to go stale.
+ *
  * Everything else here is either not created mid-session or is far too large
  * to re-ask for on the opening of a field: the student and guardian
- * directories run to hundreds of rows each, and the two searched feeds already
- * ask the school by their own route.
+ * directories run to hundreds of rows each, and the searched feeds already ask
+ * the school by their own route.
  */
 const ALWAYS_ASK: readonly OptionsKey[] = [
   'classes',
@@ -69,6 +88,8 @@ const ALWAYS_ASK: readonly OptionsKey[] = [
   'subjects',
   'sessions',
   'terms',
+  'all-books',
+  'fees',
 ]
 
 /**
@@ -180,7 +201,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
   if (key === 'all-books') {
     // Every title, for the edit flow — a retired one is exactly the title an
     // office may need to fix or put back on lending, so nothing is filtered.
-    const books = await held(refBooks)
+    const books = await asked(SET.refBooks, refBooks)
     return distinct(
       books.map((book) => ({
         value: String(book.id),
@@ -191,30 +212,17 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
     )
   }
 
-  if (key === 'books') {
-    // Only titles the office has left lendable are offered; whether a copy is
-    // actually on the shelf is the lend endpoint's own 409 to give. The
-    // catalogue comes back whole — it ignores paging — so no limit is sent.
-    const books = await held(refBooks)
-    return distinct(
-      books
-        .filter((book) => book.isavailable === 'Available')
-        .map((book) => ({
-          value: String(book.id),
-          label: book.title,
-          // Two copies of a set text can be two rows; the author tells the
-          // reader which row is which before the id has to.
-          meta: book.author ?? '',
-        })),
-    )
-  }
-
   if (key === 'fees') {
     // Retired fees are left out: an invoice raised against one could not be
     // charged, and the catalogue keeps them only so old invoices still read.
     // Filtered here rather than at the fetch, so the set on the device is the
     // whole catalogue and a register that wants a retired fee still has it.
-    const items = await held(refFees)
+    //
+    // And asked for rather than read, like the book catalogue above and for
+    // the same reason: `status` is what this filter turns on, the office is
+    // what changes it, and a fee offered off a stale copy is an invoice the
+    // school will not accept.
+    const items = await asked(SET.refFees, refFees)
     return items
       .filter((fee) => Number(fee.status) === 1)
       .map((fee) => ({ value: String(fee.id), label: fee.name }))
@@ -403,9 +411,10 @@ const FOUND = 20
 /**
  * Whether what the office typed is in this option's text.
  *
- * The label is the whole of it on both searched feeds: a student's is the name
- * and the admission number, and a guardian's is both parents' names — which is
- * what the office is typing, and what the school's own search matches on.
+ * The label is the whole of it on every searched feed: a student's is the name
+ * and the admission number, a guardian's is both parents' names, a book's is
+ * its title — which is what the office is typing, and what the school's own
+ * search matches on. Only used offline, where the school cannot be asked.
  */
 function matches(option: Option, needle: string): boolean {
   return !needle || option.label.toLowerCase().includes(needle)
@@ -449,7 +458,74 @@ async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
       )
   }
 
+  if (key === 'books') {
+    /*
+     * `booktitle`, not `q`: the catalogue controller has its own three
+     * parameters (`booktitle`, `bookauthor`, `isbn`) and no shared search.
+     * Only the title is sent, because the title is what a librarian at the
+     * counter has in front of them — the author is offered beside each result
+     * to tell two editions apart, not typed to find one.
+     *
+     * Still filtered to what the library lends, exactly as the dropdown was:
+     * the endpoint narrows the catalogue, it does not decide what may go out.
+     * Whether a copy is on the shelf remains the lend endpoint's own 409.
+     */
+    return await libraryService
+      .books({ booktitle: term || undefined })
+      .then((books) => distinct(books.filter(lendable).map(bookOption)).slice(0, FOUND))
+      .catch(async () =>
+        distinct(
+          (await held(refBooks))
+            .filter(lendable)
+            .map(bookOption)
+            .filter((one) => matches(one, needle)),
+        ).slice(0, FOUND),
+      )
+  }
+
   return []
+}
+
+/** Titles the office has left lendable. Its own function, used by both feeds. */
+const lendable = (book: { isavailable?: string | null }) =>
+  book.isavailable === 'Available'
+
+/**
+ * One title as a picker offers it. Two copies of a set text can be two rows,
+ * so the author is what tells the librarian which row is which before the id
+ * has to.
+ */
+function bookOption(book: {
+  id: number
+  title: string
+  author?: string | null
+}): Option & { meta: string } {
+  return { value: String(book.id), label: book.title, meta: book.author ?? '' }
+}
+
+/**
+ * The label for an id the office picked out of a searched feed.
+ *
+ * A searched feed is never held whole, so the old way of naming a chosen
+ * record — read the unsearched feed and look the id up — would load the very
+ * list the search exists to avoid. What it reads instead is the answer the
+ * office actually picked from: every search this field ran is in the query
+ * cache under its own term, and the chosen row is in one of them by
+ * construction. No request, and no list.
+ *
+ * Undefined where the cache has been swept since — a flow left open for an
+ * hour, a reload between picking and confirming — and the caller says what to
+ * put in its place rather than being handed a wrong name.
+ */
+export function searchedLabel(key: SearchKey, value: string): string | undefined {
+  if (!value) return undefined
+  for (const [, cached] of queryClient.getQueriesData<Option[]>({
+    queryKey: ['search', key],
+  })) {
+    const found = cached?.find((option) => option.value === value)
+    if (found) return found.label
+  }
+  return undefined
 }
 
 /**

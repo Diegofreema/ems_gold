@@ -8,15 +8,28 @@ import { adminFlows } from '@/portals/admin/features/actions/defs'
 import { ActionPage } from '@/portals/admin/features/actions/action-page'
 
 export const Route = createFileRoute('/admin/$collection/action')({
-  // The record is optional: taking a payment starts without one, allocating a
-  // fee starts from the fee. Keeping it in the URL makes the flow shareable.
-  //
-  // `flow` names which of the collection's flows was opened, for the registers
-  // that have more than one. Left out, it is the first — which is what every
-  // link written before there were two of anything still says.
-  validateSearch: (search: Record<string, unknown>): { record?: string; flow?: string } => ({
+  /*
+   * The record is optional: taking a payment starts without one, allocating a
+   * fee starts from the fee. Keeping it in the URL makes the flow shareable.
+   *
+   * `flow` names which of the collection's flows was opened, for the registers
+   * that have more than one. Left out, it is the first — which is what every
+   * link written before there were two of anything still says.
+   *
+   * `q` is what a searched field has been typed into, where the field asked
+   * for its term to be kept here (`searchParam`) — the lending form's title
+   * search is the one that does. It has to be declared: nuqs writes through
+   * the router, so a parameter this function does not hand back is a parameter
+   * stripped off the URL as fast as the box writes it. It is deliberately not
+   * in `loaderDeps` below — typing a title narrows a dropdown, it does not
+   * rebuild the flow.
+   */
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { record?: string; flow?: string; q?: string } => ({
     ...(typeof search.record === 'string' ? { record: search.record } : {}),
     ...(typeof search.flow === 'string' ? { flow: search.flow } : {}),
+    ...(typeof search.q === 'string' ? { q: search.q } : {}),
   }),
   loaderDeps: ({ search }) => ({ record: search.record, flow: search.flow }),
   loader: async ({ params, deps }) => {

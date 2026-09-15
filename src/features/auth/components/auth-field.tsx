@@ -152,15 +152,15 @@ export function AuthFieldError({ children }: { children: ReactNode }) {
 
 /**
  * Filled while it is being written in, outlined in red once it has been
- * refused — the design swaps the fill for a white ground so the red border
- * reads as a border rather than a line around a grey box.
+ * refused — the design swaps the fill for the page's own ground so the red
+ * border reads as a border rather than a line around a grey box.
  */
 function fieldClasses(hasIcon: boolean, hasToggle: boolean, invalid: boolean) {
   return cn(
     'h-(--auth-control) w-full rounded-md border bg-ui-field text-base text-ui-ink transition-colors outline-none placeholder:text-ui-hint focus-visible:border-ui-blue',
     hasIcon ? 'pl-12' : 'pl-4',
     hasToggle ? 'pr-12' : 'pr-4',
-    invalid ? 'border-ui-error-line bg-white' : 'border-transparent',
+    invalid ? 'border-ui-error-line bg-ui-paper' : 'border-transparent',
   )
 }
 

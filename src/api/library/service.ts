@@ -88,12 +88,20 @@ export const libraryService = {
       (answer) => ('stock' in answer && answer.stock ? answer.stock : (answer as BookStock)),
     ),
 
-  /** 409 with a reason: a book already out, a fine owing, or no copy left. */
-  lend: (body: LendBody) => request<unknown>('loanedbooks', { method: 'POST', body }),
+  /**
+   * Lends one copy of one title, off the book rather than off the register:
+   * `POST /admins/books/{bookId}/lend`. 409 with a reason — a book already
+   * out, a fine owing, or no copy left.
+   */
+  lend: (bookId: Id, body: LendBody) =>
+    request<unknown>(`admins/books/${bookId}/lend`, { method: 'POST', body }),
 
-  /** Marks the loan returned and the copy lends again. 409 if already back. */
-  returnLoan: (id: Id, body: ReturnLoanBody) =>
-    request<unknown>(`loanedbooks/${id}/return`, { method: 'POST', body }),
+  /**
+   * Marks the copy returned and lends again — `POST /admins/books/{bookId}/return`,
+   * off the book like lending and not off the loan. 409 if already back.
+   */
+  returnLoan: (bookId: Id, body: ReturnLoanBody) =>
+    request<unknown>(`admins/books/${bookId}/return`, { method: 'POST', body }),
 
   /** Settles the money only — the book stays out until `returnLoan`. */
   payFine: (id: Id, body: PayFineBody = {}) =>

@@ -142,7 +142,7 @@ export function SignInScreen() {
             </label>
             <Link
               to="/forgot-password"
-              className="text-base text-ui-blue hover:underline"
+              className="text-base text-ui-blue-ink hover:underline"
             >
               Forgot password
             </Link>

@@ -106,8 +106,8 @@ filtered rather than filtered away at the fetch. And the feeds' own react-query 
 running the function, so a dependent feed the office had not already opened — an arm feed is keyed by
 the class chosen — stayed on "Loading…" for as long as the device was offline.
 
-**The school's own shape asks the school every time** — classes, arms, subjects, sessions and
-terms. It is the reference data a school changes while the office is working — an arm opened on the registrar's machine at ten
+**The school's own shape asks the school every time** — classes, arms, subjects, sessions, terms,
+the book catalogue and the fee list. It is the reference data a school changes while the office is working — an arm opened on the registrar's machine at ten
 is wanted on the bursar's at two, and until this device happened to resync it was simply not on the
 list. `ALWAYS_ASK` in `option-feeds.ts` names them, their `optionsQuery` carries `staleTime: 0`, and
 `asked()` refetches the collection before reading it. Through the collection rather than the service
@@ -118,14 +118,105 @@ outage — a device with no connection still fills its dropdowns from what the s
 because a form that cannot be filled in offline is the thing this whole layer exists to prevent.
 Measured: opening Add teacher fires `GET /departments`, choosing a class fires `GET /class-arms`,
 opening Performance fires `departments`, `subjects`, `semesters` and `sessions`, and a class that
-appears only in the endpoint's answer is offered without a reload. The directories stay on the
+appears only in the endpoint's answer is offered without a reload.
+**The catalogue and the fee list are in that list for a second reason as well**, and it is the one
+worth carrying: each is offered through a filter on its *own mutable status* — the lending picker
+shows only `isavailable === 'Available'`, the fee picker only `status === 1`. That is the office's
+state rather than a fact about the school, and the counter is where a stale copy shows: a book
+withdrawn this morning was still offered to be lent this afternoon, and a fee retired this morning
+was still offered to be charged. **A picker that filters on a mutable status cannot be read off a
+copy of unknown age** — it does not merely lag, it offers something the school will refuse, on a form
+that looks complete. That is the rule to reach for when the next feed is considered, rather than the
+size of the set. `all-books` asks too, since the flow that reads it unfiltered is the one correcting
+the list.
+Measured side by side, which is the clearest demonstration of what the mechanism buys: calling the
+fees feed three times fires `GET /fees` three times, while `roles` — still on the old footing —
+fires once on the set's first sync and **nothing at all** on the two opens after it. That second
+shape is the bug, and it was the same one the pages had.
+The directories stay on the
 device: students and guardians run to hundreds of rows, and the two searched feeds already ask the
-school by their own route.
+school by their own route. What is left reading the device alone is `roles`, the payment methods,
+`countries`/`states` and those directories — none of them status-filtered, and each one a candidate
+for the same treatment on the same evidence rather than a decision already taken.
 
-The two **searched** feeds (`searchFrom`) still ask the school first: they exist for registers too
+**Opening a page asks the school for what that page draws.** The same decision one level up, and it
+exists because `preload()` is the only thing that ever started a sync and starting one already
+started does nothing: a portal asked the school its questions once and then never again. The sets
+carry a 30s staleness and no window-focus refetch, and a stale query with nothing triggering it is
+simply a query that does not run — so a student who opened their results in the morning, left the
+tab open and had marks released at noon saw the morning's page until they reloaded the browser.
+`freshen` (`src/db/freshen.ts`, tested) is what a route loader calls instead of `preload()`, and
+`freshenRegister` is its one-liner for a register, since a `CollectionDef` already names every set
+its rows are built from. Three things about it are load-bearing. **What the device holds is awaited
+and what the school says is not** — a loader that waited on the network would hold the navigation for
+up to `request()`'s own 30s bound to show a page the device could already draw, so the answer lands
+into a page that is already up and the live queries redraw it. **Nothing in it can fail**: a set that
+could not be refreshed is a page showing what the school last said, which is the point of holding it,
+and a loader that threw would take the page down over a connection. And **what is derived from a set
+is dropped after the answers land, never beside them** — a count tile is a react-query read *built
+out of* the set rather than a live query over it, so dropping it mid-flight re-counts the rows being
+replaced and writes them back as fresh; the same race `dropDerivedReads` documents after a write, met
+on the way into a page. Only that register's own key is dropped: a navigation is not a write.
+Measured on the student's portal, which is where it went in first: four SPA navigations between two
+pages made exactly one request each and nothing else — and the same four ran the shell's own
+`preload()` of eleven sets and asked the school nothing, which is the bug seen from the other side.
+All four portals do it now. Three shapes, because the portals are shaped differently:
+`freshenRegister(definition)` where a route names its register, which is most of the office's pages;
+`freshen([...sets])` where a page reads sets directly — the roll and the marks behind the score
+sheet, the arms and the mark words behind a register, the school's own settings row; and
+`freshenPage(path, sets)` for the parent portal, whose definitions are built in the component out of
+the household and so cannot be named by a loader. **That last one is not optional there**: those
+definitions carry their rows on `rows` rather than a binding, and `collectionQuery` keys on the path
+alone, so a definition rebuilt from a fresher household hands react-query the same key back and the
+register goes on drawing what it cached — the refetch would be invisible without the drop.
+What is deliberately left alone is what was already on the query path and already refetches when it
+is opened: both dashboards, the timetables, the parent's own results and attendance pages, the
+notice board (which follows the unread-count poll), and the record and form routes, whose option
+feeds are `ALWAYS_ASK` already.
+The one cost, measured: the router preloads on intent, so a hover that lingers on a nav item asks
+that page's questions before the click rather than after. A pointer sweeping the rail does not —
+four items crossed in one movement fired one request, the one the pointer rested on.
+
+The three **searched** feeds (`searchFrom`) ask the school first: they exist for lists too
 long to hold, and the endpoint searches the whole of one where this device holds the first couple of
 hundred. A refusal falls back to searching what the device keeps, which is narrower than the school's
 answer and honest about it.
+
+**The parameter is the feed's own.** Guardians and students are searched with `q`; the catalogue with
+`booktitle`, which is the only one of the library controller's three the counter has any use for — a
+librarian has the title in front of them, and the author is offered beside each result to tell two
+editions apart rather than typed to find one. There is no shared search across these controllers, so
+the term travels as a plain string and `searchFeed` decides what to call it at each endpoint.
+The **lending field is the case that made a third one worth having**, and its reasoning is not the
+others': the catalogue is not too long to hold — the device holds it, for the shelf — it is that
+opening a dropdown of every title in order to lend *one* of them fetches the whole of it to use a
+single row, at the one desk where a queue is waiting. It is also the one library list that only ever
+grows. So the field types instead of scrolling, and there is no unsearched `books` feed left beside
+it.
+Two things fall out of that and are easy to get wrong. **A searched feed cannot be used to name what
+was picked**: the old success line read the whole catalogue through `optionLabels('books')` and
+looked the id up, which would load back exactly the list the search exists to avoid.
+`searchedLabel` reads the answers already in the query cache instead — the office picked the row out
+of one of them, so it is there by construction — and says "The book" rather than guessing when the
+cache has been swept. And **a write to the catalogue has to drop every term already searched**, not
+one cached list: `dropCatalogue` now clears `['library']`, both `options` keys and the whole
+`['search','books']` subtree from one place, called at all seven sites that write a title. It used
+to be spelled out at two of them, which was survivable while the pickers were five-minute dropdowns
+and is not once a retired title can sit in a dozen cached searches.
+
+**A search box's settled term lives in the URL** — `useUrlTerm` in `src/hooks/use-url-term.ts`, which
+is one implementation shared by every register's search row and by the lending form's title field.
+The split is the point: the box shows every keystroke and the URL holds what was actually asked for,
+300ms behind it, so a search costs one request rather than one per keystroke *and* the address bar is
+never a half-typed word. What that buys is a narrowed list that survives a reload, comes back with
+the back button and travels in a link. A field opts in with `searchParam` on its spec, and **the
+route must declare the key in its own `validateSearch`** — nuqs writes through the router here, so a
+parameter the route does not hand back is one stripped off the URL as fast as the box writes it (the
+flow route declares `q` for this, and deliberately keeps it out of `loaderDeps`: typing a title
+narrows a dropdown, it does not rebuild the flow). It is a separate component rather than a flag,
+because the hook cannot be called conditionally and a field that does not want the URL must not
+write to it. One key to one field: two fields on a form sharing a parameter would type over each
+other.
 
 ### Writes
 
@@ -520,15 +611,33 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   with the sign-in screens and now carry the shell and the office's pages too, which is why
   `--ems-brand` is `#356ead`: two near-identical blues side by side is the one thing a half-applied
   design always looks like. `--ui-field` fills an input, `--ui-line` fills a table's header band,
-  and both have a dark half — the rest of the set is either colour-agnostic or reached only from
-  `src/features/auth/`. Tile accents (`--tile-*`) are decoration and nothing else: they let somebody
-  find a figure by its colour, and no other component may reach for them.
-- **The sign-in screens are drawn light-only**, so the layout carries `.auth-daylight`, which
-  re-declares the light tokens *and the shadcn aliases over them* — an alias is resolved where it is
-  declared, so a container that redeclares `--ems-ink` alone still inherits `<html>`'s resolved
-  `--muted-foreground`, which under a dark theme is pale grey on the sign-in page's white. Their
-  fields are `AuthField`, not `TextField`: sharing one component between a record form the office
-  fills in forty of and a single field on a white page would mean a variant flag on every rule in it.
+  `--ui-paper` is the sign-in page's own ground and `--ui-poster` the blue half beside it, and every
+  one of them has a dark half now. Tile accents (`--tile-*`) are decoration and nothing else: they
+  let somebody find a figure by its colour, and no other component may reach for them.
+- **The sign-in screens follow the device's theme like every other page.** They were drawn in one
+  palette and pinned to it — `.auth-daylight` re-declared the light tokens on the container — so a
+  person who had set the portal to dark signed out and was handed a white page. The theme is a
+  property of the machine, not of being signed in, and two themes on one device is the one thing a
+  theme setting must not do. The missing half is declared in `index.css` rather than the page
+  refusing to follow: `--ui-ink`, `--ui-muted`, `--ui-paper`, `--ui-blue-ink`, `--ui-poster` and
+  `--ui-ring` now have dark values, and the class (`.auth-screen`) carries the `--auth-*`
+  measurements and nothing else.
+  Two of those are splits rather than flips, for the reason danger and success are split. **A blue
+  that is a fill is not a blue that is a word**: white on `--ui-blue` passes in both themes, which
+  is why the Login button and the checkbox keep it, while the same blue as link text on the dark
+  ground is 3.4:1 — so `--ui-blue-ink` lightens and the fills do not. And **the poster is its own
+  blue**: half a screen of full-strength brand blue beside a dark form is exactly what a page looks
+  like when only one of its halves was themed, so `--ui-poster` deepens at night while the button
+  does not.
+  The alias trap that `.auth-daylight` existed to work around is worth keeping in mind even though
+  nothing hits it now: a shadcn alias is resolved where it is declared, so a container that
+  redeclares `--ems-ink` alone still inherits `<html>`'s *resolved* `--muted-foreground`. Redeclaring
+  tokens on a subtree means redeclaring the aliases over them.
+  There is still no theme toggle on these screens, which is the design's own decision: the theme is
+  chosen in a portal's header and remembered on the device, so the sign-in page follows a choice
+  already made rather than offering it again in front of a login form. Their fields are `AuthField`,
+  not `TextField`: sharing one component between a record form the office fills in forty of and a
+  single field on the sign-in page would mean a variant flag on every rule in it.
 - **The sign-in page is measured against the height of the screen, not the width of it.** Its
   spacing, its two headlines and the height of a field are `--auth-*` clamps in `index.css` and are
   set nowhere else — `clamp(2.5rem, 13vh, 8.75rem)` above the mark, and so on down. Height is the
@@ -584,8 +693,16 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   `netpro-logo.webp`, trimmed to its own edges and centred on a square at its native 114px, never
   scaled up. So the folded rail and the full one cannot drift apart, and it is the same mark the
   browser tab carries. The old `favicon.svg` was a purple lightning bolt from another brand
-  entirely; the PWA icons and `apple-touch-icon.png` still are, and re-cutting those needs a
-  higher-resolution original than the wordmark holds. The swing is `calc(260ms * var(--ems-motion))`, so a reader who has
+  entirely, and so were the PWA icons and `apple-touch-icon.png` — all five are the globe now.
+  **114px is the only original there is**, so the four large icons are upscaled from it, and two
+  things about that are easy to get wrong. Pillow resamples colour and alpha apart, which averages
+  the colour under transparent pixels into every edge and fringes the mark, so the resize goes
+  through the premultiplied `RGBa` mode. And the canvas is **RGB, not RGBA**: pasting through a
+  mask onto an RGBA canvas writes the mask into the destination alpha too, so the mark's
+  antialiased edge comes out semi-transparent and a dark launcher shows through it — which is how
+  the first cut of these shipped before the opacity was asserted. The coverages (66% for the plain
+  icons, 46% for the maskable one, whose middle 80% is all a launcher guarantees) are the ones the
+  purple icons already used, so the mark sits at the weight the app had. The swing is `calc(260ms * var(--ems-motion))`, so a reader who has
   turned motion off gets the new width at once rather than a crawl.
   Two things this must not break, both found by breaking them: the **drawer** takes `w-0` for its
   slot, since the sheet is `fixed` and a slot holding 264px open would push the page out from under

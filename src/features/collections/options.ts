@@ -7,17 +7,28 @@ export type Option = { value: string; label: string }
  * guardians the API knows about.
  */
 /**
- * A feed too long to open as a dropdown — searched with a `q` a keystroke at a
- * time rather than loaded whole. Its own union so a field cannot ask to search
- * a feed there is no search for.
+ * A feed too long to open as a dropdown — searched a keystroke at a time
+ * rather than loaded whole. Its own union so a field cannot ask to search a
+ * feed there is no search for.
+ *
+ * Each names its own parameter at the endpoint: guardians and students are
+ * searched with `q`, the catalogue with `booktitle`. There is no shared search
+ * across these controllers, which is why the term is passed as a plain string
+ * and `searchFeed` decides what to call it.
  */
-export type SearchKey = 'guardians' | 'students'
+export type SearchKey = 'guardians' | 'students' | 'books'
 
 export type OptionsKey =
   | 'classes'
-  /** Titles the library lends, off the catalogue endpoint. */
-  | 'books'
-  /** Every title, retired ones included — what the edit flow picks from. */
+  /**
+   * Every title, retired ones included — what the edit flow picks from. A
+   * retired one is exactly the title an office may need to put back on
+   * lending, so nothing is filtered out of it.
+   *
+   * There is no unfiltered-down `books` beside it any more: the lending
+   * counter searches the catalogue (`SearchKey`) rather than opening it, and a
+   * dropdown of every lendable title was the thing that change removed.
+   */
   | 'all-books'
   | 'arms'
   /** Every arm in the school, class-qualified — not narrowed to one class. */

@@ -6,6 +6,12 @@ import { Panel } from '@/components/page/panel'
 import { Button } from '@/components/ui/button'
 import { NotificationsPanel } from '@/features/notifications/components/notifications-panel'
 import { useMyNotifications } from '@/features/notifications/use-notice-feed'
+import { freshen } from '@/db/collection'
+import {
+  parentAttendance,
+  parentChildren,
+  parentInvoices,
+} from '@/db/collections/parent'
 import { useFirstName } from '@/features/auth/session'
 import { greeting } from '@/lib/greeting'
 import { ActionQueue } from '@/portals/parent/features/action-queue'
@@ -18,6 +24,11 @@ import { useFamily, useSelectedChild } from '@/portals/parent/parent.store'
 
 export const Route = createFileRoute('/parent/')({
   staticData: { title: 'Dashboard', crumb: 'Overview' },
+  // The whole household, asked for again on the way in — this page counts what
+  // is owed across every child and draws six weeks of one child's register, so
+  // all three sets are on screen at once. Only the readying is waited for; the
+  // figures are composed from live queries and follow the answer in.
+  loader: () => freshen([parentChildren, parentInvoices, parentAttendance]),
   component: ParentDashboard,
 })
 

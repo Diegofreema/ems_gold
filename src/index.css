@@ -15,15 +15,14 @@
    Naming note: the design system calls its brand colour "accent", but shadcn
    already uses --accent for subtle hover fills. The blue is `brand` here.
 
-   `.auth-daylight` shares this block rather than copying it. The sign-in
-   design is drawn in one palette and has no dark half — an office signing in
-   on a machine somebody left in dark mode would otherwise get its own white
-   page with the dark theme's pale text on it. Setting the light values on the
-   auth container overrides what it inherits from <html>, for it and
-   everything under it, without touching the theme the portals read.
+   The sign-in screens read these like everything else. They used to pin
+   themselves to the light half of this block — the design is drawn in one
+   palette and has no dark half — which meant a person who had set the portal
+   to dark signed out and was handed a white page. Two themes on one device is
+   the one thing a theme setting must not do, so the missing half is declared
+   below (`--ui-*` in the dark block) rather than the page refusing to follow.
    ───────────────────────────────────────────────────────────────────── */
-:root,
-.auth-daylight {
+:root {
   --ems-ground: #fafafa;
   --ems-surface: #f2f2f2;
   --ems-ink: #202020;
@@ -101,6 +100,11 @@
      `field` fills an input, `line` fills a table header and any other quiet
      band, `hint` is placeholder text. */
   --ui-blue: #356ead;
+  /* The same blue as a *word* rather than a fill. White on `--ui-blue` passes
+     in both themes, which is why the button and the checkbox share one token;
+     `--ui-blue` as text on the dark ground is 3.4:1 and does not. Split roles,
+     for the same reason danger and success are split. */
+  --ui-blue-ink: #356ead;
   --ui-ring: #4c83b9;
   --ui-ink: #202020;
   --ui-muted: #575757;
@@ -109,6 +113,13 @@
   --ui-line: #f6f6f6;
   --ui-error: #eb4d48;
   --ui-error-line: #ea3628;
+  /* The sign-in page's own two grounds: the paper the form is written on, and
+     the blue half beside it. `--ems-raised` would nearly do for the first, but
+     the field fill sits 2 points off it at night and the control would lose
+     its edge — so the paper drops to the ground colour there and the field
+     lifts off it, which is the relationship the light design has. */
+  --ui-paper: #ffffff;
+  --ui-poster: #356ead;
 
   /* Tile accents. A dashboard tile carries a coloured square so a reader can
      find the figure they came for by its colour before they have read a word
@@ -135,12 +146,24 @@
 
   /* The two fills that are a shade of white in the light design — an input's
      ground and a table's header band — have to be a shade of the dark ground
-     here, or a form at night is a page of white slabs. The rest of the --ui-*
-     set is either a colour that works on both (the blue) or only ever used on
-     the sign-in screens, which are daylight-only by design. */
+     here, or a form at night is a page of white slabs.
+
+     The rest of the set is the sign-in screens'. It was left undeclared while
+     those screens pinned themselves to daylight, so every one of these was
+     the light value and a dark sign-in page would have been near-black text
+     on white. The two that are fills — the blue a button is and the blue the
+     poster is — are not the same token for that reason: white on the button
+     has to keep passing, while half a screen of full-strength brand blue at
+     night is the thing that makes a dark page look unfinished. */
   --ui-field: #24272d;
   --ui-line: #22252b;
   --ui-hint: #8f9299;
+  --ui-ink: #f2f2f4;
+  --ui-muted: color-mix(in srgb, #f2f2f4 62%, transparent);
+  --ui-blue-ink: #7db8e4;
+  --ui-paper: #15161a;
+  --ui-poster: #1c4066;
+  --ui-ring: #2f5f8d;
 
   --ems-ground: #15161a;
   --ems-surface: #1f2126;
@@ -187,14 +210,14 @@
 
 /* shadcn semantic names, aliased onto the tokens above.
 
-   `.auth-daylight` is in the list for a reason that is easy to miss: these are
-   resolved where they are declared, so a container that redeclares --ems-ink
-   alone still inherits the *resolved* --muted-foreground from <html>. Under a
-   dark theme that is the pale grey, on the sign-in page's white. Declaring the
-   aliases on the container too re-resolves them against its own tokens. */
+   The sign-in container used to be in this list as well, and the reason is
+   worth keeping even though it has gone: an alias is resolved where it is
+   declared, so a container that redeclares --ems-ink alone still inherits the
+   *resolved* --muted-foreground from <html>. Redeclaring tokens on a subtree
+   means redeclaring the aliases over them. Nothing does that any more — the
+   auth screens read <html>'s theme like every other page. */
 :root,
-[data-ems-theme='dark'],
-.auth-daylight {
+[data-ems-theme='dark'] {
   --background: var(--ems-ground);
   --foreground: var(--ems-ink);
   --card: var(--ems-raised);
@@ -234,7 +257,7 @@
    inch shorter should be an inch tighter, not a different layout. And `vh`
    rather than `dvh` — the padding would otherwise breathe in and out with a
    phone's address bar as the page scrolls. */
-.auth-daylight {
+.auth-screen {
   /* Above the mark, and the mark to the title. */
   --auth-lead: clamp(2.5rem, 13vh, 8.75rem);
   --auth-mark: clamp(1.25rem, 3.8vh, 2.125rem);
@@ -357,6 +380,9 @@
   --radius-4xl: 24px;
 
   --color-ui-blue: var(--ui-blue);
+  --color-ui-blue-ink: var(--ui-blue-ink);
+  --color-ui-paper: var(--ui-paper);
+  --color-ui-poster: var(--ui-poster);
   --color-ui-ring: var(--ui-ring);
   --color-ui-ink: var(--ui-ink);
   --color-ui-muted: var(--ui-muted);

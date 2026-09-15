@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { NotificationsPanel } from '@/features/notifications/components/notifications-panel'
 import { useMyNotifications } from '@/features/notifications/use-notice-feed'
 import { useFirstName } from '@/features/auth/session'
+import { freshen } from '@/db/collection'
 import { schoolingInvoices, schoolingStats } from '@/db/collections/schooling'
 import { useHeldDocument } from '@/db/live'
 import { studentHome } from '@/portals/student/api/dashboard'
@@ -18,12 +19,14 @@ export const Route = createFileRoute('/student/')({
   // Readied here rather than suspended on: the counters and the ledger arrive
   // together or not at all, and a refusal is swallowed so a student with no
   // connection lands on their own home page rather than an error boundary.
-  loader: () =>
-    Promise.all(
-      [schoolingStats, schoolingInvoices].map((collection) =>
-        collection.preload().catch(() => undefined),
-      ),
-    ),
+  //
+  // And asked for again, not merely readied. This is the page a student lands
+  // on every time they open the portal, and the five counters on it are the
+  // school's own arithmetic about fees and marks — the figures most likely to
+  // have moved since this device last synced, and the ones a stale copy of is
+  // least forgivable. Both are read live, so the fresh answer redraws them
+  // without the page waiting on it.
+  loader: () => freshen([schoolingStats, schoolingInvoices]),
   component: StudentDashboard,
 })
 

@@ -66,7 +66,7 @@ export function ForgotPasswordScreen() {
 
       <p className="mt-(--auth-tail) text-center text-base">
         Remember Password?{' '}
-        <Link to="/sign-in" className="font-semibold text-ui-blue hover:underline">
+        <Link to="/sign-in" className="font-semibold text-ui-blue-ink hover:underline">
           Sign In
         </Link>
       </p>
