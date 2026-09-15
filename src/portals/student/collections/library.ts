@@ -7,6 +7,7 @@ import type { CollectionDef } from '@/features/collections/types'
 import { loanFine, loanPaid } from '@/features/library/loan-read'
 import { formatNaira } from '@/lib/format'
 import { myLoanRow } from './my-loan-row'
+import { loanBorrowed } from '@/features/library/loan-read'
 import { newestFirst } from '@/features/collections/order'
 
 /**
@@ -24,8 +25,7 @@ import { newestFirst } from '@/features/collections/order'
  * settles the ties — a desk that issues two books at once stamps them the same
  * day.
  */
-const borrowings = (loans: readonly Loan[]) =>
-  newestFirst(loans, (loan) => loan.borrowed_on ?? loan.date_created ?? loan.dateadded)
+const borrowings = (loans: readonly Loan[]) => newestFirst(loans, loanBorrowed)
 
 const myLoans = () => heldRows(schoolingLoans).then((loans) => borrowings(loans).map((loan) => myLoanRow(loan)))
 

@@ -4,6 +4,7 @@ import type { Row } from '../../../features/collections/types.ts'
 import { when } from '../../../features/collections/when.ts'
 import {
   first,
+  loanBorrowed,
   loanBook,
   loanDue,
   loanFine,
@@ -22,7 +23,7 @@ export function myLoanRow(loan: Loan, today = new Date()): Row {
   return {
     id: String(loan.id),
     book: loanBook(loan),
-    borrowed: when(first(loan.borrowed_on, loan.date_created, loan.dateadded) || null),
+    borrowed: when(loanBorrowed(loan) || null),
     due: when(loanDue(loan) || null),
     standing: loanStanding(loan, today),
     fine: Number.isFinite(fine) && fine > 0 ? formatNaira(fine) : BLANK,
@@ -30,6 +31,8 @@ export function myLoanRow(loan: Loan, today = new Date()): Row {
 
     // Read by the record panel, not by the table.
     returned_on: when(loan.returned_on),
-    condition: first(loan.condition, loan.status) || BLANK,
+    // The condition alone: `status` is the expanded shape's word for whether
+    // the book is back, not the state it came back in.
+    condition: first(loan.condition) || BLANK,
   }
 }

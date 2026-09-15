@@ -3,15 +3,25 @@ import { test } from 'node:test'
 import type { Loan } from '../../../api/library/types.ts'
 import { myLoanRow } from './my-loan-row.ts'
 
-/** As the contract promises `/loanedbooks/mine`; no live row read yet. */
+/**
+ * The flat shape the loan controller sends, read off bronze on 2026-09-15 —
+ * `/loanedbooks` and `/loanedbooks/{id}` alike, and `/loanedbooks/mine` is the
+ * same controller. It replaces a fixture written from the 2026-09-03 contract,
+ * whose field names (`book_title`, `due_date`, `returned: 'Yes'`) nothing
+ * sends; see the note in the office's `loan-row.test.ts`.
+ */
 const LOAN: Loan = {
   id: 4,
-  book_title: 'Things Fall Apart',
-  borrowed_on: '2026-08-20',
-  due_date: '2026-08-30',
-  returned: 'No',
-  paid: 'No',
-  fine: 250,
+  book: 'Things Fall Apart',
+  book_id: 1,
+  borrowed: '2026-08-20',
+  due: '2026-08-30',
+  overdue: true,
+  returned: false,
+  paid: false,
+  penalty: 250,
+  penalty_if_returned_today: 250,
+  student_id: 120,
 }
 
 const TODAY = new Date('2026-09-03T09:00:00+01:00')
@@ -29,7 +39,7 @@ test('a student reads their own loan without a student column', () => {
 
 test('a returned loan reads settled', () => {
   const row = myLoanRow(
-    { ...LOAN, returned: 'Yes', paid: 'Yes', returned_on: '2026-09-01', condition: 'Good' },
+    { ...LOAN, returned: true, paid: true, returned_on: '2026-09-01', condition: 'Good' },
     TODAY,
   )
   assert.equal(row.standing, 'Returned')
@@ -39,7 +49,8 @@ test('a returned loan reads settled', () => {
 })
 
 test('a loan with no fine shows neither figure nor owing', () => {
-  const row = myLoanRow({ ...LOAN, due_date: '2026-09-10', fine: 0 }, TODAY)
+  // `paid` is `true` on a loan that never owed anything, so the figure decides.
+  const row = myLoanRow({ ...LOAN, overdue: false, penalty: 0, paid: true }, TODAY)
   assert.equal(row.standing, 'Out')
   assert.equal(row.fine, '—')
   assert.equal(row.paid, '—')

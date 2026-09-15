@@ -15,14 +15,16 @@ import type {
 } from './types'
 
 /**
- * The lending endpoints have not answered live yet, so each read is unwrapped
- * by whichever key it turns out to use — the bare shape, or a `loans` / `loan`
- * envelope like the rest of bronze wears — rather than betting the page on one.
+ * Every lending read wears an envelope, and **not the same one**: `/loanedbooks`
+ * and `/admins/borrowed-books` answer under `loans`, `/loanedbooks/overdue`
+ * under `overdue`, `/loanedbooks/{id}` under `loan`. Read off bronze
+ * 2026-09-15; the `data` and bare-array fallbacks are what was guessed before
+ * that and are kept because they cost a line.
  */
 function asLoans(answer: unknown): Loan[] {
   if (Array.isArray(answer)) return answer as Loan[]
-  const wrapped = answer as { loans?: Loan[]; data?: Loan[] } | null
-  const loans = wrapped?.loans ?? wrapped?.data
+  const wrapped = answer as { loans?: Loan[]; overdue?: Loan[]; data?: Loan[] } | null
+  const loans = wrapped?.loans ?? wrapped?.overdue ?? wrapped?.data
   // An answer wearing none of the known shapes is a fault, not an empty
   // register: this list is the complete state of a set on the device, and a
   // fault read as "no loans" would erase the device's copy of the lending
@@ -79,8 +81,17 @@ export const libraryService = {
   /** What is out, late and owed, and the fine rate. Keys not yet read. */
   summary: () => request<LoanSummary>('loanedbooks/summary'),
 
-  /** Overdue loans with the fine accrued so far. */
+  /**
+   * Overdue loans, under `overdue` rather than `loans`, beside a `count` and a
+   * `fines_if_returned_today` total. The rows are the same flat shape the
+   * register reads, so the envelope is all that differs — and it is why this
+   * threw before the answer had been looked at.
+   */
   overdue: () => request<unknown>('loanedbooks/overdue').then(asLoans),
+
+  /** Every borrowing with the pupil and the title expanded; no pagination. */
+  borrowedBooks: () =>
+    request<unknown>('admins/borrowed-books').then(asLoans),
 
   /** Copies minus loans not yet returned. `available` is the truth. */
   stock: (bookId: Id) =>

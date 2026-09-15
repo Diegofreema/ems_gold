@@ -51,53 +51,103 @@ export type BookSearchParams = {
  */
 
 /** One borrowing. `returned` and `paid` are the words 'Yes' and 'No'. */
+/**
+ * One borrowing. **Read off bronze on 2026-09-15**, which is the first time any
+ * of these rows had been seen, and they are two shapes rather than one:
+ *
+ * - `/loanedbooks`, `/loanedbooks/{id}` and `/loanedbooks/overdue` send a
+ *   **flat** row — `book` is the *title as a string*, `student` is `null`, the
+ *   dates are `borrowed` and `due`, and `returned`/`paid`/`overdue` are real
+ *   booleans. This is what the office's register is drawn from.
+ * - `/admins/borrowed-books` sends an **expanded** row — `book` is the whole
+ *   catalogue record and `student` the whole pupil record, with `date` and
+ *   `datetoreturn` for the dates and `status: "not returned"` in place of the
+ *   flags.
+ *
+ * Both are typed here because both are live, and the readers in
+ * `features/library/loan-read.ts` take either. What is *not* here any more is
+ * the set of names the 2026-09-03 contract published and nothing sends:
+ * `book_title`, `student_name`, `due_date`, `toreturn`, `borrowed_on`,
+ * `date_created`, `dateadded`. They were read first by every reader, which is
+ * why the register showed "Student 12" borrowing "Book 2" with no due date and
+ * everything standing "Out".
+ */
 export type Loan = {
   id: number
   student_id?: number | null
-  /** The student's name, however the controller sends it — flat or as a record. */
-  student_name?: string | null
+  /** Expanded on `/admins/borrowed-books`; `null` on the flat shape. */
   student?: {
     id?: number | null
-    name?: string | null
     fname?: string | null
     mname?: string | null
     lname?: string | null
     regno?: string | null
   } | null
+  /** Flat on the loan controller, `null` beside the expanded pupil. */
+  regno?: string | null
   book_id?: number | null
-  book_title?: string | null
-  book?: { id?: number | null; title?: string | null; author?: string | null } | null
-  title?: string | null
-  returned?: string | null
-  paid?: string | null
-  /** ISO dates on the school's wall clock, like everything else on bronze. */
-  due_date?: string | null
-  toreturn?: string | null
+  /** The title as a string on the flat shape, the record on the expanded one. */
+  book?: string | { id?: number | null; title?: string | null; author?: string | null } | null
+  /** Flat: the day it went out. Expanded: `date`, a full timestamp. */
+  borrowed?: string | null
+  date?: string | null
+  /** Flat: `due`. Expanded: `datetoreturn`. Both YYYY-MM-DD. */
+  due?: string | null
+  datetoreturn?: string | null
   returned_on?: string | null
-  borrowed_on?: string | null
-  date_created?: string | null
-  dateadded?: string | null
+  /** Booleans on the flat shape. */
+  returned?: boolean | null
+  paid?: boolean | null
+  overdue?: boolean | null
+  /** Whole days past the due date, the school's own arithmetic. */
+  days_overdue?: number | null
+  /** The expanded shape's words instead of the flags — "not returned". */
+  status?: string | null
   /** The state the book came back in. */
   condition?: string | null
-  status?: string | null
-  /** Days late × the library's fine per day. */
-  fine?: number | string | null
+  /** The fine as it stands: 0 until the copy is actually back. */
   penalty?: number | string | null
-  /** On `/loanedbooks/{id}` — what the desk quotes before the handover. */
+  /** What the desk quotes before the handover. On the list as well as the record. */
   penalty_if_returned_today?: number | string | null
+  /** Who issued it. */
+  admin_id?: number | null
 }
 
 /**
- * `/loanedbooks/summary` — what is out, late and owed, and the fine rate.
- * Exposed but not yet read into any page: its key names have not been seen,
- * and the tiles count the list they already hold instead.
+ * `/loanedbooks/summary` — what is out, late and owed, and the school's own
+ * lending rules. Keys read off bronze 2026-09-15:
+ * `{loans, out, overdue, fines_owing, fine_per_day, loan_days}`.
+ *
+ * Still not what the Lending page's tiles read: they count the set on the
+ * device, which is the rule for every counted tile in this app — a figure
+ * fetched separately from the rows under it can disagree with them, and cannot
+ * be shown at all with no connection. This is here for a page that wants the
+ * fine rate or the loan length, neither of which is derivable from the rows.
  */
-export type LoanSummary = Record<string, unknown>
+export type LoanSummary = {
+  /** Every borrowing on record. */
+  loans?: number | null
+  /** Out and not yet back. */
+  out?: number | null
+  overdue?: number | null
+  fines_owing?: number | null
+  /** The school's own two lending rules, which no row carries. */
+  fine_per_day?: number | null
+  loan_days?: number | null
+}
 
-/** `/loanedbooks/stock/{bookId}`. `available` is the number to trust. */
+/**
+ * `/loanedbooks/stock/{bookId}` — read off bronze 2026-09-15:
+ * `{book_id, title, copies, available, on_loan, label}`. `available` is the
+ * number to trust, and it is `copies` minus `on_loan`; `label` is the
+ * catalogue's own `isavailable` switch, which says whether the office lends the
+ * title at all and not whether a copy is there.
+ */
 export type BookStock = {
+  book_id?: number | null
+  title?: string | null
   available?: number | null
-  /** The catalogue's `isavailable` text, along for the ride. */
+  on_loan?: number | null
   label?: string | null
   copies?: number | null
 }

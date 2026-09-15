@@ -7,6 +7,7 @@ import {
   refArms,
   refBoard,
   refBooks,
+  refLoans,
   refClasses,
   refFees,
   refGuardians,
@@ -24,6 +25,7 @@ import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
 import { guardianOption } from './guardian-option'
 import { audienceOptions } from '@/portals/admin/collections/notice-row'
+import { loanBookId, loanReturned } from '../library/loan-read'
 import { distinct, type Option, type OptionsKey, type SearchKey } from './options'
 
 /**
@@ -466,17 +468,24 @@ async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
      * counter has in front of them — the author is offered beside each result
      * to tell two editions apart, not typed to find one.
      *
-     * Still filtered to what the library lends, exactly as the dropdown was:
-     * the endpoint narrows the catalogue, it does not decide what may go out.
-     * Whether a copy is on the shelf remains the lend endpoint's own 409.
+     * What is offered is then narrowed by **stock**, not by the catalogue's
+     * `isavailable` switch. See `onShelf`.
+     *
+     * An empty box asks for nothing. The other two searched feeds answer an
+     * empty term with a first page, which is a cheap and useful thing to open
+     * onto — but here it would mean the whole catalogue and then a stock
+     * request for every title in it, sixteen on this school and one more per
+     * title the library ever buys. The field says "Type a title to search"
+     * instead, which is what it is for.
      */
+    if (!needle) return []
+
     return await libraryService
       .books({ booktitle: term || undefined })
-      .then((books) => distinct(books.filter(lendable).map(bookOption)).slice(0, FOUND))
+      .then(async (books) => distinct((await onShelf(books.slice(0, FOUND))).map(bookOption)))
       .catch(async () =>
         distinct(
-          (await held(refBooks))
-            .filter(lendable)
+          (await heldOnShelf())
             .map(bookOption)
             .filter((one) => matches(one, needle)),
         ).slice(0, FOUND),
@@ -486,9 +495,61 @@ async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
   return []
 }
 
-/** Titles the office has left lendable. Its own function, used by both feeds. */
-const lendable = (book: { isavailable?: string | null }) =>
-  book.isavailable === 'Available'
+/**
+ * The titles with a copy actually on the shelf, asked of the school.
+ *
+ * `isavailable` used to decide this and no longer can: it is a switch the
+ * office sets, and lending appears to flip it — both titles lent recently read
+ * `Unavailable` while an older loan's title does not — so a set text with
+ * thirty copies vanished from the counter the moment one went out. Stock is the
+ * figure that answers the question actually being asked, and the library
+ * computes it: `available` is `copies` minus what is out.
+ *
+ * One request per result, capped at `FOUND` and run together. That is the cost
+ * of the only endpoint that knows, and it is paid on a field somebody is
+ * typing into rather than on a page load.
+ *
+ * **A title whose stock cannot be read is offered, not hidden.** A dropped
+ * request is not evidence a book is gone, and the lend endpoint refuses with
+ * its own 409 where no copy is left — so the failure mode is a refusal the
+ * librarian can read, rather than a book that silently is not in the list.
+ */
+async function onShelf<T extends { id: number }>(books: readonly T[]): Promise<T[]> {
+  const stocks = await Promise.allSettled(books.map((book) => libraryService.stock(book.id)))
+  return books.filter((_, index) => {
+    const answer = stocks[index]
+    if (answer?.status !== 'fulfilled') return true
+    const available = Number(answer.value?.available)
+    return Number.isFinite(available) ? available > 0 : true
+  })
+}
+
+/**
+ * The same judgement with no school to ask, off the two sets the device holds.
+ *
+ * `copies` minus the loans not yet back is exactly what the stock endpoint
+ * computes, and both halves are already here — so a bursar with no signal
+ * still gets a list of what can go out rather than a list of what the office
+ * last flipped a switch on. A title whose `copies` the catalogue does not say
+ * is offered, for the same reason an unreadable stock answer is.
+ */
+async function heldOnShelf() {
+  const [books, loans] = await Promise.all([
+    held(refBooks),
+    held(refLoans).catch(() => []),
+  ])
+  const out = new Map<string, number>()
+  for (const loan of loans) {
+    if (loanReturned(loan)) continue
+    const id = loanBookId(loan)
+    if (id) out.set(id, (out.get(id) ?? 0) + 1)
+  }
+  return books.filter((book) => {
+    const copies = Number(book.copies)
+    if (!Number.isFinite(copies)) return true
+    return copies - (out.get(String(book.id)) ?? 0) > 0
+  })
+}
 
 /**
  * One title as a picker offers it. Two copies of a set text can be two rows,

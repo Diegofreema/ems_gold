@@ -384,10 +384,15 @@ export const collect: CollectionDef = {
   title: 'Fee collection',
   description:
     'The counter queue: every invoice still owing. Open one to take the payment — it is settled in full, less any discount you grant.',
-  // Finding a family is the counter's own job and comes first; the report is
-  // the end-of-day one.
-  action: 'Find a student',
-  actionTo: '/admin/collect/student',
+  /*
+   * No primary button. "Find a student" used to be one, on the reasoning that
+   * finding a family is the counter's own job and comes first — but the queue
+   * below it is already searchable by a pupil's name or registration number
+   * (`searchable`, and this endpoint really does search), so the button led to
+   * a second way of doing the thing the page does. `action` stays as the
+   * record's heading: what an invoice is opened in order to do.
+   */
+  action: 'Take a payment',
   secondaryTo: { to: '/admin/collect/report', label: 'Collections report' },
   // Unlike the invoice register, this endpoint really does search — `q`
   // matches a student's name or registration number.

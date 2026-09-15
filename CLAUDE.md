@@ -364,6 +364,39 @@ whole for it to be a part of. That register is also why a binding has three look
 the office records beside them, and the catalogue that names an office account's role, which
 `GET /admins` sends as a bare `role_id`.
 
+**What a picker offers is decided by the figure that answers the question, not by the flag that
+looks like it does.** The lending counter offered `isavailable === 'Available'` and so hid "Things
+Fall Apart" — thirty copies, none out — because that field is the office's *do we lend this at all*
+switch and has nothing to do with stock. It filters on `stock.available > 0` now, which is `copies`
+minus what is out and is the library's own arithmetic: one `GET /loanedbooks/stock/{id}` per result,
+run together, capped by the search. Three things make that affordable and safe. **The box asks for
+nothing until it has a word** — the other searched feeds open onto a first page, which here would
+mean the whole catalogue and a stock request for every title in it. **A title whose stock cannot be
+read is offered, never hidden** — a dropped request is not evidence a book is gone, and the lend
+endpoint's own 409 is a refusal a librarian can read, where a missing row is not. And **offline the
+same figure is computed off the device**, `copies` minus the held loans not yet back, so a bursar
+with no signal still gets a list of what can go out.
+
+**A reader written from a contract is a guess, and it fails silently.** The lending register was
+the worked example, and it cost a page. The 2026-09-03 document named `book_title`, `student_name`,
+`due_date` and `returned: 'Yes'`; bronze sends `book` (the title as a *string*), `student: null`
+beside a `student_id`, `due`, and `returned` as a **boolean**. Every reader took the documented name
+first, found nothing, and fell through — so the office's register drew "Student 12" borrowing
+"Book 2" with no due date, every loan standing "Out" including the returned ones, and an Overdue
+tile of nought beside two overdue books. **Nothing threw, nothing logged, and the tests passed**,
+because the fixtures were written from the same document. That is the whole hazard: a wrong reader
+looks exactly like an empty column. Two rules follow. **Read the endpoint before drawing it** — the
+shapes are now in `src/api/library/types.ts` with the date they were read. And **a fixture is a
+transcript, not a promise**: CLAUDE.md already said a test written against a shape nobody produces
+proves nothing, and this is what that looks like when the shape is a whole controller.
+One endpoint answers in two shapes, so the readers in `features/library/loan-read.ts` take either:
+`/loanedbooks` is flat, `/admins/borrowed-books` expands the pupil and the title. Three things are
+worth carrying out of it. **An envelope is per-endpoint** — `loans` on the register,
+`overdue` on `/loanedbooks/overdue`, `loan` on the record — and the unwrapper that assumed one threw
+on the second. **The school's own `overdue` flag is believed over date arithmetic here**, because it
+is the same judgement made against the server's clock. And **a boolean is not a word**: `status:
+"not returned"` is truthy, so read as a flag it puts every borrowed book back on the shelf.
+
 **A predicate that reads a row's key must use that key's own reader.** `byStaffKind` matched on a
 prefix it had invented, and the test agreed with it because the fixtures used the invented format
 too — so both passed and the page showed an administrator on the teaching register. The reader is

@@ -100,7 +100,6 @@ export type ActionPath =
   | '/admin/calendar'
   | '/admin/terms'
   | '/admin/collect/report'
-  | '/admin/collect/student'
   | '/parent/pay'
   | '/parent/children/add'
   | '/admin/collect'

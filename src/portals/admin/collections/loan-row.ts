@@ -4,11 +4,13 @@ import {
   first,
   loanBook,
   loanBookId,
+  loanBorrowed,
   loanDue,
   loanFine,
   loanPaid,
   loanStanding,
   loanStudent,
+  loanStudentId,
 } from '../../../features/library/loan-read.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { when } from '../../../features/collections/when.ts'
@@ -24,13 +26,27 @@ function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
 }
 
-export { loanBook, loanBookId, loanFine, loanPaid, loanStanding, loanStudent }
+export {
+  loanBook,
+  loanBookId,
+  loanFine,
+  loanPaid,
+  loanStanding,
+  loanStudent,
+  loanStudentId,
+}
 
-export function loanRow(loan: Loan, today = new Date()): Row {
+/**
+ * `named` puts a name to the loan's `student_id`, read from the student
+ * directory this device already holds — the loan controller sends `student:
+ * null` and `regno: null`, so without it the office's register is a column of
+ * "Student 12". See `loanStudent`.
+ */
+export function loanRow(loan: Loan, today = new Date(), named?: string): Row {
   const fine = loanFine(loan)
   return {
     id: String(loan.id),
-    student: loanStudent(loan),
+    student: loanStudent(loan, named),
     book: loanBook(loan),
     due: when(loanDue(loan) || null),
     standing: loanStanding(loan, today),
@@ -44,9 +60,12 @@ export function loanRow(loan: Loan, today = new Date()): Row {
     // on the book — so without this the return flow has the words for a title
     // and no way to name it.
     book_id: loanBookId(loan),
-    borrowed: when(first(loan.borrowed_on, loan.date_created, loan.dateadded) || null),
+    student_id: loanStudentId(loan),
+    borrowed: when(loanBorrowed(loan) || null),
     returned_on: when(loan.returned_on),
-    condition: text(first(loan.condition, loan.status) || null),
+    // The condition alone: `status` is the expanded shape's word for whether
+    // the book is back, not the state it came back in.
+    condition: text(first(loan.condition) || null),
     // What the desk quotes before the handover. On the detail answer only.
     penalty_today:
       loan.penalty_if_returned_today != null && loan.penalty_if_returned_today !== ''

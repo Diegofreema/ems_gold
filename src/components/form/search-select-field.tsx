@@ -15,25 +15,36 @@ import { FieldShell, type FieldSpan } from './field-shell'
 const TRIGGER =
   'flex h-8 w-full items-center justify-between gap-1.5 rounded-md border border-input bg-transparent py-2 pr-2 pl-2.5 text-left text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20'
 
-/** What the box says for each feed — who is searched, and how to ask. */
+/**
+ * What the box says for each feed — who is searched, how to ask, and what an
+ * answer of nothing means. `prompt` is what stands in before anything has been
+ * typed, which for the catalogue is the whole instruction rather than a hint:
+ * that feed deliberately asks for nothing until it has a word to ask with.
+ */
 const WORDING: Record<
   SearchKey,
-  { trigger: string; input: string; empty: string }
+  { trigger: string; input: string; empty: string; prompt: string }
 > = {
   guardians: {
     trigger: 'Search for a guardian',
     input: 'Father or mother’s name',
     empty: 'No guardian by that name.',
+    prompt: 'Type a name to search.',
   },
   students: {
     trigger: 'Search for a student',
     input: 'Student’s name',
     empty: 'No student by that name.',
+    prompt: 'Type a name to search.',
   },
   books: {
     trigger: 'Search for a book',
     input: 'Book title',
-    empty: 'No title the library lends matches that.',
+    // Not "no such title": the search found none the library can lend *now*,
+    // which on a catalogue this size is usually a copy already out rather than
+    // a book the school does not own.
+    empty: 'No copy of that is on the shelf.',
+    prompt: 'Type a title to search.',
   },
 }
 
@@ -259,7 +270,7 @@ export function SearchSelectField<TValues extends FieldValues>({
               </p>
             ) : results.length === 0 ? (
               <p className="px-2.5 py-2 text-sm text-muted-foreground">
-                {settled ? wording.empty : 'Type a name to search.'}
+                {settled ? wording.empty : wording.prompt}
               </p>
             ) : (
               results.map((option, index) => {
