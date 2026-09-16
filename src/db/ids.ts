@@ -50,6 +50,7 @@ export const SET = {
   schoolingStats: 'schooling.stats',
   schoolingCourses: 'schooling.courses',
   schoolingMaterials: 'schooling.materials',
+  schoolingContent: 'schooling.content',
   schoolingAssignments: 'schooling.assignments',
   schoolingResults: 'schooling.results',
   schoolingAttendance: 'schooling.attendance',

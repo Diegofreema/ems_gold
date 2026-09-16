@@ -4,6 +4,7 @@ import type {
   MyInvoices,
   MyMaterial,
   Student,
+  StudentContent,
   StudentDashboard,
   UpdateMyRecordBody,
 } from './types'
@@ -23,6 +24,16 @@ export const mySchoolingService = {
    * a sibling of the list, not a field on a course.
    */
   courses: () => request<MyCourses>('students/me/courses'),
+
+  /**
+   * What teachers have written up for the subjects this student takes.
+   *
+   * Asked for whole — the endpoint takes a `subject_id` and this does not pass
+   * one. See `StudentContent`: one answer narrowed on the device beats one
+   * request per subject opened, and it is the only version of this that works
+   * with no connection.
+   */
+  content: () => request<StudentContent>('students/me/content'),
 
   /** The bills and the payments taken against them, in one answer. */
   invoices: () => request<MyInvoices>('students/me/invoices'),

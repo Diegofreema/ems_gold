@@ -10,6 +10,7 @@ import type {
   MyInvoices,
   MyMaterial,
   Student,
+  StudentContent,
   StudentDashboard,
 } from '@/api/my-schooling/types'
 import { resultsService } from '@/api/results/service'
@@ -57,6 +58,21 @@ export const schoolingStats = schoolDocument<StudentDashboard>({
 export const schoolingCourses = schoolDocument<MyCourses>({
   id: SET.schoolingCourses,
   fetch: () => mySchoolingService.courses(),
+  schemaVersion: 1,
+})
+
+/**
+ * What teachers have written up for those subjects — the scheme of work, as a
+ * child reads it.
+ *
+ * A document rather than a list, because the answer is three things: the
+ * subjects it covers, the topics under them, and the school's own sentence
+ * where there are none. Held whole and narrowed per subject on the device, so
+ * opening a subject costs nothing and works with no signal.
+ */
+export const schoolingContent = schoolDocument<StudentContent>({
+  id: SET.schoolingContent,
+  fetch: () => mySchoolingService.content(),
   schemaVersion: 1,
 })
 
@@ -125,6 +141,7 @@ export const schoolingCollections = [
   schoolingRecord,
   schoolingStats,
   schoolingCourses,
+  schoolingContent,
   schoolingInvoices,
   schoolingResults,
   schoolingAttendance,

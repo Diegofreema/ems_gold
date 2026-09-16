@@ -125,6 +125,64 @@ export type MyCourses = {
   message?: string | null
 }
 
+/**
+ * A topic a teacher has written up for one of the student's subjects, off
+ * `GET /students/me/content` — read off bronze 2026-09-16.
+ *
+ * The same scheme of work the teacher files under "Topics taught", turned
+ * round: there it is filtered by the teacher who wrote it, here by the subject
+ * the child takes.
+ *
+ * Three things about the shape are worth knowing before drawing it.
+ * `contents` is **HTML**, and not always HTML this app produced — one live
+ * topic is a table pasted out of Word, `MsoNormalTable` and all — so it goes
+ * through `RichTextView`, which parses against the editor's own schema rather
+ * than setting it on an element. `posted` is a **US-locale display string**
+ * ("9/16/26, 8:21 AM"), not a timestamp, which is the same shape `opendate`
+ * arrived in and the same trap: parsed as ISO it is blank. And `kind` is
+ * `"topic"` on every row, which reads like a merged feed waiting to happen —
+ * materials come back in their own array today.
+ */
+export type TopicPost = {
+  id: number
+  /** `"topic"` on every row seen. */
+  kind?: string | null
+  title?: string | null
+  subject_id?: number | null
+  /** The subject's name, resolved beside the id. */
+  subject?: string | null
+  /** Who wrote it up, as one string. */
+  teacher?: string | null
+  /** HTML, and not always this app's HTML. */
+  contents?: string | null
+  /** `"9/16/26, 8:21 AM"` — the school's wall clock, already formatted. */
+  posted?: string | null
+  updated?: string | null
+}
+
+/**
+ * What teachers have put up for the subjects the student takes, off
+ * `GET /students/me/content`.
+ *
+ * Takes an optional `subject_id`, which narrows `subjects` and `topics` alike.
+ * **Nothing here passes it**: the whole set is one small answer, and asked for
+ * whole it can be narrowed on the device — which is what lets a subject's
+ * topics open in a classroom with no signal, and costs one request rather than
+ * one per subject opened. The same reasoning as the teacher's own tab, which
+ * filters `GET /teachers/me/topics` locally for the same reason.
+ *
+ * `materials` is `[]` on every subject this school holds, which is consistent
+ * with the materials table having no writer anywhere in the API.
+ */
+export type StudentContent = {
+  subjects?: { id: number; name?: string | null }[] | null
+  topics?: TopicPost[] | null
+  /** Empty everywhere so far; typed so the day it fills nothing is surprised. */
+  materials?: MyMaterial[] | null
+  /** The school's own sentence for an empty answer. */
+  message?: string | null
+}
+
 export type MyResultParams = {
   session_id?: number
   semester_id?: number

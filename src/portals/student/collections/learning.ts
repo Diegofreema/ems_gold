@@ -1,5 +1,6 @@
 import { heldDocument, heldRows } from '@/db/collection';
 import {
+  schoolingContent,
   schoolingCourses,
   schoolingMaterials,
   schoolingTimetable,
@@ -8,6 +9,7 @@ import { pageRows } from '@/features/collections/api';
 import { localFirst } from '@/features/collections/local-first';
 import type { CollectionDef } from '@/features/collections/types';
 import { courseRows } from '../features/courses/courses';
+import { topicRows } from '../features/courses/topics';
 import { materialRows } from '../features/materials/materials';
 import { periodRows } from '../features/timetable/timetable';
 
@@ -29,8 +31,17 @@ const registered = async () => {
 export const courses: CollectionDef = {
   id: 'courses',
   path: '/student/courses',
-  // Six fields and no sub-tables: the record opens over the register.
-  modal: true,
+  /*
+   * A page, not a modal.
+   *
+   * It was a modal on the rule this app follows everywhere: a record of six
+   * short fields and no sub-tables opens over its register rather than taking
+   * the reader somewhere. It has a sub-table now — what the teacher has
+   * written up for the subject — and a scheme of work is the opposite of a
+   * modal's shape: prose, several entries of it, read rather than glanced at.
+   * A modal draws no tabs by design, so the choice is not between two
+   * decorations, it is between showing this and not.
+   */
   kicker: 'Learning',
   title: 'My subjects',
   description:
@@ -46,9 +57,36 @@ export const courses: CollectionDef = {
     'Your subjects appear here once the office registers you for them, and a registration is made for one class and one term at a time. Your marks are on My results whether or not a subject is listed here.',
   noun: 'course',
   nameKey: 'name',
-  // No history and no tiles: this is a list of what a student takes, and the
-  // API keeps no record of when they were put on it.
-  tabs: [],
+  // No tiles: this is a list of what a student takes, and the API keeps no
+  // record of when they were put on it.
+  tabs: [
+    {
+      label: 'Topics',
+      /*
+       * Panels rather than a table, and the same shape the teacher who wrote
+       * these reads them in. A topic is a heading and the prose under it: as
+       * columns the prose is cut to whatever fits one line, which is the half
+       * worth reading, and the frame scrolls sideways on the phone most of
+       * these children are holding.
+       */
+      accordion: {
+        title: 'title',
+        body: 'contents',
+        meta: 'meta',
+        empty: 'Your teacher filed this topic without anything written under it.',
+      },
+      /*
+       * Off the device and filtered here. `GET /students/me/content` takes a
+       * `subject_id` and is not sent one — the whole answer is small, one
+       * request covers every subject, and a set held whole is one a child can
+       * open in a classroom with no signal. See `mySchoolingService.content`.
+       */
+      source: async (recordId) =>
+        topicRows(await heldDocument(schoolingContent), recordId),
+      empty:
+        'Your teacher has not written anything up for this subject yet. Anything they add appears here.',
+    },
+  ],
   columns: [
     { key: 'code', label: 'Code', cardRole: 'title' },
     { key: 'name', label: 'Subject', cardRole: 'subtitle' },

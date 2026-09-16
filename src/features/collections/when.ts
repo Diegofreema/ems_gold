@@ -104,13 +104,18 @@ export function toDateTimeInput(stamp: string | null | undefined): string {
  * behaviour outside ISO is implementation-defined — the same reason nothing
  * else here parses a stamp by trusting the engine.
  *
+ * Exported because it is not one field's problem: `opendate` was the first,
+ * and `GET /students/me/content` sends a topic's `posted` in exactly the same
+ * dialect. A second reader written against the same shape is a second reader
+ * to get subtly wrong.
+ *
  * **Month before day**, because that is what produced it: `9/17/26` can only
  * be the 17th of September, so the formatter is American. A date where both
  * parts are 12 or under — `5/6/26` — is genuinely ambiguous in isolation, and
  * is read the way the formatter that wrote it would have written it. The real
  * fix is server-side: a field should come back in the shape it was sent.
  */
-function fromDisplayStamp(bare: string): string {
+export function fromDisplayStamp(bare: string): string {
   const parts =
     /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4}),?\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp])\.?[Mm]\.?$/.exec(
       bare,
