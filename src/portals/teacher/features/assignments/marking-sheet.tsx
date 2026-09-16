@@ -22,8 +22,10 @@ import {
   correctOption,
   isChoice,
   maxTotal,
+  keyScore,
   needsHand,
   openingScores,
+  overruled,
   rightCount,
   runningTotal,
   wasRight,
@@ -46,23 +48,30 @@ const RichTextView = lazy(() =>
  *
  * Every answer is shown, not only the ones to mark: a teacher deciding what a
  * written answer is worth reads the whole assignment, and hiding the multiple
- * choice would hide the half the school has already decided. Every answer
- * carries a box — the multiple-choice ones already filled in from the answer
- * key — because the school scores nothing itself and a mark nobody typed is a
- * mark nobody sent.
+ * choice would hide the half already settled.
+ *
+ * **Only the written answers carry a box.** A multiple-choice mark is read off
+ * the answer key and stated, not offered — the student picked an option and
+ * the assignment says which one is right, so there is nothing for a person to
+ * decide. Its mark is still in `scores` and still sent: the school scores
+ * nothing itself, so an answer left out of the payload is an answer left
+ * unmarked.
  */
 
 export type MarkingValues = { scores: Record<string, string>; comment: string };
 
 /**
- * What each answer may be given, so a mark over the question's own worth is
- * refused. Every answer, not the written ones alone: a multiple-choice box is
- * filled in but still typeable, and 50 on a question worth 2 is a total the
- * school will keep.
+ * What a written answer may be given, so a mark over the question's own worth
+ * is refused — 50 on a question worth 2 is a total the school will keep.
  */
 function schemaFor(answers: MarkingAnswer[]) {
+  // The written ones alone: a choice mark is not typed, so it cannot be wrong,
+  // and an error message under a figure nobody can change would be a complaint
+  // about this app's own arithmetic.
   const caps = new Map(
-    answers.map((answer) => [answerKey(answer), answer.points ?? 0]),
+    answers
+      .filter((answer) => !isChoice(answer))
+      .map((answer) => [answerKey(answer), answer.points ?? 0]),
   );
 
   return z
@@ -165,12 +174,12 @@ export function MarkingSheet({
 
         <div className="mt-6 flex items-center gap-3">
           <Button type="submit" pending={pending}>
-            {marked ? 'Save the correction' : 'Save the marks'}
+            {marked ? 'Save' : 'Save the marks'}
           </Button>
           <span className="text-2xs text-muted-foreground">
             {hand.length === 0
-              ? 'The multiple choice is marked against the answer key already — check it and save.'
-              : 'The multiple choice is filled in from the answer key; the written answers are yours. A box left empty is saved as nought.'}
+              ? 'Every answer here is multiple choice, so all of it is marked from the answer key — there is nothing to mark by hand. Save to file it.'
+              : 'The multiple choice is marked from the answer key; the written answers are yours. A box left empty is saved as nought.'}
           </span>
         </div>
       </form>
@@ -227,7 +236,11 @@ function AnswerCard({
                 aria-label="Does not match the answer key"
               />
             ))}
-          <AnswerScore answer={answer} cap={points} />
+          {theory ? (
+            <AnswerScore answer={answer} cap={points} />
+          ) : (
+            <KeyScore answer={answer} cap={points} />
+          )}
         </div>
       </div>
 
@@ -262,19 +275,55 @@ function AnswerCard({
  */
 function TheoryAnswer({ written }: { written: string }) {
   if (!written) {
-    return <p className="text-muted-foreground">Nothing was written.</p>
+    return <p className="text-muted-foreground">Nothing was written.</p>;
   }
   if (isRichText(written)) {
     return (
       <Suspense fallback={<div className="h-5 animate-ems-fade" />}>
         <RichTextView html={written} />
       </Suspense>
-    )
+    );
   }
-  return <p className="whitespace-pre-wrap text-foreground">{written}</p>
+  return <p className="whitespace-pre-wrap text-foreground">{written}</p>;
 }
 
-/** What this answer was worth to the student. Every answer carries one. */
+/**
+ * A multiple-choice mark: stated, not asked for.
+ *
+ * Drawn in the same place and to the same width as the written answer's box,
+ * so a teacher reading down the sheet sees one column of marks rather than two
+ * kinds of thing — but as text on the ground rather than a field, which is the
+ * difference somebody notices before they try to type in it.
+ *
+ * The figure is `keyScore` rather than the box's value because it is not in a
+ * box; both are the same number, since `openingScores` fills the form from the
+ * same function.
+ */
+function KeyScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
+  const given = keyScore(answer) ?? 0;
+  const replaced = overruled(answer);
+
+  return (
+    <div className="w-33">
+      <span className="mb-1.25 block text-xs font-normal text-foreground/70">
+        Mark out of {cap}
+      </span>
+      <div className="flex h-11 items-center rounded-lg bg-ui-field px-4 text-[15px] tabular-nums">
+        {given}
+      </div>
+      <div className="mt-1 text-2xs text-muted-foreground">
+        {/* Said out loud rather than left to happen: this mark is on file and
+            saving replaces it. Only ever shown for a submission marked by hand
+            before the key became the authority. */}
+        {replaced === null
+          ? 'From the answer key'
+          : `From the answer key. ${replaced} is on file; saving replaces it.`}
+      </div>
+    </div>
+  );
+}
+
+/** What this written answer was worth to the student. */
 function AnswerScore({ answer, cap }: { answer: MarkingAnswer; cap: number }) {
   const key = answerKey(answer);
   const name = `scores.${key}` as const;

@@ -5,6 +5,7 @@ import { pageRows } from '@/features/collections/api'
 import { localFirst } from '@/features/collections/local-first'
 import { byId } from '@/features/collections/order'
 import { BLANK } from '@/features/collections/blank'
+import { freeCopies, lendingLabel } from '@/features/library/book-read'
 import type { CollectionDef, Row } from '@/features/collections/types'
 import { when } from '@/features/collections/when'
 
@@ -31,7 +32,13 @@ function bookRow(book: Book): Row {
     author: text(book.author),
     section: text(book.section),
     copies: String(book.copies),
-    lending: book.isavailable,
+    // Through the reader, never straight off the row: `isavailable` is a
+    // number on this deployment and was a word until 2026-09-15, and a number
+    // handed to the table's column reader is what took this page down.
+    lending: lendingLabel(book),
+    // Only where the row carries a count. The old worded shape has none, and
+    // an em dash is the honest answer rather than a nought.
+    onShelf: freeCopies(book) === null ? BLANK : `${freeCopies(book)} of ${book.copies}`,
 
     // Read by the record panel and the edit flow, not by the table.
     isbn: text(book.isbn),
@@ -85,7 +92,11 @@ export const books: CollectionDef = {
     },
   ],
   filters: [
-    { key: 'lending', label: 'Any standing', options: ['Available', 'Unavailable'] },
+    // "All out" rather than "Unavailable": on this deployment nothing is
+    // retired, every copy is simply borrowed. A school still on the worded
+    // shape sees its own words in the rows; the dropdown offers what the
+    // count produces.
+    { key: 'lending', label: 'Any standing', options: ['Available', 'All out'] },
   ],
   columns: [
     { key: 'title', label: 'Title', cardRole: 'title' },
@@ -102,6 +113,7 @@ export const books: CollectionDef = {
     { key: 'section', label: 'Section' },
     { key: 'callno', label: 'Call number' },
     { key: 'copies', label: 'Copies held' },
+    { key: 'onShelf', label: 'On the shelf' },
     { key: 'lending', label: 'Lending' },
     { key: 'added', label: 'Added' },
   ],

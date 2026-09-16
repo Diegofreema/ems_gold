@@ -3,8 +3,20 @@ export type Book = {
   title: string
   author: string
   pubdate: string | null
-  /** The API spells availability as a word, not a boolean. */
-  isavailable: 'Available' | 'Unavailable'
+  /**
+   * **Two shapes, and it changed meaning between them.** Until 2026-09-15 this
+   * was the office's lending switch, spelled as a word — `"Available"` /
+   * `"Unavailable"` — and said nothing about stock. On 2026-09-16 bronze sent
+   * a **number** instead: book 1 reads `isavailable: 14` beside `copies: 15`,
+   * which is exactly `GET /loanedbooks/stock/1`'s `available`. So it is the
+   * free-copy count now.
+   *
+   * Never read directly — `freeCopies` / `lendingLabel` / `canLend` in
+   * `features/library/book-read.ts` take either. Reading it as a string is
+   * what took the library register down: a number reached a column reader that
+   * trims, and the page died on `value.trim is not a function`.
+   */
+  isavailable: number | 'Available' | 'Unavailable'
   date_created: string
   user_id: number
   isbn: string | null

@@ -262,7 +262,19 @@ export const assignments: CollectionDef = {
           label: 'Class',
           required: true,
           optionsFrom: 'my-classes',
-          hint: 'Who sits it. Every student of the class sees the assignment; no other class does.',
+          /*
+           * Narrowed by the subject, because a subject belongs to exactly one
+           * class: a teacher who takes Home Economics in SSS 3 alone was being
+           * offered every class they reach, and three of the four were a 
+           * class that does not sit the subject. Answered off the device —
+           * `/teachers/me/subjects` expands the class beside each subject — so
+           * it costs no request and still works with no connection.
+           *
+           * Changing the subject clears a class that is not the new subject's,
+           * which `RemoteSelectField` does for every dependent feed.
+           */
+          dependsOn: 'subject_id',
+          hint: 'Who sits it — the class that takes the subject you chose. Every student of that class sees the assignment; no other class does.',
         },
       ],
     },

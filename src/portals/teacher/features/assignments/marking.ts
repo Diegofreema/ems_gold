@@ -11,10 +11,12 @@ import { when } from '../../../../features/collections/when.ts'
  * Marking what the students of one assignment sent back.
  *
  * The school scores nothing itself — every answer of a submitted assignment
- * comes back with `score: null`, multiple choice included — so every mark here
- * is the teacher's. What the school does send is the answer key, on the
- * options, and that is enough for the sheet to propose the multiple-choice
- * marks rather than make a teacher work them out by eye.
+ * comes back with `score: null`, multiple choice included — so every mark that
+ * reaches it is worked out here. What the school does send is the answer key,
+ * on the options, which settles every multiple-choice answer outright: those
+ * marks are read off the key and are not the teacher's to change. What is left
+ * for a teacher to decide is the written answers, which is the whole of what a
+ * person is needed for.
  */
 
 export type SubmissionState = 'To mark' | 'Marked'
@@ -106,17 +108,56 @@ export function wasRight(answer: MarkingAnswer): boolean | null {
   return chosen ? Boolean(chosen.is_correct) : null
 }
 
-/** What the sheet opens on for one answer: the mark given, or the one proposed. */
+/**
+ * What the answer key gives this answer, and null where it has nothing to say.
+ *
+ * The question's own points where the student picked the right option, and
+ * nought where they did not — which includes the ones they left alone, since
+ * an unanswered question earns nothing whatever the reason it was skipped.
+ */
+export function keyScore(answer: MarkingAnswer): number | null {
+  if (!isChoice(answer)) return null
+  return wasRight(answer) === true ? (answer.points ?? 0) : 0
+}
+
+/**
+ * What the sheet opens on for one answer.
+ *
+ * **A multiple-choice mark is the key's, and the key's alone** (the teacher's
+ * call, 2026-09-16). It used to be a *proposal* the teacher could type over,
+ * which is what a marking sheet ought to offer for a judgement — but this is
+ * not a judgement: the student picked an option, the assignment says which
+ * option is right, and both came back in the same payload. Offering a box
+ * invited a teacher to overrule arithmetic they cannot see the working of, and
+ * to disagree with the "Multiple choice right" tile sitting above it.
+ *
+ * So the key wins even over a mark already on file. A stored score that
+ * disagrees is a mark given by hand before this rule, and re-saving the
+ * submission replaces it — `overruled` is how the card says so out loud
+ * rather than letting it change under the teacher.
+ *
+ * A written answer is nobody's to propose: it opens on the mark given, or
+ * empty.
+ */
 export function openingScore(answer: MarkingAnswer): string {
-  if (answer.score != null) return String(answer.score)
-  // A written answer is nobody's to propose. A multiple-choice one is decided
-  // by the key the school already sent: the question's own points where the
-  // student picked the right option, and nought where they did not — which
-  // includes the ones they left alone, since an unanswered question earns
-  // nothing whatever the reason it was skipped. The teacher can still overrule
-  // any of it; what they should not have to do is work it out by eye.
-  if (!isChoice(answer)) return ''
-  return wasRight(answer) === true ? String(answer.points ?? 0) : '0'
+  const key = keyScore(answer)
+  if (key !== null) return String(key)
+  return answer.score != null ? String(answer.score) : ''
+}
+
+/**
+ * A mark on file for a choice answer that the answer key does not agree with,
+ * and null where there is none.
+ *
+ * Only ever non-null for a submission marked before the key became the
+ * authority, or one whose key has been corrected since. The card shows it, so
+ * a mark about to be replaced is a mark the teacher was told about.
+ */
+export function overruled(answer: MarkingAnswer): number | null {
+  const key = keyScore(answer)
+  if (key === null || answer.score == null) return null
+  const stored = Number(answer.score)
+  return Number.isFinite(stored) && stored !== key ? stored : null
 }
 
 export function openingScores(answers: MarkingAnswer[]): Record<string, string> {

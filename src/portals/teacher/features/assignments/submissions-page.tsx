@@ -235,7 +235,7 @@ function Header({
       title={title}
       description={
         description ||
-        'What your students submitted, for you to mark. The multiple choice is proposed from the answer key; the written answers, and the note beside the mark, are yours.'
+        'What your students submitted, for you to mark. The multiple choice is marked from the answer key; the written answers, and the note beside the mark, are yours.'
       }
       action={action}
     />

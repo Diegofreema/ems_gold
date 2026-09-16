@@ -27,8 +27,23 @@ export function filledColumns(specs: ColumnSpec[], rows: Row[]): ColumnSpec[] {
     (spec) =>
       spec.cardRole === 'title' ||
       rows.some((row) => {
+        /*
+         * `String(...)` rather than trusting the type. `Row` says every cell
+         * is a string and a row builder that hands over a number is a bug —
+         * but the bug lands *here*, as `value.trim is not a function` thrown
+         * out of a `.some()` during render, which takes the whole register to
+         * its error boundary and reports it as "We could not reach the school
+         * system" about an answer the school gave in full.
+         *
+         * That is what the library page did on 2026-09-16, when `isavailable`
+         * changed from a word to a number under it. One field's shape must not
+         * be able to delete a page: a wrong-looking cell is a bug somebody can
+         * see and fix, and a dead register is a bug that hides its own cause.
+         */
         const value = row[spec.key]
-        return value !== undefined && value.trim() !== '' && value.trim() !== BLANK
+        if (value === undefined || value === null) return false
+        const written = String(value).trim()
+        return written !== '' && written !== BLANK
       }),
   )
 }

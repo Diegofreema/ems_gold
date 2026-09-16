@@ -17,6 +17,6 @@ export const Route = createFileRoute('/teacher/registers')({
    * school's.
    */
   loader: () => freshen(registerCollections),
-  staticData: { title: 'Registers taken', crumb: 'Teaching' },
+  staticData: { title: 'Attendance timeline', crumb: 'Teaching' },
   component: CoveragePage,
 });

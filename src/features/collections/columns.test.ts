@@ -51,3 +51,31 @@ test('an empty string counts as blank, and a zero does not', () => {
 test('whitespace is not data', () => {
   assert.ok(!keys(filledColumns(SPECS, [row({ klass: '   ' })])).includes('klass'))
 })
+
+test('a cell that is not a string cannot take the register down', () => {
+  /*
+   * The library page, 2026-09-16: `isavailable` changed from "Available" to a
+   * number under the row builder, and the raw value reached this function.
+   * `value.trim()` threw through the whole register and the route boundary
+   * reported it as "We could not reach the school system" — about an answer
+   * the school had given in full.
+   */
+  const specs = [
+    { key: 'title', label: 'Title' },
+    { key: 'lending', label: 'Lending' },
+  ]
+  const rows = [{ id: '1', title: 'General Maths', lending: 14 }] as unknown as Row[]
+
+  assert.doesNotThrow(() => filledColumns(specs, rows))
+  // And it is a filled column, not a dropped one: 14 is a value.
+  assert.deepEqual(filledColumns(specs, rows).map((one) => one.key), ['title', 'lending'])
+})
+
+test('a null cell is still an empty one', () => {
+  const specs = [
+    { key: 'title', label: 'Title' },
+    { key: 'author', label: 'Author' },
+  ]
+  const rows = [{ id: '1', title: 'General Maths', author: null }] as unknown as Row[]
+  assert.deepEqual(filledColumns(specs, rows).map((one) => one.key), ['title'])
+})

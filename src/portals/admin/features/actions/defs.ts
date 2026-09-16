@@ -666,17 +666,18 @@ function editTitle(row?: Row): ActionDef {
       { key: 'section', label: 'Section', placeholder: 'Keep as written' },
       { key: 'callno', label: 'Call number', placeholder: 'Keep as written' },
       { key: 'department_id', label: 'Class', optionsFrom: 'classes' },
-      {
-        key: 'isavailable',
-        label: 'Availability',
-        // A word, not an empty value: the select control refuses "" items.
-        value: 'Keep',
-        options: [
-          { value: 'Keep', label: 'Keep as it is' },
-          { value: 'Available', label: 'Available' },
-          { value: 'Unavailable', label: 'Unavailable — retire from lending' },
-        ],
-      },
+      /*
+       * **Availability is no longer asked.** It was a switch the office set —
+       * `isavailable` spelled `"Available"` / `"Unavailable"` — and on
+       * 2026-09-16 bronze began answering with a number instead: the count of
+       * copies free to lend, `copies` minus what is out, which is the
+       * library's own arithmetic and nobody's to type. Offering the words
+       * would have written one into a numeric column.
+       *
+       * The value is still sent, unchanged, because this endpoint takes the
+       * record whole rather than a diff — see `run` below. What is gone is the
+       * question.
+       */
     ],
     cta: 'Save the changes',
     footnote: 'Only what you filled in changes; the rest stands as written.',
@@ -698,11 +699,10 @@ function editTitle(row?: Row): ActionDef {
         callno: typed('callno') || book.callno || undefined,
         department_id:
           Number(values.department_id) || book.department_id || undefined,
-        isavailable:
-          typed('isavailable') === 'Available' ||
-          typed('isavailable') === 'Unavailable'
-            ? (typed('isavailable') as 'Available' | 'Unavailable')
-            : book.isavailable,
+        // Handed back exactly as it was read. The flow sends the record whole,
+        // so leaving the key out could blank a column this form has no
+        // business setting — and it is derived stock now, not a switch.
+        isavailable: book.isavailable,
       });
       // The shelf page and both pickers read the catalogue; a rename or a
       // retirement should not wait out their caches.
@@ -878,7 +878,7 @@ function correctLoan(row?: Row): ActionDef {
         hint: 'Leave empty to keep what is written.',
       },
     ],
-    cta: 'Save the correction',
+    cta: 'Save',
     footnote: 'Only the due date and condition change; the loan itself stands.',
     done: () => 'Loan corrected',
     run: async (values) => {

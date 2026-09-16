@@ -23,8 +23,10 @@ import { teacherArms, teacherSubjects } from '@/db/collections/teaching'
 import { SET } from '@/db/ids'
 import { queryClient } from '@/lib/query-client'
 import { methodOptions } from './payment-methods'
+import { myClasses } from './my-classes'
 import { guardianOption } from './guardian-option'
 import { audienceOptions } from '@/portals/admin/collections/notice-row'
+import { lendingLabel } from '../library/book-read'
 import { loanBookId, loanReturned } from '../library/loan-read'
 import { distinct, type Option, type OptionsKey, type SearchKey } from './options'
 
@@ -208,7 +210,7 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
       books.map((book) => ({
         value: String(book.id),
         label:
-          book.isavailable === 'Unavailable' ? `${book.title} · retired` : book.title,
+          lendingLabel(book) === 'Available' ? book.title : `${book.title} · ${lendingLabel(book).toLowerCase()}`,
         meta: book.author ?? '',
       })),
     )
@@ -275,18 +277,16 @@ async function fetchOptions(key: OptionsKey, dependsOn: string): Promise<Option[
      * off the device's own sets, like every other feed here — this was the
      * one feed left asking the school, and offline it left the assignment
      * form's required class field with nothing to offer.
+     *
+     * `dependsOn` is a subject, where a field declares one, and narrows this
+     * to the single class that sits it — see `myClasses`. Narrowed **on the
+     * device**, like the arms feed: the class is already expanded on the
+     * subject, so it costs no request and the dropdown still fills with no
+     * connection.
      */
     const [subjects, arms] = await Promise.all([held(teacherSubjects), held(teacherArms)])
-    const classes = new Map<number, { name: string; code: string }>()
-    for (const one of [
-      ...subjects.map((subject) => subject.department),
-      ...arms.map((arm) => arm.department),
-    ]) {
-      if (one) classes.set(one.id, { name: one.name, code: one.deptcode ?? '' })
-    }
-
     return distinct(
-      [...classes].map(([id, { name, code }]) => ({
+      myClasses(subjects, arms, dependsOn).map(({ id, name, code }) => ({
         value: String(id),
         label: name,
         // This school has two classes both named SSS I; the code tells them

@@ -55,7 +55,7 @@ export function CoveragePage() {
   const header = (
     <PageHeader
       kicker="Teaching"
-      title="Registers taken"
+      title="Attendance timeline"
       description="Which days this arm was marked at all, over a period. Weekends are not counted. Open a missing day to take it late."
     />
   );
@@ -106,6 +106,9 @@ export function CoveragePage() {
           className="mb-3"
           tiles={[
             { label: 'School days', value: formatCount(data.school_days ?? 0) },
+            /* Still "Registers taken" while the page is now called Attendance
+               timeline: the tile is a count of registers, and "Attendance
+               timeline: 12" names nothing. A tile says what its figure is. */
             { label: 'Registers taken', value: formatCount(data.taken ?? 0) },
             { label: 'Never taken', value: formatCount(data.missing_count ?? 0) },
           ]}

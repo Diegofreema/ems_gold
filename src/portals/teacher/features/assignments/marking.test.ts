@@ -10,10 +10,12 @@ import {
   chosenOption,
   correctOption,
   gradeBody,
+  keyScore,
   maxTotal,
   needsHand,
   openingScore,
   openingScores,
+  overruled,
   rightCount,
   runningTotal,
   stateOf,
@@ -144,15 +146,43 @@ test('an unanswered choice is not a wrong one, and neither is a written answer',
   assert.equal(chosenOption(skipped), '')
 })
 
-test('the sheet proposes the multiple-choice marks and asks for the rest', () => {
+test('the sheet marks the multiple choice itself and asks for the rest', () => {
   // The school scores nothing: every answer came back null. The key it does
-  // send is enough to fill the choice in, and a written answer is nobody's to
+  // send settles the choice outright, and a written answer is nobody's to
   // guess at.
   assert.equal(openingScore(RIGHT), '1')
   assert.equal(openingScore(WRONG), '0')
   assert.equal(openingScore(WRITTEN), '')
-  // A mark already given is what it opens on, whatever the key says.
-  assert.equal(openingScore({ ...WRONG, score: 1 }), '1')
+})
+
+test('a written answer opens on the mark already given', () => {
+  assert.equal(openingScore({ ...WRITTEN, score: 7 }), '7')
+})
+
+test('a choice answer opens on the key, even over a mark on file', () => {
+  // The teacher can no longer type over a choice mark, so a stored one that
+  // disagrees is a mark given by hand before that rule. The key is the
+  // authority; the card says the stored figure is about to be replaced.
+  assert.equal(openingScore({ ...WRONG, score: 1 }), '0')
+  assert.equal(overruled({ ...WRONG, score: 1 }), 1)
+})
+
+test('a stored choice mark the key agrees with is not called a replacement', () => {
+  // The ordinary case for a submission marked through this sheet: nothing to
+  // say, so the card says nothing.
+  assert.equal(overruled({ ...RIGHT, score: 1 }), null)
+  assert.equal(overruled({ ...WRONG, score: 0 }), null)
+})
+
+test('nothing is claimed about a written answer or an unmarked one', () => {
+  assert.equal(keyScore(WRITTEN), null)
+  assert.equal(overruled({ ...WRITTEN, score: 3 }), null)
+  assert.equal(overruled(WRONG), null)
+})
+
+test('the key gives the question’s own points, not a flat one', () => {
+  assert.equal(keyScore({ ...RIGHT, points: 5 }), 5)
+  assert.equal(keyScore({ ...WRONG, points: 5 }), 0)
 })
 
 test('a choice the student never answered is filled in as nought, not left blank', () => {

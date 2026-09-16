@@ -40,7 +40,7 @@ export const teacherNav: NavGroup[] = [
       },
       {
         to: '/teacher/registers',
-        label: 'Registers taken',
+        label: 'Attendance timeline',
         icon: CalendarSearch,
       },
       {
