@@ -31,6 +31,8 @@ import {
   type MoveValues,
   studentMove,
 } from '@/portals/admin/collections/student-move';
+import { borrowBlock } from '@/features/library/loan-read';
+import { BOTH_COPIES_STUCK, needsTheLoanId } from '@/features/library/return-route';
 import { searchedLabel } from '@/features/collections/option-feeds';
 import { formatDate, formatNaira, parseNaira } from '@/lib/format';
 import { queryClient } from '@/lib/query-client';
@@ -479,18 +481,30 @@ function lend(): ActionDef {
         values?.datetoreturn instanceof Date
           ? formatDate(values.datetoreturn)
           : null;
-      // Only a flat "false" warns: an answer without the flag, or no answer at
-      // all, proves nothing, and the lend endpoint has its own refusal.
-      const blocked = history?.may_borrow === false;
+      /*
+       * A refusal is a dead end, not a warning.
+       *
+       * It used to offer "Try anyway" beside a hedge — the school had already
+       * said no, and the desk was invited to press on and be refused a second
+       * time, in a toast, having lost the dialog that explained it. The flag is
+       * the school's own answer about the school's own rule, so there is
+       * nothing here for a librarian to overrule: no button is drawn, and the
+       * way back is the only way.
+       *
+       * Only a flat "false" blocks. An answer without the flag, or no answer at
+       * all, proves nothing, and the lend endpoint has its own refusal for
+       * whatever this could not see.
+       */
+      const refusal = borrowBlock(history);
       return {
-        title: blocked ? 'The library would refuse this' : 'Issue this book?',
-        body: blocked
-          ? 'Their borrowing record says they may not take a book right now — one is still out against them, or a fine is owing. You can press on, and the library will answer with its own reason.'
-          : 'The copy is written out against their name and counts against the library until it is brought back.',
+        title: refusal ? 'This action cannot be performed' : 'Issue this book?',
+        body:
+          refusal ||
+          'The copy is written out against their name and counts against the library until it is brought back.',
         subject: [bookLabel(values), name, due ? `due ${due}` : undefined]
           .filter(Boolean)
           .join(' · '),
-        cta: blocked ? 'Try anyway' : 'Issue the book',
+        cta: refusal ? undefined : 'Issue the book',
         cancel: 'Go back',
       };
     },
@@ -770,19 +784,30 @@ function takeBack(row?: Row): ActionDef {
     run: async (values) => {
       if (!row) throw new Error('That loan could not be loaded.');
       /*
-       * The book, not the loan: returning is keyed on the title the same way
-       * lending is. The row carries both, and a row that names no book id is
-       * refused here rather than posted to a path with a hole in it — a loan
-       * read off a shape that spells the title some third way would otherwise
-       * return whatever `/admins/books/undefined/return` happens to mean.
+       * Keyed on the book, as lending is. A row that names no title is refused
+       * here rather than posted to a path with a hole in it.
+       *
+       * The school refuses with 409 where a title has two copies out and it
+       * cannot tell which came back. That is its own to settle — there is no
+       * second route to try, and the two that look like one are dead ends
+       * (`libraryService.returnLoan` has the map). All this does is put the
+       * refusal into words a counter can act on, since the school's own
+       * sentence ends in an API path.
        */
       const bookId = String(row.book_id ?? '').trim();
       if (!bookId) {
         throw new Error('That loan does not say which title it is of.');
       }
-      await libraryService.returnLoan(bookId, {
-        status: String(values.status ?? '').trim(),
-      });
+      const condition = String(values.status ?? '').trim();
+      // Under both names — see `ReturnLoanBody`. They cannot disagree.
+      const body = { status: condition, condition };
+
+      try {
+        await libraryService.returnLoan(bookId, body);
+      } catch (refusal) {
+        if (!needsTheLoanId(refusal)) throw refusal;
+        throw new Error(BOTH_COPIES_STUCK);
+      }
       dropCatalogue();
       return { message: `${row.book} is back on the shelf.` };
     },

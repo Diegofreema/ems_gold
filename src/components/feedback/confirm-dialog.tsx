@@ -25,8 +25,16 @@ export type ConfirmRequest = {
    * them.
    */
   subject: ReactNode
-  /** Label of the destructive button, e.g. "Delete the student". */
-  cta: string
+  /**
+   * Label of the destructive button, e.g. "Delete the student".
+   *
+   * Left out where there is nothing to confirm — the action cannot be taken at
+   * all, and the dialog says why. No button is drawn then, and the way back
+   * becomes the only one: offering a "Try anyway" beside a refusal the school
+   * has already made invites the desk to press it and be refused again, on a
+   * page it has to be led back from.
+   */
+  cta?: string
   /** Label of the cancel button — "Keep it", "Go back", "Keep working". */
   cancel?: string
   /** Defaults to `danger`, which is what most of these dialogs are for. */
@@ -110,7 +118,10 @@ export function ConfirmDialog({
                   overwrites the button's `data-slot` and so loses the design's
                   44px touch target on a phone. */}
               <Button
-                variant="outline"
+                // The only button when there is nothing to confirm, and then it
+                // is the solid one: a lone outline button reads as the quiet
+                // half of a pair whose other half never arrived.
+                variant={request.cta ? 'outline' : 'default'}
                 disabled={pending}
                 onClick={() => onOpenChange(false)}
               >
@@ -118,16 +129,18 @@ export function ConfirmDialog({
               </Button>
               {/* The brand tone takes the button's own default fill, which is
                   already the brand — only the danger one is dressed here. */}
-              <Button
-                pending={pending}
-                onClick={() => void run()}
-                className={cn(
-                  !brand &&
-                    'bg-danger text-white hover:bg-danger/85 focus-visible:border-danger focus-visible:ring-danger/40',
-                )}
-              >
-                {request.cta}
-              </Button>
+              {request.cta && (
+                <Button
+                  pending={pending}
+                  onClick={() => void run()}
+                  className={cn(
+                    !brand &&
+                      'bg-danger text-white hover:bg-danger/85 focus-visible:border-danger focus-visible:ring-danger/40',
+                  )}
+                >
+                  {request.cta}
+                </Button>
+              )}
             </div>
           </>
         )}

@@ -95,6 +95,7 @@ export type ActionConfirm = {
   title: string
   body: string
   subject: string
-  cta: string
+  /** Left out where the flow cannot go on — see `ConfirmRequest.cta`. */
+  cta?: string
   cancel: string
 }

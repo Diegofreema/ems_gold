@@ -198,8 +198,27 @@ export type LendBody = {
  * book id alone does not settle when two copies are out — is unverified.
  */
 export type ReturnLoanBody = {
-  /** The condition the book came back in. */
+  /**
+   * The condition the book came back in, sent under **both** names it could
+   * have.
+   *
+   * The two endpoints either side of this one disagree: the book-keyed return
+   * took `status`, while `POST /loanedbooks/{loanId}` — correcting a loan,
+   * under the same prefix as the return that is actually used — takes
+   * `condition`. Which one the loan-keyed return reads cannot be established
+   * without returning a real book: it runs no validation before it looks the
+   * loan up, so every probe against an id nothing holds answers 404 whatever
+   * the body says.
+   *
+   * So both go, carrying the same word. A key the controller does not know is
+   * ignored; a key it does know is the one that was going to be dropped in
+   * silence otherwise — and a condition that vanishes on the way to the school
+   * is exactly the kind of loss nothing on the screen would report. Settle it
+   * at the desk: return one copy, open the loan, and see which name the school
+   * read it back under. Then drop the other.
+   */
   status?: string
+  condition?: string
   /** YYYY-MM-DD, to backdate the return. Left out, it is today. */
   returned_on?: string
 }
@@ -223,6 +242,29 @@ export type CorrectLoanBody = {
  * then simply asks the lend endpoint, which answers with its own reason.
  */
 export type StudentLoanHistory = {
+  student_id?: number | null
   may_borrow?: boolean
   loans: Loan[]
+  /**
+   * Why the flag says what it says — read off bronze 2026-09-16, alongside
+   * `borrowed` (loans ever made) and `still_out` (how many of them are).
+   *
+   * Both are worth having rather than guessing between: the desk used to be
+   * told "one is still out against them, or a fine is owing", which is the
+   * portal reciting the two rules it knows about instead of reading the
+   * answer in front of it. The school names the title and totals the fine.
+   */
+  books_out?: BookOut[] | null
+  /** Naira, and `0` on every student read so far. */
+  fines_owing?: number | null
+  borrowed?: number | null
+  still_out?: number | null
+}
+
+/** One title a student has not brought back, as the history lists it. */
+export type BookOut = {
+  book_id?: number | null
+  title?: string | null
+  loan_id?: number | null
+  source?: string | null
 }

@@ -3,6 +3,7 @@ import type { Id } from '../types'
 import type {
   Book,
   BookBody,
+  BookOut,
   BookSearchParams,
   BookStock,
   CorrectLoanBody,
@@ -40,11 +41,40 @@ function asLoan(answer: unknown): Loan {
   return wrapped?.loan ?? wrapped?.data ?? (answer as Loan)
 }
 
+/** A count the school sent, or undefined where it sent something else. */
+function figure(value: unknown): number | undefined {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+/**
+ * One student's borrowing history, and **why** it says what it says.
+ *
+ * The three reason fields are carried through rather than dropped. This used
+ * to rebuild the answer out of `may_borrow` and `loans` alone, so the desk was
+ * told a student may not borrow and nothing about which book was out — the
+ * dialog fell back to "The library will not lend to them at the moment" while
+ * the title sat in the answer it had just thrown away. A reader that narrows
+ * an answer is a reader that has to be widened again every time somebody wants
+ * to say something true.
+ */
 function asHistory(answer: unknown): StudentLoanHistory {
   const wrapped = answer as { data?: unknown } | null
-  const inner = (wrapped?.data ?? answer) as { may_borrow?: unknown } | null
+  const inner = (wrapped?.data ?? answer) as {
+    student_id?: unknown
+    may_borrow?: unknown
+    books_out?: unknown
+    fines_owing?: unknown
+    borrowed?: unknown
+    still_out?: unknown
+  } | null
   return {
+    student_id: figure(inner?.student_id),
     may_borrow: typeof inner?.may_borrow === 'boolean' ? inner.may_borrow : undefined,
+    books_out: Array.isArray(inner?.books_out) ? (inner.books_out as BookOut[]) : undefined,
+    fines_owing: figure(inner?.fines_owing),
+    borrowed: figure(inner?.borrowed),
+    still_out: figure(inner?.still_out),
     loans: asLoans(inner),
   }
 }
@@ -108,8 +138,28 @@ export const libraryService = {
     request<unknown>(`admins/books/${bookId}/lend`, { method: 'POST', body }),
 
   /**
-   * Marks the copy returned and lends again — `POST /admins/books/{bookId}/return`,
-   * off the book like lending and not off the loan. 409 if already back.
+   * Marks a copy returned — `POST /admins/books/{bookId}/return`, keyed on the
+   * book the same way lending is.
+   *
+   * The one return endpoint this app calls, and the only one this deployment
+   * answers. Mapped on 2026-09-16 after the desk hit a 409: with two copies of
+   * one title out to two pupils it cannot tell which came back, and the
+   * sentence it refuses with names a loan-keyed route,
+   * `POST /api/admins/borrowed-books/{loanId}/return`. That route is not
+   * deployed — probed as POST, PUT and PATCH, as `/return`, `/returned` and
+   * `return/{id}`, with and without the `admins` prefix — so nothing here
+   * calls it, and the ambiguity is the school's to settle rather than this
+   * app's to route around.
+   *
+   * Two blind alleys worth not walking down twice. The book-keyed route
+   * **ignores every key that could disambiguate it**: `loan_id`, `loanId`,
+   * `borrowedbook_id` and `student_id` each come back with the same 409. And
+   * `/loanedbooks/{loanId}/return`, which does exist, addresses the
+   * `loanedbooks` table, while every borrowing this school holds carries
+   * `source: "borrowedbooks"` — so `GET /loanedbooks/2` is a 404 for a loan
+   * sitting in the register.
+   *
+   * 409 if the copy is already back.
    */
   returnLoan: (bookId: Id, body: ReturnLoanBody) =>
     request<unknown>(`admins/books/${bookId}/return`, { method: 'POST', body }),

@@ -330,6 +330,9 @@ export const classes: CollectionDef = {
         { key: 'day', label: 'Day' },
         { key: 'time', label: 'Time' },
         { key: 'subject', label: 'Subject' },
+        // The grid resolves its own staff, so the class's week names them
+        // without a second request. Two teachers to a period is ordinary here.
+        { key: 'teachers', label: 'Taken by' },
       ],
       source: async (recordId) =>
         weekPeriods(await timetablesService.forClass(recordId)).map(classPeriodRow),

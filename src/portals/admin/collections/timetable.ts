@@ -67,7 +67,7 @@ export const timetable: CollectionDef = {
   description:
     'Every period the school teaches, class by class. A period is one subject, on one day, between two times — add them here and each class’s week builds itself.',
   action: 'Add period',
-  searchHint: 'Search subject, class or day',
+  searchHint: 'Search subject, class, teacher or day',
   footer: 'Every period on record, across all classes',
   emptyTitle: 'No periods yet',
   emptyBody:
@@ -94,10 +94,17 @@ export const timetable: CollectionDef = {
     { key: 'day', label: 'Day', cardRole: 'subtitle' },
     { key: 'time', label: 'Time' },
     { key: 'subject', label: 'Subject', cardRole: 'tag' },
+    /*
+     * Who is standing in front of them. "Taken by" rather than "Teacher"
+     * because a period can have two — the school runs them — and a column
+     * headed with the singular would be contradicted by its own cells.
+     */
+    { key: 'teachers', label: 'Taken by' },
   ],
   detail: [
     { key: 'subject', label: 'Subject' },
     { key: 'klass', label: 'Class' },
+    { key: 'teachers', label: 'Taken by' },
     { key: 'day', label: 'Day' },
     { key: 'time', label: 'Time' },
     { key: 'session', label: 'Session' },

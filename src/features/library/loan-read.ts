@@ -1,4 +1,5 @@
-import type { Loan } from '../../api/library/types.ts'
+import type { Loan, StudentLoanHistory } from '../../api/library/types.ts'
+import { formatNaira } from '../../lib/format.ts'
 import { BLANK } from '../collections/blank.ts'
 
 /**
@@ -157,4 +158,39 @@ export function loanPaid(loan: Loan): string {
   const owed = Number.isFinite(fine) && fine > 0
   if (!owed) return BLANK
   return loan.paid === true ? 'Paid' : 'Owing'
+}
+
+/**
+ * Why the library will not lend to this student, in one line.
+ *
+ * Built from what the school actually says — `books_out` names the title and
+ * `fines_owing` totals the money — rather than from the two rules the portal
+ * happens to know. The sentence it replaced recited both and committed to
+ * neither ("one is still out against them, or a fine is owing"), which is
+ * longer than the answer and less use: the desk's next question is *which
+ * book*, and the answer was already on the wire.
+ *
+ * Empty where the student may borrow, so the caller can ask this one question
+ * instead of two.
+ */
+export function borrowBlock(history: StudentLoanHistory | null | undefined): string {
+  // Only a flat `false` blocks. An answer without the flag proves nothing, and
+  // the lend endpoint has its own refusal for whatever this cannot see.
+  if (history?.may_borrow !== false) return ''
+
+  const titles = (history.books_out ?? [])
+    .map((one) => one?.title?.trim())
+    .filter((title): title is string => Boolean(title))
+  const out = Math.max(titles.length, Number(history.still_out) || 0)
+  const fine = Number(history.fines_owing) || 0
+
+  const said: string[] = []
+  if (titles.length === 1) said.push(`They still have ${titles[0]} out.`)
+  else if (out > 1) said.push(`They still have ${out} books out.`)
+  else if (out === 1) said.push('They still have a book out.')
+  if (fine > 0) said.push(`A fine of ${formatNaira(fine)} is owing.`)
+
+  // The school said no and would not say why — which is still worth saying,
+  // rather than inventing a reason to fill the line.
+  return said.join(' ') || 'The library will not lend to them at the moment.'
 }

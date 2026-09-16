@@ -41,6 +41,41 @@ export function periodLabel(period: Period): string {
   return period.label?.trim() || period.subject_name?.trim() || period.title?.trim() || BLANK
 }
 
+/**
+ * Who takes the period, in the order the school sent them.
+ *
+ * Off `teachers`, never off `teacher`: the singular field is null as soon as a
+ * period has two of them, so reading it would leave the staffroom's own
+ * job-share slots looking unstaffed. The string is still read where the list
+ * itself is missing, which is what a deployment made before this field existed
+ * sends — there, one name is all there ever was.
+ *
+ * Deduplicated on the name, because a teacher assigned to a period twice over
+ * — the same person for the subject and for the arm — is one person standing
+ * in one room, and a column reading "ADAMA U StaffLAST, ADAMA U StaffLAST"
+ * reads as a fault in the portal rather than as a fact about the school.
+ */
+export function periodTeachers(period: Period): string[] {
+  const listed = (period.teachers ?? [])
+    .map((one) => one?.name?.trim())
+    .filter((name): name is string => Boolean(name))
+
+  const named = listed.length ? listed : [period.teacher?.trim()].filter(Boolean)
+  return [...new Set(named as string[])]
+}
+
+/**
+ * The same, as one line for a cell.
+ *
+ * Every name rather than the first and a count: two is the whole of it on this
+ * school, and "Mrs Okafor +1" answers a question nobody asked while hiding the
+ * one they did. A period nobody is down for is a dash — the school runs
+ * Assembly with no staff against it, and that is a real answer.
+ */
+export function periodTeaching(period: Period): string {
+  return periodTeachers(period).join(', ') || BLANK
+}
+
 export function periodRow(period: Period): Row {
   return {
     id: String(period.id),
@@ -48,6 +83,7 @@ export function periodRow(period: Period): Row {
     day: text(period.day_of_week),
     time: periodTime(period),
     subject: periodLabel(period),
+    teachers: periodTeaching(period),
 
     // Read by the record panel and by the edit form, not by the table.
     session: text(period.session_name),
@@ -74,6 +110,7 @@ export function classPeriodRow(period: Period): Row {
     day: text(period.day_of_week),
     time: periodTime(period),
     subject: periodLabel(period),
+    teachers: periodTeaching(period),
   }
 }
 

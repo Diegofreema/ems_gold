@@ -7,6 +7,8 @@ import {
   periodDeleteBody,
   periodLabel,
   periodRow,
+  periodTeachers,
+  periodTeaching,
   periodTime,
 } from './period-row.ts'
 
@@ -120,7 +122,69 @@ test('a class’s own tab drops the class it is already about', () => {
     day: 'Monday',
     time: '08:56 – 10:56',
     subject: 'ENGLISH LANGUAGE',
+    // No staff on this row at all — an older answer, before the field existed.
+    teachers: '—',
   })
+})
+
+/**
+ * Period 103 as bronze sent it on 2026-09-16. Two teachers on the list, and
+ * `teacher` null beside them — which is the whole reason this reader exists.
+ */
+const SHARED: Period = {
+  ...PERIOD,
+  id: 103,
+  teacher: null,
+  teachers: [
+    { id: 2, name: 'Teacher u 1 New Teacher' },
+    { id: 13, name: 'ADAMA U StaffLAST' },
+  ],
+}
+
+test('a period two teachers take names both of them', () => {
+  assert.deepEqual(periodTeachers(SHARED), ['Teacher u 1 New Teacher', 'ADAMA U StaffLAST'])
+  assert.equal(periodTeaching(SHARED), 'Teacher u 1 New Teacher, ADAMA U StaffLAST')
+  assert.equal(periodRow(SHARED).teachers, 'Teacher u 1 New Teacher, ADAMA U StaffLAST')
+})
+
+test('the singular field is not believed — it is null on exactly those periods', () => {
+  // Reading `teacher` here would print a dash on the shared slots and leave
+  // the office to conclude nobody takes them.
+  assert.equal(SHARED.teacher, null)
+  assert.notEqual(periodTeaching(SHARED), '—')
+})
+
+test('one teacher is one name, off the list rather than the string', () => {
+  const alone: Period = {
+    ...PERIOD,
+    teacher: 'NETPRO2 TEACHER2',
+    teachers: [{ id: 7, name: 'NETPRO2 TEACHER2' }],
+  }
+  assert.equal(periodTeaching(alone), 'NETPRO2 TEACHER2')
+})
+
+test('a school still sending only the string is read by it', () => {
+  // The field arrived mid-September; a deployment behind that sends the name
+  // alone, and there one name is all there ever was.
+  assert.equal(periodTeaching({ ...PERIOD, teacher: 'Mrs Okafor' }), 'Mrs Okafor')
+})
+
+test('a period nobody is down for says so, rather than guessing', () => {
+  // Assembly on this school: `teachers: []`, `teacher: null`. A real answer.
+  assert.equal(periodTeaching({ ...PERIOD, teachers: [], teacher: null }), '—')
+  assert.deepEqual(periodTeachers({ ...PERIOD, teachers: [] }), [])
+})
+
+test('the same teacher listed twice is one person in one room', () => {
+  const twice: Period = {
+    ...PERIOD,
+    teachers: [
+      { id: 2, name: 'ADAMA U StaffLAST' },
+      { id: 2, name: 'ADAMA U StaffLAST' },
+      { id: 5, name: '  ' },
+    ],
+  }
+  assert.equal(periodTeaching(twice), 'ADAMA U StaffLAST')
 })
 
 test('the confirm says what goes and what does not', () => {

@@ -45,6 +45,39 @@ export type Period = {
   semester_id?: number | null
   semester_name?: string | null
   dateadded?: string | null
+  /**
+   * Who takes the period. Added by the school between 2026-09-01 and
+   * 2026-09-16, and read off bronze on the second date.
+   *
+   * **This list is the answer; `teacher` beside it is not.** The singular
+   * field carries a name only where there is exactly one, and is `null` the
+   * moment a period has two — period 103 is taken by "Teacher u 1 New
+   * Teacher" and "ADAMA U StaffLAST", and sends `teacher: null`. So a reader
+   * that took the obvious-looking field would print nothing on precisely the
+   * periods somebody is asking about, and print it silently: an empty column
+   * is what a missing field and an unstaffed period look like alike.
+   *
+   * Resolved by the server on all three period-bearing endpoints — the
+   * office's flat list, `/timetables/{id}`, and the class grid — so a period
+   * names its staff wherever it is drawn and nothing has to look them up.
+   */
+  teachers?: PeriodTeacher[] | null
+  /** One name, and null where there are none *or* more than one. Above. */
+  teacher?: string | null
+  /**
+   * Whether the period is the whole class's rather than one arm's, and the
+   * school's own sentence for who sits it ("JSS III JSS III A"). Neither is
+   * drawn yet; typed because they arrived in the same change as `teachers`.
+   */
+  whole_class?: boolean | null
+  audience?: string | null
+  /**
+   * The arm, sent as a name here and as a record elsewhere in this file. Read
+   * through `nameOf` if it is ever drawn — see `ClassTimetable.class_arm`,
+   * where assuming the string took a page down.
+   */
+  class_arm?: unknown
+  class_arm_id?: number | null
   /** Where it is held. Null on every period; the school records no rooms. */
   where?: string | null
   venue?: string | null
@@ -52,6 +85,12 @@ export type Period = {
   onlinelink?: string | null
   level_id?: number | null
   programetype_id?: number | null
+}
+
+/** A member of staff who takes a period, with the name already resolved. */
+export type PeriodTeacher = {
+  id: number
+  name?: string | null
 }
 
 export type DayName =
