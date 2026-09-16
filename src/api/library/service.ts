@@ -149,7 +149,8 @@ export const libraryService = {
    * deployed — probed as POST, PUT and PATCH, as `/return`, `/returned` and
    * `return/{id}`, with and without the `admins` prefix — so nothing here
    * calls it, and the ambiguity is the school's to settle rather than this
-   * app's to route around.
+   * app's to route around. The refusal reaches the desk in the school's own
+   * words, that route included.
    *
    * Two blind alleys worth not walking down twice. The book-keyed route
    * **ignores every key that could disambiguate it**: `loan_id`, `loanId`,

@@ -32,7 +32,6 @@ import {
   studentMove,
 } from '@/portals/admin/collections/student-move';
 import { borrowBlock } from '@/features/library/loan-read';
-import { BOTH_COPIES_STUCK, needsTheLoanId } from '@/features/library/return-route';
 import { searchedLabel } from '@/features/collections/option-feeds';
 import { formatDate, formatNaira, parseNaira } from '@/lib/format';
 import { queryClient } from '@/lib/query-client';
@@ -787,12 +786,12 @@ function takeBack(row?: Row): ActionDef {
        * Keyed on the book, as lending is. A row that names no title is refused
        * here rather than posted to a path with a hole in it.
        *
-       * The school refuses with 409 where a title has two copies out and it
-       * cannot tell which came back. That is its own to settle — there is no
-       * second route to try, and the two that look like one are dead ends
-       * (`libraryService.returnLoan` has the map). All this does is put the
-       * refusal into words a counter can act on, since the school's own
-       * sentence ends in an API path.
+       * A refusal is not caught or reworded. The school refuses with 409 where
+       * a title has two copies out and it cannot tell which came back, and its
+       * own sentence is what reaches the desk — including the route it names.
+       * That sentence was translated here for a while, into something a
+       * counter could act on; it is the school's to say, and a portal that
+       * paraphrases a refusal is a portal that can be wrong about one.
        */
       const bookId = String(row.book_id ?? '').trim();
       if (!bookId) {
@@ -800,14 +799,7 @@ function takeBack(row?: Row): ActionDef {
       }
       const condition = String(values.status ?? '').trim();
       // Under both names — see `ReturnLoanBody`. They cannot disagree.
-      const body = { status: condition, condition };
-
-      try {
-        await libraryService.returnLoan(bookId, body);
-      } catch (refusal) {
-        if (!needsTheLoanId(refusal)) throw refusal;
-        throw new Error(BOTH_COPIES_STUCK);
-      }
+      await libraryService.returnLoan(bookId, { status: condition, condition });
       dropCatalogue();
       return { message: `${row.book} is back on the shelf.` };
     },
