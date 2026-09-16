@@ -639,7 +639,12 @@ a key guessed from an unseen shape is how a register quietly holds two copies of
   there and the HTML written since, so drawing the first through the editor is harmless and drawing
   the second as text shows `<p>` to a parent.
 - **`src/index.css` is the only source of design truth** — the hybrid token system, soft raised
-  surfaces, and danger and success as the only colours beside brand.
+  surfaces, and danger, success and warn as the only colours beside brand. **Warn was added for one
+  screen and is not a general caution colour**: the attendance register has to show four marks in
+  four colours, and present/absent/excused had taken green, red and brand blue, so late had nowhere
+  to go. Same split fill/ink roles as the other two, and white on the fill clears 4.5:1 in both
+  themes. A fourth role is a real addition to the palette — reach for an existing one before adding
+  a fifth.
 - **The design's own greys are `--ui-*`, and the brand ramp is anchored on its blue.** They arrived
   with the sign-in screens and now carry the shell and the office's pages too, which is why
   `--ems-brand` is `#356ead`: two near-identical blues side by side is the one thing a half-applied

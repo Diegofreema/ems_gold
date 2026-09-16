@@ -10,6 +10,7 @@ import {
   myClassOptions,
   registerRows,
   statusOptions,
+  statusTone,
 } from './register.ts'
 
 const student = (over: Partial<RegisterStudent> = {}): RegisterStudent => ({
@@ -62,8 +63,8 @@ test('the tally reads in-school off the statuses, not off the word', () => {
   // The school here says late is NOT in school. The count must follow that,
   // not this module's own reading of the English.
   const statuses = [
-    { value: 'present', label: 'Present', inSchool: true },
-    { value: 'late', label: 'Late', inSchool: false },
+    { value: 'present', label: 'Present', inSchool: true, tone: 'good' as const },
+    { value: 'late', label: 'Late', inSchool: false, tone: 'warn' as const },
   ]
   const rows = registerRows(
     [student({ status: 'present' }), student({ student_id: 2, name: 'ADA', status: 'late' }), student({ student_id: 3, name: 'OBI' })],
@@ -148,4 +149,42 @@ test('missing days come back newest first', () => {
     days.map((day) => day.iso),
     ['2026-08-31', '2026-08-14', '2026-08-03'],
   )
+})
+
+test('each of the four marks wears its own colour', () => {
+  // The whole point of the change: a teacher standing in front of a class has
+  // to see which word is set without reading it.
+  assert.deepEqual(
+    statusOptions(undefined).map((one) => [one.value, one.tone]),
+    [
+      ['present', 'good'],
+      ['absent', 'bad'],
+      ['late', 'warn'],
+      ['excused', 'accent'],
+    ],
+  )
+})
+
+test('the colour is read off the word, not off the in-school list', () => {
+  // Present and late are both counted as being in school, and they are exactly
+  // the two a teacher most needs to tell apart. Grouping by the school's own
+  // arithmetic would paint them the same.
+  const read = statusOptions({
+    statuses: ['present', 'late'],
+    counted_as_present: ['present', 'late'],
+  })
+  assert.deepEqual(read.map((one) => one.tone), ['good', 'warn'])
+})
+
+test('a word the school spells its own way is still recognised', () => {
+  assert.equal(statusTone('Present'), 'good')
+  assert.equal(statusTone('  ABSENT '), 'bad')
+})
+
+test('a word nobody here has seen still looks chosen', () => {
+  // The catalogue is the school's; it may hold words this file does not know.
+  // Brand blue is what the control has always filled with, so an unrecognised
+  // mark reads as set rather than as untouched.
+  assert.equal(statusTone('suspended'), 'accent')
+  assert.equal(statusTone(''), 'accent')
 })

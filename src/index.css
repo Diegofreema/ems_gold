@@ -65,11 +65,22 @@
   --ems-danger-ink: #a63429;
   --ems-danger-subtle: color-mix(in srgb, #b23b31 9%, transparent);
 
-  /* Success is the second and last colour added to the palette: directional
-     deltas and positive statuses. Same split roles as danger. */
+  /* Success is the second colour added to the palette: directional deltas and
+     positive statuses. Same split roles as danger. */
   --ems-success: #15803d;
   --ems-success-ink: #166534;
   --ems-success-subtle: color-mix(in srgb, #15803d 10%, transparent);
+
+  /* Warn is the third and last, and it exists for exactly one thing: the
+     attendance register needs four marks to be four colours, and the palette
+     had three. Present is success, absent is danger, excused is brand — late
+     is the one with nowhere to go, and it is the reading amber already has
+     everywhere else. Same split roles, for the same reason: white on this
+     fill is ~5:1, which is the bar the other two are cut to. Not a general
+     "caution" colour — nothing else in the app has asked for one. */
+  --ems-warn: #b45309;
+  --ems-warn-ink: #9a4a08;
+  --ems-warn-subtle: color-mix(in srgb, #b45309 10%, transparent);
 
   /* Shadows are reserved for card surfaces and floating layers; structure
      still uses borders. Dark theme swaps these for deeper black shadows. */
@@ -195,6 +206,10 @@
   --ems-success: #2f8f55;
   --ems-success-ink: #7fd8a4;
   --ems-success-subtle: color-mix(in srgb, #7fd8a4 12%, transparent);
+
+  --ems-warn: #b06017;
+  --ems-warn-ink: #f0a868;
+  --ems-warn-subtle: color-mix(in srgb, #f0a868 12%, transparent);
 
   /* Lifted above --ems-raised (#22252b), which is what a tile is standing on
      inside a panel, and well above the ground behind a dashboard. */
@@ -408,6 +423,10 @@
   --color-success: var(--ems-success);
   --color-success-ink: var(--ems-success-ink);
   --color-success-subtle: var(--ems-success-subtle);
+
+  --color-warn: var(--ems-warn);
+  --color-warn-ink: var(--ems-warn-ink);
+  --color-warn-subtle: var(--ems-warn-subtle);
 
   --color-figure: var(--ems-figure);
   --color-figure-edge: var(--ems-figure-edge);

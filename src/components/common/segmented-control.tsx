@@ -1,14 +1,23 @@
 import { cn } from '@/lib/utils'
+import { SEGMENTED_FILL, type SegmentedTone } from './segmented-tone'
+
+export type { SegmentedTone }
 
 export type SegmentedOption<TValue extends string> = {
   value: TValue
   label: string
+  /** The fill when this one is chosen. Brand where it is not said. */
+  tone?: SegmentedTone
 }
 
 /**
  * The design system's `.seg` — a bordered row of options with 1px dividers,
- * the selected one filled with accent. Radio inputs keep it keyboard- and
- * screen-reader-navigable.
+ * the selected one filled. Accent unless an option names its own tone. Radio
+ * inputs keep it keyboard- and screen-reader-navigable.
+ *
+ * **Colour is never the only signal**: the chosen option is the filled one
+ * whatever its tone, and the radio behind it is what a screen reader reads, so
+ * a teacher who cannot tell green from amber still sees which word is set.
  */
 export function SegmentedControl<TValue extends string>({
   name,
@@ -34,7 +43,7 @@ export function SegmentedControl<TValue extends string>({
             'border-l border-divider first:border-l-0',
             'has-[:focus-visible]:outline has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-brand',
             option.value === value
-              ? 'bg-brand text-white'
+              ? SEGMENTED_FILL[option.tone ?? 'accent']
               : 'hover:bg-foreground/7',
           )}
         >

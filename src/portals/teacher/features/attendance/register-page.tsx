@@ -27,9 +27,18 @@ import { useMarkWords, useRegisterArms, useRegisterDay } from './use-register-da
  * Nothing is filed until the teacher saves, and only the rows they touched are
  * sent — a student left out is left alone by the endpoint, which is what makes a
  * half-finished register safe to leave.
+ *
+ * **There is no standing footnote under the sheet** (the teacher's call,
+ * 2026-09-16). It explained that nobody had marked the day, that a pupil left
+ * alone is left alone, and what the school means by late and excused — three
+ * things at once, on every open, to somebody who has taken this register every
+ * morning for a term. What it said is still true and still knowable: the tiles
+ * count what is marked and what is not, each row says "Not marked" for itself,
+ * and `useMarkWords`'s `note` is still read off `/attendances/statuses` for
+ * whatever wants it next.
  */
 export function RegisterPage() {
-  const { options: marks, note: markNote } = useMarkWords();
+  const { options: marks } = useMarkWords();
   const [edits, setEdits] = useState<Edits>({});
 
   const [{ arm, date }, setQuery] = useQueryStates({
@@ -102,12 +111,6 @@ export function RegisterPage() {
     setEdits((previous) => ({
       ...previous,
       [studentId]: { ...previous[studentId], status },
-    }));
-
-  const setNote = (studentId: number, notes: string) =>
-    setEdits((previous) => ({
-      ...previous,
-      [studentId]: { ...previous[studentId], notes },
     }));
 
   /** Fills the blanks on screen. It files nothing — the teacher still saves. */
@@ -228,7 +231,6 @@ export function RegisterPage() {
           statuses={marks}
           waiting={day.waiting}
           onMark={setMark}
-          onNote={setNote}
         />
       ) : (
         <EmptyState
@@ -236,17 +238,6 @@ export function RegisterPage() {
           body="The office places students in arms. Once one is placed here, they appear on this register."
         />
       )}
-
-      <p className="mt-3.5 text-xs text-muted-foreground">
-        {day.taken
-          ? 'This register has been taken. Changing a mark files the change over it.'
-          : 'Nobody has marked this day yet.'}{' '}
-        A student you leave alone stays as they are — nothing here marks anyone
-        absent by default.
-        {/* The school's own sentence about what its words mean, rather than
-            this page's paraphrase of it. */}
-        {markNote && <> {markNote}</>}
-      </p>
     </>
   );
 }

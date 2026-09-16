@@ -7,6 +7,7 @@ import type {
 } from '../../../../api/attendance/types.ts'
 import { ignoredNote } from '../../../../api/attendance/ignored.ts'
 import { toApiDate } from '../../../../features/collections/date-range.ts'
+import type { SegmentedTone } from '../../../../components/common/segmented-tone.ts'
 import { capitalise, formatDate } from '../../../../lib/format.ts'
 
 /** Kept exported from here: it was this page's sentence before it was the drain's. */
@@ -18,6 +19,37 @@ export type StatusOption = {
   label: string
   /** Whether this word means the child was in the building. */
   inSchool: boolean
+  /** What the button is filled with once it is chosen. See `statusTone`. */
+  tone: SegmentedTone
+}
+
+/**
+ * The colour a mark wears when it is set.
+ *
+ * Read off the **word**, deliberately, and not off `inSchool`: present and
+ * late are both counted as being in school, and they are exactly the two a
+ * teacher most needs to tell apart on a row they are about to save. Grouping
+ * the colours by the school's own arithmetic would paint them the same.
+ *
+ * A word this does not recognise keeps the brand fill the control has always
+ * used — the catalogue is the school's and may hold words nobody here has
+ * seen, and an unrecognised mark must still look chosen. Two unknown words
+ * would share a colour, which is worse than four distinct ones and much better
+ * than a button that reads as untouched.
+ */
+export function statusTone(value: string): SegmentedTone {
+  switch (value.trim().toLowerCase()) {
+    case 'present':
+      return 'good'
+    case 'absent':
+      return 'bad'
+    case 'late':
+      return 'warn'
+    default:
+      // Excused among them: authorised rather than good or bad, which is what
+      // the brand blue already says everywhere else in the app.
+      return 'accent'
+  }
 }
 
 /**
@@ -48,6 +80,7 @@ export function statusOptions(catalogue: StatusCatalogue | undefined): StatusOpt
     value: word,
     label: capitalise(word),
     inSchool: inSchool.has(word),
+    tone: statusTone(word),
   }))
 }
 

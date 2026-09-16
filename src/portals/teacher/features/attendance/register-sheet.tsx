@@ -1,22 +1,28 @@
 import { SegmentedControl } from '@/components/common/segmented-control'
-import { Input } from '@/components/ui/input'
 import { BLANK } from '@/features/collections/blank'
 import type { RegisterRow, StatusOption } from './register'
 
 /**
- * The roll: one row per student, the school's own words to mark them with, and a
- * note beside it.
+ * The roll: one row per student and the school's own words to mark them with,
+ * each word wearing its own colour once it is chosen.
  *
  * A student nobody has marked shows no selected word and says "Not marked" —
  * never a pre-ticked Present, which would make an untaken register read as a
  * day when everybody turned up.
+ *
+ * **There is no note box** (the teacher's call, 2026-09-16). The register is
+ * taken standing up in front of a class, and a free-text field on every row
+ * was a column's width and a decision per pupil for something almost nobody
+ * filled in. A note the school already holds is **not** discarded with the
+ * box: it still rides on `RegisterRow` and is sent back with the mark, so
+ * re-marking a pupil whose absence was explained does not quietly erase the
+ * explanation.
  */
 export function RegisterSheet({
   rows,
   statuses,
   waiting,
   onMark,
-  onNote,
 }: {
   rows: RegisterRow[]
   statuses: StatusOption[]
@@ -27,16 +33,14 @@ export function RegisterSheet({
    */
   waiting: ReadonlySet<number>
   onMark: (studentId: number, status: string) => void
-  onNote: (studentId: number, notes: string) => void
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-foreground/60 bg-raised">
-      <table className="w-full min-w-170 border-collapse text-sm">
+      <table className="w-full min-w-140 border-collapse text-sm">
         <thead>
           <tr className="border-b border-divider-strong text-left">
             <Th>Student</Th>
             <Th>Mark</Th>
-            <Th className="w-60">Note</Th>
           </tr>
         </thead>
         <tbody>
@@ -70,14 +74,6 @@ export function RegisterSheet({
                     onChange={(status) => onMark(row.student_id, status)}
                   />
                 </fieldset>
-              </td>
-              <td className="px-2 py-2.75">
-                <Input
-                  aria-label={`Note for ${row.name}`}
-                  value={row.notes}
-                  placeholder="Optional"
-                  onChange={(event) => onNote(row.student_id, event.target.value)}
-                />
               </td>
             </tr>
           ))}
