@@ -5,7 +5,9 @@ import { SectionHeading } from '@/components/common/section-heading'
 import { Button } from '@/components/ui/button'
 import { SegmentedControl } from '@/components/common/segmented-control'
 import { TableSkeleton } from '@/components/feedback/table-skeleton'
+import { CardView } from '@/components/data-table/card-view'
 import { TableView } from '@/components/data-table/table-view'
+import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import type { CollectionRoutes, DetailTab, Row } from '../types'
 import { DetailAccordion } from './detail-accordion'
@@ -26,6 +28,7 @@ function TabTable({
   routes: CollectionRoutes
 }) {
   const navigate = useNavigate()
+  const phone = useBreakpoint('phone')
   const { rowTo, rowRecord } = tab
 
   // Rows whose substance is prose are read in panels that open, not in cells.
@@ -50,24 +53,45 @@ function TabTable({
     )
   }
 
+  const columns = toTableColumns(tab.columns ?? [])
+  const onRowClick = rowTo
+    ? (row: Row) => {
+        const { to, search } = rowTo(recordId, row)
+        void navigate({ to, search })
+      }
+    : rowRecord
+      ? (row: Row) =>
+          void navigate({ to: routes.record, params: rowRecord(recordId, row) })
+      : undefined
+
+  /*
+   * Cards on a phone, exactly as every register does — `DataTable` has made
+   * this choice since the design landed, and a record's own sub-tables were
+   * the one place still drawing the desktop table at any width.
+   *
+   * It was not merely cramped, it was *lossy*: the frame around the table
+   * clips to its own rounded corners, so an assignment's Questions tab put
+   * 498px of columns in a 343px box and Points and Answer could not be
+   * reached at all — not by scrolling, not by turning the phone. A teacher
+   * checking what a question was worth on the way to a lesson simply could
+   * not see it.
+   */
+  if (phone)
+    return (
+      <CardView
+        columns={columns}
+        rows={rows}
+        rowKey={(row) => row.id}
+        onRowClick={onRowClick}
+      />
+    )
+
   return (
     <TableView
-      columns={toTableColumns(tab.columns ?? [])}
+      columns={columns}
       rows={rows}
       rowKey={(row) => row.id}
-      onRowClick={
-        rowTo
-          ? (row) => {
-              const { to, search } = rowTo(recordId, row)
-              void navigate({ to, search })
-            }
-          : rowRecord
-            ? (row) => void navigate({
-                to: routes.record,
-                params: rowRecord(recordId, row),
-              })
-            : undefined
-      }
+      onRowClick={onRowClick}
     />
   )
 }
@@ -217,10 +241,14 @@ export function DetailTabPanel({
         )}
       </div>
 
-      <div key={`${active}:${attempt}`} className="animate-ems-up overflow-x-auto">
+      <div key={`${active}:${attempt}`} className="animate-ems-up">
         <TabBoundary retry={() => setAttempt((count) => count + 1)}>
           <Suspense fallback={<TableSkeleton rows={SKELETON_ROWS} />}>
-            <div className="overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
+            {/* The scroll is on the frame itself, not on a wrapper around it.
+                `overflow-hidden` here is what rounds the corners, and it was
+                also what cut a wide table off: the wrapper outside could not
+                scroll to columns its own child had already clipped. */}
+            <div className="overflow-x-auto rounded-xl border border-divider bg-raised shadow-card">
               {tab.source ? (
                 <LiveTab
                   tab={tab}

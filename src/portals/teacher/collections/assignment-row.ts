@@ -1,7 +1,12 @@
 import type { Assignment } from '../../../api/set-assignments/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import type { Row } from '../../../features/collections/types.ts'
-import { schoolMillis, schoolTime, when } from '../../../features/collections/when.ts'
+import {
+  schoolMillis,
+  schoolTime,
+  toDateTimeInput,
+  when,
+} from '../../../features/collections/when.ts'
 
 /**
  * The teacher's own register of assignments, off `GET /setassignments`.
@@ -54,6 +59,25 @@ function text(value: string | null | undefined): string {
   return value?.trim() || BLANK
 }
 
+/**
+ * The fields the school will still take on this paper.
+ *
+ * A paper nobody has sat takes everything. Once a pupil has handed one in the
+ * school locks it and names what is left — `["status", "closedate"]` on every
+ * paper read so far — because the answers already filed are the record of
+ * what those pupils were asked, and rewriting the question under a marked
+ * answer rewrites history.
+ *
+ * Read off the row rather than decided here. A school that widens the list
+ * widens the form with it, and a deployment that sends no list at all locks
+ * nothing, because a form must never be shut on a question the school was
+ * never asked — the same rule the default-password gate follows.
+ */
+export function editableFields(assignment: Assignment): string[] | null {
+  if (!assignment.locked) return null
+  return assignment.editable_when_locked ?? null
+}
+
 export function assignmentRows(assignments: Assignment[], now = Date.now()): Row[] {
   return assignments
     .map((assignment) => ({ assignment, state: stateOf(assignment, now) }))
@@ -75,6 +99,20 @@ export function assignmentRows(assignments: Assignment[], now = Date.now()): Row
       minutes: assignment.time_limit ? `${assignment.time_limit} minutes` : 'No limit',
       pass: assignment.passing_score == null ? BLANK : `${assignment.passing_score}%`,
       opens: when(schoolTime(assignment.opendate), true),
+
+      // The window as the school wrote it, beside the two display strings
+      // above. The form opens on these: "23 Sep 2026, 08:12" is for reading
+      // and parses to nothing, so a form fed the display value would open
+      // empty and save the window away on the first correction.
+      opens_at: toDateTimeInput(assignment.opendate),
+      closes_at: toDateTimeInput(assignment.closedate),
+
+      // What the school will still take, and why it will not take the rest.
+      // Empty where the paper is open to everything.
+      locked: assignment.locked ? 'yes' : '',
+      locked_reason: text(assignment.locked_reason),
+      editable_when_locked: (editableFields(assignment) ?? []).join(','),
+      sat_by: String(assignment.submission_count ?? 0),
 
       // Held for the forms, which submit ids rather than the names shown, and
       // for the update body, which sends back a status this portal never sets.

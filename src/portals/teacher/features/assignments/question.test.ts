@@ -7,7 +7,9 @@ import {
   correctIndex,
   NO_ANSWER,
   questionBody,
+  questionReview,
   questionValues,
+  type QuestionValues,
   totalMarks,
   typeLabel,
 } from './question.ts'
@@ -126,4 +128,46 @@ test('a theory question sends no options at all', () => {
 test('an unrecognised kind reads as the kind every assignment has held', () => {
   assert.equal(typeLabel('theory'), 'Theory')
   assert.equal(typeLabel(null), 'Multiple choice')
+})
+
+/** A question part-written in the form: one choice still blank, "Manure" ticked. */
+const TYPED: QuestionValues = {
+  question_text: '  What is soil fertility?  ',
+  question_type: 'multiple_choice',
+  points: '3',
+  options: [{ option_text: 'Soil' }, { option_text: '   ' }, { option_text: 'Manure' }],
+  correct: '2',
+}
+
+test('the read-back is what will be sent, not what is in the form', () => {
+  const review = questionReview(TYPED)
+  // The blank choice is dropped on the way out, so it is not read back either.
+  assert.deepEqual(review.choices.map((choice) => choice.text), ['Soil', 'Manure'])
+  assert.equal(review.question, 'What is soil fertility?')
+  assert.equal(review.points, 3)
+  assert.equal(review.kind, 'Multiple choice')
+})
+
+test('the read-back ticks the choice the school will mark right', () => {
+  // "Manure" is index 2 in the form and index 1 in the body once the blank has
+  // gone. A read-back off the form's own values would tick the wrong line.
+  const ticked = questionReview(TYPED).choices.filter((choice) => choice.correct)
+  assert.deepEqual(ticked.map((choice) => choice.text), ['Manure'])
+})
+
+test('a theory question is read back with no choices at all', () => {
+  const review = questionReview({ ...TYPED, question_type: 'theory' })
+  assert.deepEqual(review.choices, [])
+  assert.equal(review.kind, 'Theory')
+  assert.match(review.marking, /you mark this one yourself/i)
+})
+
+test('with no answer marked, the read-back ticks nothing', () => {
+  const review = questionReview({ ...TYPED, correct: NO_ANSWER })
+  assert.equal(review.choices.some((choice) => choice.correct), false)
+})
+
+test('the read-back reads points through the same filter the body does', () => {
+  assert.equal(questionReview({ ...TYPED, points: '4kg' }).points, 4)
+  assert.equal(questionReview({ ...TYPED, points: '' }).points, 0)
 })

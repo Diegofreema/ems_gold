@@ -4,7 +4,7 @@ import type {
   SubmitAssignmentBody,
 } from '../../../../api/assignments/types.ts'
 import { BLANK } from '../../../../features/collections/blank.ts'
-import { schoolTime, when } from '../../../../features/collections/when.ts'
+import { schoolMillis, schoolTime, when } from '../../../../features/collections/when.ts'
 import { hasText } from '../../../../features/collections/rich-text.ts'
 import { text } from '../../../../features/profile/record.ts'
 
@@ -141,4 +141,53 @@ export function assignmentFields(
       value: assignment?.passing_score == null ? BLANK : `${assignment.passing_score}%`,
     },
   ]
+}
+
+/** A span of minutes as somebody would say it out loud. */
+function spell(minutes: number): string {
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'}`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  const said = `${hours} hour${hours === 1 ? '' : 's'}`
+  return rest ? `${said} and ${rest} minute${rest === 1 ? '' : 's'}` : said
+}
+
+/**
+ * What the closing time means for somebody about to press Start, beyond the
+ * two dates already listed above it.
+ *
+ * **The window cuts the clock short, and nothing said so.** `attemptExpiry`
+ * takes the earlier of "the time allowed" and "when the assignment shuts", so a
+ * student starting a thirty-minute paper ten minutes before it closes gets
+ * ten — while the terms above them still read "Time allowed: 30 minutes".
+ * That is the app telling them something untrue at the one moment it matters,
+ * and they find out when the clock runs out two thirds of the way through.
+ *
+ * Null when there is nothing worth saying: no closing time, one already past
+ * (the school refuses the sitting and says so itself), or a window wide enough
+ * that the time allowed is the real bound.
+ */
+export function windowNote(
+  detail: AssignmentDetail | undefined,
+  now: number,
+): string | null {
+  const assignment = detail?.assignment
+  const closes = schoolMillis(assignment?.closedate)
+  if (closes === null) return null
+
+  const left = Math.floor((closes - now) / 60_000)
+  // Already shut, or shutting inside the minute. Either way the school's own
+  // refusal is the thing to show, not a countdown.
+  if (left <= 0) return null
+
+  const limit = assignment?.time_limit ?? null
+  if (limit && left < limit) {
+    return `This assignment shuts in ${spell(left)}, which is less than the ${limit} minutes it allows. The clock stops when it shuts, so starting now gives you about ${spell(left)}, not ${limit}.`
+  }
+
+  // Worth saying without a limit too: an assignment with no time limit is
+  // bounded by its window and nothing else, so the window *is* the clock.
+  if (!limit) return `This assignment shuts in ${spell(left)}. There is no other time limit, so that is how long you have.`
+
+  return null
 }

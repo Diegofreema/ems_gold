@@ -1,6 +1,6 @@
 import { blockedReason } from '../blocked'
 import { canChange } from '../unsynced'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useMemo } from 'react'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -10,6 +10,7 @@ import { CheckboxGroupField } from '@/components/form/checkbox-group-field'
 import { DateField } from '@/components/form/date-field'
 import { FileField } from '@/components/form/file-field'
 import { fromApiDate } from '../date-range'
+import { toDateTimeInput } from '../when'
 import { FormSection } from '@/components/form/form-section'
 import { RecordForm } from '@/components/form/record-form'
 import {
@@ -148,7 +149,15 @@ function renderField(field: FieldSpec, record?: Row, settled?: boolean) {
       {...shared}
       placeholder={field.placeholder}
       type={
-        field.email ? 'email' : field.time ? 'time' : field.number ? 'number' : 'text'
+        field.email
+          ? 'email'
+          : field.datetime
+            ? 'datetime-local'
+            : field.time
+              ? 'time'
+              : field.number
+                ? 'number'
+                : 'text'
       }
       min={field.min}
       max={field.max}
@@ -189,7 +198,26 @@ export function CollectionForm({
   const router = useRouter()
   const canGoBack = useCanGoBack()
   const confirm = useConfirm()
-  const sections = definition.form ?? fallbackSections(definition)
+  const rawSections = definition.form ?? fallbackSections(definition)
+  /*
+   * Fields this record does not take are dropped before anything else reads
+   * the form — the defaults, the validator and the rendering all work from
+   * one list, so a withheld field cannot be required by a validator that
+   * still knows about it.
+   *
+   * Keyed on the record rather than on what is being typed, so the shape of
+   * the form is settled when it opens and does not move under somebody.
+   */
+  const sections = useMemo(
+    () =>
+      rawSections
+        .map((section) => ({
+          ...section,
+          fields: section.fields.filter((field) => field.when?.(record) ?? true),
+        }))
+        .filter((section) => section.fields.length > 0),
+    [rawSections, record],
+  )
 
   const defaults: Values = {}
   for (const section of sections) {
@@ -215,6 +243,14 @@ export function CollectionForm({
       // one format that can be read back — YYYY-MM-DD. A row carrying a
       // display date parses to nothing and the picker opens empty, which is
       // where every date field used to start.
+      // A window opens on the stamp the school holds, cut down to the minute
+      // the control can show. The row carries the school's own
+      // `YYYY-MM-DD HH:MM:SS` under a `_at` key for exactly this — the
+      // displayed "23 Sep 2026, 08:12" beside it parses to nothing here.
+      if (field.datetime) {
+        defaults[field.key] = toDateTimeInput(held === BLANK ? '' : String(held ?? ''))
+        continue
+      }
       defaults[field.key] = field.date
         ? fromApiDate(held)
         : held === BLANK

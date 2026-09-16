@@ -10,7 +10,7 @@ type TextFieldProps<TValues extends FieldValues> = {
   required?: boolean
   span?: FieldSpan
   placeholder?: string
-  type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'time'
+  type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'time' | 'datetime-local'
   /** Bounds for a number control, so the stepper stops where the rule does. */
   min?: number
   max?: number

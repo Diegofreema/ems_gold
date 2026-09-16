@@ -6,6 +6,7 @@ import type {
 } from '../../../../api/set-assignments/types.ts'
 import {
   answerKey,
+  autoGradable,
   choiceCount,
   chosenOption,
   correctOption,
@@ -13,6 +14,7 @@ import {
   keyScore,
   maxTotal,
   needsHand,
+  needsTeacher,
   openingScore,
   openingScores,
   overruled,
@@ -244,5 +246,145 @@ test('a correction says it is one, and an empty box is nought given', () => {
   assert.deepEqual(
     gradeBody({ answers: [WRITTEN], scores: { '43': '' }, comment: ' ', marked: true }),
     { scores: { '43': 0 }, regrade: true },
+  )
+})
+
+/*
+ * Paper 90 off bronze 2026-09-16: four questions, every one multiple choice,
+ * one submission. The school sent `graded: false`, `total_score: null` and
+ * `score: null` on every answer — which is what made "To mark" and
+ * "Waiting on you: 1" a claim about work nobody had.
+ */
+const CHOICE_ONLY = [
+  { id: 103, question_type: 'multiple_choice' as const, points: 5 },
+  { id: 104, question_type: 'multiple_choice' as const, points: 1 },
+]
+
+test('a paper of nothing but multiple choice needs no teacher', () => {
+  assert.equal(needsTeacher(CHOICE_ONLY), false)
+})
+
+test('one theory question anywhere on the paper needs a teacher', () => {
+  assert.equal(
+    needsTeacher([...CHOICE_ONLY, { id: 105, question_type: 'theory', points: 3 }]),
+    true,
+  )
+})
+
+test('a question with no kind and no choices is a person’s to read', () => {
+  // The conservative half of the rule: unrecognised is not "the key settles it".
+  assert.equal(needsTeacher([{ id: 106 }]), true)
+})
+
+test('a question carrying choices counts as one even with no kind named', () => {
+  assert.equal(
+    needsTeacher([
+      { id: 107, options: [{ id: 405, option_text: 'a' }, { id: 406, option_text: 'b' }] },
+    ]),
+    false,
+  )
+})
+
+test('an empty paper still goes in front of a person', () => {
+  // Not because there is anything to read — because a submission against a
+  // paper with no questions is somebody's mistake, not a nought to file.
+  assert.equal(needsTeacher([]), true)
+})
+
+test('an ungraded submission on a key-settled paper says who marked it', () => {
+  const submission = { assignment_id: 90, graded: false, total_score: null }
+  assert.equal(stateOf(submission, false), 'Marked by the system')
+  assert.equal(stateOf(submission, true), 'To mark')
+})
+
+test('once the school has it on file it is simply marked', () => {
+  const graded = { assignment_id: 90, graded: true, total_score: 6 }
+  assert.equal(stateOf(graded, false), 'Marked')
+  assert.equal(stateOf(graded, true), 'Marked')
+})
+
+const SCRIPT = {
+  id: 90,
+  answers: [
+    {
+      answer_id: 501,
+      question_type: 'multiple_choice' as const,
+      points: 5,
+      score: null,
+      options: [
+        { id: 401, option_text: '1', is_correct: true, chosen: false },
+        { id: 402, option_text: '2', is_correct: false, chosen: true },
+      ],
+    },
+    {
+      answer_id: 502,
+      question_type: 'multiple_choice' as const,
+      points: 1,
+      score: null,
+      options: [
+        { id: 403, option_text: '20', is_correct: true, chosen: true },
+        { id: 404, option_text: '30', is_correct: false, chosen: false },
+      ],
+    },
+  ],
+}
+
+test('a key-settled submission is offered for filing, with its answers', () => {
+  const [one] = autoGradable(
+    [{ assignment_id: 90, graded: false, total_score: null }],
+    [SCRIPT],
+    false,
+    new Set(),
+  )
+  assert.equal(one.id, '90')
+  // The marks that go are the answer key's own: wrong, then right.
+  assert.deepEqual(gradeBody({
+    answers: one.answers,
+    scores: openingScores(one.answers),
+    comment: '',
+    marked: false,
+  }).scores, { '501': 0, '502': 1 })
+})
+
+test('nothing is filed for a paper a person has to read', () => {
+  assert.deepEqual(
+    autoGradable([{ assignment_id: 90, graded: false, total_score: null }], [SCRIPT], true, new Set()),
+    [],
+  )
+})
+
+test('a submission the school has already graded is left alone', () => {
+  // Or a teacher's own marks would be overwritten by the key on every visit.
+  assert.deepEqual(
+    autoGradable([{ assignment_id: 90, graded: true, total_score: 6 }], [SCRIPT], false, new Set()),
+    [],
+  )
+})
+
+test('nothing is queued twice for the same submission', () => {
+  assert.deepEqual(
+    autoGradable(
+      [{ assignment_id: 90, graded: false, total_score: null }],
+      [SCRIPT],
+      false,
+      new Set(['90']),
+    ),
+    [],
+  )
+})
+
+test('a script this device has not read yet is not filed as a nought', () => {
+  assert.deepEqual(
+    autoGradable([{ assignment_id: 90, graded: false, total_score: null }], [], false, new Set()),
+    [],
+  )
+  assert.deepEqual(
+    autoGradable(
+      [{ assignment_id: 90, graded: false, total_score: null }],
+      [{ id: 90, answers: [] }],
+      false,
+      new Set(),
+    ),
+    [],
   )
 })

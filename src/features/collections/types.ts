@@ -394,6 +394,42 @@ export type FieldSpec = {
    * `HH:MM`, which is what the timetable endpoint sends and takes.
    */
   time?: boolean
+  /**
+   * A day **and** a time — when an assignment opens, when it shuts. The
+   * browser's own `datetime-local` control.
+   *
+   * Held and submitted as the control's own `YYYY-MM-DDTHH:MM`, a string
+   * throughout: `date` hands the form a `Date`, which has to be read back
+   * through the reader's timezone on the way out, and a window is a wall
+   * clock the school and the reader have to agree on to the minute. See
+   * `toDateTimeInput` and `toSchoolStamp` in `when.ts`.
+   */
+  datetime?: boolean
+  /**
+   * With `datetime`: the field this one must not fall before — an assignment
+   * that shuts before it opens is a window nobody can sit. Names the other
+   * field's key; the message is written from that field's own label.
+   */
+  after?: string
+  /**
+   * Whether this field applies to **this record**, asked once when the form
+   * opens rather than on every keystroke.
+   *
+   * The record, not the form's values — that is what makes it safe where the
+   * section-level `when` is not. A section that appears and disappears as
+   * somebody types cannot carry a required field, because the validator is
+   * built from the whole definition and would refuse the form for a box
+   * nobody can see; a field withheld on the strength of the record is
+   * withheld for the life of the form, so it can be dropped from the
+   * validator with it.
+   *
+   * What it exists for: a school that will not take a field on this
+   * particular row. An assignment a class has begun handing in accepts only
+   * the fields named in `editable_when_locked`, and asking a teacher to fill
+   * in a compulsory box whose value is then discarded is worse than not
+   * asking at all.
+   */
+  when?: (record?: Row) => boolean
 }
 
 export type FormSectionSpec = {

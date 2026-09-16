@@ -30,6 +30,24 @@ export type EnqueueSpec = {
   toast: MutationToast
   /** What this was, in the reader's words. Shown if it fails later. */
   label: string
+  /**
+   * The school's own answer, handed back to the screen that made the write —
+   * and only where the write actually reached the school.
+   *
+   * It exists to close a gap the wire-first design opened: a write **held** on
+   * the device is drawn at once, by the overlay every page composes off the
+   * outbox, while a write the school *took* is drawn by nothing until the set
+   * it belongs to has been fetched again. So a teacher with no signal saw
+   * their question immediately and a teacher with a good connection waited on
+   * a refetch — the app was quicker offline than on, which is nobody's idea of
+   * how this should feel.
+   *
+   * What comes through is whatever the handler's `send` resolved with, so it
+   * is the handler's own unwrapping and not a guess at the envelope. It is a
+   * courtesy and not a contract: a page that reads nothing usable out of it
+   * simply waits for the set, which is exactly what it does today.
+   */
+  onSent?: (answer: unknown) => void
 }
 
 /**
@@ -167,6 +185,15 @@ function landedOnTheWire(
   answer: unknown,
 ): void {
   announceSaved(spec.toast)
+
+  // The screen that made the write, before anything is refetched. Guarded
+  // because `enqueue` does not throw and a screen's own bookkeeping must not
+  // be able to make it: the school has already taken this write.
+  try {
+    spec.onSent?.(answer)
+  } catch {
+    /* The write landed. What the page does with the answer is the page's. */
+  }
 
   // Anything the school said about what it actually did. Unlike the drain's,
   // this reaches the person who wrote it, on the screen they wrote it from.

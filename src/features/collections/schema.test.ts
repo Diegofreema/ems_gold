@@ -70,3 +70,50 @@ test('a figure nobody filled in is left alone — no limit is not zero', () => {
   assert.equal(figures.safeParse({ minutes: '', pass: '' }).success, true)
   assert.equal(figures.safeParse({}).success, true)
 })
+
+const windowed = schemaFromSections([
+  {
+    title: 'When it can be sat',
+    fields: [
+      { key: 'opens_at', label: 'Opens', datetime: true },
+      { key: 'closes_at', label: 'Closes', datetime: true, after: 'opens_at' },
+    ],
+  },
+])
+
+test('a window that shuts before it opens is refused', () => {
+  const bad = windowed.safeParse({
+    opens_at: '2026-09-23T10:00',
+    closes_at: '2026-09-23T09:00',
+  })
+  assert.equal(bad.success, false)
+  const issue = bad.error?.issues.find((one) => one.path[0] === 'closes_at')
+  // Named from the other field's own label, so the message reads in the form's
+  // words rather than in a key.
+  assert.equal(issue?.message, 'Must be after opens')
+})
+
+test('a window that shuts at the moment it opens is refused too', () => {
+  const same = '2026-09-23T10:00'
+  assert.equal(windowed.safeParse({ opens_at: same, closes_at: same }).success, false)
+})
+
+test('a window in the right order is taken', () => {
+  assert.equal(
+    windowed.safeParse({ opens_at: '2026-09-21T08:00', closes_at: '2026-09-23T09:00' }).success,
+    true,
+  )
+})
+
+test('either end left open has nothing to be out of order with', () => {
+  assert.equal(windowed.safeParse({ opens_at: '', closes_at: '2026-09-23T09:00' }).success, true)
+  assert.equal(windowed.safeParse({ opens_at: '2026-09-21T08:00', closes_at: '' }).success, true)
+  assert.equal(windowed.safeParse({ opens_at: '', closes_at: '' }).success, true)
+})
+
+test('something the picker could not have produced is refused', () => {
+  assert.equal(
+    windowed.safeParse({ opens_at: '23/09/2026 08:00', closes_at: '' }).success,
+    false,
+  )
+})

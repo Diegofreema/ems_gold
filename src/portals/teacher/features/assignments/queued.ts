@@ -107,6 +107,29 @@ export function composeQuestions(
   ]
 }
 
+/**
+ * Questions the school has already taken, but the set has not caught up with.
+ *
+ * Composed **before** the queue's own overlay rather than after it, so a
+ * question added a moment ago behaves like any other: rewriting it shows the
+ * new wording, deleting it takes it off. Appended after it would be a row the
+ * overlay could not reach, and a teacher who deleted a question they had just
+ * written would watch it come straight back.
+ *
+ * It is a stopgap with a natural end: the id is the school's own, so the
+ * moment the set is fetched again the row is in `written` and this drops it.
+ * That is what makes it safe where an optimistic write into the collection is
+ * not — nothing here outlives the answer it was standing in for.
+ */
+export function withFreshQuestions(
+  written: readonly AssignmentQuestion[],
+  fresh: readonly AssignmentQuestion[],
+): AssignmentQuestion[] {
+  if (fresh.length === 0) return [...written]
+  const known = new Set(written.map((question) => String(question.id)))
+  return [...written, ...fresh.filter((question) => !known.has(String(question.id)))]
+}
+
 /** The grades this device has queued, by submission id. Later wins. */
 export function queuedGrades(ops: readonly OutboxOp[]): ReadonlyMap<string, GradeBody> {
   const grades = new Map<string, GradeBody>()
@@ -152,10 +175,19 @@ export function gradedCounters(
   // Only marks for scripts the school still calls unmarked move the figures —
   // a queued *re*grade changes a mark, not the count of marked scripts.
   const fresh = rows.filter((row) => grades.has(row.id) && row.state === 'To mark').length
+  /*
+   * Papers the answer key has already settled are not work.
+   *
+   * "Waiting on you: 1" against a paper of four multiple-choice questions was
+   * the tile claiming a job nobody had — there is not a figure on that sheet a
+   * teacher can change. They are counted as marked here because by this
+   * device's reading they are, which is the same licence the queued ones take.
+   */
+  const settled = rows.filter((row) => row.state === 'Marked by the system').length
   return {
     sat: counters.sat,
-    marked: counters.marked + fresh,
-    waiting: Math.max(0, counters.waiting - fresh),
+    marked: counters.marked + fresh + settled,
+    waiting: Math.max(0, counters.waiting - fresh - settled),
   }
 }
 

@@ -6,6 +6,7 @@ import type { OutboxOp } from '../../../../db/outbox.ts'
 import type { Row } from '../../../../features/collections/types.ts'
 import {
   composeQuestions,
+  withFreshQuestions,
   gradedCounters,
   queuedGrades,
   withQueuedGrades,
@@ -151,6 +152,64 @@ test('later ops win, in the order the teacher worked', () => {
   ]
   const out = composeQuestions([question(1, 'First')], ops, '7')
   assert.equal(out[0].question.question_text, 'Second rewrite')
+})
+
+test('a question the school has taken is drawn before the set has caught up', () => {
+  const out = composeQuestions(
+    withFreshQuestions([question(1, 'First')], [question(9, 'Just written')]),
+    [],
+    '7',
+  )
+  assert.deepEqual(out.map((entry) => entry.question.question_text), ['First', 'Just written'])
+  // The school has it and issued its id, so it edits and deletes like any
+  // other — this is not queued work.
+  assert.equal(out[1].waiting, false)
+  assert.equal(out[1].key, '9')
+})
+
+test('once the set catches up the question is drawn once, not twice', () => {
+  const caught = withFreshQuestions(
+    [question(1, 'First'), question(9, 'Just written')],
+    [question(9, 'Just written')],
+  )
+  assert.deepEqual(caught.map((one) => one.id), [1, 9])
+})
+
+test('deleting a question written a moment ago does not bring it back', () => {
+  // The whole reason this is composed *before* the queue's overlay: appended
+  // after it, the delete would take the row off and this would re-add it.
+  const ops = [
+    op({
+      id: 'a',
+      seq: 1,
+      handler: WRITE.removeQuestion,
+      payload: { assignment_id: '7', question_id: 9 },
+    }),
+  ]
+  const out = composeQuestions(withFreshQuestions([], [question(9, 'Just written')]), ops, '7')
+  assert.deepEqual(out, [])
+})
+
+test('rewriting a question written a moment ago shows the new wording', () => {
+  const ops = [
+    op({
+      id: 'a',
+      seq: 1,
+      handler: WRITE.updateQuestion,
+      payload: {
+        assignment_id: '7',
+        question_id: 9,
+        body: { question_text: 'Rewritten', question_type: 'theory', points: 4 },
+      },
+    }),
+  ]
+  const out = composeQuestions(withFreshQuestions([], [question(9, 'Just written')]), ops, '7')
+  assert.deepEqual(out.map((entry) => entry.question.question_text), ['Rewritten'])
+})
+
+test('with nothing fresh, the school\u2019s rows are handed back as they were', () => {
+  const rows = [question(1, 'First')]
+  assert.deepEqual(withFreshQuestions(rows, []), rows)
 })
 
 const gradeOp = (id: string, seq: number, submission: string, scores: Record<string, number>) =>

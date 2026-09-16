@@ -35,6 +35,10 @@ export function SubmissionList({
       key: 'state',
       label: 'State',
       cardRole: 'tag',
+      // Accent is "yours to do". A paper the answer key settled is not, so it
+      // reads quiet beside one the school has on file — the two differ in
+      // whether the school knows yet, which is the queue's business and not
+      // the teacher's.
       cell: (row) => (
         <Tag variant={row.state === 'To mark' ? 'accent' : 'neutral'}>{row.state}</Tag>
       ),

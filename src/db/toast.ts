@@ -18,10 +18,12 @@ import type { MutationToast } from '@/lib/mutation-toast'
 const HELD = 'saved on this device. It will send as soon as the school can be reached.'
 
 export function announceSaved(meta: MutationToast): void {
+  if (meta.silent) return
   toast.success(meta.success)
 }
 
 export function announceHeld(meta: MutationToast): void {
+  if (meta.silent) return
   toast.success(`${meta.success} — ${HELD}`)
 }
 

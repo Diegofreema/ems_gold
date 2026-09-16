@@ -126,3 +126,85 @@ test('a submission with no answers recorded produces no rows', () => {
   assert.deepEqual(answerRows(UNMARKED, []), [])
   assert.deepEqual(answerRows(undefined, []), [])
 })
+
+/**
+ * Paper 90 off bronze 2026-09-16: four multiple-choice questions, no teacher
+ * near it, and the server had already scored it — 1 of 8, `is_graded: false`.
+ */
+const CHOICE_ONLY: AssignmentResult = {
+  assignment: { id: 90, title: 'Assignment 1', is_graded: false },
+  score: { total_score: 1, max_points: 8, correct_answers: 1, total_questions: 4, percentage: 12.5 },
+  answers: [
+    { question_id: 1, question_type: 'multiple_choice', points: 5, is_correct: false },
+    { question_id: 2, question_type: 'multiple_choice', points: 1, is_correct: true },
+    { question_id: 3, question_type: 'multiple_choice', points: 1, is_correct: false },
+    { question_id: 4, question_type: 'multiple_choice', points: 1, is_correct: false },
+  ],
+}
+
+test('a finished all-choice paper is not promised it might go up', () => {
+  // The server scored it at submit and no teacher is coming. "This can go up"
+  // would be holding out a hope the paper cannot deliver.
+  const note = scoreNote(CHOICE_ONLY)
+  assert.match(note, /1 of 8 marks/)
+  assert.doesNotMatch(note, /can go up/)
+})
+
+test('a paper with writing on it still says the mark is not final', () => {
+  const mixed: AssignmentResult = {
+    ...CHOICE_ONLY,
+    score: { ...CHOICE_ONLY.score, total_questions: 3 },
+    answers: [
+      ...(CHOICE_ONLY.answers ?? []),
+      { question_id: 3, question_type: 'theory', points: 4, theory_answer: 'Because of erosion.' },
+    ],
+  }
+  assert.match(scoreNote(mixed), /can go up/)
+})
+
+test('an answer list shorter than the paper keeps the sentence, to be safe', () => {
+  // Seen live: this route sent 2 answers against a stated 4. "None of the two
+  // I can see is written" is not "nothing on this paper is written".
+  const partial: AssignmentResult = {
+    ...CHOICE_ONLY,
+    score: { ...CHOICE_ONLY.score, total_questions: 4 },
+    answers: (CHOICE_ONLY.answers ?? []).slice(0, 2),
+  }
+  assert.match(scoreNote(partial), /can go up/)
+})
+
+test('once a teacher has been through it, nothing is outstanding either way', () => {
+  const marked: AssignmentResult = {
+    ...CHOICE_ONLY,
+    assignment: { id: 90, title: 'Assignment 1', is_graded: true },
+    answers: [
+      { question_id: 3, question_type: 'theory', points: 4, theory_answer: 'Because of erosion.' },
+    ],
+  }
+  assert.doesNotMatch(scoreNote(marked), /can go up/)
+})
+
+test('an all-choice paper says the answer key marked it, not a teacher', () => {
+  // `is_graded` means "something was filed", and on this paper nothing human
+  // filed it: the server scored the choices and the teacher's portal filed the
+  // same figures without anybody opening the script.
+  const fields = Object.fromEntries(
+    resultFields({
+      ...CHOICE_ONLY,
+      assignment: { id: 90, title: 'Assignment 1', is_graded: true },
+    }).map((one) => [one.label, one.value]),
+  )
+  assert.equal(fields.Marked, 'From the answer key')
+  assert.equal(fields['Marked by a teacher'], undefined)
+})
+
+test('a paper with writing on it still reports whether a person has been', () => {
+  const written: AssignmentResult = {
+    ...CHOICE_ONLY,
+    score: { ...CHOICE_ONLY.score, total_questions: 1 },
+    answers: [{ question_id: 3, question_type: 'theory', points: 4, theory_answer: 'Erosion.' }],
+  }
+  const fields = Object.fromEntries(resultFields(written).map((one) => [one.label, one.value]))
+  assert.equal(fields['Marked by a teacher'], 'Not yet')
+  assert.equal(fields.Marked, undefined)
+})

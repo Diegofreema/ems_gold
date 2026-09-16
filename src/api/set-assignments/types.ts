@@ -38,6 +38,38 @@ export type Assignment = {
   /** Minutes allowed once a student starts. Null means the window is the limit. */
   time_limit?: number | null
   passing_score?: number | null
+  /** How many students have handed this paper in. 0 on one nobody has sat. */
+  submission_count?: number | null
+  /**
+   * Whether the school will still take changes to this paper.
+   *
+   * Read off bronze 2026-09-16, along with the two fields under it: four of
+   * the five papers on file come back locked, because a pupil has submitted.
+   * A locked paper refuses the fields that would change *what was asked* —
+   * the wording, the subject, the class, the time allowed, the pass mark —
+   * because the answers already filed are the record of what those pupils
+   * sat, and rewriting the question under a marked answer rewrites history.
+   */
+  locked?: boolean | null
+  /**
+   * The school's own sentence for why, in its own words, or null where it is
+   * not locked. Shown to the teacher verbatim rather than paraphrased — it
+   * already explains both the refusal and the way round it ("To ask something
+   * different, set a new paper").
+   */
+  locked_reason?: string | null
+  /**
+   * The fields a locked paper will still take — `["status", "closedate"]` on
+   * every paper read so far.
+   *
+   * **This is the school telling the form what to offer**, and it is why the
+   * window is worth having at all on a locked paper: a teacher whose class
+   * has begun handing in can still give them longer, or shut the paper early,
+   * without being able to change the questions under them. Read as a list
+   * rather than assumed to be those two, so a school that widens it widens
+   * the form with it.
+   */
+  editable_when_locked?: string[] | null
   /**
    * How many questions the assignment actually holds — 0 on an assignment just created,
    * 1 once one question is written. Not the student's `total_questions`, which
@@ -55,9 +87,15 @@ export type AssignmentListParams = PageParams & {
 /**
  * What creating or editing an assignment sends.
  *
- * No `opendate` or `closedate`: neither is in the body the API documents, and
- * the school fills the closing date in itself. An assignment's window is therefore
- * not the teacher's to set from here.
+ * **The window is the teacher's now.** It was not: the API took neither date,
+ * and the school filled the closing time in itself — which is why every paper
+ * on file carries `opendate: null` and a `closedate` nobody chose. The
+ * endpoint takes both as of 2026-09-16.
+ *
+ * Written `YYYY-MM-DD HH:MM:SS` with no zone, which is the shape the list
+ * sends back (`2026-09-23 08:12:16`) — see `toSchoolStamp`. Null is the
+ * school's own "no bound": an assignment with no `opendate` is open from the
+ * moment it holds questions, and one with no `closedate` does not shut.
  */
 export type AssignmentBody = {
   subject_id: number
@@ -67,6 +105,10 @@ export type AssignmentBody = {
   test_type: string
   time_limit?: number | null
   passing_score?: number | null
+  /** When students may start it. Null is open as soon as it has questions. */
+  opendate?: string | null
+  /** When it shuts. Null never shuts. */
+  closedate?: string | null
   /** Only on an edit. Creating always lands the assignment `active`. */
   status?: string
 }

@@ -54,6 +54,10 @@ export const assignments: CollectionDef = {
     { key: 'subject', label: 'Subject', cardRole: 'subtitle' },
     { key: 'questions', label: 'Questions', align: 'right' },
     { key: 'minutes', label: 'Minutes', align: 'right' },
+    // Both ends, because "Not open yet" is the one state whose date is the
+    // opening one — a student reading only "Closes" against an assignment
+    // they cannot start yet is being shown the wrong half of the window.
+    { key: 'opens', label: 'Opens' },
     { key: 'closes', label: 'Closes' },
     { key: 'state', label: 'State', tag: true, cardRole: 'tag' },
   ],

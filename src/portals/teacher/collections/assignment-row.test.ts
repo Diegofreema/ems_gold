@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Assignment } from '../../../api/set-assignments/types.ts'
-import { assignmentRows, assignmentTally, stateOf } from './assignment-row.ts'
+import {
+  assignmentRows,
+  assignmentTally,
+  editableFields,
+  stateOf,
+} from './assignment-row.ts'
 
 /** Assignment 35 as `GET /setassignments` sends it, before a question was written. */
 const ASSIGNMENT: Assignment = {
@@ -108,4 +113,49 @@ test('an assignment with nothing filled in is still nameable', () => {
   assert.equal(row.pass, '—')
   // No closing date is not a closed assignment.
   assert.equal(row.state, 'No questions')
+})
+
+/*
+ * `locked`, `locked_reason` and `editable_when_locked` were read off bronze
+ * on 2026-09-16: four of five papers came back locked, each because a pupil
+ * had already handed it in.
+ */
+const LOCKED: Assignment = {
+  id: 89,
+  title: 'Weekend Quiz Home Economics',
+  status: 'active',
+  opendate: null,
+  closedate: '2026-09-22 18:56:44',
+  total_questions: 2,
+  submission_count: 1,
+  locked: true,
+  locked_reason:
+    '1 pupil has already handed this paper in, so it can no longer be changed.',
+  editable_when_locked: ['status', 'closedate'],
+}
+
+test('a locked paper names the fields the school will still take', () => {
+  assert.deepEqual(editableFields(LOCKED), ['status', 'closedate'])
+})
+
+test('a paper nobody has sat is open to everything', () => {
+  assert.equal(editableFields({ ...LOCKED, locked: false }), null)
+  assert.equal(editableFields({ ...LOCKED, locked: null }), null)
+})
+
+test('a deployment that locks without saying what it allows locks nothing', () => {
+  // A form must never be shut on a question the school was never asked: with
+  // no list, the whole body goes and the school decides, which is what
+  // happened before any of these fields existed.
+  assert.equal(editableFields({ ...LOCKED, editable_when_locked: undefined }), null)
+})
+
+test('the row carries the window as the form reads it and as the reader does', () => {
+  const [row] = assignmentRows([LOCKED], Date.parse('2026-09-20T09:00:00'))
+  // The display string is for reading and parses to nothing; the `_at` value
+  // is what the control opens on.
+  assert.equal(row.closes_at, '2026-09-22T18:56')
+  assert.equal(row.opens_at, '')
+  assert.equal(row.sat_by, '1')
+  assert.equal(row.editable_when_locked, 'status,closedate')
 })

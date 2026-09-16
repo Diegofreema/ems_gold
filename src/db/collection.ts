@@ -141,9 +141,47 @@ export async function heldRows<T extends object>(collection: {
   return collection.toArrayWhenReady()
 }
 
-/** Refetches one collection by id, if this build has it. */
+/**
+ * Refetches in flight, keyed by set. See `refetchCollection`.
+ */
+const refetching = new Map<string, Promise<void>>()
+
+/**
+ * Refetches one collection by id, if this build has it — and **once**, however
+ * many callers ask at the same moment.
+ *
+ * Every landed write asks for its own set twice over: `enqueue` refetches the
+ * set the write was about, and `dropDerivedReads` resyncs every set the device
+ * has open, which includes that one. Two calls, microseconds apart, and
+ * react-query does not fold them together because each runs the collection's
+ * own fetcher rather than joining a query already running.
+ *
+ * For a plain set that is one wasted request. For a fan-out it is a second
+ * fan-out: `setQuestions` asks the school for the questions of every paper the
+ * teacher has set, so adding a single question fired ten requests where five
+ * would do — measured, 2026-09-16 — and the teacher waited on the slowest of
+ * the ten before their own question appeared. Joining the one already running
+ * is the whole fix, and it is the same saving on every write in the app.
+ *
+ * A rejection is shared with whoever joined it, which is what every caller
+ * here already expects: each of them swallows it, because a set that could not
+ * be refreshed is a stale list rather than a failure.
+ */
 export async function refetchCollection(id: string): Promise<void> {
-  await refetchers.get(id)?.()
+  const already = refetching.get(id)
+  if (already) return already
+
+  const refetcher = refetchers.get(id)
+  if (!refetcher) return
+
+  // Cleared before the promise settles, so the next caller after this one
+  // finishes starts a fresh request rather than joining a finished one.
+  const run = Promise.resolve(refetcher())
+    .then(() => undefined)
+    .finally(() => refetching.delete(id))
+
+  refetching.set(id, run)
+  return run
 }
 
 /**
@@ -184,7 +222,11 @@ export async function resyncCollections(ids?: readonly string[]): Promise<void> 
       // write to something else entirely. An admin saving a fee would fetch
       // the teacher's own subjects, which the school answers with a 403.
       .filter((id) => built.get(id)?.status !== 'idle')
-      .map((id) => Promise.resolve(refetchers.get(id)?.()).catch(() => undefined)),
+      // Through `refetchCollection` rather than the refetcher directly, so a
+      // set this resync shares with the write that triggered it is asked for
+      // once. Calling straight past it was worth a whole second fan-out on
+      // every write to a set built out of many requests.
+      .map((id) => refetchCollection(id).catch(() => undefined)),
   )
 }
 

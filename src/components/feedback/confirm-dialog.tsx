@@ -1,5 +1,5 @@
 import { AlertCircle, HelpCircle } from 'lucide-react'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,8 +15,16 @@ export type { ConfirmTone }
 export type ConfirmRequest = {
   title: string
   body: string
-  /** The record the action applies to, shown in a neutral block. */
-  subject: string
+  /**
+   * The record the action applies to, shown in a neutral block.
+   *
+   * Usually the row's name. A node where naming it is not enough to decide by:
+   * a question about to go on a paper is its wording, its kind, what it is
+   * worth and which choice is ticked, and a dialog that showed only the first
+   * of those would be asking the teacher to confirm something it had not shown
+   * them.
+   */
+  subject: ReactNode
   /** Label of the destructive button, e.g. "Delete the student". */
   cta: string
   /** Label of the cancel button — "Keep it", "Go back", "Keep working". */
@@ -89,7 +97,10 @@ export function ConfirmDialog({
               <DialogDescription className="mt-3.5 text-sm text-muted-foreground">
                 {request.body}
               </DialogDescription>
-              <div className="mt-4 rounded-md bg-neutral-100 px-3.5 py-3 text-sm">
+              {/* Capped and scrollable: the subject is a line of text for most
+                  of these dialogs and a read-back for some, and a tall one must
+                  not push the buttons off a laptop's screen. */}
+              <div className="mt-4 max-h-[min(46vh,340px)] overflow-y-auto rounded-md bg-neutral-100 px-3.5 py-3 text-sm">
                 {request.subject}
               </div>
             </div>

@@ -22,6 +22,8 @@ import {
   submitBody,
 } from './assignment'
 import { QuestionPips } from './question-pips'
+import { alreadySat, alreadySatNote } from './resubmit'
+import { AssignmentBrief } from './assignment-brief'
 import { useCountdown } from './use-countdown'
 
 /**
@@ -62,6 +64,13 @@ export function AssignmentSitting({
 
   const [draft, setDraft] = useState<Draft>(() => attempt.draft)
   const [questionParam, setQuestion] = useQueryState('q', parseAsInteger.withDefault(1))
+  /**
+   * Set when the school refuses the submission because this paper is already
+   * in. It replaces the sitting rather than sitting behind a toast: a student
+   * who has just answered every question and pressed Submit needs to be told
+   * what happened, not handed back the paper with a red message above it.
+   */
+  const [refused, setRefused] = useState<string | null>(null)
 
   const index = Math.min(Math.max(1, questionParam), Math.max(1, total)) - 1
   const question = questions[index]
@@ -85,9 +94,40 @@ export function AssignmentSitting({
           params: { assignmentId },
         })
       })
-      // The toast has already said what went wrong; the assignment stays put so the
-      // answers are not lost with it.
-      .catch(() => undefined)
+      .catch((error: unknown) => {
+        // One attempt is the rule and the school is the only thing that
+        // enforces it — this portal is told `submitted: false` for a paper
+        // already handed in, so the refusal is the first true thing anybody
+        // says about it. See `resubmit.ts`.
+        if (!alreadySat(error)) return undefined
+        // The sitting is over whatever happens next: the school will not take
+        // this paper, and resuming it would offer a third attempt.
+        clearAttempt(owner, assignmentId)
+        setRefused(alreadySatNote(error))
+        return undefined
+      })
+
+  if (refused) {
+    return (
+      <AssignmentBrief
+        assignment={assignment}
+        state="Submitted"
+        note={refused}
+        action={
+          <Button
+            onClick={() =>
+              void navigate({
+                to: '/student/assignments/$assignmentId/result',
+                params: { assignmentId },
+              })
+            }
+          >
+            See how you did
+          </Button>
+        }
+      />
+    )
+  }
 
   return (
     <div className="mx-auto w-full max-w-[820px]">

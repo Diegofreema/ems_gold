@@ -1,12 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { lazy, type ReactNode, Suspense } from 'react'
+import { lazy, type ReactNode, Suspense, useState } from 'react'
 import type { AssignmentDetail } from '@/api/assignments/types'
 import { Tag } from '@/components/common/tag'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { isRichText } from '@/features/collections/rich-text'
 import { toneForStatus } from '@/lib/status-tone'
-import { assignmentFields, assignmentMeta } from './assignment'
+import { serverNow } from '@/lib/server-clock'
+import { assignmentFields, assignmentMeta, windowNote } from './assignment'
 
 /**
  * The reader is the editor with typing turned off, and the editor is a large
@@ -41,6 +42,17 @@ export function AssignmentBrief({
 }) {
   const title = assignment.assignment?.title?.trim() || 'This assignment'
   const details = assignment.assignment?.details?.trim()
+  /*
+   * Read once, when the brief is put up, rather than ticking.
+   *
+   * The school's clock, not the device's — a laptop ten minutes fast would
+   * otherwise tell a student their window is shorter than it is. It does not
+   * count down: this panel is read in seconds and then left, and the sitting
+   * behind it has a live clock of its own. Held in state rather than called
+   * during render, which is a side effect dressed as a value.
+   */
+  const [openedAt] = useState(() => serverNow())
+  const shortWindow = windowNote(assignment, openedAt)
 
   return (
     <div className="mx-auto w-full max-w-[720px]">
@@ -82,6 +94,17 @@ export function AssignmentBrief({
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{note}</p>
+
+      {/* Only where the window actually changes what the terms above promise.
+          Given the warn colour rather than the muted one because it contradicts
+          a figure the student has just read — "Time allowed: 30 minutes" — and
+          a correction in the same grey as everything else is a correction
+          nobody notices. */}
+      {shortWindow && (
+        <p className="mt-3 rounded-md border-l-2 border-warn bg-warn-subtle px-3.5 py-2.5 text-sm leading-relaxed text-warn-ink">
+          {shortWindow}
+        </p>
+      )}
       <Rule />
 
       <div className="flex flex-wrap gap-2.5">

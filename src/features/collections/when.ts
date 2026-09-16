@@ -58,3 +58,96 @@ export function schoolMillis(stamp: string | null | undefined): number | null {
   const parsed = new Date(schoolTime(stamp) ?? '').getTime()
   return Number.isNaN(parsed) ? null : parsed
 }
+
+/**
+ * A school stamp as the `datetime-local` control holds it: `YYYY-MM-DDTHH:MM`.
+ *
+ * Parsed with a pattern rather than through `Date`, for the same reason
+ * `toApiDate` is written off the calendar's own parts: a stamp read into a
+ * `Date` and written back out is a stamp that has been through the reader's
+ * timezone twice, and an assignment closing at 08:00 in Lagos would open the
+ * form at 07:00 for anybody marking from London. The school's wall clock is
+ * the only thing the school and the reader agree on, so it is moved as text.
+ *
+ * Seconds are dropped because the control has none. That is a real loss — a
+ * window read back and saved unchanged moves its closing time by up to 59
+ * seconds — and it is the right trade: a teacher setting the minute an
+ * assignment shuts is not thinking in seconds, and offering a seconds box
+ * would suggest they should be.
+ */
+export function toDateTimeInput(stamp: string | null | undefined): string {
+  const bare = schoolTime(stamp)?.trim()
+  if (!bare) return ''
+
+  const iso = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(bare)
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}T${iso[4]}:${iso[5]}`
+
+  return fromDisplayStamp(bare)
+}
+
+/**
+ * The third spelling: `9/17/26, 10:14 AM`.
+ *
+ * Read off the wire 2026-09-16, and it is the *same field* as the raw
+ * `2026-09-23 08:12:00` beside it — the school returns `closedate` exactly as
+ * it was sent and hands `opendate` back through a US-locale formatter. Two
+ * ends of one window, two formats, on one row.
+ *
+ * This is precisely the hazard CLAUDE.md records about readers written from a
+ * contract, and it failed the same silent way: the strict pattern above found
+ * nothing, the edit form opened with an empty box, and saving from that box
+ * would have sent null and wiped an opening date the teacher had set. A blank
+ * that destroys data is worse than an error, so the format is read rather
+ * than ignored.
+ *
+ * Parsed with a pattern rather than by handing the string to `Date`, whose
+ * behaviour outside ISO is implementation-defined — the same reason nothing
+ * else here parses a stamp by trusting the engine.
+ *
+ * **Month before day**, because that is what produced it: `9/17/26` can only
+ * be the 17th of September, so the formatter is American. A date where both
+ * parts are 12 or under — `5/6/26` — is genuinely ambiguous in isolation, and
+ * is read the way the formatter that wrote it would have written it. The real
+ * fix is server-side: a field should come back in the shape it was sent.
+ */
+function fromDisplayStamp(bare: string): string {
+  const parts =
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4}),?\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp])\.?[Mm]\.?$/.exec(
+      bare,
+    )
+  if (!parts) return ''
+
+  const [, month, day, year, hour, minute, meridiem] = parts
+  const pad = (value: string | number) => String(value).padStart(2, '0')
+  // A two-digit year is this century: the school issues no assignment for 1926.
+  const full = year.length === 2 ? 2000 + Number(year) : Number(year)
+
+  // 12 AM is midnight and 12 PM is noon — the one pair that does not simply
+  // add twelve, and the one that silently moves a window half a day.
+  const raw = Number(hour) % 12
+  const hours = meridiem.toLowerCase() === 'p' ? raw + 12 : raw
+
+  return `${full}-${pad(month)}-${pad(day)}T${pad(hours)}:${minute}`
+}
+
+/**
+ * The control's value as the school stores it: `YYYY-MM-DD HH:MM:SS`.
+ *
+ * That is the shape `GET /setassignments` sends back — `2026-09-23 08:12:16`,
+ * a space and no zone — so it is the shape written to it, and a window saved
+ * and reloaded reads the same both ways.
+ *
+ * No zone is sent, deliberately. The API keeps the wall clock it is given and
+ * discards any offset on it, which `startedAt` in the student's own submit
+ * already records; sending the reader's UTC would shut an assignment an hour
+ * early for anybody outside Lagos.
+ *
+ * Null for an empty box, which is the school's own "no bound" — every
+ * assignment on file today carries `opendate: null`.
+ */
+export function toSchoolStamp(input: string | null | undefined): string | null {
+  const typed = input?.trim()
+  if (!typed) return null
+  const parts = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::(\d{2}))?$/.exec(typed)
+  return parts ? `${parts[1]} ${parts[2]}:${parts[3] ?? '00'}` : null
+}

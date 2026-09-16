@@ -1,4 +1,5 @@
 import type {
+  AssignmentQuestion,
   AssignmentSubmission,
   GradeBody,
   MarkingAnswer,
@@ -10,34 +11,99 @@ import { when } from '../../../../features/collections/when.ts'
 /**
  * Marking what the students of one assignment sent back.
  *
- * The school scores nothing itself — every answer of a submitted assignment
- * comes back with `score: null`, multiple choice included — so every mark that
- * reaches it is worked out here. What the school does send is the answer key,
+ * **This endpoint** scores nothing — every answer of a submitted assignment
+ * comes back with `score: null`, multiple choice included — so every mark a
+ * teacher sees on the sheet is worked out here. That is a fact about the
+ * marking view and not about the school: the student's own result route has
+ * the multiple choice scored from the moment they submit (`result.ts` sets
+ * out both readings side by side). Reading this line as "nobody has marked it
+ * anywhere" is a mistake that has already been made once. What the school does send is the answer key,
  * on the options, which settles every multiple-choice answer outright: those
  * marks are read off the key and are not the teacher's to change. What is left
  * for a teacher to decide is the written answers, which is the whole of what a
  * person is needed for.
  */
 
-export type SubmissionState = 'To mark' | 'Marked'
+export type SubmissionState = 'To mark' | 'Marked' | 'Marked by the system'
 
 /**
- * Whether anybody has marked this submission.
+ * Whether a question is one the answer key can settle on its own.
+ *
+ * The same rule `isChoice` applies to an answer, asked of the question before
+ * anybody has answered it: the school's own word for it, or the choices that
+ * make it one. Anything else — a theory question, or one that arrives with
+ * neither a type nor options — is a person's to read.
+ */
+function keyCanSettle(question: AssignmentQuestion): boolean {
+  if (question.question_type === 'theory') return false
+  return question.question_type === 'multiple_choice' || (question.options?.length ?? 0) > 0
+}
+
+/**
+ * Whether this paper needs a person at all.
+ *
+ * A paper of nothing but multiple choice has no judgement left in it: the
+ * student picked an option, the assignment says which option is right, and
+ * both came back in the same payload. Every mark on it is arithmetic, and
+ * since the marks were made read-only there is not one figure on the sheet a
+ * teacher could change.
+ *
+ * **A paper holding no questions needs a person too.** Not because there is
+ * anything to read, but because a submission against an empty paper is not a
+ * thing to quietly file a nought for — that is a paper somebody set wrong, and
+ * it belongs in front of them.
+ */
+export function needsTeacher(questions: readonly AssignmentQuestion[]): boolean {
+  if (questions.length === 0) return true
+  return questions.some((question) => !keyCanSettle(question))
+}
+
+/**
+ * Whether anybody — or anything — has marked this submission.
  *
  * `graded` is the school's own answer where it sends one. A total on its own
  * is the fallback, for the marking view, which sends `graded_at` instead.
+ *
+ * The third state exists because the first two were a lie on a paper with no
+ * theory on it. **The school scores nothing itself** — every answer of a
+ * submitted assignment comes back `score: null`, multiple choice included, and
+ * `graded: false` beside it — so a paper the answer key settles completely
+ * still read "To mark", and sat under "Waiting on you" until a teacher opened
+ * it and pressed Save on a sheet where every figure was already right and none
+ * of them was editable. That is not marking, it is a ceremony, and the tile
+ * above it was claiming work that did not exist.
+ *
+ * So a submission the key settles says so. It is a *reading* of what the app
+ * already knows, not a claim about the school's records — `autoGradable` is
+ * what actually files it, and once that lands the school says `graded` and
+ * this reads 'Marked' like anything else.
  */
-export function stateOf(submission: AssignmentSubmission): SubmissionState {
+export function stateOf(
+  submission: AssignmentSubmission,
+  /** Whether the paper this belongs to needs a person — `needsTeacher`. */
+  needsAPerson = true,
+): SubmissionState {
   const graded = submission.graded ?? submission.total_score != null
-  return graded ? 'Marked' : 'To mark'
+  if (graded) return 'Marked'
+  return needsAPerson ? 'To mark' : 'Marked by the system'
 }
 
 /** What still needs marking comes first; within that, whoever submitted first. */
-const ORDER: Record<SubmissionState, number> = { 'To mark': 0, Marked: 1 }
+const ORDER: Record<SubmissionState, number> = {
+  'To mark': 0,
+  // Between the two: settled, but not yet on the school's record. A teacher
+  // scanning the list is looking for what is theirs, and this is not.
+  'Marked by the system': 1,
+  Marked: 2,
+}
 
-export function submissionRows(submissions: AssignmentSubmission[]): Row[] {
+export function submissionRows(
+  submissions: AssignmentSubmission[],
+  /** Whether the paper needs a person. Defaults to yes, which is the old reading. */
+  needsAPerson = true,
+): Row[] {
   return submissions
-    .map((submission) => ({ submission, state: stateOf(submission) }))
+    .map((submission) => ({ submission, state: stateOf(submission, needsAPerson) }))
     .sort(
       (a, b) =>
         ORDER[a.state] - ORDER[b.state] ||
@@ -237,4 +303,42 @@ export function gradeBody({
     ...(comment.trim() ? { comment: comment.trim() } : {}),
     ...(marked ? { regrade: true } : {}),
   }
+}
+
+/**
+ * The submissions this device can file from the answer key alone, right now.
+ *
+ * Four conditions, and each one is there to stop a write that would be wrong
+ * rather than merely redundant:
+ *
+ *  - **the paper needs no person** (`needsTeacher`), or filing would be this
+ *    app inventing a mark for something somebody has to read;
+ *  - **the school has not already graded it**, or a teacher's own marks would
+ *    be overwritten by the key on every visit to the page;
+ *  - **nothing is queued for it**, so a pass that runs twice before the first
+ *    send lands does not queue the same marks twice;
+ *  - **the script is on the device**, because the body is keyed on `answer_id`
+ *    and there is nothing to key without the answers.
+ *
+ * Pure, so the decision to write on somebody's behalf is a thing with a test
+ * rather than a condition buried in an effect.
+ */
+export function autoGradable(
+  submissions: readonly AssignmentSubmission[],
+  scripts: readonly { id: number; answers?: MarkingAnswer[] | null }[],
+  needsAPerson: boolean,
+  alreadyQueued: ReadonlySet<string>,
+): { id: string; answers: MarkingAnswer[] }[] {
+  if (needsAPerson) return []
+
+  const held = new Map(scripts.map((script) => [String(script.id), script.answers ?? []]))
+
+  return submissions
+    .filter((submission) => stateOf(submission, false) === 'Marked by the system')
+    .map((submission) => String(submission.assignment_id))
+    .filter((id) => !alreadyQueued.has(id))
+    .map((id) => ({ id, answers: held.get(id) ?? [] }))
+    // A script with no answers on it is not an empty paper to file a nought
+    // for — it is one this device has not read yet.
+    .filter((one) => one.answers.length > 0)
 }

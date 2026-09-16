@@ -42,6 +42,10 @@ test('setting one sends the body the school documents, and nothing else', () => 
     test_type: 'cbt_test',
     time_limit: 25,
     passing_score: 40,
+    // The window is the teacher's now. Unset on this one, which the school
+    // reads as "open once it has questions, and never shuts".
+    opendate: null,
+    closedate: null,
   })
 })
 
@@ -100,6 +104,11 @@ test('correcting one edits the row it was read from, and keeps its status', () =
     test_type: 'cbt_test',
     time_limit: 25,
     passing_score: 40,
+    // Read back off the row and sent again unchanged — the edit form opens on
+    // the stamps the school wrote, so a correction that does not touch the
+    // window leaves the window where it was.
+    opendate: null,
+    closedate: '2026-09-09 14:57:00',
     // Sent back as the school holds it. Nothing in this portal sets a status,
     // and the update body carries one.
     status: 'active',

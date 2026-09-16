@@ -75,13 +75,17 @@ const schema = z
 export function QuestionForm({
   values,
   submitLabel,
-  pending,
   onSubmit,
   onCancel,
 }: {
   values: QuestionValues
   submitLabel: string
-  pending: boolean
+  /**
+   * Opens the confirm dialog rather than writing. Nothing is sent from here,
+   * so this button has nothing to wait on and takes no pending state — the
+   * spinner belongs to the dialog's own button, which is the one the school is
+   * actually answering.
+   */
   onSubmit: (values: QuestionValues) => void | Promise<void>
   onCancel: () => void
 }) {
@@ -129,9 +133,7 @@ export function QuestionForm({
         {kind === 'multiple_choice' && <OptionList />}
 
         <div className="mt-6 flex gap-2.5">
-          <Button type="submit" pending={pending}>
-            {submitLabel}
-          </Button>
+          <Button type="submit">{submitLabel}</Button>
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>

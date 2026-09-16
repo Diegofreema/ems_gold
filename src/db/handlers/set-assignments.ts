@@ -2,7 +2,7 @@ import { setAssignmentsService } from '@/api/set-assignments/service'
 import type { AssignmentBody, GradeBody, QuestionBody } from '@/api/set-assignments/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
-import { idOfAnswer, idUnder } from '../new-id'
+import { idOfAnswer } from '../new-id'
 import { registerHandler } from '../registry'
 
 /**
@@ -47,7 +47,12 @@ registerHandler<{ assignment_id: Id; body: QuestionBody }>(WRITE.addQuestion, {
   send: ({ assignment_id, body }) =>
     setAssignmentsService.addQuestion(assignment_id, body).then((answer) => answer.question),
   idempotent: false,
-  newId: idUnder('question'),
+  // `idOfAnswer`, not `idUnder('question')`: `send` above has already taken the
+  // question out of its envelope, so the reader was looking for a `question`
+  // inside the question and finding nothing — the exact failure `new-id.ts`
+  // was written to stop, and silent because no write yet depends on a
+  // question's id. Same shape as `createAssignment`, which unwraps `{paper}`.
+  newId: idOfAnswer,
   collectionId: SET.teachingQuestions,
 })
 

@@ -10,6 +10,7 @@ import {
   assignmentMeta,
   questionsOf,
   startedAt,
+  windowNote,
   submitBody,
   windowProblem,
 } from './assignment.ts'
@@ -116,4 +117,59 @@ test('the brief counts the questions sent, since the count field is null here', 
   assert.equal(fields['Time allowed'], 'No limit')
   assert.equal(fields['Pass mark'], '30%')
   assert.equal(fields.Closes, '28 Aug 2026, 10:08')
+})
+
+/** An assignment that shuts sooner than its own time limit would run out. */
+const CLOSING: AssignmentDetail = {
+  assignment: {
+    id: 90,
+    title: 'Mid Term Test',
+    time_limit: 30,
+    closedate: '2026-09-23 09:00:00',
+  },
+  questions: [],
+}
+
+const NINE = Date.parse('2026-09-23T09:00:00')
+
+test('a student starting near the close is told the clock is the window, not the limit', () => {
+  // The trap this exists for: `attemptExpiry` takes the earlier of the two, so
+  // starting ten minutes before the close gives ten minutes — while the terms
+  // above still read "Time allowed: 30 minutes".
+  const note = windowNote(CLOSING, NINE - 10 * 60_000)
+  assert.match(note ?? '', /10 minutes/)
+  assert.match(note ?? '', /not 30/)
+})
+
+test('a window wider than the time allowed says nothing — the limit is the bound', () => {
+  assert.equal(windowNote(CLOSING, NINE - 90 * 60_000), null)
+})
+
+test('an assignment with no limit is bounded by its window, and says so', () => {
+  const note = windowNote(
+    { ...CLOSING, assignment: { ...CLOSING.assignment, time_limit: null } },
+    NINE - 45 * 60_000,
+  )
+  assert.match(note ?? '', /45 minutes/)
+  assert.match(note ?? '', /no other time limit/i)
+})
+
+test('an hour and a half is said the way somebody would say it', () => {
+  const note = windowNote(
+    { ...CLOSING, assignment: { ...CLOSING.assignment, time_limit: null } },
+    NINE - 90 * 60_000,
+  )
+  assert.match(note ?? '', /1 hour and 30 minutes/)
+})
+
+test('a window already shut says nothing — the school’s own refusal does', () => {
+  assert.equal(windowNote(CLOSING, NINE + 60_000), null)
+  assert.equal(windowNote(CLOSING, NINE), null)
+})
+
+test('an assignment that never shuts has no window note at all', () => {
+  assert.equal(
+    windowNote({ ...CLOSING, assignment: { ...CLOSING.assignment, closedate: null } }, NINE),
+    null,
+  )
 })

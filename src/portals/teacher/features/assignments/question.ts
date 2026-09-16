@@ -138,3 +138,42 @@ export function questionBody(values: QuestionValues): QuestionBody {
       ),
   }
 }
+
+/**
+ * What the confirm dialog reads back before a question goes on the paper.
+ *
+ * Built from `questionBody` rather than from the form's own values, and that
+ * is the whole point of it: the teacher is shown **what is about to be sent**,
+ * not a second rendering of what they typed. The two are not the same thing —
+ * a blank choice is dropped on the way out, a theory question sheds its
+ * choices entirely, and points are read through a filter that turns "3kg" into
+ * 3. A read-back off the form would agree with the teacher and disagree with
+ * the school.
+ */
+export type QuestionReview = {
+  question: string
+  kind: string
+  points: number
+  /** The choices as they will be saved, with the answer key marked. */
+  choices: { text: string; correct: boolean }[]
+  /** Who marks it, which is the difference the two kinds actually make. */
+  marking: string
+}
+
+export function questionReview(values: QuestionValues): QuestionReview {
+  const body = questionBody(values)
+
+  return {
+    question: body.question_text,
+    kind: TYPE_LABEL[body.question_type],
+    points: body.points,
+    choices: (body.options ?? []).map((option) => ({
+      text: option.option_text,
+      correct: option.is_correct === true,
+    })),
+    marking:
+      body.question_type === 'theory'
+        ? 'You mark this one yourself once the assignment is sat.'
+        : 'The school marks this one against the choice ticked.',
+  }
+}

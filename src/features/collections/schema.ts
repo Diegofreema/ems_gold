@@ -26,6 +26,17 @@ function schemaForField(field: FieldSpec): ZodType {
   let text = z.string().trim()
   if (field.required) text = text.min(1, 'Required')
 
+  if (field.datetime) {
+    // As with `time`, this catches a value typed into a browser that fell back
+    // to a plain box rather than the picker. The ordering rule between two of
+    // these is a whole-form check — see `schemaFromSections`.
+    const stamp = text.refine(
+      (value) => !value || /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value),
+      'A date and a time',
+    )
+    return field.required ? stamp : stamp.optional()
+  }
+
   if (field.time) {
     // The control cannot produce anything else, so this catches a value typed
     // into a browser that fell back to a plain box rather than the reader.
@@ -74,13 +85,50 @@ function numberMessage(field: FieldSpec): string {
   return 'A whole number'
 }
 
-/** Builds one validator for a whole form definition. */
+/**
+ * Builds one validator for a whole form definition.
+ *
+ * `after` is checked here rather than on the field, because a rule about two
+ * fields cannot be written on one of them: a refinement on the closing time
+ * has no way to read the opening time beside it.
+ */
 export function schemaFromSections(sections: FormSectionSpec[]) {
   const shape: Record<string, ZodType> = {}
+  const ordered: { field: string; after: string; label: string }[] = []
+
   for (const section of sections) {
     for (const field of section.fields) {
       shape[field.key] = schemaForField(field)
+      if (field.after) {
+        const earlier = sections
+          .flatMap((one) => one.fields)
+          .find((one) => one.key === field.after)
+        // Named from the other field's own label, so the message reads in the
+        // form's words rather than in a key: "must be after Opens".
+        ordered.push({ field: field.key, after: field.after, label: earlier?.label ?? field.after })
+      }
     }
   }
-  return z.object(shape)
+
+  const object = z.object(shape)
+  if (ordered.length === 0) return object
+
+  return object.superRefine((values, context) => {
+    for (const rule of ordered) {
+      const later = String((values as Record<string, unknown>)[rule.field] ?? '').trim()
+      const earlier = String((values as Record<string, unknown>)[rule.after] ?? '').trim()
+      // Either side left blank is an open-ended window, which is allowed —
+      // there is nothing to be out of order with.
+      if (!later || !earlier) continue
+      // Compared as strings: both are `YYYY-MM-DDTHH:MM`, a format that sorts
+      // the same way it reads, so no clock and no timezone come into it.
+      if (later <= earlier) {
+        context.addIssue({
+          code: 'custom',
+          path: [rule.field],
+          message: `Must be after ${rule.label.toLowerCase()}`,
+        })
+      }
+    }
+  })
 }

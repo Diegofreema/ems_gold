@@ -2,9 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
 import { ChevronLeft } from 'lucide-react'
 import { parseAsString, useQueryState } from 'nuqs'
+import { useEffect, useRef } from 'react'
 import { collectionError } from '@/db/collection'
 import {
   setAssignments,
+  setQuestions,
   setScripts,
   setSubmissions,
 } from '@/db/collections/set-assignments'
@@ -20,7 +22,13 @@ import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { errorMessage, OFFLINE_MESSAGE } from '@/lib/errors'
 import { MarkingSheet, type MarkingValues } from './marking-sheet'
-import { gradeBody, submissionRows } from './marking'
+import {
+  autoGradable,
+  gradeBody,
+  needsTeacher,
+  openingScores,
+  submissionRows,
+} from './marking'
 import { gradedCounters, queuedGrades, withQueuedGrades, withQueuedScores } from './queued'
 import { SubmissionList } from './submission-list'
 
@@ -47,8 +55,68 @@ export function SubmissionsPage() {
   const assignments = useHeld(setAssignments)
   const submissions = useHeld(setSubmissions)
   const scripts = useHeld(setScripts)
+  const questions = useHeld(setQuestions)
   const queue = useLiveQuery({ query: (q) => q.from({ op: outbox() }) })
   const ops = (queue.data ?? []) as OutboxOp[]
+
+  /*
+   * Papers the answer key settles are filed here, without anybody pressing
+   * anything.
+   *
+   * The school scores nothing itself, so a paper of nothing but multiple
+   * choice used to wait on a teacher opening each script and pressing Save on
+   * a sheet where every figure was already right and none of them editable.
+   * The student waited on that click for their result. Filing it is not this
+   * app deciding anything: the marks are the assignment's own answer key,
+   * worked out by the same function the sheet would have shown and sent by the
+   * same handler the button would have used.
+   *
+   * On this page rather than anywhere else because this is where the scripts
+   * are — the body is keyed on `answer_id`, and the answers arrive with the
+   * route's own `freshen`. A paper nobody ever opens Marking for is still not
+   * filed, which is the one gap left and is written down rather than hidden.
+   */
+  const filed = useRef(new Set<string>())
+  const paperNeedsAPerson = needsTeacher(
+    questions.rows.filter((question) => String(question.assignment_id) === assignmentId),
+  )
+  const doc = submissions.rows.find((one) => String(one.id) === assignmentId)
+
+  useEffect(() => {
+    if (!assignmentId || paperNeedsAPerson) return
+    const wanted = autoGradable(
+      doc?.submissions ?? [],
+      scripts.rows,
+      paperNeedsAPerson,
+      filed.current,
+    )
+    for (const one of wanted) {
+      // Written down before the send, not after: the outbox takes a moment to
+      // show the op, and a re-render in between would queue the same marks
+      // again.
+      filed.current.add(one.id)
+      void enqueue({
+        handler: WRITE.gradeSubmission,
+        payload: {
+          submission_id: one.id,
+          body: gradeBody({
+            answers: one.answers,
+            scores: openingScores(one.answers),
+            comment: '',
+            // Never a regrade: `autoGradable` only ever hands back submissions
+            // the school still calls ungraded.
+            marked: false,
+          }),
+        },
+        collectionId: SET.teachingScripts,
+        // Silent. This is the app catching up with arithmetic nobody disputed,
+        // and a teacher opening Marking on a class of thirty does not want
+        // thirty sentences about it. A failure still speaks for itself.
+        toast: { success: 'Marked from the answer key', silent: true },
+        label: `Marks for submission ${one.id}, from the answer key`,
+      })
+    }
+  }, [assignmentId, paperNeedsAPerson, doc, scripts.rows])
 
   if (!assignmentId) {
     return (
@@ -177,9 +245,8 @@ export function SubmissionsPage() {
     )
   }
 
-  const doc = submissions.rows.find((one) => String(one.id) === assignmentId)
   const listed = doc?.submissions ?? []
-  const school = submissionRows(listed)
+  const school = submissionRows(listed, paperNeedsAPerson)
   // The counters are moved against the school's own rows, before the overlay
   // writes "Marked" over them — after it, a queued mark would count as
   // nothing new.
