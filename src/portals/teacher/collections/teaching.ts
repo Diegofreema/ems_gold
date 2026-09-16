@@ -308,7 +308,14 @@ export const topics: CollectionDef = {
           label: 'Subject',
           required: true,
           optionsFrom: 'my-subjects',
-          hint: 'Filled in from the subject you opened this from. It is chosen when the topic is added and not changed afterwards, so correct it here if it is wrong.',
+          /*
+           * Only ever read on the edit form, and on a create reached cold —
+           * opened from a subject's page, this field is settled and shows that
+           * subject's name instead of asking. The API does not move a topic
+           * between subjects, so the edit form says so rather than offering a
+           * change that is not saved.
+           */
+          hint: 'The subject this was taught in. It is chosen when the topic is added and not changed afterwards.',
         },
         {
           key: 'title',

@@ -1,6 +1,11 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useLogoutEverywhere } from '@/api/auth/hooks'
 import { SectionHeading } from '@/components/common/section-heading'
+import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
+import { useSyncStatus } from '@/db/status'
+import { accountSummary } from '@/features/auth/account-summary'
+import { signOutBody, signOutCta } from '@/features/auth/sign-out'
+import { useConfirm } from '@/hooks/use-confirm'
 import { Rule } from '@/components/page/rule'
 import { Button } from '@/components/ui/button'
 import { DetailRows } from '@/features/auth/components/detail-rows'
@@ -40,6 +45,8 @@ export function ProfilePage({
   const config =
     account && !portal.fromRecord ? profileFromAccount(portal, account) : portal
   const logout = useLogoutEverywhere()
+  const confirm = useConfirm()
+  const { waiting, failed, review } = useSyncStatus()
   const form = useRecordForm<ProfileValues>(
     profileSchema(config.fields),
     config.values,
@@ -85,15 +92,29 @@ export function ProfilePage({
 
           <SectionHeading className="mt-7 mb-3.5">Session</SectionHeading>
           {/* The API revokes every token for the account at once, this one
-              included, so the page it lands on has to be sign-in. */}
+              included, so the page it lands on has to be sign-in — which the
+              button's own label does not say, and the dialog does. It is also
+              the more destructive of the two sign-outs in the app, so it is
+              the one that least ought to happen on a single click. */}
           <Button
             variant="outline"
             className="w-full justify-start"
             pending={logout.isPending}
-            onClick={async () => {
-              await logout.mutateAsync().catch(() => undefined)
-              await navigate({ to: '/sign-in' })
-            }}
+            onClick={() =>
+              confirm.ask({
+                title: 'Sign out everywhere?',
+                body: signOutBody({ waiting, needsAnswer: failed + review }, true),
+                subject: account
+                  ? `${accountSummary(account).name} · ${accountSummary(account).line}`
+                  : 'This account',
+                cta: signOutCta(true),
+                cancel: 'Stay signed in',
+                onConfirm: async () => {
+                  await logout.mutateAsync().catch(() => undefined)
+                  await navigate({ to: '/sign-in' })
+                },
+              })
+            }
           >
             Sign out my other devices
           </Button>
@@ -102,6 +123,8 @@ export function ProfilePage({
           </p>
         </aside>
       </div>
+
+      <ConfirmDialog request={confirm.request} onOpenChange={confirm.setOpen} />
     </div>
   )
 }

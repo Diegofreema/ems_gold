@@ -7,6 +7,7 @@ import {
   classLabels,
   classWeeks,
   mySubjectIds,
+  noPeriodsYet,
   teachingSummary,
 } from './class-weeks.ts'
 
@@ -71,6 +72,18 @@ const SSS1_TWO = week('SSS I', [
 
 const NOTHING = week('SSS I', [], 'No timetable has been entered for this class yet.')
 
+/**
+ * What `classTimetableQuery` substitutes when a class's week could not be
+ * read — no `days` at all, where the API sends the five school days on every
+ * real answer, empty or not. That is the only thing telling a refusal apart
+ * from a week the office has not drawn.
+ */
+const REFUSED = {
+  days: [],
+  period_count: 0,
+  message: 'You do not have permission to view this class.',
+} as unknown as ClassTimetable
+
 const WEDNESDAY = new Date(2026, 8, 2, 9, 0)
 
 const build = (grids: ClassTimetable[]) =>
@@ -108,29 +121,64 @@ test('another teacher’s period says so rather than reading as missing data', (
   assert.equal(other.teacher, 'Not one of your subjects')
 })
 
-test('classes the teacher takes come first, then drawn weeks, then empty ones', () => {
+test('a class the teacher has no period in is not on the page', () => {
   // JSS 1 holds one of theirs; class 2 holds a period that is not; class 6 has
-  // no timetable at all.
+  // no timetable at all. Only the first survives.
   assert.deepEqual(
     build([JSS1, SSS1_TWO, NOTHING]).map((week) => week.label),
-    ['JSS 1', 'SSS I · class 2', 'SSS I · class 6'],
-  )
-  // The server's order is kept inside a band, so a class only moves up when
-  // there is something of the teacher's in it.
-  assert.deepEqual(
-    build([NOTHING, SSS1_TWO, JSS1]).map((week) => [week.label, week.mine]),
-    [
-      ['SSS I · class 6', 1],
-      ['SSS I · class 2', 0],
-      ['JSS 1', 0],
-    ],
+    ['JSS 1'],
   )
 })
 
-test('an empty class is empty, and carries no sentence of the school’s own', () => {
-  const [, , empty] = build([JSS1, SSS1_TWO, NOTHING])
-  assert.equal(empty.total, 0)
-  assert.equal('message' in empty, false)
+test('a week nobody could read is kept, with the reason and below their own', () => {
+  const weeks = build([JSS1, REFUSED, REFUSED])
+  assert.deepEqual(
+    weeks.map((week) => [week.label, week.unreadable]),
+    [
+      ['JSS 1', false],
+      ['SSS I · class 2', true],
+      ['SSS I · class 6', true],
+    ],
+  )
+  assert.equal(weeks[1].note, 'You do not have permission to view this class.')
+})
+
+test('an unreadable week is not a class they teach in', () => {
+  // It is shown, but it is not evidence of a period — the summary counts the
+  // classes that hold one.
+  assert.equal(
+    teachingSummary(build([JSS1, REFUSED, REFUSED])),
+    '1 period a week, across 1 class.',
+  )
+})
+
+test('a week the office simply has not drawn is dropped, not kept', () => {
+  // `NOTHING` carries the five days and the school's own sentence: read in
+  // full, and holding nothing. Only a grid with no days at all is a refusal.
+  assert.deepEqual(build([JSS1, NOTHING, NOTHING]).map((week) => week.label), ['JSS 1'])
+})
+
+test('a class with a timetable but nothing of theirs is dropped too', () => {
+  // The case that reads worst on the page: a full week drawn, every period
+  // somebody else's. It used to sit under their own classes saying "none
+  // yours".
+  assert.deepEqual(build([SSS1_TWO, SSS1_TWO, SSS1_TWO]), [])
+})
+
+test('what is left keeps the order the school sent its classes in', () => {
+  assert.deepEqual(
+    build([JSS1, JSS1, JSS1]).map((week) => week.label),
+    ['JSS 1', 'SSS I · class 2', 'SSS I · class 6'],
+  )
+})
+
+test('every class is still read, so a period of theirs anywhere is found', () => {
+  // The teacher's own subject sits in the last class the server sent. Nothing
+  // narrows the fetch, so it is drawn like any other.
+  assert.deepEqual(
+    build([NOTHING, SSS1_TWO, JSS1]).map((week) => [week.label, week.mine]),
+    [['SSS I · class 6', 1]],
+  )
 })
 
 test('the summary counts periods and the classes they are spread over', () => {
@@ -142,8 +190,45 @@ test('the summary counts periods and the classes they are spread over', () => {
     teachingSummary(build([JSS1, JSS1, NOTHING])),
     '2 periods a week, across 2 classes.',
   )
+  // Nothing of theirs anywhere: the page draws its empty state rather than
+  // this line, but the sentence is kept for the one caller that would.
   assert.equal(
     teachingSummary(build([SSS1_TWO, SSS1_TWO, NOTHING])),
     'None of the periods entered so far are in your subjects.',
+  )
+})
+
+/**
+ * Teacher 135 on bronze, read 2026-09-16: Agriculture and Home Economics, both
+ * in SSS 3. The two periods the school holds in the current term are Igbo
+ * Language (JSS 1) and Physical and Health Education (SSS 3) — so this
+ * teacher's page is empty while the school's timetable is not, which is the
+ * case the sentence exists for.
+ */
+const OBINNA = [
+  { id: 131, name: 'AGRICULTURE', department_id: 83 },
+  { id: 134, name: 'HOME ECONOMICS', department_id: 83 },
+] as unknown as TeacherSubject[]
+
+test('an empty week names the subjects it found no period for', () => {
+  assert.equal(
+    noPeriodsYet(OBINNA),
+    'Every class open to you was read, and none of the periods drawn in them is in AGRICULTURE and HOME ECONOMICS. A class appears here as soon as the office draws a period for one of your subjects.',
+  )
+})
+
+test('one subject reads as one, and three are listed with commas', () => {
+  assert.match(noPeriodsYet(OBINNA.slice(0, 1)), /is in AGRICULTURE\. A class/)
+  assert.match(
+    noPeriodsYet([...OBINNA, { id: 7, name: 'IGBO LANGUAGE' }] as unknown as TeacherSubject[]),
+    /is in AGRICULTURE, HOME ECONOMICS and IGBO LANGUAGE\./,
+  )
+})
+
+test('a teacher holding no subject at all is told that instead', () => {
+  // Nothing to have a period in, so naming an empty list would read as a bug.
+  assert.equal(
+    noPeriodsYet([]),
+    'The office has not put any subject in your hands yet, so no period can be yours. They appear on My subjects once it has.',
   )
 })

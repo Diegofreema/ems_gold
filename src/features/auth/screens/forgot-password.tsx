@@ -10,6 +10,7 @@ import { authButton } from '../components/auth-button'
 import { AuthField } from '../components/auth-field'
 import { AuthHeading } from '../components/auth-heading'
 import { forgotPasswordSchema, type ForgotPasswordValues } from '../schemas'
+import { useResendWait } from '../use-resend'
 
 export function ForgotPasswordScreen() {
   const navigate = useNavigate()
@@ -20,7 +21,20 @@ export function ForgotPasswordScreen() {
     email: '',
   })
 
+  /*
+   * The same wait the code screen honours, because this screen can send a code
+   * too: the back button from there lands here, and a timer the second screen
+   * owned alone would be a timer one click walks around. Scoped to the
+   * address, so somebody who mistyped theirs can try another at once — the
+   * wait is about one inbox being mailed repeatedly, not about the person.
+   */
+  const typed = form.watch('email')
+  const wait = useResendWait(typeof typed === 'string' ? typed : '')
+
   const onSubmit = async (values: ForgotPasswordValues) => {
+    // Disabled already; this catches a submit that got past it — the Enter key
+    // on the field, a render behind the countdown.
+    if (wait > 0) return
     try {
       // Step 1 hands back the id the next two steps are addressed to.
       const { user_id } = await forgotPassword.mutateAsync({
@@ -58,9 +72,26 @@ export function ForgotPasswordScreen() {
             autoComplete="username"
           />
 
-          <Button type="submit" pending={isSubmitting} className={`mt-(--auth-tail) ${authButton}`}>
-            {isSubmitting ? 'Sending the code…' : 'Send Code'}
+          <Button
+            type="submit"
+            disabled={wait > 0}
+            pending={isSubmitting}
+            className={`mt-(--auth-tail) ${authButton}`}
+          >
+            {isSubmitting
+              ? 'Sending the code…'
+              : wait > 0
+                ? `Send Code in ${wait}s`
+                : 'Send Code'}
           </Button>
+
+          {wait > 0 && (
+            <p className="mt-3 text-center text-[13px] leading-relaxed text-ui-muted">
+              A code has just gone to this address. Give it a minute — a new one
+              replaces the old, so asking again too quickly cancels the code you
+              are waiting for.
+            </p>
+          )}
         </form>
       </FormProvider>
 

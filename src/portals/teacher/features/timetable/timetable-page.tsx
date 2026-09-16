@@ -10,16 +10,24 @@ import {
 } from '@/features/timetable/queries'
 import { WeekCalendar } from '@/features/timetable/week-calendar'
 import { mySubjectsQuery } from '../../api/timetable'
-import { type ClassWeek, classWeeks, mySubjectIds, teachingSummary } from './class-weeks'
+import {
+  type ClassWeek,
+  classWeeks,
+  mySubjectIds,
+  noPeriodsYet,
+  teachingSummary,
+} from './class-weeks'
 
 /**
- * Every class this teacher may open, each drawn as its own week, with the
- * periods in their subjects marked.
+ * The classes this teacher has a period in, each drawn as its own week, with
+ * their own periods marked.
  *
  * The classes come from the server rather than from the teacher's record:
  * `GET /timetables/classes` answers with exactly what the account may read, so
- * a class missing from this page is the API's decision and not a role check
- * made here. Each week is then a separate call, keyed by class id.
+ * a class missing from this page is either the API's decision or a class
+ * holding nothing of theirs, and not a role check made here. Each week is then
+ * a separate call, keyed by class id — every class is still read, because a
+ * class is only known to hold a period of theirs once its week has been.
  */
 export function TeacherTimetablePage() {
   const { data: classes } = useSuspenseQuery(timetableClassesQuery)
@@ -41,14 +49,23 @@ export function TeacherTimetablePage() {
       <PageHeader
         kicker="Teaching"
         title="Class timetables"
-        description="Every class you take a subject in, and every other class you may open. Your own periods are filled in and marked; the rest are there for context."
+        description="Every class you have a period in, drawn as the school drew it. Your own periods are filled in and marked; the rest of the class's week is there for context."
       />
       <Rule />
 
-      {classes.length === 0 ? (
+      {/* Two ways to have nothing, and they are different facts: no class is
+          open to this account at all, or classes are open and none of them
+          has a period in one of this teacher's subjects. Saying the first
+          about the second would send a teacher to the office over a timetable
+          the office has not finished drawing. */}
+      {weeks.length === 0 ? (
         <EmptyState
-          title="No classes to show"
-          body="The school has not opened any class timetable to your account. Your subjects, and the class each belongs to, are on My subjects."
+          title="No periods for you yet"
+          body={
+            classes.length === 0
+              ? 'The school has not opened any class timetable to your account. Your subjects, and the class each belongs to, are on My subjects.'
+              : noPeriodsYet(subjects)
+          }
         />
       ) : (
         <>
@@ -69,17 +86,20 @@ function ClassSection({ week }: { week: ClassWeek }) {
       <SectionHeading action={<WeekTag week={week} />}>{week.label}</SectionHeading>
 
       <div className="mt-3">
-        {week.total === 0 ? (
+        {week.unreadable ? (
+          /* The school's own reason, or the app's. Unlike the sentence this
+             replaced, it is worth handing a teacher: "no timetable drawn yet"
+             was the office's business, but "this class was refused to your
+             account" is the teacher's, and it is the difference between a
+             week nobody has entered and a week they are not being shown. */
           <p className="rounded-lg border border-divider bg-raised px-4 py-5 text-sm text-muted-foreground">
-            {/* Not the API's own sentence. Where the periods on file sit under
-                a term the school is no longer in, it explains the school's
-                session settings to whoever is reading — which is the office's
-                business, not something to hand a teacher mid-lesson. */}
-            No timetable yet for this class.
+            {week.note ?? 'This class’s timetable could not be read just now.'}
           </p>
         ) : (
-          // No `onOpen`: the teacher portal publishes no page for one period,
-          // and everything a period holds is on the hover already.
+          // No empty case beyond that one: a class with periods drawn but none
+          // of this teacher's never reaches the page. No `onOpen` either — the
+          // teacher portal publishes no page for one period, and everything a
+          // period holds is on the hover already.
           <WeekCalendar columns={week.columns} />
         )}
       </div>
@@ -87,10 +107,15 @@ function ClassSection({ week }: { week: ClassWeek }) {
   )
 }
 
-/** How much of a class's week is the teacher's, said before they read it. */
+/**
+ * How much of a class's week is the teacher's, said before they read it.
+ *
+ * Two cases now, not four: a class reaching this page either holds a period of
+ * theirs or could not be read at all, so "Not drawn yet" and "none yours" name
+ * states no section here can be in.
+ */
 function WeekTag({ week }: { week: ClassWeek }) {
-  if (week.total === 0) return <Tag>Not drawn yet</Tag>
-  if (week.mine === 0) return <Tag>{week.total} periods, none yours</Tag>
+  if (week.unreadable) return <Tag>Could not be read</Tag>
   return (
     <Tag variant="accent">
       {week.mine} of {week.total} yours

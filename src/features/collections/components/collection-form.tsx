@@ -18,6 +18,7 @@ import {
 } from '@/components/form/search-select-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
 import { SelectField } from '@/components/form/select-field'
+import { SettledSelectField } from '@/components/form/settled-select-field'
 import { toOptions } from '@/features/collections/options'
 import { MoneyField } from '@/components/form/money-field'
 import { TextField } from '@/components/form/text-field'
@@ -27,6 +28,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status'
 import { useRecordForm } from '@/hooks/use-record-form'
 import { BLANK } from '../blank'
 import { schemaFromSections } from '../schema'
+import { settledValue } from '../settled'
 import { useRemoveRecord } from '../use-remove-record'
 import { useSaveRecord } from '../use-save-record'
 import type { WriteOutcome } from '@/db/write-outcome'
@@ -52,7 +54,12 @@ const RichTextField = lazy(() =>
   })),
 )
 
-function renderField(field: FieldSpec, record?: Row) {
+/**
+ * `settled` says this field's answer arrived with the page, so it is shown
+ * rather than asked. It is decided by `settledValue` and passed in, since only
+ * the form knows what the page it was opened from had already chosen.
+ */
+function renderField(field: FieldSpec, record?: Row, settled?: boolean) {
   const shared = {
     name: field.key,
     label: field.label,
@@ -110,6 +117,14 @@ function renderField(field: FieldSpec, record?: Row) {
       <SearchSelectField<Values> key={field.key} {...searched} />
     )
   }
+  if (field.optionsFrom && settled)
+    return (
+      <SettledSelectField<Values>
+        key={field.key}
+        {...shared}
+        from={field.optionsFrom}
+      />
+    )
   if (field.optionsFrom)
     return (
       <RemoteSelectField<Values>
@@ -159,10 +174,14 @@ export function CollectionForm({
    * chosen, because it is the page's whole subject — asking again would be
    * asking a question the reader has just answered by being there.
    *
-   * Seeds the form and no more: the field is still the teacher's to change,
-   * which is what stops a link with the wrong id in it becoming a record
-   * filed in the wrong place with no way to say so. Ignored on an edit, where
-   * the record itself is what the form opens on.
+   * A field decided this way is **shown rather than asked** — see
+   * `settled.ts` — so the reader reads the subject's name where the dropdown
+   * was. The value is still the form's: registered, validated and submitted
+   * exactly as a picked one. What guards against a link carrying the wrong id
+   * is that a value the feed cannot name falls back to the picker, so a
+   * settled field only ever states something the school can confirm.
+   *
+   * Ignored on an edit, where the record itself is what the form opens on.
    */
   preset?: Record<string, string>
 }) {
@@ -338,7 +357,9 @@ export function CollectionForm({
       >
         {shown.map((section) => (
           <FormSection key={section.title} title={section.title}>
-            {section.fields.map((field) => renderField(field, record))}
+            {section.fields.map((field) =>
+              renderField(field, record, Boolean(settledValue(field, preset, editing))),
+            )}
           </FormSection>
         ))}
       </RecordForm>
