@@ -356,26 +356,58 @@ const paymentsTaken: DetailTab = {
 }
 
 /**
- * The rest of the same student's bill. A parent at the counter settling one
- * invoice is the moment to know they are also down for the bus, so this asks
- * for every session rather than only the current one.
+ * The rest of the same student's bill, at the two scopes the counter actually
+ * works in.
+ *
+ * It was one tab asking for every session, on the reasoning that a parent
+ * settling one invoice is the moment to learn they are also down for the bus.
+ * That is still true and still the wider tab — but it is not what the person
+ * at the counter is usually looking at. **What is owed *this* session is the
+ * bill being collected**, and reading it off a list carrying two or three
+ * years of history means picking this year's rows out by eye, on a queue.
+ *
+ * So the scope is the choice rather than the assumption, and the endpoint
+ * already drew the same line: `collect-fees/students/{id}/invoices` answers
+ * for the current session and widens with `all=1`.
+ *
+ * Two tabs rather than a dropdown inside one, because a record's tabs are
+ * already the way this app offers a choice about what a panel shows, and
+ * because each is then its own cached read — the panel is keyed on the tab's
+ * label, so opening one does not throw away the other.
  */
-const studentLedger: DetailTab = {
-  label: "This student's invoices",
-  columns: [
-    { key: 'invoice', label: 'Invoice' },
-    { key: 'fee', label: 'Fee' },
-    { key: 'session', label: 'Session' },
-    { key: 'billed', label: 'Amount', align: 'right' },
-    { key: 'status', label: 'Status', tag: true },
-  ],
-  empty: 'This student has no other invoices.',
-  source: async (recordId) => {
-    const invoice = await collectFeesService.invoice(recordId)
-    const ledger = await collectFeesService.studentLedger(invoice.student_id)
-    return ledger.invoices.map(collectRow)
-  },
+function ledgerTab(label: string, spec: { all: boolean; empty: string }): DetailTab {
+  return {
+    label,
+    columns: [
+      { key: 'invoice', label: 'Invoice' },
+      { key: 'fee', label: 'Fee' },
+      // The session is only worth a column where the rows differ in it. On
+      // the narrow tab every row carries the same one, and a column of one
+      // word repeated down the page is the width taken off the figures
+      // somebody came to read — the same reason the teachers' register
+      // dropped its "Role".
+      ...(spec.all ? [{ key: 'session', label: 'Session' } as const] : []),
+      { key: 'billed', label: 'Amount', align: 'right' as const },
+      { key: 'status', label: 'Status', tag: true },
+    ],
+    empty: spec.empty,
+    source: async (recordId) => {
+      const invoice = await collectFeesService.invoice(recordId)
+      const ledger = await collectFeesService.studentLedger(invoice.student_id, spec.all)
+      return ledger.invoices.map(collectRow)
+    },
+  }
 }
+
+const thisSession = ledgerTab('This session', {
+  all: false,
+  empty: 'This student has been billed nothing else this session.',
+})
+
+const everySession = ledgerTab('Every session', {
+  all: true,
+  empty: 'This student has no other invoices on record.',
+})
 
 export const collect: CollectionDef = {
   id: 'collect',
@@ -438,7 +470,7 @@ export const collect: CollectionDef = {
     { key: 'raised', label: 'Raised' },
     { key: 'settledOn', label: 'Settled' },
   ],
-  tabs: [paymentsTaken, studentLedger],
+  tabs: [paymentsTaken, thisSession, everySession],
   // The record is not edited from here: an invoice is written by the register
   // and closed by a payment, and there is nothing on it a counter may retype.
   readonly: true,
