@@ -546,7 +546,7 @@ function dropCatalogue() {
 function addTitle(): ActionDef {
   return {
     kicker: 'School · Library',
-    title: 'Add a title',
+    title: 'Add a book',
     description:
       'Put a new title in the catalogue so copies of it can be issued. How many the school holds is what the shelf count runs on.',
     summary: [],
@@ -584,7 +584,7 @@ function addTitle(): ActionDef {
       { key: 'callno', label: 'Call number', placeholder: '45' },
       { key: 'department_id', label: 'Class', optionsFrom: 'classes' },
     ],
-    cta: 'Add the title',
+    cta: 'Add',
     footnote: 'The title can be issued the moment it is added.',
     done: () => 'Title added',
     run: async (values) => {
@@ -1408,7 +1408,7 @@ export const adminFlows: Record<string, AdminFlow[]> = {
   books: [
     {
       name: 'add',
-      label: 'Add a title',
+      label: 'Add a book',
       fromList: true,
       when: () => false,
       build: addTitle,

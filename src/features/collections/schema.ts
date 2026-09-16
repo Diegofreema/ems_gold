@@ -66,6 +66,15 @@ function schemaForField(field: FieldSpec): ZodType {
       (value) => !value || z.email().safeParse(value).success,
       'That does not look like an email address',
     )
+  } else if (field.emailOrUsername) {
+    // The `@` is what makes this decidable. Nobody types one into a username,
+    // so a value carrying one is an address being attempted and is held to
+    // being a whole one; a value without one is whatever the school issued and
+    // is nobody's business to check.
+    schema = text.refine(
+      (value) => !value || !value.includes('@') || z.email().safeParse(value).success,
+      'That looks like an email address, but it is not a complete one',
+    )
   } else if (field.numeric || field.money) {
     schema = text.refine(
       (value) => !value || NUMERIC.test(value),

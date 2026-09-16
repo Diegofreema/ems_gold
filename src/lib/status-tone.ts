@@ -10,7 +10,11 @@ const GOOD = ['Active', 'Paid', 'Cleared', 'Approved', 'Marked', 'Current', 'Pre
 // painted exactly like one already handed in, which is the opposite reading.
 const ACCENT = ['Open']
 // Settled: over, withdrawn, or never current. Nothing to do and nothing wrong.
-const QUIET = ['Not current', 'Closed', 'Inactive']
+// 'Unavailable' is settled either way it arises: a title the office retired,
+// or one down to the reference copy the library keeps back. Nothing is wrong
+// and nothing is owed — it simply does not go out. Red is for 'All out',
+// which is the one that says the shelf is empty.
+const QUIET = ['Not current', 'Closed', 'Inactive', 'Unavailable']
 const BAD = ['Overdue', 'Unpaid', 'Suspended', 'Not marked', 'All out', 'Rejected', 'Sent back', 'Declined', 'Owing', 'Not placed', 'Absent', 'Disabled', 'Deactivated', 'Missed', 'Wrong', 'No questions']
 
 /**

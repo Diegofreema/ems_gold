@@ -164,13 +164,19 @@ const IDENTITY: FormSectionSpec = {
      * username itself and the enrol endpoint does not report it back — unlike
      * a guardian's, which answers with the login beside the record — so what
      * a student actually signs in with is read off their record afterwards.
+     *
+     * Which is also why it is not held to being an address at all. The office
+     * has to be able to put the registration number in here for a child with
+     * no email, and a box that refuses one refuses what the school issued
+     * itself. `emailOrUsername` still catches a half-typed address, since an
+     * `@` is only ever an address being attempted.
      */
     {
       key: 'email',
-      label: 'Email',
-      email: true,
-      placeholder: 'student@example.com',
-      hint: 'Where the school can reach the student. Their sign-in is usually made from it, so leaving it empty means checking the record afterwards for what they sign in with.',
+      label: 'Email or username',
+      emailOrUsername: true,
+      placeholder: 'student@example.com, or their number',
+      hint: 'Where the school can reach the student. An address if they have one, otherwise whatever the school knows them by — a registration number is fine. Leaving it empty means checking the record afterwards for what they sign in with.',
     },
     { key: 'phone', label: 'Phone', required: true, numeric: true, placeholder: '0705 883 1190' },
     {

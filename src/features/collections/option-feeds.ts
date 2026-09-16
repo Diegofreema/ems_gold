@@ -26,7 +26,7 @@ import { methodOptions } from './payment-methods'
 import { myClasses } from './my-classes'
 import { guardianOption } from './guardian-option'
 import { audienceOptions } from '@/portals/admin/collections/notice-row'
-import { lendingLabel } from '../library/book-read'
+import { lendableCount, lendingLabel } from '../library/book-read'
 import { loanBookId, loanReturned } from '../library/loan-read'
 import { distinct, type Option, type OptionsKey, type SearchKey } from './options'
 
@@ -513,14 +513,18 @@ async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
  * request is not evidence a book is gone, and the lend endpoint refuses with
  * its own 409 where no copy is left — so the failure mode is a refusal the
  * librarian can read, rather than a book that silently is not in the list.
+ *
+ * What counts as "on the shelf" is `lendableCount`, which keeps the school's
+ * reserve copy back. The rule lives with the other book readers so this half
+ * and `heldOnShelf` below cannot answer differently — a picker that offered a
+ * title online and hid it offline would be worse than either rule alone.
  */
 async function onShelf<T extends { id: number }>(books: readonly T[]): Promise<T[]> {
   const stocks = await Promise.allSettled(books.map((book) => libraryService.stock(book.id)))
   return books.filter((_, index) => {
     const answer = stocks[index]
     if (answer?.status !== 'fulfilled') return true
-    const available = Number(answer.value?.available)
-    return Number.isFinite(available) ? available > 0 : true
+    return lendableCount(answer.value?.available)
   })
 }
 
@@ -547,7 +551,10 @@ async function heldOnShelf() {
   return books.filter((book) => {
     const copies = Number(book.copies)
     if (!Number.isFinite(copies)) return true
-    return copies - (out.get(String(book.id)) ?? 0) > 0
+    // The same figure the stock endpoint computes, through the same rule —
+    // `RESERVED_COPIES` is kept back here too, or the counter would offer a
+    // last copy with no signal that it refuses with one.
+    return lendableCount(copies - (out.get(String(book.id)) ?? 0))
   })
 }
 

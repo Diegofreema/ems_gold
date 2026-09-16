@@ -371,7 +371,28 @@ export type FieldSpec = {
   max?: number
   /** A figure in naira: masked as it is typed and spelled out beneath. */
   money?: boolean
+  /**
+   * An address, and it must be one. For a box that genuinely holds a login —
+   * a guardian's household, a staff account — where anything that is not an
+   * address is an account nobody can sign in to.
+   */
   email?: boolean
+  /**
+   * An address **or** whatever else the school has for this person.
+   *
+   * The student's box is the case it exists for. A child enrolling at a
+   * Nigerian school very often has no address of their own, and the school
+   * issues the username itself rather than making one out of this field — of
+   * four students read off bronze, two sign in with an address that is not the
+   * one on their record and the test login on file is a registration number.
+   * So the box is a contact detail, not a credential, and refusing
+   * `UDOYE2608264308` refuses something the school itself wrote.
+   *
+   * A value carrying an `@` is still checked, because there is only one reason
+   * to type one and a half-finished address is a bounced invoice rather than a
+   * username. Everything without one is taken as written.
+   */
+  emailOrUsername?: boolean
   /**
    * An upload rather than typed text, and the `accept` attribute that narrows
    * the picker — `'image/*'` for a book's cover. The form holds the `File`

@@ -9,6 +9,7 @@ const sections = [
       { key: 'name', label: 'Name', required: true },
       { key: 'amount', label: 'Amount', required: true, numeric: true },
       { key: 'email', label: 'Email', email: true },
+      { key: 'login', label: 'Email or username', emailOrUsername: true },
       { key: 'note', label: 'Note' },
     ],
   },
@@ -31,6 +32,20 @@ test('optional email is skipped when empty but checked when filled', () => {
   assert.equal(schema.safeParse({ name: 'A', amount: '1' }).success, true)
   assert.equal(schema.safeParse({ name: 'A', amount: '1', email: 'nope' }).success, false)
   assert.equal(schema.safeParse({ name: 'A', amount: '1', email: 'a@b.ng' }).success, true)
+})
+
+test('a box that takes a username takes what the school issued, address or not', () => {
+  // The registration number the test student actually signs in with.
+  assert.equal(schema.safeParse({ name: 'A', amount: '1', login: 'UDOYE2608264308' }).success, true)
+  assert.equal(schema.safeParse({ name: 'A', amount: '1', login: 'a@b.ng' }).success, true)
+  assert.equal(schema.safeParse({ name: 'A', amount: '1' }).success, true)
+})
+
+test('but an address half-typed into it is still a half-typed address', () => {
+  // Nobody puts an @ in a username, so one is an address being attempted —
+  // and this one bounces every invoice sent to it.
+  assert.equal(schema.safeParse({ name: 'A', amount: '1', login: 'ada@gmail' }).success, false)
+  assert.equal(schema.safeParse({ name: 'A', amount: '1', login: 'ada@' }).success, false)
 })
 
 const figures = schemaFromSections([
