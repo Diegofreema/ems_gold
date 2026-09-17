@@ -170,6 +170,41 @@ export function MessagesPage({
     )
   }
 
+  /*
+   * On a phone a conversation is its own screen, not a panel under the
+   * inbox's furniture.
+   *
+   * The two panes already swapped at this width, but the swap alone was not
+   * the thing: the page title, the New message button, the Open/Closed/All
+   * filters and the search box all stayed above the conversation, so opening
+   * a thread on a 375px screen put roughly four hundred pixels of somebody
+   * else's controls between the reader and the first message, and the reply
+   * box wherever the bottom of the thread landed. That is a panel wearing a
+   * screen's clothes, and it is why this did not feel like a messaging app.
+   *
+   * So the chat replaces the page rather than joining it: nothing above it but
+   * its own header, which already carries the way back. The height is the
+   * viewport less the shell's header and the page's own padding, and the
+   * messages scroll inside it — which is what pins the reply box to the foot
+   * where a thumb expects it.
+   */
+  if (narrow && selected)
+    return (
+      <div className="h-[calc(100dvh_-_var(--shell-header)_-_2*var(--spacing-content))] min-h-96">
+        <ThreadView
+          key={selected.id}
+          thread={selected}
+          meId={meId}
+          queued={queuedReplies(ops, selected.id)}
+          onBack={() => void setState({ thread: '' })}
+          onClose={() => closeThread.mutate(selected.id)}
+          closing={closeThread.isPending}
+          canClose={canClose}
+          full
+        />
+      </div>
+    )
+
   return (
     <div>
       {header}
@@ -216,10 +251,9 @@ export function MessagesPage({
         pane there, so there is nothing to pin.
       */}
       <div className="grid gap-5 lg:h-[calc(100dvh-17.5rem)] lg:min-h-104 @3xl/page:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]">
-        {/* On a narrow screen the two panes are one: opening a thread replaces
-            the list, and the thread's own back button returns to it. */}
-        {(!narrow || !selected) && (
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
+        {/* Always drawn here: a narrow screen with a thread open has already
+            returned above, as its own screen. */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-divider bg-raised shadow-card">
             {/* What scrolls on a wide screen. On a narrow one there is only
                 ever one pane and the page scrolls instead, which is why the
                 foot of the list is watched against the viewport rather than
@@ -247,26 +281,24 @@ export function MessagesPage({
               <div className="border-t border-divider px-4 py-2 text-2xs text-muted-foreground">
                 Showing {page.length} of {total}
               </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
-        {(!narrow || selected) &&
-          (selected ? (
-            <ThreadView
-              // Keyed on the thread, so switching conversations starts the
-              // panel afresh rather than showing the last one's reply box.
-              key={selected.id}
-              thread={selected}
-              meId={meId}
-              queued={queuedReplies(ops, selected.id)}
-              onBack={() => void setState({ thread: '' })}
-              onClose={() => closeThread.mutate(selected.id)}
-              closing={closeThread.isPending}
-              canClose={canClose}
-            />
-          ) : (
-            <div className="hidden min-h-0 place-items-center rounded-xl border border-dashed border-divider px-6 py-16 text-center lg:grid">
+        {selected ? (
+          <ThreadView
+            // Keyed on the thread, so switching conversations starts the
+            // panel afresh rather than showing the last one's reply box.
+            key={selected.id}
+            thread={selected}
+            meId={meId}
+            queued={queuedReplies(ops, selected.id)}
+            onBack={() => void setState({ thread: '' })}
+            onClose={() => closeThread.mutate(selected.id)}
+            closing={closeThread.isPending}
+            canClose={canClose}
+          />
+        ) : (
+          <div className="hidden min-h-0 place-items-center rounded-xl border border-dashed border-divider px-6 py-16 text-center lg:grid">
               <div className="max-w-[34ch]">
                 <div className="font-heading text-base font-extrabold">
                   Nothing open
@@ -276,8 +308,8 @@ export function MessagesPage({
                   one. Opening a conversation marks it read.
                 </p>
               </div>
-            </div>
-          ))}
+          </div>
+        )}
       </div>
 
       <ComposeDialog

@@ -11,6 +11,7 @@ import type {
   Loan,
   LoanSummary,
   PayFineBody,
+  PayForBookBody,
   ReturnLoanBody,
   StudentLoanHistory,
 } from './types'
@@ -139,26 +140,27 @@ export const libraryService = {
 
   /**
    * Marks a copy returned — `POST /admins/books/{bookId}/return`, keyed on the
-   * book the same way lending is.
+   * book the same way lending is, with the pupil in the body.
    *
-   * The one return endpoint this app calls, and the only one this deployment
-   * answers. Mapped on 2026-09-16 after the desk hit a 409: with two copies of
-   * one title out to two pupils it cannot tell which came back, and the
-   * sentence it refuses with names a loan-keyed route,
-   * `POST /api/admins/borrowed-books/{loanId}/return`. That route is not
-   * deployed — probed as POST, PUT and PATCH, as `/return`, `/returned` and
-   * `return/{id}`, with and without the `admins` prefix — so nothing here
-   * calls it, and the ambiguity is the school's to settle rather than this
-   * app's to route around. The refusal reaches the desk in the school's own
-   * words, that route included.
+   * **Both halves are needed**, and the second is what was missing. The path
+   * names the title; `student_id` names whose copy came back. Sent without it,
+   * a title with two copies out to two pupils is refused with 409 — the school
+   * cannot know which borrowing to close — and that is what stopped the desk
+   * returning anything at all.
    *
-   * Two blind alleys worth not walking down twice. The book-keyed route
-   * **ignores every key that could disambiguate it**: `loan_id`, `loanId`,
-   * `borrowedbook_id` and `student_id` each come back with the same 409. And
-   * `/loanedbooks/{loanId}/return`, which does exist, addresses the
+   * A probe with `student_id: 999999` came back with that same 409, which
+   * reads as the key being ignored and is not: there was no borrowing of that
+   * book by that pupil to close, and the endpoint has only the one sentence
+   * for it. Worth remembering when the next key is tested — an id nothing
+   * holds proves nothing either way.
+   *
+   * One blind alley worth not walking down twice: `/loanedbooks/{loanId}/return`
+   * exists and looks like the loan-keyed answer, but it addresses the
    * `loanedbooks` table, while every borrowing this school holds carries
-   * `source: "borrowedbooks"` — so `GET /loanedbooks/2` is a 404 for a loan
-   * sitting in the register.
+   * `source: "borrowedbooks"` — `GET /loanedbooks/2` is a 404 for a loan
+   * sitting in the register. Nor is the route the 409 advertises deployed:
+   * `/admins/borrowed-books/{loanId}/return` answers "No API endpoint matches"
+   * however it is spelled.
    *
    * 409 if the copy is already back.
    */
@@ -168,6 +170,20 @@ export const libraryService = {
   /** Settles the money only — the book stays out until `returnLoan`. */
   payFine: (id: Id, body: PayFineBody = {}) =>
     request<unknown>(`loanedbooks/${id}/pay`, { method: 'POST', body }),
+
+  /**
+   * Takes the overdue fine on a copy being handed back —
+   * `POST /books/{bookId}/pay`, keyed on the book with the pupil in the body,
+   * the same address lending and returning use.
+   *
+   * Called by the return flow before the return itself, and only where the
+   * desk typed an amount: money first, then the book, so a payment that is
+   * refused leaves the copy where everybody can still see it is out. See
+   * `PayForBookBody` — this route is not deployed yet, and the empty box is
+   * what keeps ordinary returns working until it is.
+   */
+  payForBook: (bookId: Id, body: PayForBookBody) =>
+    request<unknown>(`books/${bookId}/pay`, { method: 'POST', body }),
 
   /** Only the due date and condition; `returned` and `paid` have their own. */
   correctLoan: (id: Id, body: CorrectLoanBody) =>

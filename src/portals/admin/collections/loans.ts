@@ -1,4 +1,3 @@
-import { libraryService } from '@/api/library/service'
 import type { Loan } from '@/api/library/types'
 import type { Student } from '@/api/students/types'
 import { heldRows } from '@/db/collection'
@@ -128,12 +127,24 @@ export const library: CollectionDef = {
     const standing = params.filters.standing
     return pageRows(standing ? rows.filter((row) => row.standing === standing) : rows, params)
   },
-  // `/loanedbooks/{id}` carries `penalty_if_returned_today`, which the list
-  // does not — so the record is asked for on its own, and the register only
-  // answers where the detail endpoint would not.
-  record: async (recordId) => {
-    const detail = await libraryService.loan(recordId).catch(() => null)
-    if (detail?.id != null) return loanRow(detail)
-    return (await register()).find((row) => row.id === String(recordId))
-  },
+  /*
+   * Off the register's own rows, and **not** from `GET /loanedbooks/{id}`.
+   *
+   * That detail endpoint used to be asked first, because it carried
+   * `penalty_if_returned_today` and the list did not. Both halves of that have
+   * since stopped being true. The list carries every field this row reader
+   * needs, that one included — read off bronze 2026-09-16, seventeen keys on a
+   * list row. And the detail endpoint cannot answer for this school at all:
+   * the id-scoped `/loanedbooks/*` routes address the `loanedbooks` table,
+   * while every borrowing here carries `source: "borrowedbooks"`. The school's
+   * own summary now says so outright — `by_source` reports `loanedbooks` at 0
+   * loans and `borrowedbooks` at 5.
+   *
+   * So the call was a request that 404'd on every record opened, swallowed by
+   * a `.catch` and covered by this same fallback. What it bought was two
+   * failing round trips per open and a page that drew a beat later than it
+   * needed to.
+   */
+  record: async (recordId) =>
+    (await register()).find((row) => row.id === String(recordId)),
 }

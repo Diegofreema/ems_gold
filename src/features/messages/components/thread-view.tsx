@@ -57,6 +57,7 @@ export function ThreadView({
   onClose,
   closing,
   canClose,
+  full = false,
 }: {
   thread: ConversationSummary;
   /** The reader's own `user_id`, so their messages sit on their own side. */
@@ -68,6 +69,13 @@ export function ThreadView({
   closing: boolean;
   /** The office alone may close a thread. */
   canClose: boolean;
+  /**
+   * The whole screen rather than a panel beside a list — what a phone gets,
+   * where the conversation is its own page. It fills the height it is given
+   * and scrolls its messages inside itself, so the reply box stays put instead
+   * of sitting wherever the bottom of the thread happens to land.
+   */
+  full?: boolean;
 }) {
   const unsent = isQueuedThread(thread);
   const { data, isPending, error } = useConversation(thread.id, !unsent);
@@ -97,7 +105,15 @@ export function ThreadView({
       list shrink: a flex child will not go below its content without it, and
       the panel would grow instead of scrolling.
     */
-    <div className="flex min-h-112 flex-col overflow-hidden rounded-xl border border-divider bg-raised shadow-card lg:h-full lg:min-h-0">
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden rounded-xl border border-divider bg-raised shadow-card',
+        // Given a height by whoever placed it, rather than growing with the
+        // thread. Beside a list that only happens on a wide screen; as a
+        // screen of its own it is always true.
+        full ? 'h-full min-h-0' : 'min-h-112 lg:h-full lg:min-h-0',
+      )}
+    >
       <header className="flex flex-wrap items-start gap-3 border-b border-divider px-4.5 py-3.5">
         <Button
           variant="outline"

@@ -1,16 +1,17 @@
-import { Link } from '@tanstack/react-router'
-import { parseAsString, useQueryState } from 'nuqs'
-import { useGatewayConfig, useInitialisePayment } from '@/api/payments/hooks'
-import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
-import { BackLink } from '@/components/page/back-link'
-import { PageHeader } from '@/components/page/page-header'
-import { Rule } from '@/components/page/rule'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { useConfirm } from '@/hooks/use-confirm'
-import { cn } from '@/lib/utils'
-import { callbackUrl, gatewayWarning, outstandingFor } from './outstanding'
-import { useFamily } from '../../parent.store'
+import { Link } from '@tanstack/react-router';
+import { parseAsString, useQueryState } from 'nuqs';
+import { useGatewayConfig, useInitialisePayment } from '@/api/payments/hooks';
+import { ConfirmDialog } from '@/components/feedback/confirm-dialog';
+import { BackLink } from '@/components/page/back-link';
+import { PageHeader } from '@/components/page/page-header';
+import { Rule } from '@/components/page/rule';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useConfirm } from '@/hooks/use-confirm';
+import { cn } from '@/lib/utils';
+import { gatewayWarning, outstandingFor } from './outstanding';
+import { useFamily } from '../../parent.store';
+import { toast } from 'sonner';
 
 /**
  * Paying one invoice by card or transfer, through Credo.
@@ -21,45 +22,61 @@ import { useFamily } from '../../parent.store'
  * is choosing which bill to settle.
  */
 export function PayPage() {
-  const confirm = useConfirm()
-  const outstanding = outstandingFor(useFamily())
-  const gateway = useGatewayConfig()
-  const open = useInitialisePayment()
+  const confirm = useConfirm();
+  const outstanding = outstandingFor(useFamily());
+  const gateway = useGatewayConfig();
+  const open = useInitialisePayment();
 
   // Empty rather than the first invoice: the default is read once, and the
   // list is fetched, so a default built from it would stick at whatever the
   // first render happened to hold.
-  const [invoiceId, setInvoiceId] = useQueryState('invoice', parseAsString.withDefault(''))
-  const chosen = outstanding.find((entry) => entry.id === invoiceId) ?? outstanding[0]
-  const warning = gatewayWarning(gateway.data)
+  const [invoiceId, setInvoiceId] = useQueryState(
+    'invoice',
+    parseAsString.withDefault(''),
+  );
+  const chosen =
+    outstanding.find((entry) => entry.id === invoiceId) ?? outstanding[0];
+  const warning = gatewayWarning(gateway.data);
 
-  const pay = () => {
-    if (!chosen) return
-    confirm.ask({
-      title: 'Pay this invoice?',
-      body: 'You will be taken to Credo to pay by card or bank transfer. The amount is the invoice’s own and cannot be changed. A refund has to go through the bursary.',
-      subject: `${chosen.balance} · ${chosen.invoice} · ${chosen.child}`,
-      cancel: 'Go back',
-      cta: 'Continue to payment',
-      onConfirm: async () => {
-        const session = await open
-          .mutateAsync({
-            invoice_id: Number(chosen.id),
-            callback_url: callbackUrl(window.location.origin),
-          })
-          .catch(() => null)
-        // A refusal has already been announced by the mutation cache; there is
-        // nowhere to send the payer, so the page simply stays put.
-        if (!session?.authorization_url) return
-        // Leaving the app entirely — Credo hosts the card form, and it is
-        // theirs to host precisely so no card detail ever reaches this origin.
-        window.location.assign(session.authorization_url)
+  // const pay = () => {
+  //   if (!chosen) return
+  //   confirm.ask({
+  //     title: 'Pay this invoice?',
+  //     body: 'You will be taken to Credo to pay by card or bank transfer. The amount is the invoice’s own and cannot be changed. A refund has to go through the bursary.',
+  //     subject: `${chosen.balance} · ${chosen.invoice} · ${chosen.child}`,
+  //     cancel: 'Go back',
+  //     cta: 'Continue to payment',
+  //     onConfirm: async () => {
+  //       const session = await open
+  //         .mutateAsync({
+  //           invoice_id: Number(chosen.id),
+  //           callback_url: callbackUrl(window.location.origin),
+  //         })
+  //         .catch(() => null)
+  //       // A refusal has already been announced by the mutation cache; there is
+  //       // nowhere to send the payer, so the page simply stays put.
+  //       if (!session?.authorization_url) return
+  //       // Leaving the app entirely — Credo hosts the card form, and it is
+  //       // theirs to host precisely so no card detail ever reaches this origin.
+  //       window.location.assign(session.authorization_url)
+  //     },
+  //   })
+  // }
+  const onPress = () => {
+    toast.warning(
+      'This feature is not available at the moment. Please try again later.',
+      {
+        duration: 5000,
+        action: {
+          label: 'Dismiss',
+          onClick: () => toast.dismiss(),
+        },
       },
-    })
-  }
+    );
+  };
 
   return (
-    <div className="mx-auto w-full max-w-[680px]">
+    <div className="mx-auto w-full max-w-170">
       <BackLink to="/parent" label="Back to dashboard" />
       <PageHeader
         kicker="Finance"
@@ -131,7 +148,7 @@ export function PayPage() {
 
       <div className="flex flex-wrap items-center gap-2.5">
         {chosen && (
-          <Button onClick={pay} pending={open.isPending}>
+          <Button onClick={onPress} pending={open.isPending}>
             Pay {chosen.balance}
           </Button>
         )}
@@ -142,5 +159,5 @@ export function PayPage() {
 
       <ConfirmDialog request={confirm.request} onOpenChange={confirm.setOpen} />
     </div>
-  )
+  );
 }

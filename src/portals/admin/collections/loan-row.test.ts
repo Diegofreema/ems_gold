@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Loan } from '../../../api/library/types.ts'
+import type { Row } from '../../../features/collections/types.ts'
 import {
   loanBook,
   loanBookId,
@@ -11,6 +12,8 @@ import {
   loanStanding,
   loanStudent,
   loanStudentId,
+  fineRequest,
+  returnRequest,
 } from './loan-row.ts'
 
 /**
@@ -166,4 +169,66 @@ test('the delete confirm says the copy quietly goes back', () => {
   const body = loanDeleteBody(loanRow(EXPANDED, TODAY))
   assert.match(body, /Things Fall Apart against Lucy Chinenyenwa Obi/)
   assert.match(body, /goes back on the shelf/)
+})
+
+/**
+ * Loan 2 off bronze 2026-09-16 — Lucy Obi's copy of History of Nigeria, one of
+ * two out to two different children, which is the case the pupil has to be
+ * named for.
+ */
+const SHARED_TITLE: Row = {
+  id: '2',
+  book: 'History of Nigeria',
+  book_id: '2',
+  student: 'Lucy Chinenyenwa Obi',
+  student_id: '120',
+}
+
+test('the return names the title in the path and the pupil in the body', () => {
+  const asked = returnRequest(SHARED_TITLE, 'Good')
+  assert.equal(asked?.bookId, '2')
+  // A number, not the row's string: the endpoint is given an id, not a label.
+  assert.equal(asked?.body.student_id, 120)
+  assert.equal(asked?.body.status, 'Good')
+  // Under both names, carrying the same word so they cannot disagree.
+  assert.equal(asked?.body.condition, 'Good')
+})
+
+test('the condition is trimmed, never sent as the spaces somebody typed', () => {
+  const asked = returnRequest(SHARED_TITLE, '  Damaged  ')
+  assert.equal(asked?.body.status, 'Damaged')
+  assert.equal(asked?.body.condition, 'Damaged')
+})
+
+test('a row that cannot name the book or the pupil is refused, not posted', () => {
+  // Either missing would send the wrong child's copy back, or address a path
+  // with a hole in it. Both read as an empty field rather than as an error,
+  // which is why this is checked rather than trusted.
+  assert.equal(returnRequest({ ...SHARED_TITLE, book_id: '' }, 'Good'), null)
+  assert.equal(returnRequest({ ...SHARED_TITLE, student_id: '' }, 'Good'), null)
+  assert.equal(returnRequest({ ...SHARED_TITLE, student_id: 'Lucy' }, 'Good'), null)
+  assert.equal(returnRequest({ ...SHARED_TITLE, student_id: '0' }, 'Good'), null)
+})
+
+test('a fine is only asked for when there is one to take', () => {
+  // The empty box is the ordinary return — most copies come back on time, and
+  // a payment call for nothing would put a receipt on a loan that owed
+  // nothing. Nought is the same answer as blank.
+  assert.equal(fineRequest(SHARED_TITLE, 0), null)
+  assert.equal(fineRequest(SHARED_TITLE, Number.NaN), null)
+  assert.equal(fineRequest(SHARED_TITLE, -500), null)
+})
+
+test('a fine names the title in the path and the pupil with the money', () => {
+  const asked = fineRequest(SHARED_TITLE, 4000)
+  assert.equal(asked?.bookId, '2')
+  assert.equal(asked?.body.student_id, 120)
+  assert.equal(asked?.body.amount, 4000)
+})
+
+test('a row that cannot name the book or the pupil takes no money either', () => {
+  // The same guard as the return, and it matters more here: a payment posted
+  // against a path with a hole in it is money the school cannot attribute.
+  assert.equal(fineRequest({ ...SHARED_TITLE, book_id: '' }, 4000), null)
+  assert.equal(fineRequest({ ...SHARED_TITLE, student_id: '' }, 4000), null)
 })

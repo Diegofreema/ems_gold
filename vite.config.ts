@@ -32,7 +32,25 @@ export default defineConfig({
         short_name: 'NETPRO',
         description:
           'The school portal — registers, results, fees and timetables, on your device.',
-        start_url: '/',
+        /*
+         * The sign-in form, not the landing page.
+         *
+         * The landing page is a shopfront: what the school is, what the
+         * portal does, and a Sign in button at the end of it. Somebody who
+         * has installed the app has already been sold — they tapped the icon
+         * to get at a register or a result, and being shown the pitch again
+         * with the one control they want a scroll away is the tax the web
+         * pays and an installed app should not.
+         *
+         * `scope` stays at the root, so every portal underneath is still the
+         * app rather than a link out to the browser.
+         *
+         * This alone only reaches installs made from here on — a device that
+         * already has the app keeps the `start_url` its manifest was
+         * installed with. `installedApp()` is what covers those, redirecting
+         * the landing route when the app is running standalone.
+         */
+        start_url: '/sign-in',
         scope: '/',
         display: 'standalone',
         background_color: '#ffffff',

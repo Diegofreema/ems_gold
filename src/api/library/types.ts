@@ -191,13 +191,23 @@ export type LendBody = {
  * `POST /admins/books/{bookId}/return` — keyed on the book, as lending is, and
  * not on the loan. 409 where the copy is already back.
  *
- * `status` is the condition the book came back in, which is the one field the
- * desk is asked for. What else this endpoint takes has not been seen: the
- * shape published for the loan-keyed version allowed a `returned_on` backdate,
- * and whether this one does — or whether it wants the student named, which a
- * book id alone does not settle when two copies are out — is unverified.
+ * The book id alone does not settle which borrowing closed, so the pupil goes
+ * in the body. That question was open in this comment for a while and the
+ * answer is `student_id`.
  */
 export type ReturnLoanBody = {
+  /**
+   * Which pupil's copy came back — what tells two borrowings of one title
+   * apart, since the route itself names only the book.
+   *
+   * Without it the school refuses a title with more than one copy out: "2
+   * copies of that title are out, to 2 pupils." A probe with an id nothing
+   * holds (`student_id: 999999`) came back with that same sentence, which
+   * reads as the key being ignored and is not — there was simply no borrowing
+   * of that book by that pupil to close, and the endpoint says so in the only
+   * words it has for it.
+   */
+  student_id?: number
   /**
    * The condition the book came back in, sent under **both** names it could
    * have.
@@ -227,6 +237,35 @@ export type ReturnLoanBody = {
 export type PayFineBody = {
   /** Left out, the full fine as it stands is taken. */
   amount?: number
+}
+
+/**
+ * `POST /books/{bookId}/pay` — the overdue fine, taken at the counter as the
+ * copy is handed back.
+ *
+ * Keyed on the book like lending and returning, so the pupil goes in the body
+ * for the same reason: a title with two copies out has two borrowings, and the
+ * path names neither. `amount` is what the desk actually took, which is not
+ * always the whole fine.
+ *
+ * **Not deployed as of 2026-09-16.** Probed as `/books/{id}/pay` and
+ * `/admins/books/{id}/pay`, plus `/pay-fine`, `/fine`, `pay/{id}`,
+ * `/admins/borrowed-books/{id}/pay` and `/borrowedbooks/{id}/pay` — every one
+ * answers "No API endpoint matches". The only pay route that exists is
+ * `/loanedbooks/{loanId}/pay`, which addresses the `loanedbooks` table, and
+ * `GET /loanedbooks/summary` now reports that table holding **0 loans** while
+ * `borrowedbooks` holds all five. So nothing on this school can be paid
+ * through it either.
+ *
+ * Which is why the amount is optional on the form rather than required: a
+ * return with the box left empty makes no payment call at all and goes on
+ * working exactly as it does today.
+ */
+export type PayForBookBody = {
+  /** Whose copy — what tells two borrowings of one title apart. */
+  student_id?: number
+  /** Naira, as a number. What was handed over, not necessarily the whole fine. */
+  amount: number
 }
 
 /** `POST /loanedbooks/{loanId}` — only these two are correctable here. */

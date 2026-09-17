@@ -17,6 +17,7 @@ import {
   type ReviewValues,
 } from '@/portals/admin/collections/admission';
 import { applicantDocuments } from '@/portals/admin/collections/applicant-row';
+import { fineRequest, returnRequest } from '@/portals/admin/collections/loan-row';
 import {
   collecting,
   figure,
@@ -34,6 +35,7 @@ import {
 import { borrowBlock } from '@/features/library/loan-read';
 import { searchedLabel } from '@/features/collections/option-feeds';
 import { formatDate, formatNaira, parseNaira } from '@/lib/format';
+import { dropMoneyReads } from '@/api/money';
 import { queryClient } from '@/lib/query-client';
 import type { ActionDef } from './types';
 
@@ -750,7 +752,7 @@ function takeBack(row?: Row): ActionDef {
     kicker: 'School · Lending',
     title: `Return ${row?.book ?? 'book'}`,
     description:
-      'Mark the copy returned and put it back on the shelf, ready to lend again.',
+      'Mark the copy returned and put it back on the shelf. Anything owed on it can be taken here at the same time.',
     summary: [
       ...loanSummary(row),
       { label: 'Fine if returned today', value: row?.penalty_today ?? DASH },
@@ -764,44 +766,93 @@ function takeBack(row?: Row): ActionDef {
         value: 'Good',
         hint: 'The state the book came back in — Good, Damaged, Lost — kept on the loan record.',
       },
+      /*
+       * The fine, taken in the same breath as the book.
+       *
+       * **Not required, and that is the whole design of it.** Most copies come
+       * back on time with nothing owed, and a box the desk had to fill in to
+       * give a book back would block every ordinary return. Left empty, no
+       * payment is attempted at all and this form does exactly what it did
+       * before — which also means the counter keeps working while
+       * `POST /books/{bookId}/pay` is still being deployed.
+       */
+      {
+        key: 'amount',
+        label: 'Fine paid',
+        money: true,
+        wide: true,
+        hint: 'What the student is handing over now. Leave it empty if nothing is owed — the book still goes back.',
+      },
     ],
     cta: 'Return book',
-    footnote: 'The copy stays against the student until you press this.',
+    footnote: 'Nothing is taken and nothing is returned until you press this.',
     done: () => 'Book returned',
-    confirm: () => ({
-      title: 'Return this book?',
-      body:
-        row?.paid === 'Owing'
-          ? 'The copy goes back on the shelf. The fine is not taken by this — collect it with its own button, before or after.'
-          : 'The loan is closed and the copy goes back on the shelf, ready to be issued again.',
-      subject: [row?.book ?? 'This title', row?.student]
-        .filter(Boolean)
-        .join(' · '),
-      cta: 'Return the book',
-      cancel: 'Go back',
-    }),
+    confirm: (_total, values) => {
+      const paying = parseNaira(String(values?.amount ?? ''));
+      return {
+        title: paying ? 'Take the fine and return this book?' : 'Return this book?',
+        /*
+         * Money first, and the dialog says so in that order — because that is
+         * the order it happens in, and because a confirm that mentions a book
+         * and quietly also takes ₦4,000 is the one kind of dialog this app
+         * must not have.
+         */
+        body: paying
+          ? 'The fine is taken first. Only if it goes through does the copy go back on the shelf, so a payment the school refuses leaves the loan standing where it can still be seen.'
+          : 'The loan is closed and the copy goes back on the shelf, ready to be issued again. Nothing is collected — leave the amount empty only if nothing is owed.',
+        subject: [row?.book ?? 'This title', row?.student, paying ? formatNaira(paying) : undefined]
+          .filter(Boolean)
+          .join(' · '),
+        cta: paying ? 'Take it and return the book' : 'Return the book',
+        cancel: 'Go back',
+      };
+    },
     run: async (values) => {
       if (!row) throw new Error('That loan could not be loaded.');
       /*
-       * Keyed on the book, as lending is. A row that names no title is refused
-       * here rather than posted to a path with a hole in it.
+       * The book in the path, the pupil in the body — and the second is not
+       * optional. A title the school holds two copies of is out to two
+       * children, and `POST /admins/books/{bookId}/return` cannot tell which
+       * borrowing closed without being told whose it was; it refuses the lot
+       * with a 409 rather than guess.
        *
-       * A refusal is not caught or reworded. The school refuses with 409 where
-       * a title has two copies out and it cannot tell which came back, and its
-       * own sentence is what reaches the desk — including the route it names.
-       * That sentence was translated here for a while, into something a
-       * counter could act on; it is the school's to say, and a portal that
-       * paraphrases a refusal is a portal that can be wrong about one.
+       * A row that cannot name both is refused here rather than posted as a
+       * path with a hole in it or a body naming nobody.
        */
-      const bookId = String(row.book_id ?? '').trim();
-      if (!bookId) {
-        throw new Error('That loan does not say which title it is of.');
+      const asked = returnRequest(row, String(values.status ?? ''));
+      if (!asked) {
+        throw new Error('That loan does not say which title it is of, or who has it.');
       }
-      const condition = String(values.status ?? '').trim();
-      // Under both names — see `ReturnLoanBody`. They cannot disagree.
-      await libraryService.returnLoan(bookId, { status: condition, condition });
+
+      /*
+       * Two endpoints behind one button, in the order that fails safely.
+       *
+       * The money goes first and the book waits on it. Returning first would
+       * mean a refused payment leaving a settled loan with a fine nobody can
+       * see any more — the copy is on the shelf, the child has gone, and the
+       * only record that anything was owed is the one just closed. This way
+       * round the worst case is a loan that is still open, which is a true
+       * statement about a book somebody is standing there holding.
+       *
+       * Nothing is thrown or caught around it: a refusal is the school's own
+       * sentence, raised by the flow, with the form still filled in. The
+       * return simply never runs.
+       */
+      const fine = fineRequest(row, parseNaira(String(values.amount ?? '')));
+      if (fine) {
+        await libraryService.payForBook(fine.bookId, fine.body);
+        // The money is real the moment it lands, whether or not the return
+        // that follows goes through.
+        dropMoneyReads(queryClient);
+      }
+
+      await libraryService.returnLoan(asked.bookId, asked.body);
       dropCatalogue();
-      return { message: `${row.book} is back on the shelf.` };
+      return {
+        message: fine
+          ? `${formatNaira(fine.body.amount)} taken, and ${row.book} is back on the shelf.`
+          : `${row.book} is back on the shelf.`,
+      };
     },
   };
 }
