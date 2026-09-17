@@ -22,7 +22,6 @@ import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-pass
 import { Route as AuthSessionExpiredRouteImport } from './routes/_auth/session-expired'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignedInRouteImport } from './routes/_auth/signed-in'
-import { Route as AuthWrongPortalRouteImport } from './routes/_auth/wrong-portal'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminApplicantsRouteImport } from './routes/admin/applicants'
@@ -180,11 +179,6 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
 const AuthSignedInRoute = AuthSignedInRouteImport.update({
   id: '/signed-in',
   path: '/signed-in',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthWrongPortalRoute = AuthWrongPortalRouteImport.update({
-  id: '/wrong-portal',
-  path: '/wrong-portal',
   getParentRoute: () => AuthRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -680,7 +674,6 @@ export interface FileRoutesByFullPath {
   '/session-expired': typeof AuthSessionExpiredRoute
   '/sign-in': typeof AuthSignInRoute
   '/signed-in': typeof AuthSignedInRoute
-  '/wrong-portal': typeof AuthWrongPortalRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/arms': typeof AdminArmsRoute
@@ -785,7 +778,6 @@ export interface FileRoutesByTo {
   '/session-expired': typeof AuthSessionExpiredRoute
   '/sign-in': typeof AuthSignInRoute
   '/signed-in': typeof AuthSignedInRoute
-  '/wrong-portal': typeof AuthWrongPortalRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/arms': typeof AdminArmsRoute
@@ -896,7 +888,6 @@ export interface FileRoutesById {
   '/_auth/session-expired': typeof AuthSessionExpiredRoute
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/signed-in': typeof AuthSignedInRoute
-  '/_auth/wrong-portal': typeof AuthWrongPortalRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applicants': typeof AdminApplicantsRoute
   '/admin/arms': typeof AdminArmsRoute
@@ -1007,7 +998,6 @@ export interface FileRouteTypes {
     | '/session-expired'
     | '/sign-in'
     | '/signed-in'
-    | '/wrong-portal'
     | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/arms'
@@ -1112,7 +1102,6 @@ export interface FileRouteTypes {
     | '/session-expired'
     | '/sign-in'
     | '/signed-in'
-    | '/wrong-portal'
     | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/arms'
@@ -1222,7 +1211,6 @@ export interface FileRouteTypes {
     | '/_auth/session-expired'
     | '/_auth/sign-in'
     | '/_auth/signed-in'
-    | '/_auth/wrong-portal'
     | '/admin/analytics'
     | '/admin/applicants'
     | '/admin/arms'
@@ -1419,13 +1407,6 @@ declare module '@tanstack/react-router' {
       path: '/signed-in'
       fullPath: '/signed-in'
       preLoaderRoute: typeof AuthSignedInRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/wrong-portal': {
-      id: '/_auth/wrong-portal'
-      path: '/wrong-portal'
-      fullPath: '/wrong-portal'
-      preLoaderRoute: typeof AuthWrongPortalRouteImport
       parentRoute: typeof AuthRoute
     }
     '/admin/': {
@@ -2327,7 +2308,6 @@ interface AuthRouteChildren {
   AuthSessionExpiredRoute: typeof AuthSessionExpiredRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignedInRoute: typeof AuthSignedInRoute
-  AuthWrongPortalRoute: typeof AuthWrongPortalRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -2338,7 +2318,6 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSessionExpiredRoute: AuthSessionExpiredRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignedInRoute: AuthSignedInRoute,
-  AuthWrongPortalRoute: AuthWrongPortalRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

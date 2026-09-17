@@ -87,7 +87,23 @@ export function SignInScreen() {
       const role = roleForAccount(account)
       identify(account.user.username, role)
 
-      await navigate({ to: role ? portalFor(role).to : '/wrong-portal' })
+      /*
+       * Signed in, and nowhere to go: the account carries a role none of the
+       * four portals is built for. The session is dropped rather than left
+       * half-open — a token with no portal behind it is one the next reload
+       * would only have to turn away again — and the form says so, which is
+       * the same place every other sign-in that cannot proceed ends up.
+       */
+      if (!role) {
+        endSession(queryClient)
+        setFailure({
+          title: 'This account has no portal to open.',
+          body: 'Ask the school office to check the role on it, then sign in again.',
+        })
+        return
+      }
+
+      await navigate({ to: portalFor(role).to })
     } catch (error) {
       setFailure({ title: errorMessage(error, OFFLINE_MESSAGE), body: WRONG_DETAILS_BODY })
     }

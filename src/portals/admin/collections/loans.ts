@@ -8,7 +8,7 @@ import { localFirst } from '@/features/collections/local-first'
 import { newestFirst } from '@/features/collections/order'
 import type { CollectionDef } from '@/features/collections/types'
 import { loanRow, loanStudentId } from './loan-row'
-import { loanBorrowed } from '@/features/library/loan-read'
+import { keyParts, loanBorrowed } from '@/features/library/loan-read'
 
 /**
  * The Lending page is the borrowing register, off `GET /loanedbooks` — every
@@ -76,15 +76,6 @@ export const library: CollectionDef = {
   emptyTitle: 'Nothing is out',
   emptyBody:
     'No book has been lent yet. Issue one with the button above — the loan appears here the moment it goes out.',
-  /*
-   * A loan that will not open is not a loan that is gone, and the default
-   * sentence here ("This loan is not on the register") says the opposite of
-   * what is true: the row is on the register, and it is the record endpoint
-   * that cannot find it. Whoever runs the API is the one who can act on this,
-   * so it names the route rather than apologising vaguely at a librarian.
-   */
-  missingBody:
-    'The borrowing is still on the register — it is the record endpoint that cannot find it. /loanedbooks/{id} answers "not found" for every loan here, because it reads the loanedbooks table while these borrowings are in borrowedbooks. Nothing is lost, and the record opens as soon as that is fixed.',
   noun: 'loan',
   nameKey: 'book',
   // Records arrive by lending, not by typing: returns and fines are flows on
@@ -138,32 +129,29 @@ export const library: CollectionDef = {
     return pageRows(standing ? rows.filter((row) => row.standing === standing) : rows, params)
   },
   /*
-   * The record is `GET /loanedbooks/{id}`, the endpoint made for it, and
-   * nothing else. It carries the whole borrowing under a `loan` envelope of
-   * its own — `penalty_if_returned_today` included, which is the figure the
-   * desk quotes when a book comes back late.
+   * The record is `GET /loanedbooks/{loanId}`, the endpoint made for it, and
+   * nothing else behind it. It carries the whole borrowing with
+   * `penalty_if_returned_today` — the figure the desk quotes before the book
+   * is on the counter.
    *
-   * **It 404s for every borrowing this school holds, today.** Not a wrong
-   * path: the route is deployed and answers the library's own sentence
-   * ("That borrowing record could not be found") rather than the router's
-   * "No API endpoint matches". It reads the `loanedbooks` table, while all
-   * five loans here carry `source: "borrowedbooks"` — which the list and the
-   * summary beside it both read, the summary saying so outright in
-   * `by_source`: loanedbooks 0, borrowedbooks 5. Measured on 2026-09-17
-   * across ids 1–5, with `?source=` and `?type=` making no difference.
+   * **That route is the desk table's alone**, and that is the school's own
+   * design rather than a fault: `{{loanId}}` is a `loanedbooks` row, the two
+   * tables both number from 1, and putting one table's id in the other's URL
+   * "will 404" in their words. So a row from the retired assign-book screen
+   * has no record endpoint at all. It is not asked for at someone else's id —
+   * that would open a stranger's loan, which is worse than a blank page — and
+   * nothing here reads the row off the register instead.
    *
-   * So until that handler unions the second table the way the list does, no
-   * loan opens — and the return and the fine are flows on this record. That
-   * is a server-side fix, taken deliberately over papering it over here: a
-   * record synthesised from the register row was the previous shape, and it
-   * hid a broken endpoint behind a page that looked well.
-   *
-   * The pupil is still named from the directory on the device. `student` is
-   * the id's own row rather than a name on most of these answers, and the
-   * join costs no request.
+   * What that costs, plainly: the five legacy borrowings on this school cannot
+   * be opened, so their return and correction buttons cannot be reached. Every
+   * loan made from now on is a desk row, because `POST /loanedbooks` is the
+   * only way left to lend, and those open normally.
    */
   record: async (recordId) => {
-    const loan = await libraryService.loan(recordId)
+    const { source, id } = keyParts(String(recordId))
+    if (source === 'borrowedbooks') return undefined
+
+    const loan = await libraryService.loan(id)
     const names = namesOf(await heldRows(refStudents).catch(() => []))
     return loanRow(loan, new Date(), names.get(loanStudentId(loan)))
   },

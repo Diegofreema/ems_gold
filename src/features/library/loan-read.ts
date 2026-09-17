@@ -24,6 +24,57 @@ export function first(...values: (string | null | undefined)[]): string {
   return ''
 }
 
+/**
+ * Which table the row came from. Empty where the school did not say.
+ */
+export function loanSource(loan: Loan): string {
+  return loan.source?.trim() ?? ''
+}
+
+/**
+ * What identifies one borrowing **on this device**.
+ *
+ * `id` alone does not. The school lists both lending tables in one answer and
+ * each numbers from 1, so `id: 1` appears twice in a single page — once from
+ * the desk and once from the retired assign-book screen. A collection keyed
+ * on the number holds one of them and drops the other, with nothing thrown
+ * and nothing logged: the register simply comes up a row short, which is
+ * indistinguishable from a book nobody borrowed.
+ *
+ * So the key is the pair, written `loanedbooks:1`. A deployment that sends no
+ * `source` keys on the number as before, which is what it meant then.
+ */
+export function loanKey(loan: Loan): string {
+  const source = loanSource(loan)
+  return source ? `${source}:${loan.id}` : String(loan.id)
+}
+
+/** The pair back out of a key, for a reader that has only the URL. */
+export function keyParts(key: string): { source: string; id: string } {
+  const at = key.indexOf(':')
+  return at === -1
+    ? { source: '', id: key }
+    : { source: key.slice(0, at), id: key.slice(at + 1) }
+}
+
+/**
+ * Whether a fine on this loan can be **recorded and settled**, rather than
+ * merely worked out.
+ *
+ * The retired table has no penalty column and no paid column, so a figure
+ * against one of its rows is what would be owed and not a debt the school has
+ * booked — there is nowhere to mark it paid. The school's instruction is
+ * plain: offer no Collect button on those.
+ *
+ * Where the flag is missing the source decides, which is the same rule stated
+ * the other way round, and is what a deployment made before the flag existed
+ * meant.
+ */
+export function fineTracked(loan: Loan): boolean {
+  if (typeof loan.fine_tracked === 'boolean') return loan.fine_tracked
+  return loanSource(loan) !== 'borrowedbooks'
+}
+
 /** Which pupil this loan is against, as an id. Empty where the row says none. */
 export function loanStudentId(loan: Loan): string {
   const id = loan.student_id ?? loan.student?.id

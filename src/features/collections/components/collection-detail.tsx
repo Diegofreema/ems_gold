@@ -86,15 +86,25 @@ export function CollectionDetail({
     <BackLink to={definition.path} label={`Back to ${home}`} />
   )
 
-  // The page is the right page; the data is not there. Saying so in the shell
-  // beats the portal's 404, which claims the link itself was wrong.
+  /*
+   * The page is the right page; the data is not there. Saying so in the shell
+   * beats the portal's 404, which claims the link itself was wrong.
+   *
+   * **One sentence for the whole app, and no way to override it.** A
+   * definition used to be able to write its own, and what that bought was
+   * copy written for whoever was debugging that register at the time — one of
+   * them named an endpoint and a database table at a librarian. Nobody
+   * reading this has a fault to fix: they clicked something that is not
+   * there, and what they need is to be told so kindly and pointed back at the
+   * list. Anything a developer needs belongs in the console, not on the page.
+   */
   if (!record) {
     return (
       <div>
         {back}
         <MissingState
-          title={definition.missingTitle ?? 'Record not found'}
-          body={definition.missingBody ?? `This ${definition.noun} is not on the register.`}
+          title="We could not find that one"
+          body="It may have been removed since, or the link may be out of date. Nothing else is affected — go back and pick it from the list."
           action={
             <Button asChild>
               <Link to={definition.path}>Back to {home}</Link>

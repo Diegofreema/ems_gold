@@ -497,8 +497,6 @@ export const staff: CollectionDef = {
   footer: 'Teaching and office records',
   emptyTitle: 'No staff records',
   emptyBody: 'Add your teaching and office staff to assign subjects and arms.',
-  missingTitle: 'Record not found',
-  missingBody: 'This staff record could not be opened. Ask your ICT desk to look at it.',
   noun: 'staff member',
   nameKey: 'name',
   counts: [
@@ -589,13 +587,6 @@ export const staffAdmin = staffSlice(
   {
     collection: staffBinding('admin'),
     action: 'Add administrator',
-    // Not "no such administrator": they are on the register, and the office
-    // can see them there. `GET /users/admins/{id}` refuses any record whose
-    // login carries country 0 — seven of the nine on bronze — so the page
-    // names the fault rather than blaming the link.
-    missingTitle: 'Record not found',
-    missingBody:
-      'This account could not be opened, so its privileges cannot be changed. Its sign-in can still be turned on or off from the register. Ask your ICT desk to look at it.',
     footer: 'Office records',
     emptyTitle: 'No office records',
     emptyBody: 'Add an administrator to give someone access to this portal.',
@@ -733,8 +724,6 @@ export const staffTeachers = staffSlice(
       { key: 'status', label: 'Status', tag: true, cardRole: 'tag' },
     ],
     noun: 'teacher',
-    missingTitle: 'Record not found',
-    missingBody: 'This teaching record is not on the register.',
     footer: 'Teaching records',
     emptyTitle: 'No teaching records',
     emptyBody: 'Add a teacher to assign them subjects and an arm.',

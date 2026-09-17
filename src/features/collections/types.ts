@@ -328,7 +328,8 @@ export type FieldSpec = {
    * one whose whole point is that it is not loaded whole, e.g. the book
    * catalogue at a lending counter. The field submits the record's id all the
    * same, and which parameter the endpoint is asked with is the feed's own
-   * business (`q` for people, `booktitle` for the catalogue).
+   * business — `q` at every one of them now, though it means "title, author
+   * or ISBN" at the catalogue and "name" at the two directories.
    */
   searchFrom?: SearchKey
   /**
@@ -590,9 +591,6 @@ export type CollectionDef = {
    */
   searchable?: boolean
   footer: string
-  /** Shown where the record asked for did not come back. */
-  missingTitle?: string
-  missingBody?: string
   emptyTitle: string
   emptyBody: string
   /** Singular noun used in delete confirms, e.g. "fee". */

@@ -1,12 +1,20 @@
-import type { Loan, PayForBookBody, ReturnLoanBody } from '../../../api/library/types.ts'
+import type {
+  Loan,
+  PayForBookBody,
+  ReturnAnswer,
+  ReturnLoanBody,
+} from '../../../api/library/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import {
+  fineTracked,
   first,
   loanBook,
   loanBookId,
   loanBorrowed,
   loanDue,
   loanFine,
+  loanKey,
+  loanSource,
   loanPaid,
   loanStanding,
   loanStudent,
@@ -27,8 +35,11 @@ function text(value: string | null | undefined): string {
 }
 
 export {
+  fineTracked,
   loanBook,
   loanBookId,
+  loanKey,
+  loanSource,
   loanFine,
   loanPaid,
   loanStanding,
@@ -45,7 +56,13 @@ export {
 export function loanRow(loan: Loan, today = new Date(), named?: string): Row {
   const fine = loanFine(loan)
   return {
-    id: String(loan.id),
+    // `source:id`, never the bare number — the two lending tables both count
+    // from 1. See `loanKey`.
+    id: loanKey(loan),
+    source: loanSource(loan),
+    // Read by the flows: a fine on the retired table can be quoted but never
+    // booked or settled, so no Collect button is offered against one.
+    fine_tracked: fineTracked(loan) ? 'Yes' : 'No',
     student: loanStudent(loan, named),
     book: loanBook(loan),
     due: when(loanDue(loan) || null),
@@ -80,7 +97,7 @@ export function loanDeleteBody(row: Row): string {
 }
 
 /**
- * The return as `POST /admins/books/{bookId}/return` takes it.
+ * The return as `POST /books/{bookId}/return` takes it.
  *
  * Both halves of the address are here because neither is enough on its own:
  * the book id is the path, and `student_id` is what tells two borrowings of
@@ -102,37 +119,78 @@ export function returnRequest(
   const studentId = Number(row.student_id)
   if (!bookId || !Number.isFinite(studentId) || studentId <= 0) return null
 
-  const said = condition.trim()
   return {
     bookId,
-    // The condition under both names it could have — see `ReturnLoanBody`.
-    // They carry the same word, so they cannot disagree.
-    body: { student_id: studentId, status: said, condition: said },
+    // `status`, and only `status` — see `ReturnLoanBody`. The school's own
+    // client settles a question this used to hedge by sending both names.
+    body: { student_id: studentId, status: condition.trim() },
   }
 }
 
 /**
- * The fine as `POST /books/{bookId}/pay` takes it, or `null` where there is
- * nothing to pay.
+ * Whether the desk has to take money before this copy goes back on the shelf.
  *
- * Nothing to pay is the ordinary case and is not an error: most books come
- * back on time, the box is left empty, and the return goes through on its own
- * as it always has. A figure of nought is the same answer — a payment of
- * nothing is a receipt for nothing, and writing one would put a transaction on
- * a loan that never owed anything.
+ * The school's rule rather than this app's: a late book is not handed back
+ * until the fine on it has been settled. So the return form asks for the
+ * figure, and on an overdue copy it asks for it as a requirement — the box
+ * cannot be skipped and a nought will not do.
  *
- * Takes the amount already parsed out of naira, so this stays free of the
- * money field's own formatting.
+ * Read off the row's own standing, which is what the register, the tag and
+ * this share: `loanStanding` believes the school's `overdue` flag where it
+ * sends one and works it out against the due date where it does not. A copy
+ * already back is never late in this sense — the loan is closed and there is
+ * nothing left to hand over — which is what stops the flow demanding a fine
+ * on a record being corrected.
  */
-export function fineRequest(
+export function fineDue(row: Row): boolean {
+  return row.standing === 'Overdue'
+}
+
+/**
+ * What the school says is owed, off the answer a return gave back. NaN where
+ * the answer carried no fine block at all.
+ *
+ * The figure is the school's own arithmetic — days late times its own rate —
+ * worked out as the copy came in, which is the only moment it can be: a fine
+ * does not exist until the book is back.
+ */
+export function fineOwed(answer: ReturnAnswer | null | undefined): number {
+  const amount = answer?.fine?.amount ?? answer?.penalty
+  if (amount == null) return Number.NaN
+  return Number(amount)
+}
+
+/**
+ * The payment to make **after** a return, or `null` where there is none to
+ * make.
+ *
+ * Two things have to be true: the school's own answer says something is owed,
+ * and the desk counted money onto the counter. Either alone is not a payment.
+ * Sending one anyway is not harmless — `POST /books/{id}/pay` answers 409
+ * "There is no fine to pay on that book for that pupil", so a return that was
+ * perfectly fine would end in a refusal at the desk.
+ *
+ * The ids come from the school's own `collect` block where it sent one, since
+ * that names the loan it has just booked the fine against, and from the row
+ * otherwise — the same pair the return itself was addressed with.
+ */
+export function collectRequest(
+  answer: ReturnAnswer | null | undefined,
   row: Row,
   amount: number,
 ): { bookId: string; body: PayForBookBody } | null {
   if (!Number.isFinite(amount) || amount <= 0) return null
 
-  const bookId = String(row.book_id ?? '').trim()
-  const studentId = Number(row.student_id)
+  // The school's own verdict on whether anything is owed. `overdue: false` is
+  // a real answer and is believed; a missing block says nothing either way,
+  // and then the amount the desk entered decides.
+  if (answer?.fine && answer.fine.overdue === false) return null
+
+  const collect = answer?.fine?.collect
+  const bookId = String(collect?.book_id ?? row.book_id ?? '').trim()
+  const studentId = Number(collect?.student_id ?? row.student_id)
   if (!bookId || !Number.isFinite(studentId) || studentId <= 0) return null
 
   return { bookId, body: { student_id: studentId, amount } }
 }
+

@@ -9,9 +9,11 @@ import type {
   CorrectLoanBody,
   LendBody,
   Loan,
+  LoanParams,
   LoanSummary,
   PayFineBody,
   PayForBookBody,
+  ReturnAnswer,
   ReturnLoanBody,
   StudentLoanHistory,
 } from './types'
@@ -103,8 +105,18 @@ export const libraryService = {
   updateBook: (id: Id, body: BookBody) =>
     request<{ book: Book }>(`admins/books/${id}`, { method: 'POST', form: toFormData(body) }),
 
-  /** Every borrowing, newest first. */
-  loans: () => request<unknown>('loanedbooks').then(asLoans),
+  /**
+   * Every borrowing, newest first, across **both** lending tables.
+   *
+   * The limit is asked for rather than left to the endpoint's own default,
+   * for the same reason the catalogue's is: this answer becomes the complete
+   * state of a set on the device, so a page of it stored as the whole of it is
+   * a register missing loans with nothing to say so. The server caps `limit`
+   * at 200 whatever is asked — measured — which is therefore also the ceiling
+   * on what one request can hold.
+   */
+  loans: (params: LoanParams = { limit: 200 }) =>
+    request<unknown>('loanedbooks', { query: { ...params } }).then(asLoans),
 
   /** One borrowing, with `penalty_if_returned_today` for the desk to quote. */
   loan: (id: Id) => request<unknown>(`loanedbooks/${id}`).then(asLoan),
@@ -131,22 +143,31 @@ export const libraryService = {
     ),
 
   /**
-   * Lends one copy of one title, off the book rather than off the register:
-   * `POST /admins/books/{bookId}/lend`. 409 with a reason — a book already
-   * out, a fine owing, or no copy left.
+   * Lends a copy — `POST /loanedbooks`, the book and the pupil both in the
+   * body. See `LendBody`: the old `POST /admins/books/{id}/lend` is retired
+   * and answers 410 telling the caller to come here.
+   *
+   * 409 with the school's own reason where a rule refuses it, and the reasons
+   * now span both lending tables — a copy out through the retired screen
+   * blocks a loan made here.
    */
-  lend: (bookId: Id, body: LendBody) =>
-    request<unknown>(`admins/books/${bookId}/lend`, { method: 'POST', body }),
+  lend: (body: LendBody) =>
+    request<unknown>('loanedbooks', { method: 'POST', body }),
 
   /**
-   * Marks a copy returned — `POST /admins/books/{bookId}/return`, keyed on the
-   * book the same way lending is, with the pupil in the body.
+   * Marks a copy returned — `POST /books/{bookId}/return`, keyed on the book
+   * the same way lending is, with the pupil in the body.
    *
-   * **Both halves are needed**, and the second is what was missing. The path
-   * names the title; `student_id` names whose copy came back. Sent without it,
-   * a title with two copies out to two pupils is refused with 409 — the school
-   * cannot know which borrowing to close — and that is what stopped the desk
-   * returning anything at all.
+   * **The path is the school's own, taken off their API client on
+   * 2026-09-17**, and it is not under `admins/` — the prefix this call used to
+   * carry, and the pay call beside it never did. The two are one address now,
+   * which is how they should have read all along: the same book, the same
+   * pupil, one collecting the money and the other closing the loan.
+   *
+   * **Both halves are needed.** The path names the title; `student_id` names
+   * whose copy came back. Sent without it, a title with two copies out to two
+   * pupils is refused with 409 — the school cannot know which borrowing to
+   * close — and that is what once stopped the desk returning anything at all.
    *
    * A probe with `student_id: 999999` came back with that same 409, which
    * reads as the key being ignored and is not: there was no borrowing of that
@@ -165,7 +186,7 @@ export const libraryService = {
    * 409 if the copy is already back.
    */
   returnLoan: (bookId: Id, body: ReturnLoanBody) =>
-    request<unknown>(`admins/books/${bookId}/return`, { method: 'POST', body }),
+    request<ReturnAnswer>(`books/${bookId}/return`, { method: 'POST', body }),
 
   /** Settles the money only — the book stays out until `returnLoan`. */
   payFine: (id: Id, body: PayFineBody = {}) =>
@@ -174,13 +195,13 @@ export const libraryService = {
   /**
    * Takes the overdue fine on a copy being handed back —
    * `POST /books/{bookId}/pay`, keyed on the book with the pupil in the body,
-   * the same address lending and returning use.
+   * the same address lending and returning use. Confirmed against the
+   * school's own API client on 2026-09-17: `{ student_id, amount }`.
    *
-   * Called by the return flow before the return itself, and only where the
-   * desk typed an amount: money first, then the book, so a payment that is
-   * refused leaves the copy where everybody can still see it is out. See
-   * `PayForBookBody` — this route is not deployed yet, and the empty box is
-   * what keeps ordinary returns working until it is.
+   * Called by the return flow before the return itself. Money first, then the
+   * book, so a payment the school refuses leaves the copy where everybody can
+   * still see it is out — and where a late copy is concerned that ordering is
+   * the whole point, since the fine is no longer optional on one.
    */
   payForBook: (bookId: Id, body: PayForBookBody) =>
     request<unknown>(`books/${bookId}/pay`, { method: 'POST', body }),

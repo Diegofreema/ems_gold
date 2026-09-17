@@ -17,7 +17,8 @@ import {
   type ReviewValues,
 } from '@/portals/admin/collections/admission';
 import { applicantDocuments } from '@/portals/admin/collections/applicant-row';
-import { fineRequest, returnRequest } from '@/portals/admin/collections/loan-row';
+import { collectRequest, fineDue, returnRequest } from '@/portals/admin/collections/loan-row';
+import { keyParts } from '@/features/library/loan-read';
 import {
   collecting,
   figure,
@@ -512,10 +513,23 @@ function lend(): ActionDef {
     run: async (values) => {
       const due = toApiDate(values.datetoreturn as Date | undefined);
       if (!due) throw new Error('Pick the date the book is due back.');
-      // The book is the path and the student is the body — see `LendBody`.
-      await libraryService.lend(Number(values.book_id), {
+      /*
+       * `POST /loanedbooks` — the book and the pupil both in the body now.
+       *
+       * The old address, `POST /admins/books/{id}/lend`, is retired and
+       * answers 410 saying so, which is how the desk found out: it pressed
+       * Issue and read the school's own sentence about a screen it was
+       * standing in front of. That route wrote to a table with no penalty and
+       * no paid column, so nothing lent through it could ever be fined.
+       *
+       * The due date is still sent rather than left to the school's default,
+       * because the form asked for it and a desk that agreed a date with a
+       * child has to be the one that decides it.
+       */
+      await libraryService.lend({
         student_id: Number(values.student_id),
-        datetoreturn: due,
+        book_id: Number(values.book_id),
+        toreturn: due,
       });
       const title = bookLabel(values);
       dropCatalogue();
@@ -748,11 +762,25 @@ function loanSummary(row?: Row) {
  * over.
  */
 function takeBack(row?: Row): ActionDef {
+  /*
+   * A late copy is not handed back until the fine on it has been taken. That
+   * is the school's rule, and this is the one screen that can enforce it: the
+   * child is at the counter, the book is in their hand, and after the return
+   * goes through the loan is closed and the money is nobody's to chase.
+   *
+   * So the box is required on an overdue copy and optional on one that came
+   * back on time — most do, and a figure demanded on every ordinary return
+   * would have the desk typing 0 forty times a day until it stopped meaning
+   * anything.
+   */
+  const late = row ? fineDue(row) : false
+
   return {
     kicker: 'School · Lending',
     title: `Return ${row?.book ?? 'book'}`,
-    description:
-      'Mark the copy returned and put it back on the shelf. Anything owed on it can be taken here at the same time.',
+    description: late
+      ? 'This copy is late. The fee has to be taken before it goes back — enter what the student hands over, and the copy and the money are both settled from here.'
+      : 'Mark the copy returned and put it back on the shelf. Anything owed on it can be taken here at the same time.',
     summary: [
       ...loanSummary(row),
       { label: 'Fine if returned today', value: row?.penalty_today ?? DASH },
@@ -767,24 +795,21 @@ function takeBack(row?: Row): ActionDef {
         hint: 'The state the book came back in — Good, Damaged, Lost — kept on the loan record.',
       },
       /*
-       * The fine, taken in the same breath as the book.
-       *
-       * **Not required, and that is the whole design of it.** Most copies come
-       * back on time with nothing owed, and a box the desk had to fill in to
-       * give a book back would block every ordinary return. Left empty, no
-       * payment is attempted at all and this form does exactly what it did
-       * before — which also means the counter keeps working while
-       * `POST /books/{bookId}/pay` is still being deployed.
+       * The fine, taken in the same breath as the book. Required exactly when
+       * the copy is late; see `late` above.
        */
       {
         key: 'amount',
-        label: 'Fine paid',
+        label: late ? 'Late fee collected' : 'Fine paid',
         money: true,
         wide: true,
-        hint: 'What the student is handing over now. Leave it empty if nothing is owed — the book still goes back.',
+        required: late,
+        hint: late
+          ? 'What the student is handing over for bringing it back late. The book cannot go back on the shelf until this is taken.'
+          : 'What the student is handing over now. Leave it empty if nothing is owed — the book still goes back.',
       },
     ],
-    cta: 'Return book',
+    cta: late ? 'Take the fee and return' : 'Return book',
     footnote: 'Nothing is taken and nothing is returned until you press this.',
     done: () => 'Book returned',
     confirm: (_total, values) => {
@@ -792,13 +817,15 @@ function takeBack(row?: Row): ActionDef {
       return {
         title: paying ? 'Take the fine and return this book?' : 'Return this book?',
         /*
-         * Money first, and the dialog says so in that order — because that is
-         * the order it happens in, and because a confirm that mentions a book
-         * and quietly also takes ₦4,000 is the one kind of dialog this app
-         * must not have.
+         * The dialog says the order it actually happens in, and it says the
+         * figure — a confirm that mentions a book and quietly also takes
+         * ₦32,000 is the one kind of dialog this app must not have.
+         *
+         * The order is the school's: the copy goes back, which is what works
+         * the fine out, and the money is taken against it straight after.
          */
         body: paying
-          ? 'The fine is taken first. Only if it goes through does the copy go back on the shelf, so a payment the school refuses leaves the loan standing where it can still be seen.'
+          ? 'The copy goes back on the shelf first — that is what works the fine out — and the money is taken against it straight after. If the payment is refused the book is still back and the fine still stands, so it can be collected from the loan.'
           : 'The loan is closed and the copy goes back on the shelf, ready to be issued again. Nothing is collected — leave the amount empty only if nothing is owed.',
         subject: [row?.book ?? 'This title', row?.student, paying ? formatNaira(paying) : undefined]
           .filter(Boolean)
@@ -812,7 +839,7 @@ function takeBack(row?: Row): ActionDef {
       /*
        * The book in the path, the pupil in the body — and the second is not
        * optional. A title the school holds two copies of is out to two
-       * children, and `POST /admins/books/{bookId}/return` cannot tell which
+       * children, and `POST /books/{bookId}/return` cannot tell which
        * borrowing closed without being told whose it was; it refuses the lot
        * with a 409 rather than guess.
        *
@@ -824,34 +851,50 @@ function takeBack(row?: Row): ActionDef {
         throw new Error('That loan does not say which title it is of, or who has it.');
       }
 
+      const paying = parseNaira(String(values.amount ?? ''));
       /*
-       * Two endpoints behind one button, in the order that fails safely.
+       * The same rule the field carries, checked again on the way out.
        *
-       * The money goes first and the book waits on it. Returning first would
-       * mean a refused payment leaving a settled loan with a fine nobody can
-       * see any more — the copy is on the shelf, the child has gone, and the
-       * only record that anything was owed is the one just closed. This way
-       * round the worst case is a loan that is still open, which is a true
-       * statement about a book somebody is standing there holding.
-       *
-       * Nothing is thrown or caught around it: a refusal is the school's own
-       * sentence, raised by the flow, with the form still filled in. The
-       * return simply never runs.
+       * The field's own `required` catches an empty box before the form will
+       * submit; this catches a nought typed into it, which the money field is
+       * perfectly happy with and which would otherwise sail through as "no
+       * payment" and return a late book for free.
        */
-      const fine = fineRequest(row, parseNaira(String(values.amount ?? '')));
-      if (fine) {
-        await libraryService.payForBook(fine.bookId, fine.body);
-        // The money is real the moment it lands, whether or not the return
-        // that follows goes through.
-        dropMoneyReads(queryClient);
+      if (late && paying <= 0) {
+        throw new Error('This copy is late. Enter the fee collected before returning it.');
       }
 
-      await libraryService.returnLoan(asked.bookId, asked.body);
+      /*
+       * **The book first, then the money** — which is the reverse of what this
+       * did, and the reverse is wrong against this API.
+       *
+       * The school works the fine out *as the copy comes in*: the return's own
+       * answer carries a `fine` block with the days late, the rate, the amount
+       * and what to pay it against. Until then there is nothing to pay, and
+       * `POST /books/{id}/pay` looks for "who owes something on this book"
+       * rather than for an open loan — so paying first answers 409 "There is
+       * no fine to pay on that book for that pupil", on a return that was
+       * perfectly good.
+       *
+       * What that costs is a return that lands and a payment that does not:
+       * the copy is back on the shelf with the fine still owing. The school
+       * designed for it — an unpaid fine is itself what stops the pupil
+       * borrowing again — so the debt is not lost, it is simply not collected
+       * yet, and the Collect the fine flow on the record takes it afterwards.
+       */
+      const answer = await libraryService.returnLoan(asked.bookId, asked.body);
       dropCatalogue();
+
+      const collect = collectRequest(answer, row, paying);
+      if (!collect) {
+        return { message: `${row.book} is back on the shelf.` };
+      }
+
+      await libraryService.payForBook(collect.bookId, collect.body);
+      // The money is real the moment it lands.
+      dropMoneyReads(queryClient);
       return {
-        message: fine
-          ? `${formatNaira(fine.body.amount)} taken, and ${row.book} is back on the shelf.`
-          : `${row.book} is back on the shelf.`,
+        message: `${row.book} is back on the shelf, and ${formatNaira(collect.body.amount ?? paying)} taken against the fine.`,
       };
     },
   };
@@ -905,8 +948,30 @@ function collectFine(row?: Row): ActionDef {
     run: async (values) => {
       if (!row) throw new Error('That loan could not be loaded.');
       const typed = parseNaira(String(values.amount ?? ''));
-      await libraryService.payFine(row.id, typed ? { amount: typed } : {});
+      /*
+       * By the book and the pupil, not by the loan id.
+       *
+       * Two reasons, both the school's. A counter has the book in its hand and
+       * the child in front of it; nobody there knows an internal loan id. And
+       * the id on this row is only half of one — both lending tables number
+       * from 1, so `loanedbooks/1/pay` and the row the desk is looking at need
+       * not be the same loan at all.
+       *
+       * The amount is left out where the desk typed nothing, which tells the
+       * school to take the fine as it stands. That figure cannot go stale the
+       * way one copied onto this screen could.
+       */
+      const bookId = String(row.book_id ?? '').trim();
+      const studentId = Number(row.student_id);
+      if (!bookId || !Number.isFinite(studentId) || studentId <= 0) {
+        throw new Error('That loan does not say which title it is of, or who has it.');
+      }
+      await libraryService.payForBook(bookId, {
+        student_id: studentId,
+        ...(typed ? { amount: typed } : {}),
+      });
       dropCatalogue();
+      dropMoneyReads(queryClient);
       return {
         message: typed
           ? `${formatNaira(typed)} collected.`
@@ -953,9 +1018,24 @@ function correctLoan(row?: Row): ActionDef {
       if (!row) throw new Error('That loan could not be loaded.');
       const due = toApiDate(values.due_date as Date | undefined);
       const condition = String(values.condition ?? '').trim();
-      await libraryService.correctLoan(row.id, {
-        due_date: due,
-        condition: condition || undefined,
+      /*
+       * `toreturn` and `status` — the school's own names. This sent
+       * `{due_date, condition}`, which the controller does not read, so every
+       * correction ever made from this screen was accepted and discarded.
+       *
+       * Keyed on the loan, and the loan id is the desk table's alone: a row
+       * from the retired assign-book screen has no record route here at all,
+       * so it is refused rather than posted at somebody else's id.
+       */
+      const { source, id } = keyParts(row.id);
+      if (source === 'borrowedbooks') {
+        throw new Error(
+          'This borrowing was made on the old assign-book screen, and the school keeps no record for it that can be corrected. Return it, and lend it again from here.',
+        );
+      }
+      await libraryService.correctLoan(id, {
+        toreturn: due,
+        status: condition || undefined,
       });
       dropCatalogue();
       return { message: 'The record now reads as corrected.' };
@@ -1508,7 +1588,14 @@ export const adminFlows: Record<string, AdminFlow[]> = {
     {
       name: 'pay',
       label: 'Collect the fine',
-      when: (record) => record.paid === 'Owing',
+      /*
+       * Owing, and recordable. The retired table has no penalty column and no
+       * paid column, so a fine against one of its rows is what the school
+       * *would* charge rather than a debt it has booked — there is nowhere to
+       * mark it paid, and the school's own instruction is to offer no button.
+       * Drawing one would take money the school then cannot show as received.
+       */
+      when: (record) => record.paid === 'Owing' && record.fine_tracked !== 'No',
       build: collectFine,
     },
     { name: 'correct', label: 'Correct the record', build: correctLoan },

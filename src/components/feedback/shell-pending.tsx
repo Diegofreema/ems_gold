@@ -26,8 +26,8 @@ import { Shimmer } from './shimmer'
  * What is drawn for real is what is already known without asking the school —
  * the brand mark and which portal is opening, both static per route. The nav
  * is not: a visitor who has signed into the wrong portal is about to be sent
- * to `/wrong-portal`, and the labels of a register they may not open have no
- * business flashing up on the way. Placeholders make the same shape and claim
+ * back to the sign-in page, and the labels of a register they may not open
+ * have no business flashing up on the way. Placeholders make the same shape and claim
  * nothing.
  *
  * Built per portal, the same way `portalNotFound` is, because the shell route

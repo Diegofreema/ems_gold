@@ -12,7 +12,9 @@ export type Option = { value: string; label: string }
  * feed there is no search for.
  *
  * Each names its own parameter at the endpoint: guardians and students are
- * searched with `q`, the catalogue with `booktitle`. There is no shared search
+ * searched with `q`, and the catalogue with `q` as well since 2026-09-17 —
+ * where it matches the title, the author and the ISBN at once. There is no
+ * shared search
  * across these controllers, which is why the term is passed as a plain string
  * and `searchFeed` decides what to call it.
  */

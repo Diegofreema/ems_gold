@@ -462,11 +462,12 @@ async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
 
   if (key === 'books') {
     /*
-     * `booktitle`, not `q`: the catalogue controller has its own three
-     * parameters (`booktitle`, `bookauthor`, `isbn`) and no shared search.
-     * Only the title is sent, because the title is what a librarian at the
-     * counter has in front of them — the author is offered beside each result
-     * to tell two editions apart, not typed to find one.
+     * `q` — one box over the title, the author and the ISBN together, which
+     * the catalogue controller grew on 2026-09-17. It used to send
+     * `booktitle`, one of three parameters that ANDed with each other, on the
+     * reasoning that the title is what a librarian has in front of them.
+     * True, and they also have the barcode: an ISBN typed or scanned into the
+     * same box now finds the edition in their hand rather than nothing.
      *
      * What is offered is then narrowed by **stock**, not by the catalogue's
      * `isavailable` switch. See `onShelf`.
@@ -481,7 +482,7 @@ async function searchFeed(key: SearchKey, term: string): Promise<Option[]> {
     if (!needle) return []
 
     return await libraryService
-      .books({ booktitle: term || undefined })
+      .books({ q: term || undefined, limit: FOUND })
       .then(async (books) => distinct((await onShelf(books.slice(0, FOUND))).map(bookOption)))
       .catch(async () =>
         distinct(

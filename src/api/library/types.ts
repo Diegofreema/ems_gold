@@ -44,11 +44,22 @@ export type BookBody = {
   bookimage?: File
 }
 
-/** Substring match on each field; all three are optional. */
+/**
+ * `GET /admins/books`. **Paginated from 2026-09-17** — it used to answer with
+ * the whole library on every call.
+ *
+ * `q` is the one box: it matches the title, the author and the ISBN together,
+ * which is what a desk with a book in its hand actually wants. The three
+ * named fields are the older form and AND with each other.
+ */
 export type BookSearchParams = {
+  /** Title, author or ISBN, in one term. */
+  q?: string
   booktitle?: string
   bookauthor?: string
   isbn?: string
+  page?: number
+  limit?: number
 }
 
 /*
@@ -85,7 +96,34 @@ export type BookSearchParams = {
  * everything standing "Out".
  */
 export type Loan = {
+  /**
+   * **Not unique on its own.** Both lending tables number from 1, so a row is
+   * identified by `source` *and* `id` together — the school's own collection
+   * says so, and its example list carries `id: 1` twice, once from each table.
+   *
+   * Everything on this device that keys a loan uses `loanKey` for that reason.
+   * Keying on this alone means the collection holds one of the two and drops
+   * the other, silently, which is the exact failure CLAUDE.md warns about for
+   * a key guessed from an unseen shape.
+   */
   id: number
+  /**
+   * Which table the row came from: `loanedbooks` is the library desk, the only
+   * flow that can lend from 2026-09-17; `borrowedbooks` is the retired
+   * assign-book screen, whose rows are still listed and still have to be
+   * returnable.
+   */
+  source?: LoanSource | null
+  /**
+   * Whether a fine on this row can actually be **recorded and settled**.
+   *
+   * False on every `borrowedbooks` row: that table has no penalty column and
+   * no paid column, so the figure beside it is what *would* be owed rather
+   * than a debt the school has booked, and there is nowhere to mark it paid.
+   * The school's own instruction is to offer no Collect button on those, and
+   * `fineTracked` in `features/library/loan-read.ts` is what the flows ask.
+   */
+  fine_tracked?: boolean | null
   student_id?: number | null
   /** Expanded on `/admins/borrowed-books`; `null` on the flat shape. */
   student?: {
@@ -136,6 +174,29 @@ export type Loan = {
  * be shown at all with no connection. This is here for a page that wants the
  * fine rate or the loan length, neither of which is derivable from the rows.
  */
+export type LoanSource = 'loanedbooks' | 'borrowedbooks'
+
+/**
+ * `GET /loanedbooks` narrows and pages. `returned` and `paid` are the words
+ * "Yes" and "No" here, which is what the columns hold — not the booleans the
+ * rows come back with.
+ *
+ * The whole set is read rather than narrowed at the endpoint, per the rule in
+ * CLAUDE.md: a set narrowed at the fetch cannot be widened again without a
+ * connection to widen it over. These are typed for a caller that wants one
+ * answer rather than a set.
+ */
+export type LoanParams = {
+  student_id?: number
+  book_id?: number
+  returned?: 'Yes' | 'No'
+  paid?: 'Yes' | 'No'
+  overdue?: 1
+  page?: number
+  /** Capped at 200 by the server, whatever is asked for. */
+  limit?: number
+}
+
 export type LoanSummary = {
   /** Every borrowing on record. */
   loans?: number | null
@@ -146,6 +207,13 @@ export type LoanSummary = {
   /** The school's own two lending rules, which no row carries. */
   fine_per_day?: number | null
   loan_days?: number | null
+  /**
+   * The same counts split by table. `loans`, `out` and `overdue` above span
+   * both; this is what makes a total that disagrees with one desk's own list
+   * explicable rather than baffling. `fines_owing` is the desk's alone, since
+   * the older table has no column to owe in.
+   */
+  by_source?: Record<LoanSource, { loans?: number | null; out?: number | null }> | null
 }
 
 /**
@@ -165,31 +233,38 @@ export type BookStock = {
 }
 
 /**
- * `POST /admins/books/{bookId}/lend` — the body alone; the copy being lent is
- * the path.
+ * `POST /loanedbooks` — **the only way to lend a book** from 2026-09-17.
  *
- * Which is worth writing down, because it was wrong: this used to post
- * `{studentId, bookId, toreturn}` to `/loanedbooks`, the register's own
- * collection endpoint, which is where a loan is *read* from and not where one
- * is made. Lending hangs off the book in this API, as returning and paying a
- * fine hang off the loan.
+ * `POST /admins/books/{bookId}/lend` is retired and answers 410 with its own
+ * sentence, which is how this was found: the desk pressed Issue and read the
+ * school telling it to use this route. That endpoint wrote to a table with no
+ * penalty and no paid column, so a book lent through it could never be fined
+ * or settled — which is the whole reason it went.
  *
- * Both fields are required here rather than optional. The shape is known from
- * one example and nothing else, and whether the endpoint would fall back to
- * the school's own `Library.loanDays` with the date left out has never been
- * seen — the flow asks for a date and defaults it to a fortnight, so nothing
- * needs to find out by guessing. Still refused with 409 — and a reason — where
- * the student already has a book out, owes a fine, or no copy is on the shelf.
+ * The book moves from the path into the body, beside the pupil. `toreturn` is
+ * optional: left out, the school lends for its own `Library.loanDays`, which
+ * is 14. The flow still asks for a date, because a desk that cannot see the
+ * due date it is agreeing to is a desk that cannot tell a pupil when to come
+ * back.
+ *
+ * 409 with the reason where a rule refuses it — the pupil already has this
+ * title out, is holding any other book, owes a fine, or nothing is on the
+ * shelf. All four are judged across **both** lending tables, so a book out
+ * through the retired screen blocks a loan here. 422 means the body was
+ * wrong, not that the loan was refused.
  */
 export type LendBody = {
   student_id: number
-  /** YYYY-MM-DD. */
-  datetoreturn: string
+  book_id: number
+  /** The state the copy is in as it goes out. */
+  status?: string
+  /** YYYY-MM-DD. Left out, the school's own loan length applies. */
+  toreturn?: string
 }
 
 /**
- * `POST /admins/books/{bookId}/return` — keyed on the book, as lending is, and
- * not on the loan. 409 where the copy is already back.
+ * `POST /books/{bookId}/return` — keyed on the book, as lending is, and not on
+ * the loan. 409 where the copy is already back.
  *
  * The book id alone does not settle which borrowing closed, so the pupil goes
  * in the body. That question was open in this comment for a while and the
@@ -209,32 +284,78 @@ export type ReturnLoanBody = {
    */
   student_id?: number
   /**
-   * The condition the book came back in, sent under **both** names it could
-   * have.
+   * The condition the book came back in — "in good shape", "Damaged", "Lost".
    *
-   * The two endpoints either side of this one disagree: the book-keyed return
-   * took `status`, while `POST /loanedbooks/{loanId}` — correcting a loan,
-   * under the same prefix as the return that is actually used — takes
-   * `condition`. Which one the loan-keyed return reads cannot be established
-   * without returning a real book: it runs no validation before it looks the
-   * loan up, so every probe against an id nothing holds answers 404 whatever
-   * the body says.
-   *
-   * So both go, carrying the same word. A key the controller does not know is
-   * ignored; a key it does know is the one that was going to be dropped in
-   * silence otherwise — and a condition that vanishes on the way to the school
-   * is exactly the kind of loss nothing on the screen would report. Settle it
-   * at the desk: return one copy, open the loan, and see which name the school
-   * read it back under. Then drop the other.
+   * `status` and nothing else. This used to go under `condition` as well, on
+   * the reasoning that the two endpoints either side of it disagree and a key
+   * the controller does not know is harmlessly ignored. The school's own API
+   * client settles it: `status`. The second key is dropped rather than left
+   * in — a body carrying a field nobody reads is a body the next person has
+   * to work out the truth of again.
    */
   status?: string
-  condition?: string
   /** YYYY-MM-DD, to backdate the return. Left out, it is today. */
   returned_on?: string
 }
 
-/** `POST /loanedbooks/{loanId}/pay` — the money only, never the book. */
+/**
+ * What a return answers with — and it is the whole reason the desk needs no
+ * second lookup to charge a fine.
+ *
+ * The school works out whether the copy is late **as it comes back**, so the
+ * figure is in the reply: `fine.amount` is `days_late × rate_per_day`, and
+ * `fine.collect` names exactly what to pay against. `fine.paid` is always
+ * false here — returning a book collects nothing, by design.
+ *
+ * That ordering is the school's, and it is the opposite of what this app did
+ * before: a fine cannot be paid before the book is back, because it does not
+ * exist until then. `POST /books/{id}/pay` looks for *who owes something on
+ * this book*, not for an open loan, so paying first answers 409 "There is no
+ * fine to pay on that book for that pupil."
+ */
+export type ReturnAnswer = {
+  loan?: Loan | null
+  /** The fine as booked. Same figure as `fine.amount`. */
+  penalty?: number | null
+  fine?: FineBlock | null
+}
+
+/** The charge a return worked out, with everything needed to explain it. */
+export type FineBlock = {
+  /** True when there is anything at all to pay. */
+  overdue?: boolean | null
+  due?: string | null
+  /** The day it actually came back — `returned_on`, or today. */
+  returned_on?: string | null
+  /** Due to returned_on. An early return is 0, never negative. */
+  days_late?: number | null
+  /** From the school's own settings, not from anything typed here. */
+  rate_per_day?: number | null
+  amount?: number | null
+  currency?: string | null
+  /** e.g. "NGN 300.00". */
+  amount_in_words?: string | null
+  /** Always false on a return: the money is a second step. */
+  paid?: boolean | null
+  /** What to pay against, whichever of the two pay routes is used. */
+  collect?: {
+    loan_id?: number | null
+    book_id?: number | null
+    student_id?: number | null
+  } | null
+}
+
+/**
+ * `POST /loanedbooks/{loanId}/pay` — the money only, never the book.
+ *
+ * The desk uses the by-book route instead (`PayForBookBody`): a counter has
+ * the book and the pupil, not an internal loan id, and the two lending tables
+ * both number from 1 so a loan id is ambiguous without its table. This stays
+ * typed because the route is live and a client holding a loan id may use it.
+ */
 export type PayFineBody = {
+  book_id?: number
+  student_id?: number
   /** Left out, the full fine as it stands is taken. */
   amount?: number
 }
@@ -248,30 +369,45 @@ export type PayFineBody = {
  * path names neither. `amount` is what the desk actually took, which is not
  * always the whole fine.
  *
- * **Not deployed as of 2026-09-16.** Probed as `/books/{id}/pay` and
- * `/admins/books/{id}/pay`, plus `/pay-fine`, `/fine`, `pay/{id}`,
- * `/admins/borrowed-books/{id}/pay` and `/borrowedbooks/{id}/pay` — every one
- * answers "No API endpoint matches". The only pay route that exists is
- * `/loanedbooks/{loanId}/pay`, which addresses the `loanedbooks` table, and
- * `GET /loanedbooks/summary` now reports that table holding **0 loans** while
- * `borrowedbooks` holds all five. So nothing on this school can be paid
- * through it either.
+ * Confirmed against the school's own API client on 2026-09-17, which is also
+ * where the sibling return route came from. A probe on 2026-09-16 had this
+ * answering "No API endpoint matches" under every spelling tried, so it went
+ * in behind an optional box; the school has it now.
  *
- * Which is why the amount is optional on the form rather than required: a
- * return with the box left empty makes no payment call at all and goes on
- * working exactly as it does today.
+ * The box it is typed into is required on an overdue copy and optional on one
+ * that is back on time — the school's rule, not this app's: a late book is not
+ * handed back until the fine on it has been taken.
  */
 export type PayForBookBody = {
   /** Whose copy — what tells two borrowings of one title apart. */
   student_id?: number
-  /** Naira, as a number. What was handed over, not necessarily the whole fine. */
-  amount: number
+  /**
+   * Naira, as a number. What was handed over, which need not be the whole
+   * fine — the school takes it as a part payment or a reduction.
+   *
+   * Optional: left out entirely, the fine is taken as it stands at the
+   * server, which is the figure that cannot go stale. The desk's form sends
+   * one because somebody is counting notes onto a counter and the amount they
+   * counted is the thing worth recording.
+   */
+  amount?: number
 }
 
-/** `POST /loanedbooks/{loanId}` — only these two are correctable here. */
+/**
+ * `POST /loanedbooks/{loanId}` — only these two are correctable here.
+ * `returned` and `paid` are not settable: /return and /pay own those, and
+ * they keep the shelf and the fine in step.
+ *
+ * **The names are `toreturn` and `status`**, read off the school's own
+ * collection on 2026-09-17. This was typed `{due_date, condition}` — neither
+ * of which the controller reads, so a correction posted both and changed
+ * nothing, with a 200 and a cheerful toast over it. The silent kind.
+ */
 export type CorrectLoanBody = {
-  due_date?: string
-  condition?: string
+  /** YYYY-MM-DD, the new due date. */
+  toreturn?: string
+  /** The condition, in words. */
+  status?: string
 }
 
 /**

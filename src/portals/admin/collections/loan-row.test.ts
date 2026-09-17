@@ -12,7 +12,10 @@ import {
   loanStanding,
   loanStudent,
   loanStudentId,
-  fineRequest,
+  fineDue,
+  collectRequest,
+  fineTracked,
+  loanKey,
   returnRequest,
 } from './loan-row.ts'
 
@@ -190,14 +193,11 @@ test('the return names the title in the path and the pupil in the body', () => {
   // A number, not the row's string: the endpoint is given an id, not a label.
   assert.equal(asked?.body.student_id, 120)
   assert.equal(asked?.body.status, 'Good')
-  // Under both names, carrying the same word so they cannot disagree.
-  assert.equal(asked?.body.condition, 'Good')
 })
 
 test('the condition is trimmed, never sent as the spaces somebody typed', () => {
   const asked = returnRequest(SHARED_TITLE, '  Damaged  ')
   assert.equal(asked?.body.status, 'Damaged')
-  assert.equal(asked?.body.condition, 'Damaged')
 })
 
 test('a row that cannot name the book or the pupil is refused, not posted', () => {
@@ -210,25 +210,103 @@ test('a row that cannot name the book or the pupil is refused, not posted', () =
   assert.equal(returnRequest({ ...SHARED_TITLE, student_id: '0' }, 'Good'), null)
 })
 
-test('a fine is only asked for when there is one to take', () => {
-  // The empty box is the ordinary return — most copies come back on time, and
-  // a payment call for nothing would put a receipt on a loan that owed
-  // nothing. Nought is the same answer as blank.
-  assert.equal(fineRequest(SHARED_TITLE, 0), null)
-  assert.equal(fineRequest(SHARED_TITLE, Number.NaN), null)
-  assert.equal(fineRequest(SHARED_TITLE, -500), null)
+/** The fine a return came back with: 18 days late at the school's own rate. */
+const LATE_RETURN = {
+  loan: { id: 1, source: 'loanedbooks' as const, book_id: 1, student_id: 120 },
+  penalty: 900,
+  fine: {
+    overdue: true,
+    due: '2026-08-30',
+    returned_on: '2026-09-17',
+    days_late: 18,
+    rate_per_day: 50,
+    amount: 900,
+    currency: 'NGN',
+    amount_in_words: 'NGN 900.00',
+    paid: false,
+    collect: { loan_id: 1, book_id: 1, student_id: 120 },
+  },
+}
+
+test('the fine is collected against what the school says it booked it to', () => {
+  // The ids come off the school's own `collect` block, not off the row: it
+  // names the loan the fine was just written against, which is the thing the
+  // payment has to find.
+  const asked = collectRequest(LATE_RETURN, SHARED_TITLE, 900)
+  assert.equal(asked?.bookId, '1')
+  assert.equal(asked?.body.student_id, 120)
+  assert.equal(asked?.body.amount, 900)
 })
 
-test('a fine names the title in the path and the pupil with the money', () => {
-  const asked = fineRequest(SHARED_TITLE, 4000)
+test('a part payment is sent as what was actually handed over', () => {
+  // The school takes a reduction or an instalment, so the desk's figure goes
+  // rather than the one it worked out.
+  assert.equal(collectRequest(LATE_RETURN, SHARED_TITLE, 500)?.body.amount, 500)
+})
+
+test('nothing is collected when the school says nothing is owed', () => {
+  // `overdue: false` is the school's own verdict on its own arithmetic, and
+  // paying anyway is a 409 on a return that went through perfectly.
+  const onTime = { fine: { overdue: false, amount: 0, collect: { book_id: 2, student_id: 120 } } }
+  assert.equal(collectRequest(onTime, SHARED_TITLE, 900), null)
+})
+
+test('nothing is collected when nobody counted any money', () => {
+  assert.equal(collectRequest(LATE_RETURN, SHARED_TITLE, 0), null)
+  assert.equal(collectRequest(LATE_RETURN, SHARED_TITLE, Number.NaN), null)
+  assert.equal(collectRequest(LATE_RETURN, SHARED_TITLE, -500), null)
+})
+
+test('an answer with no fine block falls to the row the return was addressed with', () => {
+  // Not a fallback endpoint — the same pair the return itself named. A
+  // deployment that sends no block has still taken the book back.
+  const asked = collectRequest({}, SHARED_TITLE, 4000)
   assert.equal(asked?.bookId, '2')
   assert.equal(asked?.body.student_id, 120)
-  assert.equal(asked?.body.amount, 4000)
 })
 
 test('a row that cannot name the book or the pupil takes no money either', () => {
-  // The same guard as the return, and it matters more here: a payment posted
-  // against a path with a hole in it is money the school cannot attribute.
-  assert.equal(fineRequest({ ...SHARED_TITLE, book_id: '' }, 4000), null)
-  assert.equal(fineRequest({ ...SHARED_TITLE, student_id: '' }, 4000), null)
+  // A payment posted against a path with a hole in it is money the school
+  // cannot attribute.
+  assert.equal(collectRequest({}, { ...SHARED_TITLE, book_id: '' }, 4000), null)
+  assert.equal(collectRequest({}, { ...SHARED_TITLE, student_id: '' }, 4000), null)
+})
+
+test('a loan is keyed on its table as well as its number', () => {
+  // Both tables count from 1, so this is the difference between five rows on
+  // the register and three.
+  assert.equal(loanKey({ id: 1, source: 'loanedbooks' }), 'loanedbooks:1')
+  assert.equal(loanKey({ id: 1, source: 'borrowedbooks' }), 'borrowedbooks:1')
+  assert.notEqual(
+    loanKey({ id: 1, source: 'loanedbooks' }),
+    loanKey({ id: 1, source: 'borrowedbooks' }),
+  )
+  // A deployment that names no table keys as it always did.
+  assert.equal(loanKey({ id: 4 }), '4')
+})
+
+test('a fine can only be collected where the school can record it', () => {
+  // The retired table has no penalty column and no paid column, so a figure
+  // against one of its rows is a quotation, not a debt.
+  assert.equal(fineTracked({ id: 1, fine_tracked: true }), true)
+  assert.equal(fineTracked({ id: 1, fine_tracked: false }), false)
+  // Where the flag is missing the table decides, which is the same rule.
+  assert.equal(fineTracked({ id: 1, source: 'borrowedbooks' }), false)
+  assert.equal(fineTracked({ id: 1, source: 'loanedbooks' }), true)
+})
+
+test('a late copy has to be paid for before it goes back', () => {
+  // The flow reads this to decide whether the fee box may be left empty, so
+  // it is the difference between a fine collected and a fine forgotten.
+  assert.equal(fineDue({ ...SHARED_TITLE, standing: 'Overdue' }), true)
+})
+
+test('a copy that is out on time, or already back, demands no fee', () => {
+  assert.equal(fineDue({ ...SHARED_TITLE, standing: 'Out' }), false)
+  // Nothing is being handed over on a loan that is already closed — this is
+  // what stops the correction flow asking for money.
+  assert.equal(fineDue({ ...SHARED_TITLE, standing: 'Returned' }), false)
+  // A row that never said. Demanding a fine on a standing nobody set would
+  // block the desk over a missing field.
+  assert.equal(fineDue(SHARED_TITLE), false)
 })

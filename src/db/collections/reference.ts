@@ -14,6 +14,7 @@ import type { Fee } from '@/api/fees/types'
 import { libraryService } from '@/api/library/service'
 import type { Book } from '@/api/library/types'
 import type { Loan } from '@/api/library/types'
+import { loanKey } from '@/features/library/loan-read'
 import { noticesService } from '@/api/notifications/service'
 import type { AllNoticesEnvelope } from '@/api/notifications/types'
 import { parentsService } from '@/api/parents/service'
@@ -191,10 +192,23 @@ export const refMethods = schoolDocument<Record<string, string>>({
   schemaVersion: 1,
 })
 
-/** The whole catalogue. The endpoint ignores paging and answers whole. */
+/**
+ * The whole catalogue.
+ *
+ * **The endpoint pages now.** It used to answer with the entire library
+ * whatever it was asked, and this relied on that — so the day the school
+ * turned pagination on, a library past the default page would have been held
+ * on the device as its first page and nothing would have said so: a shelf
+ * short of books looks exactly like a shelf.
+ *
+ * **The server caps `limit` at 200**, measured: asked for 500 it answers with
+ * `pagination.limit: 200`. So that is what is asked for, and it is the ceiling
+ * on what this device can hold in one request — a library past 200 titles
+ * wants this fetch paged, and this line is where that shows up.
+ */
 export const refBooks = schoolCollection<Book, number>({
   id: SET.refBooks,
-  fetch: () => libraryService.books(),
+  fetch: () => libraryService.books({ limit: ALL }),
   getKey: (book) => book.id,
   schemaVersion: 1,
 })
@@ -300,12 +314,20 @@ export const refBoard = schoolDocument<AllNoticesEnvelope>({
   schemaVersion: 1,
 })
 
-/** Every borrowing on record — issue, return, fines and corrections. */
-export const refLoans = schoolCollection<Loan, number>({
+/**
+ * Every borrowing on record — issue, return, fines and corrections.
+ *
+ * Keyed on `source:id` rather than on `id`, because the two lending tables
+ * both number from 1 and the school lists them together: keying on the number
+ * alone made two different loans one row and dropped whichever arrived first.
+ * `schemaVersion` is stepped for it, so a device holding the old keys refetches
+ * rather than merging two key formats in one set.
+ */
+export const refLoans = schoolCollection<Loan, string>({
   id: SET.refLoans,
   fetch: () => libraryService.loans(),
-  getKey: (loan) => loan.id,
-  schemaVersion: 1,
+  getKey: loanKey,
+  schemaVersion: 2,
 })
 
 /**

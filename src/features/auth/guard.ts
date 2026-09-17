@@ -61,19 +61,19 @@ async function requireAccount(queryClient: QueryClient) {
 /**
  * Guards a portal's shell. Resolving the account here rather than inside the
  * shell means a wrong account never sees a frame of a portal it cannot use.
+ *
+ * **A mismatch goes to the sign-in page**, which used to be a page of its own
+ * explaining that this was the wrong portal for the account. Nobody needs a
+ * page for it: the form is where somebody who cannot open what they asked for
+ * can actually do something, and it already knows what to do with a live
+ * session — `redirectIfSignedIn` reads the account and sends a teacher who
+ * typed an admin URL to their own portal, without their having to read a word
+ * about it. Whoever is genuinely signed out gets the form, which is the whole
+ * ask.
  */
 export async function requirePortal(queryClient: QueryClient, role: Role) {
   const account = await requireAccount(queryClient)
-  if (roleForAccount(account) !== role) throw redirect({ to: '/wrong-portal' })
-}
-
-/**
- * Guards the screens that only make sense to someone signed in — chiefly the
- * wrong-portal page, which is an answer to a question nobody signed out has
- * asked.
- */
-export async function requireSession(queryClient: QueryClient) {
-  await requireAccount(queryClient)
+  if (roleForAccount(account) !== role) throw redirect({ to: '/sign-in' })
 }
 
 /**
