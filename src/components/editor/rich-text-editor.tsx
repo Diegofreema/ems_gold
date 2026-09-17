@@ -22,6 +22,7 @@ export function RichTextEditor({
   placeholder,
   invalid,
   minHeightClass = 'min-h-52',
+  brief = false,
 }: {
   id?: string
   value: string
@@ -35,6 +36,11 @@ export function RichTextEditor({
    * one there pushed the conversation itself off the screen.
    */
   minHeightClass?: string
+  /**
+   * The short toolbar — bold, italic, a list and a link. For a box somebody
+   * writes a sentence in rather than a document; see `EditorToolbar`.
+   */
+  brief?: boolean
 }) {
   // Held still across renders on purpose: tiptap compares the extensions it
   // was given one by one, so a fresh array every render reads as a different
@@ -83,7 +89,7 @@ export function RichTextEditor({
         invalid && 'border-destructive ring-destructive/20 focus-within:border-destructive focus-within:ring-destructive/20',
       )}
     >
-      {editor && <EditorToolbar editor={editor} />}
+      {editor && <EditorToolbar editor={editor} brief={brief} />}
       <EditorContent editor={editor} />
     </div>
   )

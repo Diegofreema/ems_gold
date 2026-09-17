@@ -81,11 +81,20 @@ function LinkTool({ editor, active }: { editor: Editor; active: boolean }) {
   const [open, setOpen] = useState(false)
   const [href, setHref] = useState('')
 
+  /*
+   * Emptying the box takes the link off, rather than doing nothing.
+   *
+   * It is what somebody clearing an address is asking for either way, and on
+   * the brief toolbar it is the only way back — there is no unlink button
+   * beside it there, and a link that can be made and not unmade is a one-way
+   * door in a reply box.
+   */
   const apply = () => {
     const url = href.trim()
     setOpen(false)
-    if (!url) return
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    const chain = editor.chain().focus().extendMarkRange('link')
+    if (url) chain.setLink({ href: url }).run()
+    else if (active) chain.unsetLink().run()
     setHref('')
   }
 
@@ -136,8 +145,28 @@ function LinkTool({ editor, active }: { editor: Editor; active: boolean }) {
  *
  * Every button's lit state is read through `useEditorState`, which re-renders
  * this strip on a selection change and nothing else on the page with it.
+ *
+ * **Two lengths.** A record form is writing a document — a scheme of work, a
+ * notice — and wants the whole bar. A reply in a conversation is writing a
+ * sentence, and the whole bar there is fourteen controls that wrap to three
+ * rows on a phone and cost about a hundred pixels above the line somebody is
+ * typing on, in a panel whose scarcest thing is height. Headings, alignment
+ * and horizontal rules are not what anybody reaches for mid-conversation.
+ *
+ * Brief is bold, italic, a list and a link. Not a guess: they are the four
+ * that survive in every chat composer worth copying, because they are the
+ * ones that change what a sentence *means* rather than how a page is laid
+ * out. Everything dropped is still reachable — the schema is unchanged, so
+ * markup pasted in from elsewhere is kept, and the keyboard shortcuts tiptap
+ * binds (⌘B, ⌘I) work whether or not a button is drawn for them.
  */
-export function EditorToolbar({ editor }: { editor: Editor }) {
+export function EditorToolbar({
+  editor,
+  brief = false,
+}: {
+  editor: Editor
+  brief?: boolean
+}) {
   const state = useEditorState({
     editor,
     selector: ({ editor }) => ({
@@ -163,6 +192,36 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
   const chain = () => editor.chain().focus()
 
+  const bold = (
+    <Tool label="Bold" active={state.bold} onClick={() => chain().toggleBold().run()}>
+      <Bold />
+    </Tool>
+  )
+  const italic = (
+    <Tool label="Italic" active={state.italic} onClick={() => chain().toggleItalic().run()}>
+      <Italic />
+    </Tool>
+  )
+  const bullets = (
+    <Tool label="Bullet list" active={state.bullet} onClick={() => chain().toggleBulletList().run()}>
+      <List />
+    </Tool>
+  )
+
+  if (brief)
+    return (
+      <div
+        role="toolbar"
+        aria-label="Formatting"
+        className="flex flex-wrap items-center gap-0.5 border-b border-divider bg-muted/40 px-1.5 py-1"
+      >
+        {bold}
+        {italic}
+        {bullets}
+        <LinkTool editor={editor} active={state.link} />
+      </div>
+    )
+
   return (
     <div
       role="toolbar"
@@ -181,12 +240,8 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
       <Divider />
 
-      <Tool label="Bold" active={state.bold} onClick={() => chain().toggleBold().run()}>
-        <Bold />
-      </Tool>
-      <Tool label="Italic" active={state.italic} onClick={() => chain().toggleItalic().run()}>
-        <Italic />
-      </Tool>
+      {bold}
+      {italic}
       <Tool label="Underline" active={state.underline} onClick={() => chain().toggleUnderline().run()}>
         <Underline />
       </Tool>
@@ -199,9 +254,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
       <Divider />
 
-      <Tool label="Bullet list" active={state.bullet} onClick={() => chain().toggleBulletList().run()}>
-        <List />
-      </Tool>
+      {bullets}
       <Tool label="Numbered list" active={state.ordered} onClick={() => chain().toggleOrderedList().run()}>
         <ListOrdered />
       </Tool>

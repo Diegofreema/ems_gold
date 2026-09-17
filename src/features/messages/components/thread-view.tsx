@@ -293,9 +293,23 @@ function ReplyBox({
   };
 
   return (
+    /*
+     * The editor across the full width, and the button under it.
+     *
+     * They used to share a row, and a rich editor is the wrong shape for that:
+     * it is a bordered block with a toolbar on its head, so a button set
+     * beside it hangs off the bottom corner of something four times its
+     * height, and the width the toolbar loses to it is the width its own
+     * controls then wrap onto another row to get back. On a phone that was a
+     * three-row toolbar next to a button, which is what makes it look like the
+     * two were never meant to meet.
+     *
+     * Under it they are two things in their natural sizes: the editor is as
+     * wide as the conversation, and Send is where the eye already is when the
+     * typing stops.
+     */
     <div className="border-t border-divider px-4.5 py-3.5">
       <div
-        className="flex items-end gap-2.5"
         onKeyDown={(event) => {
           if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
@@ -303,33 +317,46 @@ function ReplyBox({
           }
         }}
       >
-        <div className="min-w-0 flex-1">
-          <Suspense
-            fallback={
-              <div className="h-24 animate-ems-fade rounded-lg border border-input" />
-            }
-          >
-            <RichTextEditor
-              value={body}
-              onChange={(html) => setBody(hasText(html) ? html : '')}
-              placeholder="Write a reply…"
-              minHeightClass="min-h-16"
-            />
-          </Suspense>
-        </div>
+        <Suspense
+          fallback={
+            <div className="h-24 animate-ems-fade rounded-lg border border-input" />
+          }
+        >
+          <RichTextEditor
+            value={body}
+            onChange={(html) => setBody(hasText(html) ? html : '')}
+            placeholder="Write a reply…"
+            minHeightClass="min-h-16"
+            brief
+          />
+        </Suspense>
+      </div>
+
+      {/* Reversed on a phone, so Send sits directly under the box it sends and
+          the small print is last. Full width there as well: it is the one
+          thing on this screen a thumb is aiming for. */}
+      <div className="mt-2.5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <p className="text-2xs text-muted-foreground">
+          {/* Said only where there is a key to press it with. A phone has no
+              Ctrl, and telling somebody holding one about a shortcut they
+              cannot use is the sort of small untruth that makes the rest of
+              the sentence read as boilerplate. */}
+          <span className="hidden sm:inline">
+            Ctrl + Enter sends · Enter starts a new line.{' '}
+          </span>
+          With no connection the reply is kept on this device and sent when
+          there is a signal.
+        </p>
         <Button
           onClick={send}
           disabled={!hasText(body)}
           aria-label="Send the reply"
+          className="w-full sm:w-auto sm:flex-none"
         >
           <Send className="size-4" strokeWidth={2} />
           Send
         </Button>
       </div>
-      <p className="mt-1.5 text-2xs text-muted-foreground">
-        Ctrl + Enter sends · Enter starts a new line. With no connection the
-        reply is kept on this device and sent when there is a signal.
-      </p>
     </div>
   );
 }
