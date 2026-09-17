@@ -1,3 +1,4 @@
+import { libraryService } from '@/api/library/service'
 import type { Loan } from '@/api/library/types'
 import type { Student } from '@/api/students/types'
 import { heldRows } from '@/db/collection'
@@ -75,6 +76,15 @@ export const library: CollectionDef = {
   emptyTitle: 'Nothing is out',
   emptyBody:
     'No book has been lent yet. Issue one with the button above — the loan appears here the moment it goes out.',
+  /*
+   * A loan that will not open is not a loan that is gone, and the default
+   * sentence here ("This loan is not on the register") says the opposite of
+   * what is true: the row is on the register, and it is the record endpoint
+   * that cannot find it. Whoever runs the API is the one who can act on this,
+   * so it names the route rather than apologising vaguely at a librarian.
+   */
+  missingBody:
+    'The borrowing is still on the register — it is the record endpoint that cannot find it. /loanedbooks/{id} answers "not found" for every loan here, because it reads the loanedbooks table while these borrowings are in borrowedbooks. Nothing is lost, and the record opens as soon as that is fixed.',
   noun: 'loan',
   nameKey: 'book',
   // Records arrive by lending, not by typing: returns and fines are flows on
@@ -128,23 +138,33 @@ export const library: CollectionDef = {
     return pageRows(standing ? rows.filter((row) => row.standing === standing) : rows, params)
   },
   /*
-   * Off the register's own rows, and **not** from `GET /loanedbooks/{id}`.
+   * The record is `GET /loanedbooks/{id}`, the endpoint made for it, and
+   * nothing else. It carries the whole borrowing under a `loan` envelope of
+   * its own — `penalty_if_returned_today` included, which is the figure the
+   * desk quotes when a book comes back late.
    *
-   * That detail endpoint used to be asked first, because it carried
-   * `penalty_if_returned_today` and the list did not. Both halves of that have
-   * since stopped being true. The list carries every field this row reader
-   * needs, that one included — read off bronze 2026-09-16, seventeen keys on a
-   * list row. And the detail endpoint cannot answer for this school at all:
-   * the id-scoped `/loanedbooks/*` routes address the `loanedbooks` table,
-   * while every borrowing here carries `source: "borrowedbooks"`. The school's
-   * own summary now says so outright — `by_source` reports `loanedbooks` at 0
-   * loans and `borrowedbooks` at 5.
+   * **It 404s for every borrowing this school holds, today.** Not a wrong
+   * path: the route is deployed and answers the library's own sentence
+   * ("That borrowing record could not be found") rather than the router's
+   * "No API endpoint matches". It reads the `loanedbooks` table, while all
+   * five loans here carry `source: "borrowedbooks"` — which the list and the
+   * summary beside it both read, the summary saying so outright in
+   * `by_source`: loanedbooks 0, borrowedbooks 5. Measured on 2026-09-17
+   * across ids 1–5, with `?source=` and `?type=` making no difference.
    *
-   * So the call was a request that 404'd on every record opened, swallowed by
-   * a `.catch` and covered by this same fallback. What it bought was two
-   * failing round trips per open and a page that drew a beat later than it
-   * needed to.
+   * So until that handler unions the second table the way the list does, no
+   * loan opens — and the return and the fine are flows on this record. That
+   * is a server-side fix, taken deliberately over papering it over here: a
+   * record synthesised from the register row was the previous shape, and it
+   * hid a broken endpoint behind a page that looked well.
+   *
+   * The pupil is still named from the directory on the device. `student` is
+   * the id's own row rather than a name on most of these answers, and the
+   * join costs no request.
    */
-  record: async (recordId) =>
-    (await register()).find((row) => row.id === String(recordId)),
+  record: async (recordId) => {
+    const loan = await libraryService.loan(recordId)
+    const names = namesOf(await heldRows(refStudents).catch(() => []))
+    return loanRow(loan, new Date(), names.get(loanStudentId(loan)))
+  },
 }

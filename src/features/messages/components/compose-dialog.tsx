@@ -253,6 +253,11 @@ export function ComposeDialog({
                   onChange={(html) => setBody(hasText(html) ? html : '')}
                   placeholder="Write your message"
                   invalid={showErrors && !hasText(body)}
+                  // The same four controls the reply box has. Starting a
+                  // conversation and answering one are the same act of
+                  // writing, and two different toolbars inside one feature is
+                  // the sort of difference nobody can give a reason for.
+                  brief
                 />
               </Suspense>
             </div>
