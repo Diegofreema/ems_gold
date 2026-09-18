@@ -10,7 +10,7 @@ import { optionLabels } from '@/features/collections/option-feeds'
 import { resultTemplateFile, templateName } from './result-template'
 import { newestFirst } from '@/features/collections/order'
 import { markRow } from './teaching-row'
-import { uploadBody } from './teaching-body'
+import { uploadBody, uploadTerm } from './teaching-body'
 
 const batchRows = async (): Promise<Row[]> => (await myBatches()).map(batchRow)
 
@@ -54,13 +54,16 @@ export const uploads: CollectionDef = {
   save: async (values) => {
     const [arms, marks] = await Promise.all([myArms(), myMarks()])
     const arm = arms.find((one) => String(one.id) === String(values.class_arm_id))
-    // The same term the score sheet files into, read the same way: the
-    // teacher's own marks first, and the school's register for a teacher who
-    // has none. Without the second reading a teacher could never upload their
-    // first batch, which is every teacher in their first term here.
-    return teachingService.uploadResults(
-      uploadBody(values, arm, await resolveMarkingTerm(marks)),
-    )
+    /*
+     * What the teacher picked, and only otherwise what their marks imply —
+     * their own first, then the school's results register, which is what lets
+     * somebody upload their very first batch. See `uploadTerm`.
+     *
+     * The inference is only paid for when it is needed: a teacher who picked
+     * both makes no extra request.
+     */
+    const term = uploadTerm(values, undefined) ?? (await resolveMarkingTerm(marks))
+    return teachingService.uploadResults(uploadBody(values, arm, term))
   },
   // Nothing withdraws a batch once it is with the office; a corrected file is
   // uploaded over it.
@@ -121,7 +124,30 @@ export const uploads: CollectionDef = {
           label: 'Arm',
           required: true,
           optionsFrom: 'my-arms',
-          hint: 'The class comes with the arm. The term is the one your marks are already filed into.',
+          hint: 'The class comes with the arm.',
+        },
+        /*
+         * The same two the score sheet offers, and optional for the same
+         * reason: a teaching login cannot read `/sessions` or `/semesters`
+         * yet, so requiring them would stop every upload that works today.
+         * Left empty, the batch files into the term this teacher's marks are
+         * already in, exactly as it did before these existed.
+         *
+         * Drawn whether or not the school answers — the shared field says what
+         * happened in its own placeholder, so an empty list is visible rather
+         * than a choice nobody knows is missing.
+         */
+        {
+          key: 'session_id',
+          label: 'Session',
+          optionsFrom: 'sessions',
+          hint: 'Leave empty to file into the term your marks are already in.',
+        },
+        {
+          key: 'semester_id',
+          label: 'Term',
+          optionsFrom: 'terms',
+          hint: 'Picked together with the session, or leave both empty.',
         },
       ],
     },

@@ -50,11 +50,53 @@ export type SubjectOptions = Record<string, unknown>
 export type SubjectBody = {
   name?: string
   subjectcode?: string
+  /** The one home class. A **number** — see `department_ids` below. */
   department_id?: number
+  /**
+   * Several classes, and it means **one subject per class**, not one subject
+   * taught to several.
+   *
+   * Measured against bronze on 2026-09-18, because the difference is not
+   * guessable and the wrong guess is silent:
+   *
+   * - `department_ids: [1, 4, 5]` → 201, `created: 3`, and three separate
+   *   subject rows come back, each with its own home class. The school names
+   *   them itself: "Mathematics - JSS I", "Mathematics - JSS II",
+   *   "Mathematics - JSS III", which is also what keeps each name unique
+   *   within its class.
+   * - `department_id: [1, 4, 5]` — an array under the *singular* key, which
+   *   is the obvious thing to try — answers **201 and makes one subject with
+   *   `department_id: 0` and no classes at all**. No error, no warning: a
+   *   subject belonging to no class, which the register then draws with an
+   *   empty Class column. It is the worst of the three outcomes and the
+   *   easiest to ship.
+   * - One subject taught to several classes is a different thing again, and
+   *   it is `department_id` plus `classes: [...]` — or the "Teach to classes"
+   *   flow, which is where this app does it.
+   *
+   * The answer carries `subjects`, `created` and `failed` beside the usual
+   * `subject`; the create handler reads those out so the office is told how
+   * many it got.
+   */
+  department_ids?: number[]
   creditload?: number
   semester_id?: number
   level_id?: number
   teachers?: number[]
+}
+
+/**
+ * What `POST /subjects` answers with once it may create several.
+ *
+ * `subject` is still the first one, so every older reader goes on working;
+ * `created` counts them and `failed` names the ones a rule refused — a name
+ * already taken in that class is the one to expect.
+ */
+export type SubjectCreated = {
+  subject?: Subject | null
+  subjects?: Subject[] | null
+  created?: number | null
+  failed?: unknown[] | null
 }
 
 /** Replaces the whole set, so `[]` clears it. */

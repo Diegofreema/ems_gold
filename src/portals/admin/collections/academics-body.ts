@@ -48,10 +48,30 @@ export function armBody(values: FormValues): ClassArmBody {
  * sent, including empty. Leaving it out of an edit that unticked the last
  * teacher would keep them on the subject.
  */
+/**
+ * The subject form as `POST /subjects` takes it.
+ *
+ * **Two keys, and they mean different things.** The create form asks which
+ * classes take the subject and sends `department_ids`, which makes one subject
+ * per class — the school appends the class name to each, so "Mathematics"
+ * ticked against three classes comes back as three rows. The edit form asks
+ * for the one home class and sends `department_id`, because editing a subject
+ * into three subjects is not an edit.
+ *
+ * The plural is used even for a single class, so a create is one code path
+ * whatever is ticked: `department_ids: [1]` answers `created: 1` with the home
+ * class set, which is the same row the singular key makes.
+ *
+ * What is **never** sent is an array under the singular key. That is a 201
+ * and a subject filed under no class at all — see `SubjectBody`.
+ */
 export function subjectBody(values: FormValues): SubjectBody {
+  const classes = ids(values.department_ids)
   return {
     name: text(values.name),
-    department_id: asId(values.department_id),
+    ...(classes.length
+      ? { department_ids: classes }
+      : { department_id: asId(values.department_id) }),
     teachers: ids(values.teacher_ids),
   }
 }

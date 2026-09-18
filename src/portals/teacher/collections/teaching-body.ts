@@ -42,6 +42,37 @@ export function topicUpdate(values: FormValues): UpdateTopicBody {
  * an arm knows its class — and two are the term, which a teaching login cannot
  * read from the school calendar and which is taken off their own marks.
  */
+/**
+ * Which term a batch is filed into: what the teacher picked, or what their
+ * marks imply.
+ *
+ * The two pickers are optional, and that is deliberate — `/sessions` and
+ * `/semesters` answer "restricted to administrators" to a teaching login as
+ * things stand, so requiring them would stop every upload that works today
+ * over a choice the school will not offer. Left alone, the term is read off
+ * the marks exactly as it was before the pickers existed.
+ *
+ * **Half a choice is refused rather than half-honoured.** A session picked
+ * with no term is not a term, and quietly filing into the inferred one would
+ * put the batch somewhere other than where the teacher was plainly aiming.
+ */
+export function uploadTerm(
+  values: FormValues,
+  inferred: MarkingTerm | undefined,
+): MarkingTerm | undefined {
+  const session = Number(text(values, 'session_id')) || 0
+  const semester = Number(text(values, 'semester_id')) || 0
+
+  if (session && semester) {
+    // The label is nobody's but this function's: only the two ids are sent.
+    return { session_id: session, semester_id: semester, label: `Term ${semester} · session ${session}` }
+  }
+  if (session || semester) {
+    throw new Error('Choose both the session and the term, or leave both empty.')
+  }
+  return inferred
+}
+
 export function uploadBody(
   values: FormValues,
   arm: TeacherClassArm | undefined,

@@ -31,6 +31,38 @@ test('the body is the shape the endpoint asked for', () => {
   )
 })
 
+test('several classes go under the plural key, which makes one subject each', () => {
+  assert.deepEqual(
+    subjectBody({ name: 'Mathematics', department_ids: ['1', '4', '5'], teacher_ids: [] }),
+    { name: 'Mathematics', department_ids: [1, 4, 5], teachers: [] },
+  )
+})
+
+test('an array is never sent under the singular key', () => {
+  // Measured on 2026-09-18: `department_id: [1,4,5]` answers 201 and files the
+  // subject under no class at all — department_id 0, no classes, no error. So
+  // the two keys must never be confused, and one class ticked still goes
+  // plural rather than being quietly unwrapped into the singular one.
+  const body = subjectBody({ name: 'Mathematics', department_ids: ['4'] })
+  assert.deepEqual(body.department_ids, [4])
+  assert.equal('department_id' in body, false)
+})
+
+test('the edit form still sends the one home class', () => {
+  // No `department_ids` on that form at all, so the singular key is what is
+  // built — turning a subject into three subjects is not an edit.
+  const body = subjectBody({ name: 'Mathematics', department_id: '5' })
+  assert.equal(body.department_id, 5)
+  assert.equal('department_ids' in body, false)
+})
+
+test('rubbish among the classes is dropped, as it is among the teachers', () => {
+  assert.deepEqual(
+    subjectBody({ name: 'X', department_ids: ['1', '', 'x', '0', '4'] }).department_ids,
+    [1, 4],
+  )
+})
+
 test('the teachers go as numbers, and rubbish in the array is dropped', () => {
   const body = subjectBody({ name: 'X', teacher_ids: ['2', '13', '', 'x', '0'] })
   assert.deepEqual(body.teachers, [2, 13])

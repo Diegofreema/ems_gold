@@ -125,6 +125,21 @@ const queuedArms = (ops: readonly OutboxOp[]) =>
     department_id: text(body.department_id),
   }))
 
+/*
+ * One queued row per write, and a write may now be several subjects — the
+ * create form ticks any number of classes and the school makes one for each.
+ *
+ * The preview stays a single row, deliberately: the op is one op, its local
+ * key is what every unsynced-row guardrail is keyed on, and inventing ids for
+ * rows the school has not made yet would hand the office records it cannot
+ * open. What lands is the truth, and it arrives as several rows on the next
+ * sync. The count is not lost meanwhile — the toast says how many were asked
+ * for, and the drain repeats what the school actually made.
+ *
+ * `klass` is blank for the same reason it always was: with several classes
+ * ticked there is no one class to name, and with one the school still has to
+ * confirm it.
+ */
 const queuedSubjects = (ops: readonly OutboxOp[]) =>
   queuedAcademic(ops, WRITE.createSubject, (body) => ({
     code: cell(body.subjectcode),
@@ -635,13 +650,16 @@ export const subjects: CollectionDef = {
         label: `Subject “${named}”`,
       })
     }
+    // One class ticked or five, the office is told which it got — a form that
+    // says "Subject created" after making five is a form nobody trusts twice.
+    const made = body.department_ids?.length ?? 1
     return enqueue({
       handler: WRITE.createSubject,
       payload: body,
       collectionId: SET.refSubjects,
       targetKey: newLocalKey(),
-      toast: { success: 'Subject created' },
-      label: `Subject “${named}”`,
+      toast: { success: made > 1 ? `${made} subjects created` : 'Subject created' },
+      label: made > 1 ? `Subject “${named}” for ${made} classes` : `Subject “${named}”`,
     })
   },
   // Never forced: forcing leaves results, materials and topics pointing at a
@@ -687,12 +705,37 @@ export const subjects: CollectionDef = {
           placeholder: 'Mathematics',
           hint: 'Unique within its class. The subject code is generated from it.',
         },
+        /*
+         * Creating: which classes take it, and one subject is made per class.
+         *
+         * That is the school's own arithmetic rather than a convenience here —
+         * `department_ids` answers `created: 3` for three classes and names
+         * each row after its class ("Mathematics - JSS I"). A registrar
+         * setting a term up types the name once instead of five times.
+         *
+         * Editing shows the singular field below instead: a subject that
+         * already exists has one home class, and turning it into three
+         * subjects is not an edit. Moving it between classes is what that
+         * field does, and teaching it to *more* classes without duplicating it
+         * is the "Teach to classes" flow on the record.
+         */
+        {
+          key: 'department_ids',
+          label: 'Classes',
+          required: true,
+          multi: true,
+          wide: true,
+          optionsFrom: 'classes',
+          when: (record) => !record,
+          hint: 'One subject is created for each class ticked, and the school adds the class to its name. Each can never stop being taught to the class it was made for.',
+        },
         {
           key: 'department_id',
           label: 'Home class',
           required: true,
           optionsFrom: 'classes',
-          hint: 'The class it can never stop being taught to.',
+          when: (record) => Boolean(record),
+          hint: 'The class it can never stop being taught to. To teach it to others as well, use “Teach to classes” on the record.',
         },
       ],
     },

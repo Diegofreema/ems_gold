@@ -3,7 +3,7 @@ import type { ClassArmBody } from '@/api/class-arms/types'
 import { departmentsService } from '@/api/departments/service'
 import type { DepartmentBody } from '@/api/departments/types'
 import { subjectsService } from '@/api/subjects/service'
-import type { SubjectBody } from '@/api/subjects/types'
+import type { SubjectBody, SubjectCreated } from '@/api/subjects/types'
 import type { Id } from '@/api/types'
 import { SET, WRITE } from '../ids'
 import { idUnder } from '../new-id'
@@ -41,10 +41,26 @@ registerHandler<Id>(WRITE.removeArm, {
   collectionId: SET.refArms,
 })
 
+/**
+ * Creating a subject, or several — `department_ids` makes one per class.
+ *
+ * `newId` still reads `subject`, which the school sets to the first of them.
+ * That is the right one to record: the device's local key stands for the row
+ * the office filled the form in about, and the rest arrive with the next sync
+ * like any other row this device did not make. Nothing chains off a subject's
+ * id at creation time.
+ *
+ * The `note` is there because a batch can be **partly** refused — a name
+ * already taken in one of the classes — and a 201 with `created: 2, failed: 1`
+ * is otherwise indistinguishable from a clean run. The count has nowhere else
+ * to go: a queued write's answer comes back to the drain, not to the form,
+ * which may have been closed on Tuesday.
+ */
 registerHandler<SubjectBody>(WRITE.createSubject, {
   send: (body) => subjectsService.create(body),
   idempotent: false,
   newId: idUnder('subject'),
+  note: subjectsMade,
   collectionId: SET.refSubjects,
 })
 
@@ -104,3 +120,21 @@ registerHandler<Id>(WRITE.removeClass, {
   idempotent: true,
   collectionId: SET.refClassCensus,
 })
+
+/**
+ * What the school actually made, in words, or nothing where there is nothing
+ * worth saying — one subject asked for and one created is the ordinary case
+ * and needs no sentence of its own.
+ */
+function subjectsMade(answer: unknown): string | undefined {
+  const made = answer as SubjectCreated | null
+  const created = Number(made?.created ?? 0)
+  const refused = Array.isArray(made?.failed) ? made.failed.length : 0
+
+  if (refused > 0) {
+    return `${created} subject${created === 1 ? '' : 's'} created. ${refused} ${
+      refused === 1 ? 'class was' : 'classes were'
+    } refused — the name is most likely already taken there.`
+  }
+  return created > 1 ? `${created} subjects created, one for each class.` : undefined
+}
