@@ -134,3 +134,29 @@ export function changedMarks(
       exam: markOf(row.exam),
     }))
 }
+
+/** How far a save has got. `null` when nothing is being saved. */
+export type Saving = { done: number; total: number }
+
+/**
+ * What the save button says.
+ *
+ * A sheet is filed **one mark at a time** — each is its own queued write, so a
+ * mark the school argues with fails on its own and the rest still land — which
+ * means a class of thirty is thirty round trips and the button is busy for as
+ * long as that takes. A spinner alone would say "something is happening" for
+ * ten seconds without saying how much is left, on the one screen where the
+ * person watching has just typed a sheet of marks by hand.
+ *
+ * So it counts. `done + 1` is the mark **in flight**, which is the one the
+ * reader cares about, capped so the last one does not read "31 of 30". A
+ * single mark is not a count worth reading — there is no progress to follow
+ * through one step — so that one just says it is saving.
+ */
+export function saveLabel(saving: Saving | null, edited: number): string {
+  if (saving) {
+    if (saving.total <= 1) return 'Saving…'
+    return `Saving ${Math.min(saving.done + 1, saving.total)} of ${saving.total}`
+  }
+  return edited ? `Save ${edited} mark${edited === 1 ? '' : 's'}` : 'Save marks'
+}

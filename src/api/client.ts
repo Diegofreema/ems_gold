@@ -7,12 +7,24 @@ export { paginated } from './url.ts'
 export type { QueryValue }
 
 /**
- * Always same-origin. The API sends no `Access-Control-Allow-Origin`, so the
- * browser may not call it directly from anywhere — dev goes through Vite's
- * proxy and production through the rewrite in `vercel.json`, both of which
- * hand `/api` to the school's server from the server side.
+ * Always same-origin.
  *
- * Absolute rather than the bare path, because `buildUrl` resolves against it.
+ * The API is served by the same host as the portal, under `/backend/api` —
+ * Laravel lives at `/backend` and its routes carry the `/api` prefix, so the
+ * two are stacked. Verified live: `/backend/api/users/me` answers with the
+ * envelope, `/backend/users/me` is a 404. The browser calls it directly and no
+ * proxy is in the way.
+ *
+ * That matters because the API sends no
+ * `Access-Control-Allow-Origin`: a cross-origin deployment
+ * cannot call it from a browser at all, and would need a server-side forwarder
+ * (dev uses Vite's proxy; `deploy/cpanel/api/index.php` is the one written for
+ * that case). Same-origin removes the whole problem.
+ *
+ * `VITE_API_URL` overrides it for a deployment shaped differently.
+ *
+ * Absolute rather than the bare path, because `buildUrl` resolves it with
+ * `new URL(path, base)`, which rejects a relative base.
  */
 export const API_BASE_URL =
   import.meta.env?.VITE_API_URL ??
@@ -20,7 +32,7 @@ export const API_BASE_URL =
   // there is none: this module is imported by tests as well as by the browser,
   // and it used to throw on the way in wherever `window` was not defined,
   // which is what kept the whole client untested.
-  `${globalThis.location?.origin ?? 'http://localhost'}/api`
+  `${globalThis.location?.origin ?? 'http://localhost'}/backend/api`
 
 /** Anything the API refused, with the field errors a form needs to show. */
 export class ApiError extends Error {

@@ -1,9 +1,9 @@
-import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import path from 'node:path'
-import { defineConfig } from 'vite'
-import { VitePWA } from 'vite-plugin-pwa'
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -87,9 +87,10 @@ export default defineConfig({
         globIgnores: ['**/opfs-worker-*.js'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: '/index.html',
-        // A navigation is a page; `/api` is not, and must never be answered
-        // from the shell.
-        navigateFallbackDenylist: [/^\/api\//],
+        // A navigation is a page; `/backend` is not, and must never be
+        // answered from the shell. Without this the service worker hands the
+        // app's own HTML back to fetch() and every request fails to parse.
+        navigateFallbackDenylist: [/^\/backend\//],
         runtimeCaching: [
           {
             /**
@@ -100,7 +101,7 @@ export default defineConfig({
              * the reader would have no way of telling which of the two they
              * were looking at.
              */
-            urlPattern: /^\/api\//,
+            urlPattern: /^\/backend\//,
             handler: 'NetworkOnly',
           },
           {
@@ -134,19 +135,21 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
-  // The API sends no Access-Control-Allow-Origin, so no browser may call it
-  // directly. Proxying keeps dev requests same-origin; production does the
-  // same thing through the `/api` rewrite in vercel.json. Both must point at
-  // the same host, or dev and production talk to different schools.
+  // In production the API is same-origin (`/backend` on the portal's own
+  // host), so nothing is proxied there. Dev is the odd one out: the app runs
+  // on localhost and the school does not, and the API sends no
+  // Access-Control-Allow-Origin — so `/backend` is proxied here to make dev
+  // requests same-origin too. The path must match production's exactly, or
+  // dev and production are two different apps.
   server: {
     // Honour an assigned port (tooling sets PORT to run a second dev server
     // beside the usual one); Vite's own default stands otherwise.
     port: Number(process.env.PORT) || undefined,
     proxy: {
-      '/api': {
-        target: 'https://bronze.uaes.education',
+      '/backend': {
+        target: 'https://sis.livingtempleacademy.ng',
         changeOrigin: true,
       },
     },
   },
-})
+});

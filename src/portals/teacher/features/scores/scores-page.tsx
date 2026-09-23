@@ -37,7 +37,14 @@ import { blockedReason } from './blocked'
 import { sheetAverage } from './grade'
 import { queuedScores } from './queued'
 import { ScoreSheet } from './score-sheet'
-import { changedMarks, type Edits, editKey, sheetRows } from './sheet'
+import {
+  changedMarks,
+  type Edits,
+  editKey,
+  type Saving,
+  saveLabel,
+  sheetRows,
+} from './sheet'
 
 /** A set has answered one way or the other and the page can draw. */
 const settled = (state: { isReady: boolean; isError: boolean }) =>
@@ -58,6 +65,12 @@ export function ScoresPage() {
   const marks = useLiveQuery({ query: (q) => q.from({ mark: teacherMarks }) })
   const queue = useLiveQuery({ query: (q) => q.from({ op: outbox() }) })
   const [edits, setEdits] = useState<Edits>({})
+  /*
+   * How far the save has got. A sheet is a mark at a time — see `submit` — so
+   * this is the difference between a button that looks stuck and one that is
+   * visibly working through a class.
+   */
+  const [saving, setSaving] = useState<Saving | null>(null)
   const [chosenSubject, setSubject] = useQueryState('subject')
   const [chosenArm, setArm] = useQueryState('arm')
   const [pickedTerm, setTerm] = useQueryState('term')
@@ -182,26 +195,46 @@ export function ScoresPage() {
    * exactly where they were on screen.
    */
   const submit = async () => {
-    if (!term) return
+    // A second press while the first is still going would file every mark
+    // twice. The button disables itself as well; this is the same rule said
+    // where it cannot be missed — a keyboard can still reach a button that a
+    // render has not caught up with.
+    if (!term || saving) return
+
     /*
      * One at a time, awaited. Each mark is its own write, and firing a sheet
      * of thirty at the school at once would both swamp it and defeat the
      * fallback: the second mark only knows to join the queue because the first
      * one is already in it, and it cannot know that while both are in flight.
+     *
+     * Which is exactly why the button counts: thirty marks is thirty round
+     * trips, and on a classroom connection that is a long time to be looking
+     * at a spinner that says nothing.
      */
+    const marks = changedMarks(rows, subject.id, term)
+    setSaving({ done: 0, total: marks.length })
+
     let refused = false
-    for (const mark of changedMarks(rows, subject.id, term)) {
-      const outcome = await enqueue({
-        handler: WRITE.enterScore,
-        payload: mark,
-        collectionId: SET.teachingResults,
-        toast: { success: 'Scores saved' },
-        label: `${subject.name} mark for ${
-          rows.find((row) => row.student_id === mark.student_id)?.name ?? 'a student'
-        }`,
-      })
-      if (outcome === 'refused') refused = true
+    try {
+      for (const mark of marks) {
+        const outcome = await enqueue({
+          handler: WRITE.enterScore,
+          payload: mark,
+          collectionId: SET.teachingResults,
+          toast: { success: 'Scores saved' },
+          label: `${subject.name} mark for ${
+            rows.find((row) => row.student_id === mark.student_id)?.name ?? 'a student'
+          }`,
+        })
+        if (outcome === 'refused') refused = true
+        setSaving((held) => (held ? { ...held, done: held.done + 1 } : held))
+      }
+    } finally {
+      // Whatever happened, the button comes back. A sheet left permanently
+      // mid-save because one write threw is a sheet nobody can file.
+      setSaving(null)
     }
+
     // The same rule as the register: marks the school would not take stay on
     // the sheet, where whoever entered them can see which and try again.
     if (refused) return
@@ -215,12 +248,12 @@ export function ScoresPage() {
           <div className="text-right">
             <Button
               disabled={!term || pending.length === 0 || problems.length > 0}
-              pending={looking && pending.length > 0}
+              // `pending` disables as well as spins, so a save in progress
+              // cannot be pressed a second time — see the Button itself.
+              pending={Boolean(saving) || (looking && pending.length > 0)}
               onClick={submit}
             >
-              {pending.length
-                ? `Save ${pending.length} mark${pending.length === 1 ? '' : 's'}`
-                : 'Save marks'}
+              {saveLabel(saving, pending.length)}
             </Button>
             {/* Why the button will not go, beside the button. The same reasons
                 are spelled out under the sheet, which is a long way from the

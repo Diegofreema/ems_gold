@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+# cPanel deployment artefacts
+deploy/build/
+deploy/*.zip

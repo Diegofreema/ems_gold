@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { TeacherResult, TeacherStudent } from '../../../../api/teaching/types.ts'
 import type { MarkingTerm } from '../term/term.ts'
-import { changedMarks, sheetRows } from './sheet.ts'
+import { changedMarks, saveLabel, sheetRows } from './sheet.ts'
 
 /** Two students off GET /teachers/me/students, both in arm 3. */
 const STUDENTS = [
@@ -76,4 +76,28 @@ test('only the changed rows are filed, each with the term they belong to', () =>
   assert.deepEqual(changedMarks(rows, 1, TERM), [
     { student_id: 16, subject_id: 1, session_id: 8, semester_id: 1, ca: 9, exam: 50 },
   ])
+})
+
+test('the button counts the mark in flight, not the ones already done', () => {
+  // Filing is one write per mark, so a class of thirty is thirty round trips.
+  // The reader wants to know which one is going now.
+  assert.equal(saveLabel({ done: 0, total: 30 }, 30), 'Saving 1 of 30')
+  assert.equal(saveLabel({ done: 12, total: 30 }, 30), 'Saving 13 of 30')
+})
+
+test('the last mark does not read “31 of 30”', () => {
+  // `done` reaches the total on the final step, and a count past its own
+  // total is the kind of thing that makes somebody distrust the whole screen.
+  assert.equal(saveLabel({ done: 30, total: 30 }, 30), 'Saving 30 of 30')
+})
+
+test('one mark is not a count worth reading', () => {
+  // There is no progress to follow through a single step.
+  assert.equal(saveLabel({ done: 0, total: 1 }, 1), 'Saving…')
+})
+
+test('idle, the button says how much is waiting to be filed', () => {
+  assert.equal(saveLabel(null, 0), 'Save marks')
+  assert.equal(saveLabel(null, 1), 'Save 1 mark')
+  assert.equal(saveLabel(null, 7), 'Save 7 marks')
 })
