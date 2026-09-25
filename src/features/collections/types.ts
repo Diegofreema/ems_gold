@@ -122,6 +122,12 @@ export type FlowSpec = {
   /** The flow needs no record, so the list's primary action opens it. */
   fromList?: boolean
   /**
+   * With `fromList`: offered beside the register's own primary action rather
+   * than becoming it. Importing a roster opens from the students register, and
+   * enrolling one student is still the button that register is for.
+   */
+  beside?: boolean
+  /**
    * Records this flow can be run against. A settled invoice cannot be paid
    * twice — the API refuses with 409 — so it gets no button rather than one
    * that always fails. A flow without this is offered on every record.
@@ -400,6 +406,11 @@ export type FieldSpec = {
    * itself, so the collection's `save` must send multipart.
    */
   file?: string
+  /**
+   * With `file`: the largest upload taken, in bytes. Refused as it lands and
+   * again by the validator — see `DOCUMENT_MAX_BYTES` for the documents'.
+   */
+  maxBytes?: number
   /**
    * A starting file the reader can download, for an upload whose shape the
    * endpoint will not describe. Built when the button is pressed, from the

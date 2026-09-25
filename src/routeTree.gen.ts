@@ -15,6 +15,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as ParentRouteRouteImport } from './routes/parent/route'
 import { Route as StudentRouteRouteImport } from './routes/student/route'
 import { Route as TeacherRouteRouteImport } from './routes/teacher/route'
+import { Route as AuthApplyRouteImport } from './routes/_auth/apply'
 import { Route as AuthCheckEmailRouteImport } from './routes/_auth/check-email'
 import { Route as AuthFirstSignInRouteImport } from './routes/_auth/first-sign-in'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
@@ -145,6 +146,11 @@ const TeacherRouteRoute = TeacherRouteRouteImport.update({
   id: '/teacher',
   path: '/teacher',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthApplyRoute = AuthApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthCheckEmailRoute = AuthCheckEmailRouteImport.update({
   id: '/check-email',
@@ -667,6 +673,7 @@ export interface FileRoutesByFullPath {
   '/parent': typeof ParentRouteRouteWithChildren
   '/student': typeof StudentRouteRouteWithChildren
   '/teacher': typeof TeacherRouteRouteWithChildren
+  '/apply': typeof AuthApplyRoute
   '/check-email': typeof AuthCheckEmailRoute
   '/first-sign-in': typeof AuthFirstSignInRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
@@ -771,6 +778,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/apply': typeof AuthApplyRoute
   '/check-email': typeof AuthCheckEmailRoute
   '/first-sign-in': typeof AuthFirstSignInRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
@@ -881,6 +889,7 @@ export interface FileRoutesById {
   '/student': typeof StudentRouteRouteWithChildren
   '/teacher': typeof TeacherRouteRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_auth/apply': typeof AuthApplyRoute
   '/_auth/check-email': typeof AuthCheckEmailRoute
   '/_auth/first-sign-in': typeof AuthFirstSignInRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -991,6 +1000,7 @@ export interface FileRouteTypes {
     | '/parent'
     | '/student'
     | '/teacher'
+    | '/apply'
     | '/check-email'
     | '/first-sign-in'
     | '/forgot-password'
@@ -1095,6 +1105,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/apply'
     | '/check-email'
     | '/first-sign-in'
     | '/forgot-password'
@@ -1204,6 +1215,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/_auth'
+    | '/_auth/apply'
     | '/_auth/check-email'
     | '/_auth/first-sign-in'
     | '/_auth/forgot-password'
@@ -1359,6 +1371,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher'
       preLoaderRoute: typeof TeacherRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/apply': {
+      id: '/_auth/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof AuthApplyRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/check-email': {
       id: '/_auth/check-email'
@@ -2301,6 +2320,7 @@ const TeacherRouteRouteWithChildren = TeacherRouteRoute._addFileChildren(
 )
 
 interface AuthRouteChildren {
+  AuthApplyRoute: typeof AuthApplyRoute
   AuthCheckEmailRoute: typeof AuthCheckEmailRoute
   AuthFirstSignInRoute: typeof AuthFirstSignInRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
@@ -2311,6 +2331,7 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthApplyRoute: AuthApplyRoute,
   AuthCheckEmailRoute: AuthCheckEmailRoute,
   AuthFirstSignInRoute: AuthFirstSignInRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,

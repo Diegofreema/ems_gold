@@ -21,16 +21,19 @@ DirectoryIndex index.html
   RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
   # --- 1. The API ---------------------------------------------------------
-  # The API is same-origin, served by Laravel from /backend on this same host,
-  # so there is nothing to proxy — the browser calls it directly.
+  # The school's API is on another host (https://bronze.uaes.education/api)
+  # and answers a browser only from localhost, so the app calls /api on THIS
+  # host and api/index.php passes each call on to the school.
   #
-  # This rule exists to keep the SPA fallback below OFF it. Laravel's own
-  # .htaccess inside /backend already wins (a child .htaccess with its own
-  # RewriteEngine On overrides a parent's rules), so this is belt and braces —
-  # but if it ever stopped winning, every API call would silently come back as
-  # the app's own index.html, which fetch() would fail to parse with no clue
-  # as to why. Cheap insurance against an expensive afternoon.
-  RewriteRule ^backend(/.*)?$ - [END]
+  # Some PHP/FastCGI setups drop the Authorization header before PHP sees it,
+  # which signs everybody out on every request. Copied into the environment
+  # here, and api/index.php reads it back as REDIRECT_HTTP_AUTHORIZATION.
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # [END], not [L]: with [L] the rewritten api/index.php would re-enter this
+  # rule and loop. index.php reads the original path from REQUEST_URI.
+  RewriteRule ^api(/.*)?$ api/index.php [END]
 
   # --- 2. SPA fallback ----------------------------------------------------
   # A real file or directory is served as itself.

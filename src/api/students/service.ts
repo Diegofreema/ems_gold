@@ -1,4 +1,4 @@
-import { paginated, request } from '../client'
+import { bodyOrForm, paginated, request } from '../client'
 import type { Id } from '../types'
 import type { Invoice } from '../invoices/types'
 import type {
@@ -29,14 +29,23 @@ export const studentsService = {
 
   get: (id: Id) => request<{ student: Student }>(`students/${id}`).then((data) => data.student),
 
+  /** Multipart where the office attached documents, JSON otherwise. */
   create: (body: StudentBody) =>
-    request<{ student: Student }>('students', { method: 'POST', body }),
+    request<{ student: Student }>('students', { method: 'POST', ...bodyOrForm(body) }),
 
   update: (id: Id, body: StudentBody) =>
     request<{ student: Student }>(`students/${id}`, { method: 'POST', body }),
 
   setStatus: (id: Id, body: SetStudentStatusBody) =>
     request<{ student: Student }>(`students/${id}/status`, { method: 'POST', body }),
+
+  /**
+   * A roster enrolled from a spreadsheet. Always multipart, since the sheet is
+   * the body. What it answers has never been seen, so it is handed back as it
+   * came; `importOutcome` reads it.
+   */
+  importRoster: (body: { roster: File; department_id: number; class_arm_id: number }) =>
+    request<unknown>('students/import', { method: 'POST', ...bodyOrForm(body) }),
 
   promote: (body: PromoteStudentsBody) =>
     request<unknown>('students/promote', { method: 'POST', body }),

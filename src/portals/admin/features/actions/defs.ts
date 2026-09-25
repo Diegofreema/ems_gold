@@ -38,6 +38,12 @@ import { searchedLabel } from '@/features/collections/option-feeds';
 import { formatDate, formatNaira, parseNaira } from '@/lib/format';
 import { dropMoneyReads } from '@/api/money';
 import { queryClient } from '@/lib/query-client';
+import { dropDerivedReads } from '@/features/collections/invalidate';
+import {
+  IMPORT_TEMPLATE_NAME,
+  importOutcome,
+  importTemplateFile,
+} from '@/portals/admin/collections/student-import';
 import type { ActionDef } from './types';
 
 export type AdminFlow = {
@@ -47,6 +53,8 @@ export type AdminFlow = {
   label: string;
   /** The flow needs no record, so the list's primary action opens it. */
   fromList?: boolean;
+  /** With `fromList`: a button beside the register's own action, not it. */
+  beside?: boolean;
   /** Records the flow can run against; offered on every record without it. */
   when?: (record: Row) => boolean;
   /** Whether it may be run at all — by this account, on this record. */
@@ -320,6 +328,70 @@ async function promote(row?: Row): Promise<ActionDef> {
         result,
         (id) => names.get(id) ?? `Student ${id}`,
       );
+    },
+  };
+}
+
+/**
+ * Enrolling a roster from a spreadsheet, via `POST /students/import`.
+ *
+ * A flow rather than a record form because it makes many records, not one,
+ * and because the school's reply can name rows it turned down — which stay on
+ * the page with their reasons rather than closing with a toast. It goes
+ * straight to the school: a file is not a body the outbox can hold, and a
+ * roster imported twice is two of every student.
+ */
+function importStudents(): ActionDef {
+  return {
+    kicker: 'People · Student register',
+    title: 'Import students',
+    description:
+      'Enrol a whole list at once from a spreadsheet. Download the template, fill in one student per row, then upload it with the class and arm they are joining. Needs a connection to the school.',
+    summary: [],
+    fields: [
+      {
+        key: 'roster',
+        label: 'Students spreadsheet',
+        required: true,
+        wide: true,
+        file: '.xlsx,.xls',
+        hint: 'Keep the headings as they are. Dob and admission date as dates, gender as Male or Female, Class as the school names it — JSS 1, SSS 2.',
+        template: {
+          label: 'Download the template',
+          note: 'An Excel workbook with the columns the school reads, in its order: Surname, First Name, Dob, Class, email, Address, phone, admission date, gender and Regno.',
+          build: async () => ({
+            file: await importTemplateFile(),
+            filename: IMPORT_TEMPLATE_NAME,
+          }),
+        },
+      },
+      {
+        key: 'department_id',
+        label: 'Class',
+        required: true,
+        optionsFrom: 'classes',
+      },
+      {
+        key: 'class_arm_id',
+        label: 'Arm',
+        required: true,
+        optionsFrom: 'arms',
+        dependsOn: 'department_id',
+      },
+    ],
+    cta: 'Import students',
+    footnote: 'Written to the activity log against your name.',
+    done: () => 'Students imported',
+    run: async (values) => {
+      const answer = await studentsService.importRoster({
+        roster: values.roster as File,
+        department_id: Number(values.department_id),
+        class_arm_id: Number(values.class_arm_id),
+      });
+      // The register is read off the device, so it is resynced as well as
+      // invalidated; fired, not awaited, as every write's catching-up is.
+      void dropDerivedReads(queryClient);
+      return importOutcome(answer);
     },
   };
 }
@@ -1541,7 +1613,19 @@ export const adminFlows: Record<string, AdminFlow[]> = {
   ],
   arms: [{ name: 'place', label: 'Place students', build: placeStudents }],
   subjects: [{ name: 'classes', label: 'Teach to classes', build: teachTo }],
-  students: [{ name: 'move', label: 'Promote or transfer', build: promote }],
+  students: [
+    { name: 'move', label: 'Promote or transfer', build: promote },
+    // Beside "Enrol a student", not instead of it; `when` keeps it off every
+    // record, since a roster belongs to no one student.
+    {
+      name: 'import',
+      label: 'Bulk import',
+      fromList: true,
+      beside: true,
+      when: () => false,
+      build: importStudents,
+    },
+  ],
   applicants: [{ name: 'review', label: 'Review application', build: review }],
   // Two flows rather than one with a decision box: releasing is the common
   // answer and wants no form at all, and sending back is meaningless without

@@ -19,16 +19,17 @@ echo "==> Assembling $OUT"
 rm -rf "$OUT" && mkdir -p "$OUT"
 cp -R dist/. "$OUT"/
 cp deploy/cpanel/.htaccess "$OUT/.htaccess"
-# api/index.php is NOT copied: the API is same-origin at /backend, so there is
-# nothing to proxy. deploy/cpanel/api/index.php is kept for the cross-origin
-# case (backend on another domain) — see docs/DEPLOY-CPANEL.md.
+# The forwarder: the app calls /api on its own host and this passes it on to
+# the school at https://bronze.uaes.education/api — see docs/DEPLOY-CPANEL.md.
+mkdir -p "$OUT/api"
+cp deploy/cpanel/api/index.php "$OUT/api/index.php"
 
 echo "==> Checking"
-for f in index.html .htaccess sw.js manifest.webmanifest; do
+for f in index.html .htaccess sw.js manifest.webmanifest api/index.php; do
   [ -f "$OUT/$f" ] || { echo "MISSING: $f"; exit 1; }
 done
-# The built bundle must point at the API, not at the old /api proxy path.
-grep -qr "/backend/api" "$OUT/assets" || { echo "build does not reference /backend/api"; exit 1; }
+# The built bundle must call the forwarder at /api, not the old /backend/api.
+if grep -qr "/backend/api" "$OUT/assets"; then echo "build still references /backend/api"; exit 1; fi
 
 echo "==> Zipping"
 rm -f "$ZIP"

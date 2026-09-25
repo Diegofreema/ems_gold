@@ -72,6 +72,18 @@ test('a create route alone is not enough to publish a create page', () => {
   )
 })
 
+test('a list flow drawn beside the register leaves its own action alone', () => {
+  // Importing a roster opens from the students register; enrolling one
+  // student is still that register's button, and its create page stays.
+  assert.equal(
+    primaryActionKind(def('Enrol a student'), routes, [
+      { name: 'move', label: 'Promote or transfer' },
+      { name: 'import', label: 'Bulk import', fromList: true, beside: true },
+    ]),
+    'create',
+  )
+})
+
 test('a portal with no create route falls through to its own destination', () => {
   const readOnly = { record: '/parent/$collection/$recordId' } as const
   // Nothing to link to and no create route: the prototype's unwired button.

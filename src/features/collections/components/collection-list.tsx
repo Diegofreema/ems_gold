@@ -124,9 +124,12 @@ export function CollectionList({
   // Every flow that opens without a record gets a button: the first is the
   // page's primary action and wears its label, the rest stand beside it in
   // outline — the library issues a book and adds a title from the same strip.
-  const listFlows = (flows ?? []).filter(
+  const openable = (flows ?? []).filter(
     (one) => one.fromList && (one.allowed?.() ?? true),
   )
+  const listFlows = openable.filter((one) => !one.beside)
+  // Whatever the primary action turned out to be, these stand beside it.
+  const besideFlows = openable.filter((one) => one.beside)
   const listFlow = listFlows[0]
   // Held as a `const` rather than read off `routes` at each use: a property
   // narrowed by the guard below goes back to "or undefined" inside the `.map`
@@ -178,9 +181,8 @@ export function CollectionList({
   // neither pencil nor bin.
   const editRoute = definition.readonly ? undefined : routes.edit
 
-  const moreFlows =
-    primary === 'flow' && flowRoute
-      ? listFlows.slice(1).map((one) => (
+  const moreFlows = flowRoute
+    ? [...(primary === 'flow' ? listFlows.slice(1) : []), ...besideFlows].map((one) => (
           <Button key={one.name} asChild variant="outline">
             <Link
               to={flowRoute}
@@ -191,7 +193,7 @@ export function CollectionList({
             </Link>
           </Button>
         ))
-      : []
+    : []
 
   const actions =
     definition.secondaryTo || moreFlows.length > 0 ? (

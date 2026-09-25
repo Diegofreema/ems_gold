@@ -13,36 +13,28 @@ That produces **`deploy/netpro-ems-cpanel.zip`** (2.2 MB, 455 files).
 
 ## Where the API is
 
-`https://sis.livingtempleacademy.ng/backend/api` — Laravel is installed at
-`/backend` and its own routes carry the `/api` prefix, so the two stack. On the
-**same host** as the portal.
+`https://bronze.uaes.education/api`, on its own host. Checked 2026-09-25: it
+sends `Access-Control-Allow-Origin` only to `localhost` origins, so a portal
+served from any real domain cannot call it from the browser at all.
 
-Verified live 2026-09-21: `/backend/api/users/me` answers with the envelope,
-`/backend/users/me` is a 404.
+So the portal calls **`/api` on its own host**, and `api/index.php` (shipped in
+the package) forwards each call to bronze, with the token, the body and any
+uploaded files. Checked the same day by running the forwarder against bronze:
+the envelope, the school's `Date` header, query strings and multipart bodies
+all come through, and a bad token gets bronze's own 401.
 
-Same-origin is the whole point: the API sends no `Access-Control-Allow-Origin`,
-so a browser could not call it from a different domain at all. Because it is
-served from `/backend` on this host, it needs no proxy and no CORS headers —
-the app just calls it.
-
-Set in four places, all of which must agree:
+Set in five places, all of which must agree:
 
 | Where | What |
 |---|---|
-| `src/api/client.ts` | `${location.origin}/backend/api` (override with `VITE_API_URL`) |
-| `vite.config.ts` → `server.proxy` | dev only — proxies `/backend` to the live host |
-| `vite.config.ts` → workbox | `navigateFallbackDenylist` and the `NetworkOnly` rule both match `/backend` |
-| `deploy/cpanel/.htaccess` | passes `/backend` through, so the SPA fallback cannot swallow it |
+| `src/api/client.ts` | `${location.origin}/api` (override with `VITE_API_URL`) |
+| `deploy/cpanel/api/index.php` → `$UPSTREAM` | `https://bronze.uaes.education/api` (or the `NETPRO_API_UPSTREAM` environment variable) |
+| `deploy/cpanel/.htaccess` | sends `/api` to `api/index.php`, before the SPA fallback can swallow it |
+| `vite.config.ts` → workbox | `navigateFallbackDenylist` and the `NetworkOnly` rule both match `/api` |
+| `vite.config.ts` → `server.proxy` | dev only — proxies `/api` to bronze, the same job the forwarder does |
 
-The other four entries match on the `/backend` prefix, so they cover
-`/backend/api` without change.
-
-### The proxy is no longer shipped
-
-`deploy/cpanel/api/index.php` is kept in the repo but **not** included in the
-package. It is the forwarder for a *cross-origin* backend — if the API ever
-moves to another domain, restore the `/api` rule in `.htaccess`, copy the file
-back, and point `$UPSTREAM` at it. Same-origin needs none of it.
+To point the portal at a different school, change `$UPSTREAM` (and the dev
+proxy's `target`) and nothing else.
 
 ## Upload
 
@@ -62,44 +54,31 @@ public_html/
   sw.js
   manifest.webmanifest
   assets/…            (437 files)
-  api/index.php       ← the proxy
+  api/index.php       ← the forwarder to bronze
 ```
 
 ## Requirements on the host
 
 | Need | Why | If missing |
 |---|---|---|
-| **PHP 8.2+** for the domain | Laravel's own requirement | **The API returns 500 and nothing works.** This is the current state — see below |
+| **PHP 8.0+** with cURL for the domain | `api/index.php` forwards every call to the school | **Every call fails and nobody can sign in** — see below |
 | `mod_rewrite` | SPA routes | Only the home page works |
 | `mod_headers` | Caching and security headers | Works, but browsers may cache a stale shell |
 | `mod_deflate` | Compression | Works, first load is ~6.5 MB instead of ~1.6 MB |
 | HTTPS | Service workers require a secure context | **No offline support at all** |
 
-### ⚠️ The backend is currently down
+The forwarder also needs the **PHP cURL extension**. Without it every call
+answers "Ask your host to enable the PHP cURL extension".
 
-Measured 2026-09-20, every path under `/backend/` returns:
-
-```
-HTTP 500
-Composer detected issues in your platform:
-Your Composer dependencies require a PHP version ">= 8.2.0".
-```
-
-The host is running an older PHP than Laravel needs. **Fix it in cPanel →
-MultiPHP Manager → select the domain → set PHP 8.2 or newer → Apply.** Nothing
-in the front end can work around this, and until it is fixed the portal will
-load and sign-in will fail.
-
-Once it is up, confirm with:
+Once it is up, confirm the forwarder reaches the school:
 
 ```bash
-curl -s https://sis.livingtempleacademy.ng/backend/users/me
+curl -s https://YOUR-PORTAL-DOMAIN/api/users/me
 ```
 
 It should answer with the JSON envelope — a 401 *"Authentication required"* is
-the correct, healthy response to a token-free call. If it 404s, the endpoints
-live under `/backend/api/` instead and `src/api/client.ts` needs the one-line
-change.
+the correct, healthy response to a token-free call. The portal's own HTML
+means the `/api` rule in `.htaccess` is missing; a 500 is PHP.
 
 ---
 
@@ -115,11 +94,12 @@ against direct calls to the school's API.
 | Deep SPA route (`/admin/students`) returns the shell, not 404 | ✅ |
 | Hashed assets serve with correct MIME | ✅ |
 | `manifest.webmanifest`, `sw.js` serve | ✅ |
-| Bundle calls `/backend` on its own origin | ✅ confirmed in the browser |
-| No stale `/api` base anywhere in the bundle | ✅ |
-| Service worker excludes `/backend` from the shell fallback | ✅ both rules present in `sw.js` |
+| Bundle calls `/api` on its own origin | ✅ checked in the built bundle, 2026-09-25 |
+| No stale `/backend/api` base anywhere in the bundle | ✅ checked by `package.sh` |
+| Service worker excludes `/api` from the shell fallback | ✅ both rules present in `sw.js` |
 | typecheck / lint / 1266 tests | ✅ all pass |
-| **Live API reachable** | ❌ **500 — backend PHP version, see above** |
+| Forwarder reaches bronze (PHP 8.5 locally) | ✅ 2026-09-25 |
+| **Forwarder under Apache on the real host** | ⚠️ **Not verified** — check with the `curl` above after upload |
 | **Service worker registration** | ⚠️ **Not verified** — see below |
 
 ### The one unverified thing

@@ -170,7 +170,17 @@ export function SignInScreen() {
         </form>
       </FormProvider>
 
-      <p className="mt-(--auth-tail) text-[13px] leading-relaxed text-ui-muted">
+      {/* The one way in for somebody with no account at all: a family applying
+          for a place. Above the note about invitations, which is for people
+          the school has already taken on. */}
+      <p className="mt-(--auth-tail) text-center text-base">
+        New to the school?{' '}
+        <Link to="/apply" className="font-semibold text-ui-blue-ink hover:underline">
+          Apply for admission
+        </Link>
+      </p>
+
+      <p className="mt-4 text-[13px] leading-relaxed text-ui-muted">
         Accounts are created by the school office. If you are new and have no
         password yet, open the invitation email and use the link in it, or ask
         the office to send it again.

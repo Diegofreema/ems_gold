@@ -84,6 +84,11 @@ export type ActionOutcome = {
   message: string
   /** One line per student the API would not move, with its reason. */
   failures?: string[]
+  /**
+   * The heading over them, where they are not students left unmoved — an
+   * import lists the rows of a sheet the school turned down.
+   */
+  failuresTitle?: string
 }
 
 /**

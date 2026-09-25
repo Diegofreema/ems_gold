@@ -46,7 +46,11 @@ export function primaryActionKind(
   // records themselves can be edited: `readonly` says nothing arrives through
   // the create form, and a guided flow is not that form — the lending register
   // cannot be typed into and still issues the books that fill it.
-  if (routes.flow && flows?.some((flow) => flow.fromList && (flow.allowed?.() ?? true)))
+  // A flow drawn `beside` the register's own action is not a candidate for it.
+  if (
+    routes.flow &&
+    flows?.some((flow) => flow.fromList && !flow.beside && (flow.allowed?.() ?? true))
+  )
     return 'flow'
   // A collection nobody can add to has no primary action, whatever its label
   // would otherwise have done.

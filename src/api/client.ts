@@ -7,19 +7,15 @@ export { paginated } from './url.ts'
 export type { QueryValue }
 
 /**
- * Always same-origin.
+ * Always same-origin, and forwarded to the school from there.
  *
- * The API is served by the same host as the portal, under `/backend/api` —
- * Laravel lives at `/backend` and its routes carry the `/api` prefix, so the
- * two are stacked. Verified live: `/backend/api/users/me` answers with the
- * envelope, `/backend/users/me` is a 404. The browser calls it directly and no
- * proxy is in the way.
- *
- * That matters because the API sends no
- * `Access-Control-Allow-Origin`: a cross-origin deployment
- * cannot call it from a browser at all, and would need a server-side forwarder
- * (dev uses Vite's proxy; `deploy/cpanel/api/index.php` is the one written for
- * that case). Same-origin removes the whole problem.
+ * The school's API is `https://bronze.uaes.education/api`, on another host,
+ * and it only answers a browser from `localhost` — every other origin gets no
+ * `Access-Control-Allow-Origin`, so a portal calling it directly would have
+ * every request refused by the browser. So the app calls `/api` on its own
+ * host and something there passes the call on: Vite's proxy in dev, and
+ * `deploy/cpanel/api/index.php` in production, both pointed at bronze. The
+ * path is the same in both, so dev and production are the same app.
  *
  * `VITE_API_URL` overrides it for a deployment shaped differently.
  *
@@ -32,7 +28,7 @@ export const API_BASE_URL =
   // there is none: this module is imported by tests as well as by the browser,
   // and it used to throw on the way in wherever `window` was not defined,
   // which is what kept the whole client untested.
-  `${globalThis.location?.origin ?? 'http://localhost'}/backend/api`
+  `${globalThis.location?.origin ?? 'http://localhost'}/api`
 
 /** Anything the API refused, with the field errors a form needs to show. */
 export class ApiError extends Error {
@@ -164,4 +160,30 @@ export function toFormData(body: Record<string, string | number | File | undefin
     form.append(key, value instanceof File ? value : String(value))
   }
   return form
+}
+
+/**
+ * JSON, unless the body carries a file — then multipart, since a `File` has no
+ * JSON form. For the creates whose documents are optional: a student enrolled
+ * without a passport photograph is the same request it always was.
+ *
+ * A null is sent as an empty string rather than dropped, because on these
+ * bodies null means "clear it" (a middle name the office deleted) and an
+ * absent key means "leave it". The server reads an empty field as null.
+ */
+export function bodyOrForm(
+  body: Record<string, unknown>,
+): Pick<RequestOptions, 'body' | 'form'> {
+  if (!carriesFile(body)) return { body }
+  const form = new FormData()
+  for (const [key, value] of Object.entries(body)) {
+    if (value === undefined) continue
+    form.append(key, value instanceof File ? value : value === null ? '' : String(value))
+  }
+  return { form }
+}
+
+/** Whether a body carries a file, and so can only go to the school over the wire. */
+export function carriesFile(body: Record<string, unknown>): boolean {
+  return Object.values(body).some((value) => value instanceof File)
 }

@@ -31,7 +31,7 @@ error_reporting(E_ALL);
 // CONFIGURATION — the only line you normally need to change.
 // No trailing slash.
 // ---------------------------------------------------------------------------
-$UPSTREAM = getenv('NETPRO_API_UPSTREAM') ?: 'https://sis.livingtempleacademy.ng/backend/api';
+$UPSTREAM = getenv('NETPRO_API_UPSTREAM') ?: 'https://bronze.uaes.education/api';
 
 // Must comfortably exceed the client's own 30s bound in src/api/client.ts,
 // or the proxy gives up first and the app reports the wrong reason.

@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { BackLink } from '@/components/page/back-link'
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog'
 import { DateField } from '@/components/form/date-field'
+import { FileField } from '@/components/form/file-field'
 import { MoneyField } from '@/components/form/money-field'
 import { RemoteSelectField } from '@/components/form/remote-select-field'
 import {
@@ -49,7 +50,7 @@ const RichTextField = lazy(() =>
  * The students the API would not move, and what it said about each. Shaped like
  * the form's own error banner, since it is the same kind of news.
  */
-function NotMoved({ failures }: { failures: string[] }) {
+function NotMoved({ failures, title }: { failures: string[]; title?: string }) {
   return (
     <div
       role="alert"
@@ -58,9 +59,10 @@ function NotMoved({ failures }: { failures: string[] }) {
       <CircleAlert className="mt-px size-4.5 flex-none text-danger-ink" strokeWidth={2.2} />
       <div>
         <div className="font-heading text-sm font-extrabold">
-          {failures.length === 1
-            ? 'One student was not moved'
-            : `${failures.length} students were not moved`}
+          {title ??
+            (failures.length === 1
+              ? 'One student was not moved'
+              : `${failures.length} students were not moved`)}
         </div>
         <ul className="mt-0.75 space-y-0.5 text-sm text-muted-foreground">
           {failures.map((failure) => (
@@ -83,9 +85,17 @@ function schemaFor(action: ActionDef) {
   // A field only some answers need. Checked here rather than on the field, so
   // declining an application is not held up asking which class to put them in.
   const conditional = action.fields.filter((field) => field.requiredWhen)
-  if (conditional.length === 0) return schema
+  // The shared schema never requires a file, since an edit form cannot be
+  // handed back the one on record. A flow has no record to edit, so a file it
+  // requires is required here.
+  const files = action.fields.filter((field) => field.file && field.required)
+  if (conditional.length === 0 && files.length === 0) return schema
 
   return schema.superRefine((values: Values, ctx) => {
+    for (const field of files) {
+      if (values[field.key] instanceof File) continue
+      ctx.addIssue({ code: 'custom', path: [field.key], message: 'Choose a file' })
+    }
     for (const field of conditional) {
       const when = field.requiredWhen!
       if (values[when.field] !== when.is) continue
@@ -102,7 +112,8 @@ function schemaFor(action: ActionDef) {
 function defaultsFor(action: ActionDef): Values {
   const values: Values = { picks: action.picker?.preselected ?? [] }
   for (const field of action.fields) {
-    values[field.key] = field.value ?? (field.options?.[0] ?? '')
+    // Nothing, rather than an empty string, which is not a `File`.
+    values[field.key] = field.file ? undefined : (field.value ?? (field.options?.[0] ?? ''))
   }
   return values
 }
@@ -118,6 +129,19 @@ function renderField(field: ActionField) {
   if (field.money)
     return <MoneyField<Values> key={field.key} {...shared} placeholder={field.placeholder} />
   if (field.date) return <DateField<Values> key={field.key} {...shared} />
+  // The whole row: a drop target, its template and its note beside a
+  // dropdown leaves the next field wrapping under it on its own.
+  if (field.file)
+    return (
+      <FileField<Values>
+        key={field.key}
+        {...shared}
+        span="full"
+        accept={field.file}
+        template={field.template}
+        maxSize={field.maxBytes}
+      />
+    )
   // The same branch a record form has, for the same reason: a flow that sends
   // somebody prose asks for it in the editor, not in a textarea. Lazy, so a
   // flow that asks for a figure never fetches it.
@@ -187,7 +211,7 @@ export function ActionPage({
   const navigate = useNavigate()
   const confirm = useConfirm()
   const queryClient = useQueryClient()
-  const [failures, setFailures] = useState<string[]>([])
+  const [failures, setFailures] = useState<{ lines: string[]; title?: string }>({ lines: [] })
   const form = useRecordForm<Values>(schemaFor(action), defaultsFor(action))
   const picked = (form.watch('picks') as string[] | undefined) ?? []
   // Watched rather than read once: the payment flow's figures move as the
@@ -223,14 +247,14 @@ export function ActionPage({
       return
     }
 
-    setFailures([])
+    setFailures({ lines: [] })
     const outcome = await flow.mutateAsync(values).catch(() => null)
     if (!outcome) return
 
     // A partial move is not something to walk away from — the rows that did
     // not move stay on screen with the reason the API gave for each.
     if (outcome.failures?.length) {
-      setFailures(outcome.failures)
+      setFailures({ lines: outcome.failures, title: outcome.failuresTitle })
       return
     }
     await navigate({ to: definition.path })
@@ -290,7 +314,9 @@ export function ActionPage({
             {action.fields.map(renderField)}
           </div>
 
-          {failures.length > 0 && <NotMoved failures={failures} />}
+          {failures.lines.length > 0 && (
+            <NotMoved failures={failures.lines} title={failures.title} />
+          )}
 
           <Rule />
 
