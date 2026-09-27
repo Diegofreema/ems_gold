@@ -60,6 +60,7 @@ export function ProfilePage({
     <div className="mx-auto w-full max-w-[940px]">
       <ProfileIdentity
         initials={config.initials}
+        photo={config.photo}
         name={name}
         meta={config.meta}
       />

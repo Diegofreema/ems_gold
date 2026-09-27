@@ -4,6 +4,7 @@ import type {
 } from '../../api/teaching/types.ts'
 import { BLANK } from '../../features/collections/blank.ts'
 import { asDate, fullName, initialsOf, text } from '../../features/profile/record.ts'
+import { staffPhoto } from '../../lib/photo-url.ts'
 import type { ProfileConfig } from '../../features/profile/types.ts'
 
 /**
@@ -70,6 +71,7 @@ export function teacherProfile(profile?: MyTeachingProfile): ProfileConfig {
   return {
     ...EMPTY,
     initials: initialsOf([teacher.firstname, teacher.lastname]),
+    photo: staffPhoto(teacher.passport),
     meta: [staffNo, teacher.department?.name, arms].filter(Boolean).join(' · '),
     values: {
       fullname: fullName(teacher.firstname, teacher.middlename, teacher.lastname),

@@ -28,6 +28,8 @@ export type ProfilePref = {
  */
 export type ProfileConfig = {
   initials: string
+  /** The stored photo, drawn in place of the initials once it loads. */
+  photo?: string
   /** The line under the name, e.g. "STF-014 · Mathematics · SS1 A, SS2 A". */
   meta: string
   /** Why some of the fields below cannot be edited here. */

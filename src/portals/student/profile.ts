@@ -1,6 +1,7 @@
 import type { Student, UpdateMyRecordBody } from '../../api/my-schooling/types.ts'
 import { BLANK } from '../../features/collections/blank.ts'
 import { asDate, fullName, initialsOf, text } from '../../features/profile/record.ts'
+import { studentPhoto } from '../../lib/photo-url.ts'
 import type { ProfileConfig } from '../../features/profile/types.ts'
 import { armOf } from './student.ts'
 
@@ -63,6 +64,7 @@ export function studentProfile(student?: Student): ProfileConfig {
   return {
     ...EMPTY,
     initials: initialsOf([student.fname, student.lname]),
+    photo: studentPhoto(student.passporturl),
     // No term. The design's third part is the school calendar, and every
     // endpoint holding it is refused a student login.
     meta: [student.regno, arm].map((part) => part?.trim()).filter(Boolean).join(' · '),

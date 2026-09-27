@@ -1,3 +1,4 @@
+import { PHOTO_KEY } from '@/features/collections/photo-key'
 import type { Parent } from '@/api/parents/types'
 import type { Student } from '@/api/students/types'
 import { heldRows } from '@/db/collection'
@@ -350,6 +351,7 @@ export const students: CollectionDef = {
   emptyBody: 'Enrol your first student, or admit one from the applicants list.',
   noun: 'student',
   nameKey: 'name',
+  photoKey: PHOTO_KEY,
   // Counted off the device, from the same set the register draws.
   counts: [
     { label: 'Enrolled', count: countHeld((one) => one.status === 'Admitted') },
@@ -530,6 +532,8 @@ export const applicants: CollectionDef = {
     'Applications appear here as families submit them through the admission form.',
   noun: 'application',
   nameKey: 'name',
+  // The applicant's passport, which `applicantRow` inherits from the student.
+  photoKey: PHOTO_KEY,
   // Counted off the device, from the same set the queue is drawn from.
   counts: [
     { label: 'Awaiting review', count: countHeld((one) => one.status === APPLIED) },

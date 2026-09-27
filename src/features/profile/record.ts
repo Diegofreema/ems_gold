@@ -29,6 +29,17 @@ export function initialsOf(parts: (string | null | undefined)[]): string {
 }
 
 /**
+ * The same two letters off a name already written as one line — a register's
+ * "Chidi Ebuka Okafor" is the first name and the last, not all three. A word
+ * with no letter in it is skipped, so the dash for a missing name reads as no
+ * initials at all rather than as a character.
+ */
+export function initialsOfName(name: string | null | undefined): string {
+  const words = (name ?? '').split(/\s+/).filter((word) => /\p{L}/u.test(word))
+  return initialsOf([words[0], words.length > 1 ? words.at(-1) : undefined])
+}
+
+/**
  * An ISO timestamp as the design writes dates. Anything else is left alone —
  * the API also sends dates as DD/MM/YYYY, which `Date` would read back as the
  * American order and quietly move.

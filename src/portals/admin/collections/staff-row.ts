@@ -5,6 +5,8 @@ import type { Admin } from '../../../api/users/types.ts'
 import { birthday, isoBirthday } from '../../../features/collections/birthday.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import { countryIso } from '../../../features/collections/country-ids.ts'
+import { PHOTO_KEY } from '../../../features/collections/photo-key.ts'
+import { staffPhoto } from '../../../lib/photo-url.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { formatDate } from '../../../lib/format.ts'
 
@@ -114,6 +116,9 @@ export function teacherRow(teacher: Teacher): Row {
     status: text(teacher.user?.userstatus),
 
     // Read by the record panel rather than the table.
+    // The photo, with the folder it lives in — `passport` here, `passporturl`
+    // on a student; see `photo-url.ts`.
+    [PHOTO_KEY]: staffPhoto(teacher.passport),
     qualification: text(teacher.qualification),
     // The arm(s) they are class teacher of, named. The record expands them,
     // so the panel says which rather than only that there is one; a teacher
@@ -206,6 +211,8 @@ export function adminRow(admin: Admin, roles?: ReadonlyMap<string, string>): Row
     status: titleCase(admin.status),
     account: text(admin.user?.userstatus),
 
+    // An office record's photo is `adminphoto`, in the same staff folder.
+    [PHOTO_KEY]: staffPhoto(admin.adminphoto),
     qualification: BLANK,
     adviser: BLANK,
     // The office record holds the address; the login holds the country and the

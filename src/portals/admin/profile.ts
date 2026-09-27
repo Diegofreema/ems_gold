@@ -1,6 +1,7 @@
 import type { Admin } from '../../api/users/types.ts';
 import { BLANK } from '../../features/collections/blank.ts';
 import { asDate, initialsOf, text } from '../../features/profile/record.ts';
+import { staffPhoto } from '../../lib/photo-url.ts';
 import type { ProfileConfig } from '../../features/profile/types.ts';
 
 /**
@@ -82,6 +83,7 @@ export function adminProfile(admin?: Admin): ProfileConfig {
   return {
     ...EMPTY,
     initials: initialsOf(names),
+    photo: staffPhoto(admin.adminphoto),
     meta: [role, admin.department?.name, job].filter(Boolean).join(' · '),
     values: {
       // The endpoint takes the two halves separately and the record puts the

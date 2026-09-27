@@ -4,6 +4,8 @@ import type { Student, StudentResult } from '../../../api/students/types.ts'
 import { BLANK } from '../../../features/collections/blank.ts'
 import { birthday, isoBirthday } from '../../../features/collections/birthday.ts'
 import { countryIso } from '../../../features/collections/country-ids.ts'
+import { PHOTO_KEY } from '../../../features/collections/photo-key.ts'
+import { studentPhoto } from '../../../lib/photo-url.ts'
 import type { Row } from '../../../features/collections/types.ts'
 import { payStatus } from './invoice-row.ts'
 import { formatDate, formatNaira } from '../../../lib/format.ts'
@@ -128,6 +130,8 @@ export function studentRow(
     status: text(student.studentstatus ?? student.status),
 
     // Everything below is read by the record panel rather than the table.
+    // The photo, with the folder it lives in; see `photo-url.ts`.
+    [PHOTO_KEY]: studentPhoto(student.passporturl),
     class: text(student.department?.name),
     gender: text(student.gender),
     // Read through the same function the picker uses, so a student the office

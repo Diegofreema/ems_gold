@@ -725,6 +725,12 @@ export type CollectionDef = {
   detail?: DetailFieldSpec[]
   /** The column holding the record's name — used in titles and confirms. */
   nameKey: string
+  /**
+   * The row key holding the person's stored photograph, on a register of
+   * people. The record page draws it beside the name, or their initials
+   * where there is none. Always `PHOTO_KEY`, which search leaves alone.
+   */
+  photoKey?: 'photo'
   /** A per-row control, offered on every row of the list. */
   rowAction?: RowActionSpec
   /** Where a row leads, where it leads anywhere. See `RowLinkSpec`. */
